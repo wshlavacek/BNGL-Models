@@ -4,19 +4,19 @@ A collection models drawn from the literature. Models are formulated using the B
 
 ## Models
 
-| File | Model Description | Reference(s) |
-|------|-------------------|---------------|
-| `blbr_rings_posner1995.bngl` | A model for interaction of a population of soluble bivalent ligands with a population of bivalent cell-surface receptors when cyclic receptor aggregates (e.g., a cyclic receptor dimer with 2:2 ligand:receptor stoichiometry) can form | Dembo & Goldstein, 1978; Posner et al., 1995 |
-| `blbr_cooperativity_posner2004.bngl` | A model for interaction of a population of soluble bivalent ligands with a population of bivalent cell-surface receptor when ligand-receptor binding is (negatively) cooperative | Wofsy & Goldstein, 1987; Posner et al., 2004 |
-| `genetic_switch_gardner2000.bngl` | A model for a genetic toggle switch | Gardner et al., 2000 |
-| `blbr_heterogeneity_goldstein1980.bngl` | A model for interaction of a population of soluble bivalent ligands with multiple populations of bivalent cell-surface receptors (i.e., receptors with distinct ligand-binding properties) | Goldstein & Wofsy, 1980 |
-| `antigen_pulses_harmon2017.bngl` | A model for interaction of a population of soluble (monovalent) antigens with a population of cell-surface IgE antibodies when microfluidics is used to control the antigen concentration in solution (i.e., to expose cells to square-wave antigen pulses) | Harmon et al., 2017 |
-| `kinetic_proofreading_hlavacek2001.bngl` | A model for kinetic proofreading in IgE receptor signaling | Hlavacek et al., 2001; 2002 |
-| `lac_operon_dreisigmeyer2008.bngl` | A model for lactose-triggered induction of the lac operon | Dreisigmeyer et al., 2008 |
-| `steric_effects_hlavacek1999.bngl` | A model for multivalent ligand-monovalent receptor interaction with steric effects | Hlavacek et al., 1999 |
-| `blbr_dembo1978.bngl` | A model for bivalent ligand-bivalent cell-surface receptor interaction | Dembo & Goldstein, 1978; Perelson & DeLisi, 1980 |
-| `tlbr_yang2008.bngl` | A model for trivalent ligand-bivalent cell-surface receptor interaction | Goldstein & Perelson, 1984; Yang et al., 2008 |
-| `tlbr_solution_macken1982.bngl` | A model for trivalent ligand-bivalent receptor interaction in solution | Macken & Perelson, 1982 |
+| File(s) | Description of Primary Model | Reference(s) |
+|-------|-------------------|---------------|
+| `blbr_rings_posner1995/`<br>`blbr_rings_posner1995.bngl`<br>`blbr_rings_posner1995_no_rings.bngl`<br>`blbr_rings_posner1995_alt_formulation.bngl` | A model for interaction of a population of soluble bivalent ligands with a population of bivalent cell-surface receptors when cyclic receptor aggregates (e.g., a cyclic receptor dimer with 2:2 ligand:receptor stoichiometry) can form | Dembo & Goldstein, 1978; Posner et al., 1995 |
+| `blbr_cooperativity_posner2004/`<br>`blbr_cooperativity_posner2004.bngl`<br>`blbr_cooperativity_posner2004_rings.bngl` | A model for interaction of a population of soluble bivalent ligands (e.g., anti-IgE IgG antibodies) with a population of bivalent cell-surface receptor (e.g., cell-surface IgE antibodies) when ligand-receptor binding is (negatively) cooperative | Wofsy & Goldstein, 1987; Posner et al., 2004 |
+| `genetic_switch_gardner2000/`<br>`genetic_switch_gardner2000.bngl`<br>`genetic_switch_gardner2000_iptg.bngl` | A model for a genetic toggle switch | Gardner et al., 2000 |
+| `blbr_heterogeneity_goldstein1980/`<br>`blbr_heterogeneity_goldstein1980.bngl` | A model for interaction of a population of soluble bivalent ligands with multiple populations of bivalent cell-surface receptors (i.e., receptors with distinct ligand-binding properties) | Goldstein & Wofsy, 1980 |
+| `antigen_pulses_harmon2017/`<br>`antigen_pulses_harmon2017.bngl`<br>`antigen_pulses_harmon2017_simplified.bngl` | A model for interaction of a population of soluble antigens with a population of cell-surface IgE antibodies when microfluidics is used to control the antigen concentration in solution (i.e., to expose cells to square-wave antigen pulses) | Harmon et al., 2017 |
+| `kinetic_proofreading_hlavacek2001/`<br>`kinetic_proofreading_hlavacek2001.bngl`<br>`kinetic_proofreading_hlavacek2001_messenger.bngl` | A model for kinetic proofreading in IgE receptor signaling | Hlavacek et al., 2001; 2002 |
+| `lac_operon_dreisigmeyer2008/`<br>`lac_operon_dreisigmeyer2008.bngl` | A model for lactose-triggered induction of the lac operon | Dreisigmeyer et al., 2008 |
+| `steric_effects_hlavacek1999/`<br>`steric_effects_hlavacek1999.bngl`<br>`steric_effects_hlavacek1999_nosteric.bngl`<br>`steric_effects_hlavacek1999_combinatoric.bngl` | A model for multivalent ligand-monovalent receptor interaction with steric effects | Hlavacek et al., 1999 |
+| `blbr_dembo1978/`<br>`blbr_dembo1978.bngl`<br>`blbr_dembo1978_monovalent_inhibitor.bngl`<br>`blbr_dembo1978_with_rings.bngl` | A model for bivalent ligand-bivalent cell-surface receptor interaction | Dembo & Goldstein, 1978; Perelson & DeLisi, 1980 |
+| `tlbr_yang2008/`<br>`tlbr_yang2008.bngl` | A model for trivalent ligand-bivalent cell-surface receptor interaction | Goldstein & Perelson, 1984; Yang et al., 2008 |
+| `tlbr_solution_macken1982/`<br>`tlbr_solution_macken1982.bngl` | A model for trivalent ligand-bivalent receptor interaction in solution | Macken & Perelson, 1982 |
 
 ## Setup
 
