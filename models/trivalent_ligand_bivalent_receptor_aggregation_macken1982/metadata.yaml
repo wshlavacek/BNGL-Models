@@ -1,0 +1,48 @@
+# metadata.yaml — trivalent_ligand_bivalent_receptor_aggregation_macken1982
+id: trivalent_ligand_bivalent_receptor_aggregation_macken1982
+created: 2026-03-26
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, new_model, ai_assisted]
+  description: >
+    Built from the kinetic and equilibrium theory in Macken and
+    Perelson (1982), J Math Biol 14:365-370. The BNGL model
+    implements trivalent ligand-bivalent receptor crosslinking
+    in solution without intramolecular (cyclic) bonds, validated
+    against the paper's ODE kinetics (Eq. 11), closed-form
+    equilibrium predictions (Eqs. 13, 17), and branching
+    process aggregate size distribution (Theorem 1, Eq. 21).
+
+files:
+  - name: trivalent_ligand_bivalent_receptor_aggregation_macken1982.bngl
+    role: primary
+    description: >
+      Trivalent ligand (f=3) binding bivalent receptor (g=2) in
+      solution with three rules: capture, crosslink, dissociation.
+      NFsim with -bscb flag (no intra-complex rings).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_macken1982.ipynb
+    role: verification
+    description: >
+      Compares NFsim against Macken and Perelson (1982) kinetic
+      ODEs, branching process aggregate distributions (Theorem 1),
+      and Eq. 21 equilibrium at three ligand doses.
+  - name: verify_macken1982.png
+    role: figure
+    description: Bond kinetics comparison
+  - name: verify_macken1982_aggregates.png
+    role: figure
+    description: Aggregate distribution kinetics comparison
+  - name: reference/trivalent_ligand_bivalent_receptor_aggregation_macken1982_nfr.gdat
+    role: reference
+    description: >
+      NFsim reference output at default parameterization
+      (NL=4200, NR=300, kappa_ST=0.5).

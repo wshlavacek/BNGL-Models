@@ -1,0 +1,164 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 n           20  # Constant
+    2 vKLT        1  # Constant
+    3 KxRT        10  # Constant
+    4 CRT_LT      10  # Constant
+    5 kr_kmx      1  # Constant
+    6 nu_1        18.240  # Constant
+    7 nu_2        16.564  # Constant
+    8 nu_3        14.964  # Constant
+    9 nu_4        13.430  # Constant
+   10 nu_5        11.960  # Constant
+   11 nu_6        10.540  # Constant
+   12 nu_7        9.160  # Constant
+   13 nu_8        7.840  # Constant
+   14 nu_9        6.560  # Constant
+   15 nu_10       5.300  # Constant
+   16 nu_11       4.100  # Constant
+   17 nu_12       2.980  # Constant
+   18 nu_13       2.000  # Constant
+   19 nu_14       1.240  # Constant
+   20 nu_15       0.740  # Constant
+   21 nu_16       0.432  # Constant
+   22 nu_17       0.238  # Constant
+   23 nu_18       0.120  # Constant
+   24 nu_19       0.048  # Constant
+   25 _rateLaw20  2  # Constant
+   26 _rateLaw21  3  # Constant
+   27 _rateLaw22  4  # Constant
+   28 _rateLaw23  5  # Constant
+   29 _rateLaw24  6  # Constant
+   30 _rateLaw25  7  # Constant
+   31 _rateLaw26  8  # Constant
+   32 _rateLaw27  9  # Constant
+   33 _rateLaw28  10  # Constant
+   34 _rateLaw29  11  # Constant
+   35 _rateLaw30  12  # Constant
+   36 _rateLaw31  13  # Constant
+   37 _rateLaw32  14  # Constant
+   38 _rateLaw33  15  # Constant
+   39 _rateLaw34  16  # Constant
+   40 _rateLaw35  17  # Constant
+   41 _rateLaw36  18  # Constant
+   42 _rateLaw37  19  # Constant
+   43 _rateLaw38  20  # Constant
+end parameters
+begin functions
+    1 r_b_lo() (((Obs_L1+(2*Obs_L2))+(3*Obs_L3))+(4*Obs_L4))+(5*Obs_L5)
+    2 r_b_md() ((((6*Obs_L6)+(7*Obs_L7))+(8*Obs_L8))+(9*Obs_L9))+(10*Obs_L10)
+    3 r_b_hi() (((11*Obs_L11)+(12*Obs_L12))+(13*Obs_L13))+(14*Obs_L14)
+    4 r_b_vh() (((15*Obs_L15)+(16*Obs_L16))+(17*Obs_L17))+(18*Obs_L18)
+    5 r_b_xx() (19*Obs_L19)+(20*Obs_L20)
+    6 r_free() ((((1-r_b_lo())-r_b_md())-r_b_hi())-r_b_vh())-r_b_xx()
+    7 l_free() 1-(CRT_LT*Obs_L_tot)
+    8 fn_bind() ((kr_kmx*vKLT)*r_free())*l_free()
+    9 alpha_2() (1-r_free())-Obs_L1
+   10 alpha_10() (((10*Obs_L10)+r_b_hi())+r_b_vh())+r_b_xx()
+   11 _rateLaw1() (nu_1*KxRT)*r_free()
+   12 _rateLaw2() (nu_2*KxRT)*r_free()
+   13 _rateLaw3() (nu_3*KxRT)*r_free()
+   14 _rateLaw4() (nu_4*KxRT)*r_free()
+   15 _rateLaw5() (nu_5*KxRT)*r_free()
+   16 _rateLaw6() (nu_6*KxRT)*r_free()
+   17 _rateLaw7() (nu_7*KxRT)*r_free()
+   18 _rateLaw8() (nu_8*KxRT)*r_free()
+   19 _rateLaw9() (nu_9*KxRT)*r_free()
+   20 _rateLaw10() (nu_10*KxRT)*r_free()
+   21 _rateLaw11() (nu_11*KxRT)*r_free()
+   22 _rateLaw12() (nu_12*KxRT)*r_free()
+   23 _rateLaw13() (nu_13*KxRT)*r_free()
+   24 _rateLaw14() (nu_14*KxRT)*r_free()
+   25 _rateLaw15() (nu_15*KxRT)*r_free()
+   26 _rateLaw16() (nu_16*KxRT)*r_free()
+   27 _rateLaw17() (nu_17*KxRT)*r_free()
+   28 _rateLaw18() (nu_18*KxRT)*r_free()
+   29 _rateLaw19() (nu_19*KxRT)*r_free()
+end functions
+begin species
+    1 Lig(b~1) 0
+    2 Lig(b~2) 0
+    3 Lig(b~3) 0
+    4 Lig(b~4) 0
+    5 Lig(b~5) 0
+    6 Lig(b~6) 0
+    7 Lig(b~7) 0
+    8 Lig(b~8) 0
+    9 Lig(b~9) 0
+   10 Lig(b~10) 0
+   11 Lig(b~11) 0
+   12 Lig(b~12) 0
+   13 Lig(b~13) 0
+   14 Lig(b~14) 0
+   15 Lig(b~15) 0
+   16 Lig(b~16) 0
+   17 Lig(b~17) 0
+   18 Lig(b~18) 0
+   19 Lig(b~19) 0
+   20 Lig(b~20) 0
+end species
+begin reactions
+    1 0 1 fn_bind #_R1
+    2 1 0 kr_kmx #_R2
+    3 1 2 _rateLaw1 #_R3
+    4 2 3 _rateLaw2 #_R4
+    5 2 1 _rateLaw20 #_R22
+    6 3 4 _rateLaw3 #_R5
+    7 3 2 _rateLaw21 #_R23
+    8 4 5 _rateLaw4 #_R6
+    9 4 3 _rateLaw22 #_R24
+   10 5 6 _rateLaw5 #_R7
+   11 5 4 _rateLaw23 #_R25
+   12 6 7 _rateLaw6 #_R8
+   13 6 5 _rateLaw24 #_R26
+   14 7 8 _rateLaw7 #_R9
+   15 7 6 _rateLaw25 #_R27
+   16 8 9 _rateLaw8 #_R10
+   17 8 7 _rateLaw26 #_R28
+   18 9 10 _rateLaw9 #_R11
+   19 9 8 _rateLaw27 #_R29
+   20 10 11 _rateLaw10 #_R12
+   21 10 9 _rateLaw28 #_R30
+   22 11 12 _rateLaw11 #_R13
+   23 11 10 _rateLaw29 #_R31
+   24 12 13 _rateLaw12 #_R14
+   25 12 11 _rateLaw30 #_R32
+   26 13 14 _rateLaw13 #_R15
+   27 13 12 _rateLaw31 #_R33
+   28 14 15 _rateLaw14 #_R16
+   29 14 13 _rateLaw32 #_R34
+   30 15 16 _rateLaw15 #_R17
+   31 15 14 _rateLaw33 #_R35
+   32 16 17 _rateLaw16 #_R18
+   33 16 15 _rateLaw34 #_R36
+   34 17 18 _rateLaw17 #_R19
+   35 17 16 _rateLaw35 #_R37
+   36 18 19 _rateLaw18 #_R20
+   37 18 17 _rateLaw36 #_R38
+   38 19 20 _rateLaw19 #_R21
+   39 19 18 _rateLaw37 #_R39
+   40 20 19 _rateLaw38 #_R40
+end reactions
+begin groups
+    1 Obs_L1               1
+    2 Obs_L2               2
+    3 Obs_L3               3
+    4 Obs_L4               4
+    5 Obs_L5               5
+    6 Obs_L6               6
+    7 Obs_L7               7
+    8 Obs_L8               8
+    9 Obs_L9               9
+   10 Obs_L10              10
+   11 Obs_L11              11
+   12 Obs_L12              12
+   13 Obs_L13              13
+   14 Obs_L14              14
+   15 Obs_L15              15
+   16 Obs_L16              16
+   17 Obs_L17              17
+   18 Obs_L18              18
+   19 Obs_L19              19
+   20 Obs_L20              20
+   21 Obs_L_tot            1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
+end groups

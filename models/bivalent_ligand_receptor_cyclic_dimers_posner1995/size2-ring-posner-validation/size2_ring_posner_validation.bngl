@@ -1,0 +1,93 @@
+begin model
+
+# Validation model for the Posner/Wofsy/Goldstein size-2 ring restriction.
+#
+# Three ligand doses are encoded here:
+#   LT_low   = 150  (below the size-2-ring crosslinking optimum)
+#   LT_peak  = 331  (integer LT that maximizes equilibrium Z2/R2 in this scaled model)
+#   LT_high  = 450  (moderately above the size-2-ring optimum)
+#
+# The built-in simulate_nf actions are intended for quick manual inspection.
+# For statistical validation, use the notebook in this directory, which reruns
+# NFsim on the BNGL-generated XML files over many seeds and compares to Posner
+# kinetic and equilibrium theory.
+
+begin parameters
+  RT          30
+  ST          2*RT
+
+  LT_low      150
+  LT_peak     331
+  LT_high     450
+  LT_current  LT_peak
+
+  kf          1.6605390671738464e-05
+  kpx         0.0016666666666666668
+  koff        0.01
+  jp          1.0
+end parameters
+
+begin molecule types
+  L(r~u~c~g,r~u~c~g)
+  R(l~u~c~g,l~u~c~g)
+end molecule types
+
+begin seed species
+  L(r~u,r~u) LT_peak
+  R(l~u,l~u) RT
+end seed species
+
+begin observables
+  Molecules Y1    L(r~c!+,r~u)
+  Molecules Y2x2  L(r~c!+,r~c!+)
+  Molecules Z2x2  L(r~g!+,r~g!+)
+
+  Species   C01   R(l~u,l~u)
+  Species   C11   L(r~c!1,r~u).R(l~c!1,l~u)
+  Species   C21   L(r~c!1,r~u).R(l~c!1,l~c!2).L(r~c!2,r~u)
+  Species   C02   R(l~u,l~c!1).L(r~c!1,r~c!2).R(l~c!2,l~u)
+  Species   C12   L(r~u,r~c!1).R(l~c!1,l~c!2).L(r~c!2,r~c!3).R(l~c!3,l~u)
+  Species   C22   L(r~u,r~c!1).R(l~c!1,l~c!2).L(r~c!2,r~c!3).R(l~c!3,l~c!4).L(r~c!4,r~u)
+  Species   R2    L(r~g!4,r~g!1).R(l~g!1,l~g!2).L(r~g!2,r~g!3).R(l~g!3,l~g!4)
+end observables
+
+begin functions
+  # Doubly bound symmetric ligands match both site permutations in Molecules observables.
+  Y2      Y2x2/2
+  Z2      Z2x2/2
+  Sfree   ST - Y1 - Y2x2 - Z2x2
+  Lfree   LT_current - Y1 - Y2x2/2 - Z2x2/2
+  Sc      ST - Z2x2
+  R2calc  Z2x2/4
+end functions
+
+begin reaction rules
+  L(r~u,r~u) + R(l~u) -> L(r~u,r~c!1).R(l~c!1) kf
+  L(r~c!+,r~u) + R(l~u) -> L(r~c!+,r~c!1).R(l~c!1) kpx
+  L(r~c!1).R(l~c!1) -> L(r~u) + R(l~u) koff
+
+  L(r~u,r~c!1).R(l~c!1,l~c!2).L(r~c!2,r~c!3).R(l~c!3,l~u) -> L(r~g!4,r~g!1).R(l~g!1,l~g!2).L(r~g!2,r~g!3).R(l~g!3,l~g!4) jp
+  L(r~g!4,r~g!1).R(l~g!1,l~g!2).L(r~g!2,r~g!3).R(l~g!3,l~g!4) -> L(r~u,r~c!1).R(l~c!1,l~c!2).L(r~c!2,r~c!3).R(l~c!3,l~u) koff
+end reaction rules
+
+end model
+
+begin actions
+  saveConcentrations("peak")
+
+  setParameter("LT_current","LT_low")
+  setConcentration("L(r~u,r~u)","LT_low")
+  simulate_nf({suffix=>"low",t_end=>600,n_steps=>240,seed=>1101,get_final_state=>0,print_functions=>1,param=>"-bscb -utl 5"})
+
+  resetConcentrations("peak")
+  setParameter("LT_current","LT_peak")
+  simulate_nf({suffix=>"peak",t_end=>600,n_steps=>240,seed=>1201,get_final_state=>0,print_functions=>1,param=>"-bscb -utl 5"})
+
+  resetConcentrations("peak")
+  setParameter("LT_current","LT_high")
+  setConcentration("L(r~u,r~u)","LT_high")
+  simulate_nf({suffix=>"high",t_end=>600,n_steps=>240,seed=>1301,get_final_state=>0,print_functions=>1,param=>"-bscb -utl 5"})
+
+  resetConcentrations("peak")
+  setParameter("LT_current","LT_peak")
+end actions

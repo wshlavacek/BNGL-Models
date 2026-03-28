@@ -1,0 +1,115 @@
+#@model_id: TODO_unique_id
+#@title: TODO_short_title
+#@description: TODO_1_to_3_sentences
+#@organism: TODO_human_or_mouse_or_other
+#@authors: TODO_name_list
+#@created: YYYY-MM-DD
+#@modified: YYYY-MM-DD
+#@bng_version: >=2.9.3
+#@units_convention: TODO_authoring_units_and_population_conversion_basis
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: X.Y
+#@source: handwritten
+#@reference: TODO_optional_DOI_or_PMID
+#@note: |
+#  TODO_optional_notes
+
+begin model
+
+begin parameters
+  # --- Required conversion constants (use when applicable) ---
+  NA     6.02214076e23  # 1/mol
+  V_ref  1e-12          # L
+  h_mem  1e-7           # m
+
+  # --- Optional SSA scaling (subvolume fraction) ---
+  f      1.0            # dimensionless
+
+  # --- Model parameters (each line MUST end with units comment) ---
+  # TODO_parameter_documentation_goes_above
+  k1     1.0            # TODO_units (or "dimensionless")
+  k2     1.0            # TODO_units (or "dimensionless")
+
+  # --- Reserved equilibrium constant prefixes (Ka_/Kd_/KD_) ---
+  # Ka_bind_XY  1e6      # 1/M
+  # Kd_bind_XY  1e-6     # M
+  # KD_bind_XY  1e-6     # M
+end parameters
+
+# --- Optional multi-compartment support (UNCOMMENT IF USED) ---
+# begin compartments
+#   # TODO_compartment_documentation_goes_above
+#   cyt   1e-12  # L
+#   nuc   5e-13  # L
+# end compartments
+
+begin molecule types
+  # NOTE: Molecule names should follow organism convention:
+  # - human: HGNC-style (e.g., EGFR)
+  # - mouse: MGI-style  (e.g., Egfr)
+  # Comments for molecule types go BELOW each BNGL line.
+  TODO_MOL(site~state)
+  # TODO: description / IDs / notes
+end molecule types
+
+begin seed species
+  # Each seed species amount MUST end with units comment.
+  # Use "# molecules" for counts; use "# dimensionless" only with justification above.
+  TODO_MOL(site~state)  0  # molecules
+end seed species
+
+begin observables
+  # Observable documentation goes ABOVE the observable line.
+  # Minimal requirement: at least two observables capturing primary abundance and key behavior.
+  # TODO: describe observable intent
+  Molecules  Obs_Tot_TODO   TODO_MOL()
+  # TODO: describe observable intent
+  Molecules  Obs_Key_TODO   TODO_MOL(site~state)
+end observables
+
+# --- Optional functions (UNCOMMENT IF USED) ---
+# begin functions
+#   # Function documentation goes ABOVE.
+#   fcn_example()  k1*Obs_Tot_TODO
+# end functions
+
+# --- Optional energy patterns (UNCOMMENT IF USED; REQUIRES compartments) ---
+# begin energy patterns
+#   # TODO: energy pattern documentation goes ABOVE.
+#   # NOTE: If this block is present, a compartments block MUST also be present.
+# end energy patterns
+
+begin reaction rules
+  # Rule documentation goes ABOVE each rule.
+  # Inline comments on rule lines should be avoided.
+  #
+  # NOTE: Binding/unbinding parameters MUST be single-site constants (§1.3.1).
+  #
+  # TODO: describe rule intent
+  # R_example:  TODO_MOL(site) + TODO_MOL(site) <-> TODO_MOL(site!1).TODO_MOL(site!1)  kon_XY, koff_XY
+end reaction rules
+
+end model
+
+begin actions
+  # Actions are optional but recommended. If present, they MUST be here and must follow suffix policy.
+  #
+  # If network generation is feasible, include generate_network and all feasible simulate modes.
+  # If network generation is not feasible, include only NFsim (nfr) simulate actions.
+
+  generate_network({overwrite=>1})
+
+  # --- ODE (run_network) ---
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>100,n_steps=>1000})
+
+  # --- SSA, generate-first (run_network) ---
+  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>100,n_steps=>1000})
+
+  # --- SSA with partial scaling (PSA), run_network ---
+  simulate({method=>"ssa",poplevel=>100,suffix=>"psa",t_start=>0,t_end=>100,n_steps=>1000})
+
+  # --- Network-free NFsim (rejection sampling) ---
+  simulate({method=>"nf",suffix=>"nfr",t_start=>0,t_end=>100,n_steps=>1000,complex=>1})
+
+end actions

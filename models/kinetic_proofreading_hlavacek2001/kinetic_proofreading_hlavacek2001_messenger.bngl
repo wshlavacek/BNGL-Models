@@ -1,0 +1,312 @@
+begin model
+
+#@title: |
+#  Kinetic proofreading with cytosolic messenger
+#  (Hlavacek et al., 2001)
+
+#@description: |
+#  Extension of the kinetic proofreading base model to include
+#  receptor-mediated activation of a cytosolic messenger. A
+#  terminally modified dimer (D5) acts as an enzyme: it binds
+#  inactive messenger X, forming a complex D5:X, which then
+#  yields active messenger X' and frees the dimer. Active
+#  messenger decays back to inactive form at rate mu.
+#
+#  The key result is that messenger activation can ESCAPE
+#  kinetic proofreading. When enough D5 dimers exist to
+#  saturate the messenger activation reaction, ligands with
+#  very different dissociation rates produce similar levels
+#  of X'. This explains experimental observations that MCP-1
+#  mRNA induction by FcepsilonRI is insensitive to ligand
+#  off-rate while other responses (Syk phosphorylation,
+#  degranulation, c-fos) obey kinetic proofreading.
+#
+#  The paper assumes that if a dimer dissociates while
+#  messenger is bound, the messenger returns to the cytosol
+#  without activation. BNGL cannot break two bonds in one
+#  rule, so this is approximated by a fast release rule
+#  (k_release = 1000/s) that clears messenger from any
+#  ligand whose modification counter has reset to zero.
+#
+#  With default parameters (kcat/mu = 100, XT = NR/30),
+#  messenger activation saturates at modest D5 levels,
+#  producing a broad plateau where X'/XT is insensitive
+#  to koff. See Fig. 5b and Eq. 18 in Hlavacek et al.
+#  (2002), and Fig. 5 in Hlavacek et al. (2001).
+
+#@keyword: |
+#  kinetic proofreading, escape from kinetic proofreading,
+#  receptor aggregation, signal transduction, cytosolic
+#  messenger, ligand discrimination, receptor modification,
+#  mass action, Michaelis-Menten, bivalent ligand,
+#  monovalent receptor, dimer, immunoreceptor,
+#  FcepsilonRI, MCP-1, STAT
+
+#@reference: |
+#  Hlavacek WS, Redondo A, Wofsy C, Goldstein B (2002).
+#  Kinetic proofreading in receptor-mediated transduction
+#  of cellular signals: receptor aggregation, partially
+#  activated receptors, and cytosolic messengers.
+#  Bull Math Biol 64:887-911.
+#  doi:10.1006/bulm.2002.0306
+#
+#  Hlavacek WS, Redondo A, Metzger H, Wofsy C,
+#  Goldstein B (2001). Kinetic proofreading models for
+#  cell signaling predict ways to escape kinetic
+#  proofreading. Proc Natl Acad Sci USA 98:7295-7300.
+#  doi:10.1073/pnas.121172298
+
+begin parameters
+
+  #@note: |
+  #  Parameters estimated for bispecific IgE interacting
+  #  with a bivalent antigen and FcepsilonRI on RBL-2H3
+  #  cells. See Table 1 in Hlavacek et al. (2002).
+  #  Bimolecular rate constants converted from
+  #  concentration-based to population-based using NA
+  #  and V_ref. Messenger parameters from the same table;
+  #  the messenger-dimer reaction is intracellular, with
+  #  kx_on derived from k+x*XT = 1.2/s.
+
+  # Avogadro constant
+  NA  6.02214076e23  # /mol
+
+  # Extracellular volume per cell
+  # 10^6 cells/ml => V_ref = 10^-9 L/cell
+  V_ref  1e-9  # L/cell
+
+  # Receptors per cell; see Erickson et al. (1987)
+  NR  300000  # molecules
+
+  # Ligand at 1 nM: NL = LT * NA * V_ref
+  NL  602  # molecules
+
+  # Single-site forward rate constant for ligand capture
+  # k_p1 = 1e7 /M/s; kon1 = k_p1 / (NA * V_ref)
+  kon1  1.661e-8  # /(molecule*s)
+
+  # Single-site forward rate constant for crosslinking
+  # k_p2*RT = 1 /s (surface); kon2 = 1/NR
+  kon2  3.333e-6  # /(molecule*s)
+
+  # Single-site dissociation rate constant (k_m1 = k_m2)
+  koff  0.1  # /s
+
+  # Modification rate constant; see Eq. 5-7
+  # in Hlavacek et al. (2002)
+  kp  0.4  # /s
+
+  # Messenger molecules per cell (XT = RT/30)
+  NX  10000  # molecules
+
+  # Forward rate constant for messenger binding to D5
+  # k+x*XT = 1.2/s; kx_on = 1.2/NX
+  kx_on  1.2e-4  # /(molecule*s)
+
+  # Reverse rate constant for messenger unbinding
+  kx_off  0.01  # /s
+
+  # Catalytic turnover for messenger activation
+  kcat  1.0  # /s
+
+  # Rate constant for messenger inactivation
+  mu  0.01  # /s
+
+  # Fast release rate: messenger is ejected from any
+  # ligand whose mod counter has reset to 0 after
+  # dimer dissociation. Approximates instantaneous
+  # release assumed in the paper.
+  k_release  1000.0  # /s
+
+end parameters
+
+begin molecule types
+  # Bivalent ligand with two identical receptor-binding
+  # sites, a modification counter (0-5), and a messenger
+  # docking site
+  L(r,r,mod~0~1~2~3~4~5,x)
+  # Monovalent receptor with one ligand-binding site
+  R(l)
+  # Cytosolic messenger with a dimer-docking site and
+  # an activation state (off = inactive, on = active)
+  X(d,state~off~on)
+end molecule types
+
+begin seed species
+  L(r,r,mod~0,x)     NL  # molecules
+  R(l)                NR  # molecules
+  X(d,state~off)      NX  # molecules
+end seed species
+
+begin observables
+  # Free ligand (both sites unbound)
+  Species    Obs_Free_L       L(r,r,mod~0,x)
+  # Free receptor
+  Species    Obs_Free_R       R(l)
+  # Total dimers (ligand with both sites bound)
+  Species    Obs_Tot_Dimers   L(r!+,r!+)
+  # Terminally modified dimers (all, +/- messenger)
+  Species    Obs_D5           L(r!+,r!+,mod~5)
+  # D5 free of messenger (catalytically available)
+  Species    Obs_D5_free      L(r!+,r!+,mod~5,x)
+  # D5 in complex with messenger
+  Species    Obs_D5_bound     L(r!+,r!+,mod~5,x!+)
+  # Inactive messenger (free cytosolic)
+  Molecules  Obs_X_off        X(d,state~off)
+  # Active messenger (free cytosolic)
+  Molecules  Obs_X_on         X(d,state~on)
+  # Messenger bound to dimer (in complex)
+  Molecules  Obs_X_complex    X(d!+,state~off)
+end observables
+
+begin functions
+  # Proofreading parameter alpha (Eq. 15 in
+  # Hlavacek et al., 2002)
+  alpha() = kp / (kp + 2 * koff)
+
+  # Fraction of dimers terminally modified
+  frac_term() = \
+    Obs_D5 / (Obs_Tot_Dimers + 1e-30)
+
+  # Fraction of messenger in active form
+  frac_X_on() = Obs_X_on / NX
+
+  # Fraction of receptors terminally modified
+  frac_R_term() = 2 * Obs_D5 / NR
+end functions
+
+begin reaction rules
+
+  # === Ligand-receptor binding ===
+
+  # Ligand capture: free ligand binds a free receptor.
+  # BioNetGen applies the factor of 2 for the two
+  # equivalent r sites on L automatically.
+  # See Fig. 1(a) in Hlavacek et al. (2002).
+  L(r,r,mod~0) + R(l) -> L(r!1,r,mod~0).R(l!1)  kon1
+
+  # Receptor crosslinking: singly-bound ligand engages
+  # a second free receptor, forming a dimer.
+  # See Fig. 1(a) in Hlavacek et al. (2002).
+  L(r!+,r,mod~0) + R(l) -> L(r!+,r!1,mod~0).R(l!1)  kon2
+
+  # === Dimer dissociation with modification reset ===
+
+  # Any L-R bond can break. The modification counter
+  # resets to 0 regardless of the current state. For
+  # dimers, each of 2 bonds breaks at rate koff
+  # (BioNetGen applies the factor of 2). Singly-bound
+  # ligand always has mod=0.
+  # See Eq. 1-7 in Hlavacek et al. (2002).
+  L(r!1,mod~0).R(l!1) -> L(r,mod~0) + R(l)  koff
+  L(r!1,mod~1).R(l!1) -> L(r,mod~0) + R(l)  koff
+  L(r!1,mod~2).R(l!1) -> L(r,mod~0) + R(l)  koff
+  L(r!1,mod~3).R(l!1) -> L(r,mod~0) + R(l)  koff
+  L(r!1,mod~4).R(l!1) -> L(r,mod~0) + R(l)  koff
+  L(r!1,mod~5).R(l!1) -> L(r,mod~0) + R(l)  koff
+
+  # === Sequential modification of dimers ===
+
+  # L(r!+,r!+) matches only dimers (both sites bound).
+  # Each step proceeds at rate kp.
+  # See Fig. 1(b) in Hlavacek et al. (2002).
+  L(r!+,r!+,mod~0) -> L(r!+,r!+,mod~1)  kp
+  L(r!+,r!+,mod~1) -> L(r!+,r!+,mod~2)  kp
+  L(r!+,r!+,mod~2) -> L(r!+,r!+,mod~3)  kp
+  L(r!+,r!+,mod~3) -> L(r!+,r!+,mod~4)  kp
+  L(r!+,r!+,mod~4) -> L(r!+,r!+,mod~5)  kp
+
+  # === Messenger activation (enzymatic) ===
+
+  # Inactive messenger binds to terminally modified
+  # dimer (D5). The dimer acts as enzyme, the messenger
+  # as substrate. See Fig. 1(c) in Hlavacek et al.
+  # (2002) and Fig. 5(a) in Hlavacek et al. (2001).
+  L(r!+,r!+,mod~5,x) + X(d,state~off) -> \
+    L(r!+,r!+,mod~5,x!1).X(d!1,state~off)  kx_on
+
+  # Messenger unbinds without activation (reverse)
+  L(x!1).X(d!1,state~off) -> \
+    L(x) + X(d,state~off)  kx_off
+
+  # Catalytic activation: messenger is activated and
+  # released from the dimer
+  L(x!1).X(d!1,state~off) -> \
+    L(x) + X(d,state~on)  kcat
+
+  # Active messenger decays to inactive form
+  X(state~on) -> X(state~off)  mu
+
+  # === Fast messenger release after dimer breakup ===
+
+  # If a dimer dissociates while messenger is bound,
+  # the paper assumes messenger immediately returns to
+  # the cytosol without activation. BNGL cannot break
+  # two bonds in one rule. Instead, dimer dissociation
+  # resets mod to 0 (via rules above), and this fast
+  # release rule clears any messenger still bound to a
+  # mod~0 ligand. k_release >> all other rates ensures
+  # the approximation is faithful.
+  L(mod~0,x!1).X(d!1) -> \
+    L(mod~0,x) + X(d,state~off)  k_release
+
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 19 species, 49 reactions
+
+  #@note: |
+  #  Network is small. ODE is preferred. SSA is feasible
+  #  but slow at NR=300000.
+
+  saveConcentrations()
+
+  # Time course: modification and messenger kinetics
+
+  #@protocol: |
+  #  Simulate from all-free initial conditions to steady
+  #  state (600 s). Observe the kinetics of receptor
+  #  modification (Obs_D5) and messenger activation
+  #  (Obs_X_on). With kcat/mu = 100 and XT = NR/30,
+  #  messenger activation saturates rapidly once D5
+  #  dimers form. At steady state, most messenger should
+  #  be in the active form (X'/XT near kcat/(kcat+mu)
+  #  ~ 0.99 if D5 >> Km).
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",\
+    t_start=>0,t_end=>600,n_steps=>300})
+
+#  resetConcentrations()
+#  simulate({method=>"ssa",suffix=>"ssa",\
+#    t_start=>0,t_end=>600,n_steps=>300})
+
+  # Escape from kinetic proofreading: koff scan
+
+  #@protocol: |
+  #  Scan koff from 0.001 to 1/s (log scale). Compare
+  #  the steady-state fraction of terminally modified
+  #  dimers (frac_term) against the fraction of active
+  #  messenger (frac_X_on). D5/D_total follows alpha^5
+  #  and drops sharply with koff (kinetic proofreading).
+  #  X'/XT remains high over a wide range of koff
+  #  because messenger activation saturates whenever
+  #  D5 > D*_J ~ (Km + XT/2)/(1 + kcat/mu). This
+  #  demonstrates escape from kinetic proofreading via
+  #  the messenger mechanism.
+  #
+  #  Compare qualitatively with Fig. 4(b) in Hlavacek
+  #  et al. (2002) (solid = X'/XT, dotted = 2*DN/XT)
+  #  and Fig. 5(b) in Hlavacek et al. (2001).
+
+  #@figure: Fig. 4(b) in Hlavacek et al. (2002)
+
+  resetConcentrations()
+  parameter_scan({method=>"ode",parameter=>"koff",\
+    par_min=>0.001,par_max=>1.0,n_scan_pts=>30,\
+    log_scale=>1,\
+    t_start=>0,t_end=>1000,n_steps=>100,\
+    suffix=>"scan_koff"})
+end actions

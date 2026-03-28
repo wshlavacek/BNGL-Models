@@ -1,0 +1,4 @@
+interface:
+  display_name: "NFsim"
+  short_description: "BNGL NFsim flags and validation"
+  default_prompt: "Use $nfsim to diagnose BNGL NFsim flag behavior or validate a model against theory."

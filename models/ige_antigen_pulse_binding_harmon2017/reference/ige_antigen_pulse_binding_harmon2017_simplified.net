@@ -1,0 +1,43 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA            6.02214e23  # Constant
+    2 ncells        20000  # Constant
+    3 V             100.0e-6/ncells  # ConstantExpression
+    4 mwtAg         22400  # Constant
+    5 koff          0.001264  # Constant
+    6 KD            7.435e-10  # Constant
+    7 kon           (koff/KD)/(NA*V)  # ConstantExpression
+    8 IgEtot        9838  # Constant
+    9 Agconc        10  # Constant
+   10 const         1  # Constant
+   11 Agtot         ((Agconc*1.0e-6)*(NA*V))/mwtAg  # ConstantExpression
+   12 kon_pulse     (kon*Agtot)*const  # ConstantExpression
+   13 excess_ratio  100  # Constant
+   14 use_excess    if(((Agtot/(IgEtot+0.01))>=excess_ratio),1,0)  # ConstantExpression
+   15 kon_pseudo    kon*Agtot  # ConstantExpression
+   16 fast          1e4*koff  # ConstantExpression
+   17 Aginit        Agtot*(1-use_excess)  # ConstantExpression
+   18 _rateLaw1     (kon*(1-use_excess))*const  # ConstantExpression
+   19 _rateLaw2     (kon_pseudo*use_excess)*const  # ConstantExpression
+   20 _rateLaw3     fast*(1-use_excess)  # ConstantExpression
+   21 _rateLaw4     fast*use_excess  # ConstantExpression
+end parameters
+begin species
+    1 Ag(site,tracked~free) Aginit
+    2 IgE(Fab) IgEtot
+    3 Ag(site!1,tracked~tmp).IgE(Fab!1) 0
+    4 Ag(site,tracked~tmp) 0
+end species
+begin reactions
+    1 1,2 3 _rateLaw1 #_R1
+    2 2 3 _rateLaw2 #_R2
+    3 3 2,4 koff #_R3
+    4 4 1 _rateLaw3 #_R4
+    5 4 0 _rateLaw4 #_R5
+end reactions
+begin groups
+    1 FreeIgE              2
+    2 BoundIgE             3
+    3 FreeAg               1
+    4 TmpAg                3,4
+end groups

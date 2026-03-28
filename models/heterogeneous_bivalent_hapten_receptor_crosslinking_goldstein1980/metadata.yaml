@@ -1,0 +1,45 @@
+# metadata.yaml — heterogeneous_bivalent_hapten_receptor_crosslinking_goldstein1980
+id: heterogeneous_bivalent_hapten_receptor_crosslinking_goldstein1980
+created: 2026-03-28
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, new_model, ai_assisted]
+  description: >
+    Built from the equilibrium theory in Goldstein and Wofsy (1980),
+    J Math Biol 10:347-366, extending the homogeneous cross-linking
+    model of Dembo and Goldstein (1978) to heterogeneous antibody
+    populations on the cell surface.
+
+files:
+  - name: heterogeneous_bivalent_hapten_receptor_crosslinking_goldstein1980.bngl
+    role: primary
+    description: >
+      Two-population heterogeneous antibody cross-linking by
+      symmetric bivalent hapten. NFsim with -bscb, no rings.
+      Excess-ligand approximation for high concentrations.
+      Parameter scan reproduces Fig. 5 (X_T = 500 curve).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_goldstein1980.ipynb
+    role: verification
+    description: >
+      Compares NFsim ensemble (10 reps) against Goldstein & Wofsy
+      (1980) Eqs. 13-14 for X_T = 500 (Fig. 5, bottom curve).
+  - name: verify_goldstein1980.png
+    role: figure
+  - name: reference/heterogeneous_bivalent_hapten_receptor_crosslinking_goldstein1980_scan.scan
+    role: reference
+    description: >
+      Single-rep equilibrium dose-response scan (18 points,
+      1e-12 to 1e-4 M).
+  - name: reference/heterogeneous_bivalent_hapten_receptor_crosslinking_goldstein1980_scan/
+    role: reference
+    description: >
+      Individual gdat and xml files for each scan point.

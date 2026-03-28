@@ -1,0 +1,204 @@
+begin model
+
+#@title: |
+#  Symmetric bivalent hapten-receptor cross-linking with
+#  ring closure (Dembo and Goldstein, 1978)
+
+#@description: |
+#  Equilibrium dose-response model for symmetric bivalent
+#  hapten binding to bivalent cell-surface antibody (IgE),
+#  forming linear chains and rings. Dembo and Goldstein
+#  (1978) derived an analytical equilibrium theory (Eq. 14)
+#  in which ring closure constants depend on chain length:
+#  J_i = 4*J_2/i^2 for i >= 2, with J_1 = 0.
+#
+#  There is no kinetic (rule-based) formulation for chain-
+#  length-dependent ring closure in BNGL. This file provides
+#  the chain-only kinetic model and uses parameter_scan to
+#  generate equilibrium dose-response curves (x_poly vs
+#  hapten concentration). The verification notebook solves
+#  Dembo's Eq. (14) analytically--including ring closure--
+#  and overlays the comparison.
+#
+#  The network is generated with max_stoich to truncate
+#  unbounded polymerization. Aggregates up to 10 receptors
+#  are included, which is accurate for KxRT <= 10 (Dembo
+#  Fig. 7 shows >70% of antibody is in aggregates of size
+#  <= 4 for k = 10).
+#
+#  The bimolecular crosslink rule generates only inter-
+#  molecular reactions in generate_network (no ring closure).
+#  This corresponds exactly to the J_1 = J_2 = 0 case of
+#  Dembo's analytical theory.
+
+#@keyword: |
+#  bivalent hapten, bivalent receptor, cross-linking,
+#  aggregation, ring closure, equilibrium, dose response,
+#  prozone effect, bell-shaped curve, parameter scan,
+#  mass action, ODE, IgE, basophil, histamine release
+
+#@reference: |
+#  Dembo M, Goldstein B (1978). Theory of equilibrium binding
+#  of symmetric bivalent haptens to cell surface antibody:
+#  application to histamine release from basophils. J Immunol
+#  121:345-353. doi:10.4049/jimmunol.121.1.345
+
+#@note: |
+#  Network truncation: max_stoich={R=>6} limits chains to
+#  6 receptors. For KxRT=5, the most populated aggregate
+#  has n* ~ 2 antibodies (Eq. D.4), so truncation at 6
+#  introduces negligible error.
+#
+#  Ring closure is NOT included in the BNGL rules. Chain-
+#  length-dependent ring closure (Eq. 3: J_i = 4*J_2/i^2)
+#  is handled analytically in the verification notebook
+#  via numerical solution of Dembo's Eq. (14).
+#
+#  Mapping to Dembo and Goldstein (1978) notation:
+#    H = 2*Ka (twice the single-site association constant)
+#    a = H*A (dimensionless hapten concentration)
+#    k = K*X_T (dimensionless, here KxRT)
+#    a_max = 1 + b/2 (b=0 here, so a_max = 1)
+#    x_poly = fraction of antibody in polymers of size >= 2
+#    w_1 = 1 - x_poly (fraction of antibody in monomers)
+
+begin parameters
+
+  # Physical constants
+  NA  6.02214076e23  # /mol
+
+  # Experimental conditions
+  V_cell  1e-9  # L/cell
+  R_per_cell  3e5  # molecules/cell
+
+  # Scanned parameter: total bivalent hapten per cell
+  LT_per_cell  3e6  # molecules/cell (default: near peak)
+
+  # Derived molecule counts
+  RT  R_per_cell  # molecules
+  LT  LT_per_cell  # molecules
+
+  # Single-site kinetic rate constants
+  kon  1e6  # /M/s
+  koff  0.01  # /s
+
+  # Dimensionless cross-linking propensity
+  # k = K*X_T in Dembo notation
+  KxRT  5  # dimensionless
+
+  # Ring closure constant (Dembo Eq. 3: J_i = 4*J2/i^2)
+  J2  0  # dimensionless (default 0 = no rings)
+
+  # ODE rate constants (concentration in molecules/cell)
+  kf  kon/(NA*V_cell)  # /molecule/s (hapten capture)
+  kxf  KxRT/RT*koff  # /molecule/s (inter-complex crosslink)
+
+  # Ring closure rates: J_n = 4*J2/n^2, jp_n = 2n*J_n*koff = 8*J2*koff/n
+  # Compensates for BNG reverse multiplicity of 2n*koff per ring.
+  # Bidirectional rules give equilibrium [ring]/[chain] = J_n.
+  jp2  8*J2*koff/2  # n=2: J_2 = J2
+  jp3  8*J2*koff/3  # n=3: J_3 = 4*J2/9
+  jp4  8*J2*koff/4  # n=4: J_4 = J2/4
+  jp5  8*J2*koff/5  # n=5: J_5 = 4*J2/25
+  jp6  8*J2*koff/6  # n=6: J_6 = J2/9
+
+end parameters
+
+begin molecule types
+  L(r,r)  # Bivalent hapten: two identical receptor-binding sites
+  R(l,l)  # Bivalent receptor (IgE): two identical hapten-binding sites
+end molecule types
+
+begin seed species
+  L(r,r)  LT
+  R(l,l)  RT
+end seed species
+
+begin observables
+  # Free hapten (both sites unbound)
+  Species    Obs_Free_L        L(r,r)
+  # Free receptor (both sites unbound) -- Dembo [1,0,0,0]
+  Species    Obs_Free_R        R(l,l)
+  # Monomeric receptor: one singly-bound hapten
+  Species    Obs_R_mono_10     R(l!1,l).L(r!1,r)
+  # Monomeric receptor: two singly-bound haptens
+  Species    Obs_R_mono_20     R(l!1,l!2).L(r!1,r).L(r!2,r)
+  # Total hapten-receptor bonds
+  Molecules  Obs_Bonds         L(r!1).R(l!1)
+  # Free receptor sites
+  Molecules  Obs_Free_R_sites  R(l)
+  # Doubly-bound haptens (cross-links)
+  Molecules  Obs_Crosslinks    L(r!+,r!+)
+end observables
+
+begin reaction rules
+
+  # Hapten capture: free hapten binds a receptor site
+  R_capture:   L(r,r) + R(l) -> L(r!1,r).R(l!1)         kf
+
+  # Cross-linking: tethered hapten arm binds DIFFERENT complex
+  # Bimolecular rule -> only intermolecular in generate_network
+  R_crosslink: L(r!+,r) + R(l) -> L(r!+,r!1).R(l!1)     kxf
+
+  # Bond dissociation: any hapten-receptor bond breaks
+  R_dissoc:    L(r!1).R(l!1) -> L(r) + R(l)              koff
+
+  # ================================================================
+  # Ring closure: [n,n,0,0] -> [n,n,0,1] (Dembo Eq. 2)
+  # ================================================================
+  # Chain-length-dependent: J_n = 4*J2/n^2 (Dembo Eq. 3).
+  # Each rule matches the [n,n,0,0] linear chain (free L.r
+  # at one end, free R.l at the other) and closes the ring.
+  # Ring opening is handled by R_dissoc (breaks any bond).
+
+  # n=2
+  R_ring2: L(r,r!1).R(l!1,l!2).L(r!2,r!3).R(l!3,l) <-> L(r!4,r!1).R(l!1,l!2).L(r!2,r!3).R(l!3,l!4)  jp2, koff
+
+  # n=3
+  R_ring3: L(r,r!1).R(l!1,l!2).L(r!2,r!3).R(l!3,l!4).L(r!4,r!5).R(l!5,l) <-> L(r!6,r!1).R(l!1,l!2).L(r!2,r!3).R(l!3,l!4).L(r!4,r!5).R(l!5,l!6)  jp3, koff
+
+  # n=4
+  R_ring4: L(r,r!1).R(l!1,l!2).L(r!2,r!3).R(l!3,l!4).L(r!4,r!5).R(l!5,l!6).L(r!6,r!7).R(l!7,l) <-> L(r!8,r!1).R(l!1,l!2).L(r!2,r!3).R(l!3,l!4).L(r!4,r!5).R(l!5,l!6).L(r!6,r!7).R(l!7,l!8)  jp4, koff
+
+  # n=5
+  R_ring5: L(r,r!1).R(l!1,l!2).L(r!2,r!3).R(l!3,l!4).L(r!4,r!5).R(l!5,l!6).L(r!6,r!7).R(l!7,l!8).L(r!8,r!9).R(l!9,l) <-> L(r!10,r!1).R(l!1,l!2).L(r!2,r!3).R(l!3,l!4).L(r!4,r!5).R(l!5,l!6).L(r!6,r!7).R(l!7,l!8).L(r!8,r!9).R(l!9,l!10)  jp5, koff
+
+  # n=6
+  R_ring6: L(r,r!1).R(l!1,l!2).L(r!2,r!3).R(l!3,l!4).L(r!4,r!5).R(l!5,l!6).L(r!6,r!7).R(l!7,l!8).L(r!8,r!9).R(l!9,l!10).L(r!10,r!11).R(l!11,l) <-> L(r!12,r!1).R(l!1,l!2).L(r!2,r!3).R(l!3,l!4).L(r!4,r!5).R(l!5,l!6).L(r!6,r!7).R(l!7,l!8).L(r!8,r!9).R(l!9,l!10).L(r!10,r!11).R(l!11,l!12)  jp6, koff
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1,max_stoich=>{R=>6}})
+
+  #@protocol: |
+  #  Scan bivalent hapten concentration over 6 decades (log
+  #  scale) around a_max = 1, simulating ODE to equilibrium
+  #  at each point. The equilibrium x_poly vs log(a) curve
+  #  is bell-shaped and symmetric about a_max (Dembo property
+  #  3, Eq. 21a).
+
+  # Scan 1: k = 5 (default KxRT)
+  parameter_scan({method=>"ode",parameter=>"LT_per_cell",\
+    par_min=>3e3,par_max=>3e9,n_scan_pts=>60,log_scale=>1,\
+    t_start=>0,t_end=>10000,n_steps=>100,\
+    suffix=>"scan_k5"})
+
+  # Scan 2: k = 10, J2 = 0 (chain-only, Dembo Fig. 3)
+  setParameter("KxRT",10)
+  parameter_scan({method=>"ode",parameter=>"LT_per_cell",\
+    par_min=>3e3,par_max=>3e9,n_scan_pts=>60,log_scale=>1,\
+    t_start=>0,t_end=>10000,n_steps=>100,\
+    suffix=>"scan_k10"})
+
+  # Scan 3: k = 10, J2 = 10 (with ring closure, Dembo Fig. 3)
+  setParameter("J2",10)
+  parameter_scan({method=>"ode",parameter=>"LT_per_cell",\
+    par_min=>3e3,par_max=>3e9,n_scan_pts=>60,log_scale=>1,\
+    t_start=>0,t_end=>10000,n_steps=>100,\
+    suffix=>"scan_k10_J2_10"})
+
+end actions

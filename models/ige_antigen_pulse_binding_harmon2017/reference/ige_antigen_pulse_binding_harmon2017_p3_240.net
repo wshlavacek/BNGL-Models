@@ -1,0 +1,181 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 X_tot__FREE__       6.13331088e+00  # Constant
+    2 k_Xoff__FREE__      1.91394890e-06  # Constant
+    3 k_Xon__FREE__       9.39816993e+04  # Constant
+    4 kase__FREE__        3.76143208e+00  # Constant
+    5 kdegX__FREE__       3.19130252e-04  # Constant
+    6 kdegran__FREE__     1.88893284e+05  # Constant
+    7 km_Ship1__FREE__    1.43154204e-03  # Constant
+    8 km_Syk__FREE__      2.87783197e-01  # Constant
+    9 km_x__FREE__        1.12185442e-01  # Constant
+   10 koff__FREE__        4.45671503e-03  # Constant
+   11 kp_Ship1__FREE__    1.10810534e+04  # Constant
+   12 kp_Syk__FREE__      2.65462642e+05  # Constant
+   13 kp_x__FREE__        7.81553987e+05  # Constant
+   14 kpten__FREE__       9.95093271e-03  # Constant
+   15 ksynth1__FREE__     1.84930114e-02  # Constant
+   16 pase__FREE__        1.60206452e-01  # Constant
+   17 f                   1  # Constant
+   18 NA                  6.02214076e23  # Constant
+   19 T                   60  # Constant
+   20 Vchannel            500e-9  # Constant
+   21 Nchannel            1000  # Constant
+   22 Vecf                f*(Vchannel/Nchannel)  # ConstantExpression
+   23 Vcyt                f*3e-12  # ConstantExpression
+   24 Ag_tot_0            0  # Constant
+   25 Ag_conc1            10e-9  # Constant
+   26 Ag_tot_1            Ag_conc1*(NA*Vecf)  # ConstantExpression
+   27 R_tot               f*3e5  # ConstantExpression
+   28 Syk_tot             f*3e5  # ConstantExpression
+   29 Ship1_tot           f*3e5  # ConstantExpression
+   30 X_tot               X_tot__FREE__*Ship1_tot  # ConstantExpression
+   31 H_tot               1e6  # Constant
+   32 kon                 (1e7*T)/(NA*Vecf)  # ConstantExpression
+   33 koff                koff__FREE__*T  # ConstantExpression
+   34 kase                kase__FREE__*T  # ConstantExpression
+   35 pase                pase__FREE__*T  # ConstantExpression
+   36 kp_Syk              (kp_Syk__FREE__*T)/(NA*Vcyt)  # ConstantExpression
+   37 km_Syk              km_Syk__FREE__*T  # ConstantExpression
+   38 kp_Ship1            (kp_Ship1__FREE__*T)/(NA*Vcyt)  # ConstantExpression
+   39 km_Ship1            km_Ship1__FREE__*T  # ConstantExpression
+   40 k_Xon               (k_Xon__FREE__*T)/(NA*Vcyt)  # ConstantExpression
+   41 k_Xoff              k_Xoff__FREE__*T  # ConstantExpression
+   42 kp_x                (kp_x__FREE__*T)/(NA*Vcyt)  # ConstantExpression
+   43 km_x                km_x__FREE__*T  # ConstantExpression
+   44 ksynth1             ksynth1__FREE__*T  # ConstantExpression
+   45 kdeg1               (1e7*T)/(NA*Vcyt)  # ConstantExpression
+   46 kpten               kpten__FREE__*T  # ConstantExpression
+   47 kdegran             (kdegran__FREE__*T)/(NA*Vcyt)  # ConstantExpression
+   48 kdegX               kdegX__FREE__*T  # ConstantExpression
+end parameters
+begin species
+    1 $Ag(DNP) Ag_tot_1
+    2 R(IgE,Yb~0,Yg~0) 2.999999997562e+05
+    3 Syk(tSH2) 2.999999999675e+05
+    4 Ship1(SH2,x) 2.909677714580e+05
+    5 X(s~off) 4.053926248023e+03
+    6 PIP3() 7.035683086382e-05
+    7 H(loc~in) 7.254556293864e+05
+    8 Ag(DNP!1).R(IgE!1,Yb~0,Yg~0) 2.476284832596e-24
+    9 H(loc~out) 0
+   10 Ag(DNP!1).R(IgE!1,Yb~P,Yg~P) 5.775589193280e-23
+   11 R(IgE,Yb~P,Yg~P) 2.145697184973e-06
+   12 Ag(DNP!1).R(IgE!1,Yb~P,Yg~P!2).Syk(tSH2!2) 8.000223720776e-24
+   13 Ag(DNP!1).R(IgE!1,Yb~P!2,Yg~P).Ship1(SH2!2,x) 1.383051366392e-11
+   14 X(s~on) 8.050337560185e+03
+   15 R(IgE,Yb~P,Yg~P!1).Syk(tSH2!1) 4.871284266935e-07
+   16 R(IgE,Yb~P!1,Yg~P).Ship1(SH2!1,x) 2.026295075871e-04
+   17 Ag(DNP!1).R(IgE!1,Yb~P!2,Yg~P!3).Ship1(SH2!2,x).Syk(tSH2!3) 2.118485683876e-12
+   18 Ship1(SH2,x!1).X(s~on!1) 9.032228301074e+03
+   19 Ag(DNP!1).R(IgE!1,Yb~P!2,Yg~P).Ship1(SH2!2,x!3).X(s~on!3) -1.383051366473e-11
+   20 R(IgE,Yb~P!1,Yg~P!2).Ship1(SH2!1,x).Syk(tSH2!2) 3.103856889535e-05
+   21 R(IgE,Yb~P!1,Yg~P).Ship1(SH2!1,x!2).X(s~on!2) 6.286155462233e-06
+   22 Ag(DNP!1).R(IgE!1,Yb~P!2,Yg~P!3).Ship1(SH2!2,x!4).Syk(tSH2!3).X(s~on!4) -2.118485684144e-12
+   23 R(IgE,Yb~P!1,Yg~P!2).Ship1(SH2!1,x!3).Syk(tSH2!2).X(s~on!3) 9.629065175434e-07
+end species
+begin reactions
+    1 1,2 8 kon #_R1
+    2 6 0 kpten #_R11
+    3 6,7 6,9 kdegran #_R14
+    4 8 1,2 koff #_reverse__R1
+    5 8 10 kase #_R2
+    6 10 1,11 koff #_reverse__R1
+    7 10 8 pase #_R3
+    8 3,10 12 kp_Syk #_R4
+    9 4,10 13 kp_Ship1 #_R5
+   10 5,10 10,14 k_Xon #_R6
+   11 1,11 10 kon #_R1
+   12 12 1,15 koff #_reverse__R1
+   13 13 1,16 koff #_reverse__R1
+   14 11 2 pase #_R3
+   15 3,11 15 kp_Syk #_R4
+   16 3,13 17 kp_Syk #_R4
+   17 12 3,10 km_Syk #_reverse__R4
+   18 4,11 16 kp_Ship1 #_R5
+   19 4,12 17 kp_Ship1 #_R5
+   20 13 4,10 km_Ship1 #_reverse__R5
+   21 5,11 11,14 k_Xon #_R6
+   22 5,12 12,14 k_Xon #_R6
+   23 5,13 13,14 k_Xon #_R6
+   24 14 5 k_Xoff #_R7
+   25 12 6,12 ksynth1 #_R8
+   26 4,14 18 kp_x #_R9
+   27 13,14 19 kp_x #_R9
+   28 14 0 kdegX #_R12
+   29 1,15 12 kon #_R1
+   30 1,16 13 kon #_R1
+   31 17 1,20 koff #_reverse__R1
+   32 19 1,21 koff #_reverse__R1
+   33 3,16 20 kp_Syk #_R4
+   34 3,19 22 kp_Syk #_R4
+   35 15 3,11 km_Syk #_reverse__R4
+   36 17 3,13 km_Syk #_reverse__R4
+   37 10,18 19 kp_Ship1 #_R5
+   38 11,18 21 kp_Ship1 #_R5
+   39 12,18 22 kp_Ship1 #_R5
+   40 4,15 20 kp_Ship1 #_R5
+   41 15,18 23 kp_Ship1 #_R5
+   42 16 4,11 km_Ship1 #_reverse__R5
+   43 17 4,12 km_Ship1 #_reverse__R5
+   44 19 10,18 km_Ship1 #_reverse__R5
+   45 5,15 14,15 k_Xon #_R6
+   46 5,16 14,16 k_Xon #_R6
+   47 5,17 14,17 k_Xon #_R6
+   48 5,19 14,19 k_Xon #_R6
+   49 15 6,15 ksynth1 #_R8
+   50 17 6,17 ksynth1 #_R8
+   51 14,16 21 kp_x #_R9
+   52 14,17 22 kp_x #_R9
+   53 18 4,14 km_x #_reverse__R9
+   54 19 13,14 km_x #_reverse__R9
+   55 6,19 19 kdeg1 #_R10
+   56 18 4 kdegX #_R13
+   57 19 13 kdegX #_R13
+   58 1,20 17 kon #_R1
+   59 1,21 19 kon #_R1
+   60 1,23 22 kon #_R1
+   61 22 1,23 koff #_reverse__R1
+   62 3,21 23 kp_Syk #_R4
+   63 20 3,16 km_Syk #_reverse__R4
+   64 22 3,19 km_Syk #_reverse__R4
+   65 23 3,21 km_Syk #_reverse__R4
+   66 20 4,15 km_Ship1 #_reverse__R5
+   67 21 11,18 km_Ship1 #_reverse__R5
+   68 22 12,18 km_Ship1 #_reverse__R5
+   69 23 15,18 km_Ship1 #_reverse__R5
+   70 5,20 14,20 k_Xon #_R6
+   71 5,21 14,21 k_Xon #_R6
+   72 5,22 14,22 k_Xon #_R6
+   73 5,23 14,23 k_Xon #_R6
+   74 20 6,20 ksynth1 #_R8
+   75 22 6,22 ksynth1 #_R8
+   76 23 6,23 ksynth1 #_R8
+   77 14,20 23 kp_x #_R9
+   78 21 14,16 km_x #_reverse__R9
+   79 22 14,17 km_x #_reverse__R9
+   80 23 14,20 km_x #_reverse__R9
+   81 6,21 21 kdeg1 #_R10
+   82 6,22 22 kdeg1 #_R10
+   83 6,23 23 kdeg1 #_R10
+   84 21 16 kdegX #_R13
+   85 22 17 kdegX #_R13
+   86 23 20 kdegX #_R13
+end reactions
+begin groups
+    1 Ag_total             1,8,10,12,13,17,19,22
+    2 Ag_free              1
+    3 R_bound              8,10,12,13,17,19,22
+    4 R_free               2,11,15,16,20,21,23
+    5 RP                   10,11,12,13,15,16,17,19,20,21,22,23
+    6 R0                   2,8
+    7 actSyk               12,15,17,20,22,23
+    8 actShip1             19,21,22,23
+    9 Ship1_total          4,13,16,17,18,19,20,21,22,23
+   10 PIP3_total           6
+   11 Xall                 5,14,18,19,21,22,23
+   12 X_on_free            14
+   13 X_on_free_or_bound   14,18,19,21,22,23
+   14 XShip1               18,19,21,22,23
+   15 degranulation        9
+end groups

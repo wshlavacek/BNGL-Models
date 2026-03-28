@@ -1,0 +1,152 @@
+begin model
+
+#@title: |
+#  IgE-antigen binding kinetics under pulsed stimulation
+#  (inspired by Harmon et al., 2017)
+
+#@description: |
+#  ODE model of monovalent antigen binding to cell-surface
+#  IgE-FcεRI on mast cells under a pulse/wash protocol with
+#  escalating antigen doses (10, 30, 100 ng/ml). Antigen is
+#  treated as a constant extracellular bath (pseudo-first-
+#  order capture); a "const" switch toggles binding on
+#  (pulse) and off (wash). This captures the receptor
+#  occupancy submodel of the full signaling model in
+#  Harmon et al. (2017), which additionally includes Syk,
+#  Ship1, PIP3, and degranulation dynamics.
+#
+#  An excess-ligand approximation is used: when antigen
+#  is in large excess over receptors (Agtot/IgEtot >= 100),
+#  free antigen molecules are not tracked explicitly.
+#  Instead, capture is pseudo-first-order and dissociated
+#  antigen is rapidly deleted. When antigen is limiting,
+#  molecules are tracked explicitly.
+
+#@keyword: |
+#  IgE, FcεRI, antigen binding, mast cell, pulse wash,
+#  receptor occupancy, pseudo-first-order, escalating dose,
+#  reversible binding, ODE
+
+#@reference: |
+#  Harmon B, Chylek LA, Liu Y, Mitra ED, Mahajan A,
+#  Saada EA, Schudel BR, Holowka DA, Baird BA, Wilson BS,
+#  Hlavacek WS, Singh AK (2017). Timescale separation of
+#  positive and negative signaling creates history-dependent
+#  responses to IgE receptor stimulation. Sci Rep 7:15586.
+#  doi:10.1038/s41598-017-15568-2
+
+begin parameters
+# Physical constants / geometry
+NA          6.02214e23
+ncells      20000
+V           100.0e-6/ncells      # L extracellular volume per cell
+mwtAg       22400                # g/mol
+
+# Binding kinetics
+koff        0.001264             # 1/s
+KD          7.435e-10            # M
+kon         (koff/KD)/(NA*V)     # /(molecule/cell)/s
+
+# Receptor abundance
+IgEtot      9838                 # molecules/cell
+
+# Pulse control
+Agconc      10                   # ng/ml; changed in the actions block
+const       1                    # 1 = ligand present, 0 = wash / no ligand
+Agtot       Agconc*1.0e-6*(NA*V)/mwtAg
+kon_pulse   kon*Agtot*const
+
+# --- Excess-ligand approximation ---
+excess_ratio  100
+use_excess    if(Agtot/(IgEtot+0.01)>=excess_ratio,1,0)
+kon_pseudo    kon*Agtot
+fast          1e4*koff
+
+# Initial free antigen: full count in explicit mode, 0 in excess mode
+Aginit        Agtot*(1-use_excess)
+end parameters
+
+begin molecule types
+Ag(site,tracked~free~tmp)
+IgE(Fab)
+end molecule types
+
+begin seed species
+Ag(site,tracked~free)  Aginit
+IgE(Fab)               IgEtot
+end seed species
+
+begin observables
+Molecules FreeIgE    IgE(Fab)
+Molecules BoundIgE   IgE(Fab!+)
+Molecules FreeAg     Ag(tracked~free)
+Molecules TmpAg      Ag(tracked~tmp)
+end observables
+
+begin reaction rules
+# --- Explicit capture (antigen-limiting regime) ---
+IgE(Fab) + Ag(site,tracked~free) -> IgE(Fab!1).Ag(site!1,tracked~tmp) \
+  kon*(1-use_excess)*const
+
+# --- Pseudo-first-order capture (excess-ligand regime) ---
+# Ligand is an implicit bath; capture creates a new Ag molecule.
+IgE(Fab) -> IgE(Fab!1).Ag(site!1,tracked~tmp) kon_pseudo*use_excess*const
+
+# --- Dissociation (same in both regimes) ---
+IgE(Fab!1).Ag(site!1) -> IgE(Fab) + Ag(site,tracked~tmp) koff
+
+# --- Bookkeeping for dissociated antigen ---
+# Explicit mode: recycle to free pool for rebinding.
+Ag(site,tracked~tmp) -> Ag(site,tracked~free) fast*(1-use_excess)
+
+# Excess mode: delete (bath maintains constant concentration).
+Ag(site,tracked~tmp) -> 0 fast*use_excess DeleteMolecules
+end reaction rules
+
+end model
+
+begin actions
+
+#@protocol: |
+#  Pulse/wash protocol with escalating antigen doses.
+#  Three pulses of 300 s (5 min) each at 10, 30, and
+#  100 ng/ml, separated by 300 s washes (const=0).
+#  A final 900 s wash completes the time course.
+#  Total simulation time: 2400 s.
+
+generate_network({overwrite=>1})
+
+# Pulse 1: 0-300 s at 10 ng/ml
+setParameter("Agconc",10)
+setParameter("const",1)
+simulate({method=>"ode",suffix=>"pulses",get_final_state=>1,\
+          t_start=>0,t_end=>300,n_steps=>300})
+
+# Wash 1: 300-600 s
+setParameter("const",0)
+simulate({method=>"ode",suffix=>"pulses",continue=>1,get_final_state=>1,\
+          t_start=>300,t_end=>600,n_steps=>300})
+
+# Pulse 2: 600-900 s at 30 ng/ml
+setParameter("Agconc",30)
+setParameter("const",1)
+simulate({method=>"ode",suffix=>"pulses",continue=>1,get_final_state=>1,\
+          t_start=>600,t_end=>900,n_steps=>300})
+
+# Wash 2: 900-1200 s
+setParameter("const",0)
+simulate({method=>"ode",suffix=>"pulses",continue=>1,get_final_state=>1,\
+          t_start=>900,t_end=>1200,n_steps=>300})
+
+# Pulse 3: 1200-1500 s at 100 ng/ml
+setParameter("Agconc",100)
+setParameter("const",1)
+simulate({method=>"ode",suffix=>"pulses",continue=>1,get_final_state=>1,\
+          t_start=>1200,t_end=>1500,n_steps=>300})
+
+# Final wash: 1500-2400 s
+setParameter("const",0)
+simulate({method=>"ode",suffix=>"pulses",continue=>1,get_final_state=>1,\
+          t_start=>1500,t_end=>2400,n_steps=>900})
+
+end actions

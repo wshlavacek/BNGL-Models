@@ -1,0 +1,69 @@
+# metadata.yaml — symmetric_bivalent_hapten_receptor_crosslinking_dembo1978
+id: symmetric_bivalent_hapten_receptor_crosslinking_dembo1978
+created: 2026-03-26
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, new_model, ai_assisted]
+  description: >
+    Built from the equilibrium theory in Dembo and Goldstein (1978),
+    J Immunol 121:345-353, and the kinetic theory in Perelson and
+    DeLisi (1980), Math Biosci 48:71-110. The BNGL models implement
+    bivalent hapten-bivalent receptor cross-linking with variants for
+    ring closure and monovalent hapten inhibition.
+
+files:
+  - name: symmetric_bivalent_hapten_receptor_crosslinking_dembo1978.bngl
+    role: primary
+    description: >
+      Basic bivalent hapten-bivalent receptor cross-linking without
+      ring formation (J1 = J2 = 0). Three rules: capture, cross-link,
+      dissociation. NFsim with -bscb flag.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: symmetric_bivalent_hapten_receptor_crosslinking_dembo1978_with_rings.bngl
+    role: variant
+    description: >
+      Adds reversible ring closure for cyclic dimers (size-2 rings)
+      following Dembo and Goldstein (1978) assumption (e) with
+      J2 = 100. Uses component states (u/c/g) and requires
+      -bscb -utl 5.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">2.9.3"
+  - name: symmetric_bivalent_hapten_receptor_crosslinking_dembo1978_monovalent_inhibitor.bngl
+    role: variant
+    description: >
+      Adds monovalent hapten competitor that binds receptor sites
+      but cannot cross-link, demonstrating inhibition of cross-linking
+      as in Dembo and Goldstein (1978) Fig. 6.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_dembo1978.ipynb
+    role: verification
+    description: >
+      Compares NFsim (no rings) against Perelson and DeLisi (1980)
+      kinetic ODEs and exact per-site equilibrium at three ligand doses.
+  - name: verify_dembo1978.png
+    role: figure
+  - name: verify_dembo1978_with_rings.ipynb
+    role: verification
+    description: >
+      Compares NFsim (with cyclic dimers, -bscb -utl 5) against
+      Dembo/Posner kinetic ODEs with ring closure at three ligand doses.
+  - name: verify_dembo1978_with_rings.png
+    role: figure
+  - name: verify_dembo1978_monovalent.ipynb
+    role: verification
+    description: >
+      Compares NFsim (with monovalent inhibitor) against extended
+      Perelson ODEs at three bivalent doses with fixed monovalent hapten.
+  - name: verify_dembo1978_monovalent.png
+    role: figure

@@ -1,0 +1,168 @@
+begin model
+
+#@title: |
+#  Genetic toggle switch with IPTG induction
+#  (Gardner et al., 2000)
+
+#@description: |
+#  Variant of the base Gardner toggle switch model extended with
+#  IPTG-dependent induction of the Lac repressor (u / R1). IPTG
+#  binds LacI cooperatively, reducing its effective repressor
+#  concentration and modifying Eq. 1b in Gardner et al. (2000):
+#    dv/dt = alpha_2/(1 + (u/(1 + [IPTG]/K)^eta)^gamma) - v
+#  where K is the IPTG-LacI dissociation constant and eta is the
+#  IPTG binding cooperativity (Box 1 and Fig. 5a caption in
+#  Gardner et al., 2000).
+#
+#  The core model is dimensionless (concentrations in units of
+#  K_d, time in units of 1/k_deg), but the IPTG binding
+#  subsystem uses molar concentrations because K was fitted to
+#  experimental IPTG titration data. ODE only — dimensionless
+#  variables are incompatible with stochastic simulation.
+#
+#  Approximate experimental data from Fig. 5a (pTAK117, red
+#  circles: normalized GFP vs [IPTG]) are embedded via tfun for
+#  direct comparison with model steady-state predictions. The
+#  pTAK117 switching curve shows a quasi-discontinuous jump from
+#  the low-GFP state to the high-GFP state at ~40 uM IPTG,
+#  consistent with the predicted bifurcation.
+
+#@keyword: |
+#  gene regulation, bistable, mutual inhibition, Hill kinetics,
+#  synthetic biology, Escherichia coli, toggle switch,
+#  dimensionless, IPTG induction
+
+#@reference: |
+#  Gardner TS, Cantor CR, Collins JJ (2000). Construction of a
+#  genetic toggle switch in Escherichia coli. Nature 403:339-342.
+#  doi:10.1038/35002131
+
+begin parameters
+
+  #@note: |
+  #  Core model parameters are dimensionless (see base model).
+  #  IPTG binding parameters (K, eta) are from the Fig. 5a
+  #  caption in Gardner et al. (2000). K is in molar because
+  #  it was fitted to experimental IPTG titration data; this
+  #  introduces a dimensional subsystem into an otherwise
+  #  dimensionless model.
+
+  # Max synthesis rate of u; see Eq. 1 in Gardner et al. (2000)
+  alpha_1  156.25  # dimensionless
+  # Max synthesis rate of v; see Eq. 1 in Gardner et al. (2000)
+  alpha_2  15.6    # dimensionless
+  # Hill coefficients for mutual repression
+  beta     2.5     # dimensionless
+  gamma    1.0     # dimensionless
+  # Normalized degradation rate
+  k_deg    1.0     # dimensionless
+
+  # IPTG-LacI dissociation constant; Fig. 5a caption
+  K        2.9618e-5  # M
+  # IPTG binding cooperativity; Fig. 5a caption
+  eta      2.0015     # dimensionless
+
+  # IPTG concentration (scanned parameter)
+  IPTG  0  # M
+
+end parameters
+
+begin molecule types
+  # Repressor 1 (u in Gardner et al., 2000; LacI)
+  R1()
+  # Repressor 2 (v in Gardner et al., 2000; cI-GFP)
+  R2()
+end molecule types
+
+begin seed species
+  R1()  0  # dimensionless
+  R2()  0  # dimensionless
+end seed species
+
+begin observables
+  # Total repressor levels (dimensionless, in units of K_d)
+  Molecules  Obs_Tot_R1  R1()
+  Molecules  Obs_Tot_R2  R2()
+end observables
+
+begin functions
+  # Hill-repressed synthesis of R1 (unchanged from base);
+  # see Eq. 1 in Gardner et al. (2000)
+  syn_R1() = alpha_1 / (1 + Obs_Tot_R2^beta)
+
+  # Hill-repressed synthesis of R2 with IPTG-dependent
+  # reduction of effective R1; see Box 1 and Fig. 5a caption
+  # in Gardner et al. (2000)
+  syn_R2() = alpha_2 / (1 + (Obs_Tot_R1 / (1 + IPTG/K)^eta)^gamma)
+
+  # Normalized v (0-1 scale) for comparison with
+  # experimental GFP data
+  norm_v() = Obs_Tot_R2 / alpha_2
+
+  # Experimental data: pTAK117 normalized GFP vs [IPTG]
+  # from Fig. 5a in Gardner et al. (2000). Approximate
+  # values digitized from the published figure (red
+  # circles, 13 data points).
+  exp_gfp_fig5a() = tfun(\
+    [0, 3e-6, 6e-6, 1e-5, 2e-5, 3e-5, 3.5e-5,\
+     4e-5, 4.5e-5, 5e-5, 1e-4, 5e-4, 1e-2],\
+    [0.03, 0.03, 0.02, 0.03, 0.04, 0.06, 0.10,\
+     0.42, 0.88, 0.93, 0.97, 1.00, 0.99],\
+    IPTG)
+end functions
+
+begin reaction rules
+  # Synthesis with Hill-type mutual repression
+  0 -> R1()  syn_R1()
+  0 -> R2()  syn_R2()
+
+  # First-order degradation (k_deg = 1 by nondimensionalization)
+  R1() -> 0  k_deg
+  R2() -> 0  k_deg
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 2 species, 4 reactions
+
+  #@note: |
+  #  Two protocols: (1) IPTG titration scan (active,
+  #  figure-linked), (2) simple relaxation at high IPTG
+  #  (commented out).
+
+  # IPTG titration scan
+
+  #@protocol: |
+  #  First, relax to the low-GFP steady state at IPTG = 0
+  #  (the high-u / low-v state). Then scan IPTG from 1e-7
+  #  to 1e-2 M with 100 points; each scan point starts from
+  #  the low-GFP steady state, mimicking the experimental
+  #  protocol in Fig. 5a of Gardner et al. (2000). Compare
+  #  norm_v (model) and exp_gfp_fig5a (data) in the scan
+  #  output.
+
+  #@figure: |
+  #  Theoretical curves in Fig. 5a in Gardner et al. (2000)
+
+  # Relax to low-GFP steady state at IPTG = 0
+  simulate({method=>"ode",t_start=>0,t_end=>50,n_steps=>1,\
+    suffix=>"init"})
+
+  # IPTG titration scan starting from low-GFP steady state
+  parameter_scan({method=>"ode",parameter=>"IPTG",\
+    par_min=>1e-7,par_max=>1e-2,n_scan_pts=>100,\
+    log_scale=>1,t_start=>0,t_end=>20,n_steps=>200,\
+    suffix=>"scan",print_functions=>1})
+
+  # Simple relaxation at high IPTG
+
+  #@protocol: |
+  #  Single ODE trajectory at [IPTG] = 1 mM, above the
+  #  bifurcation threshold, showing relaxation from the
+  #  origin to the v-dominant steady state.
+
+#  setParameter("IPTG",1e-3)
+#  simulate({method=>"ode",suffix=>"ode",t_start=>0,\
+#    t_end=>20,n_steps=>500})
+end actions

@@ -1,0 +1,31 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 alpha_1        156.25  # Constant
+    2 alpha_2        15.6  # Constant
+    3 beta           2.5  # Constant
+    4 gamma          1.0  # Constant
+    5 k_deg          1.0  # Constant
+    6 K              2.9618e-5  # Constant
+    7 eta            2.0015  # Constant
+    8 IPTG           3.19926713779738e-07  # Constant
+end parameters
+begin functions
+    1 syn_R1() alpha_1/(1+(Obs_Tot_R2^beta))
+    2 syn_R2() alpha_2/(1+((Obs_Tot_R1/((1+(IPTG/K))^eta))^gamma))
+    3 norm_v() Obs_Tot_R2/alpha_2
+    4 exp_gfp_fig5a() tfun([0,3e-6,6e-6,1e-5,2e-5,3e-5,3.5e-5,4e-5,4.5e-5,5e-5,1e-4,5e-4,1e-2],[0.03,0.03,0.02,0.03,0.04,0.06,0.10,0.42,0.88,0.93,0.97,1.00,0.99],IPTG)
+end functions
+begin species
+    1 R1() 1.557634076731e+02
+    2 R2() 9.951301956152e-02
+end species
+begin reactions
+    1 0 1 syn_R1 #_R1
+    2 0 2 syn_R2 #_R2
+    3 1 0 k_deg #_R3
+    4 2 0 k_deg #_R4
+end reactions
+begin groups
+    1 Obs_Tot_R1           1
+    2 Obs_Tot_R2           2
+end groups

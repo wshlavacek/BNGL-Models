@@ -1,0 +1,45 @@
+# metadata.yaml — kinetic_proofreading_hlavacek2001
+id: kinetic_proofreading_hlavacek2001
+created: 2026-03-20
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_ode, ai_assisted]
+  description: >
+    Built from reading of Hlavacek et al. (2001), PNAS 98:7295-7300
+    and Hlavacek et al. (2002), Bull Math Biol 64:887-911.
+
+files:
+  - name: kinetic_proofreading_hlavacek2001.bngl
+    role: primary
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: kinetic_proofreading_hlavacek2001_messenger.bngl
+    role: variant
+    description: Adds cytosolic messenger relay downstream of receptor modification
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_hlavacek2001.ipynb
+    role: verification
+  - name: verify_hlavacek2001.png
+    role: figure
+  # Reference simulation data (reference/ subdirectory)
+  - name: reference/kinetic_proofreading_hlavacek2001.net
+    role: reference
+  - name: reference/kinetic_proofreading_hlavacek2001_ode.gdat
+    role: reference
+  - name: reference/kinetic_proofreading_hlavacek2001_scan_koff.scan
+    role: reference
+  - name: reference/kinetic_proofreading_hlavacek2001_messenger.net
+    role: reference
+  - name: reference/kinetic_proofreading_hlavacek2001_messenger_ode.gdat
+    role: reference
+  - name: reference/kinetic_proofreading_hlavacek2001_messenger_scan_koff.scan
+    role: reference

@@ -1,0 +1,1039 @@
+# BNGL House Style Skill
+
+## 0. Purpose
+Define a consistent, enforceable house style for BioNetGen Language (BNGL) models, including:
+- File organization and formatting
+- Naming conventions
+- Annotation conventions (structured comments)
+- Minimal required observables
+- Antimony → BNGL conversion policy (SSA-first)
+- Acceptance criteria (lint rules)
+
+This document is the authoritative contract for BNGL output.
+
+---
+
+## 1. Scope and Assumptions
+
+### 1.1 Intended use
+This house style targets BNGL models intended to be:
+- **Pedagogical** (readable, well-annotated, concept-demonstrating), and
+- **Benchmarkable** (stable, reproducible, and runnable without excessive compute).
+
+**Practical compute expectation:** models SHOULD be designed to run typical simulations in **~1 minute or less** on a standard workstation configuration. This is guidance, not a hard compliance rule; models that exceed this SHOULD document why.
+
+**Target platform:** BioNetGen **2.9.3 or later** (models SHOULD also avoid relying on features that differ across minor versions unless documented).
+
+**Primary simulation workflow is action-driven.** Each model file SHOULD include a `begin actions` / `end actions` block after `end model` that enables as many of the following simulation modes as are feasible for that model:
+
+1. **Generate-first SSA:** `simulate({method=>"ssa", ...})` used with `run_network` after `generate_network(...)`.
+2. **Partial scaling SSA (PSA):** `simulate({method=>"ssa", poplevel=>100, ...})` used with `run_network` after `generate_network(...)` (include only if feasible).
+3. **Network-free simulation (NFsim):** `simulate({method=>"nf", ...})` executed via standalone NFsim (include only if feasible).
+4. **ODE integration:** `simulate({method=>"ode", ...})` used with `run_network` after `generate_network(...)`.
+
+**Action inclusion policy (MUST):**
+- If **network generation is feasible** for the model (i.e., the reaction network can be generated to completion at the intended parameterization), the actions section MUST include:
+  - one `generate_network(...)` action, and
+  - simulation actions for all **feasible** modes among: `ode`, `ssa`, `psa`, `nfr`, subject to feasibility rules below.
+- If **network generation is not feasible** (i.e., the model requires network-free simulation because the network is too large/unbounded), the actions section MUST include:
+  - **only** network-free simulation actions that are feasible (`nfr` if supported by the NFsim backend in use),
+  - and MUST NOT include generate-first SSA or ODE actions that depend on `run_network` + generated networks.
+
+**De-dimensionalized models (ODE-only):**
+If a model uses de-dimensionalized variables (i.e., variables scaled by a reference quantity such as `x = X / X_T`, yielding continuous fractions rather than molecule counts), the model is incompatible with stochastic simulation. SSA and NFsim require discrete integer populations — fractional concentrations cannot be interpreted as molecule counts without re-dimensionalizing the model. For such models:
+- The actions block MUST include only `method=>"ode"`.
+- Do NOT include commented-out SSA/NFsim stubs — they are not feasible, not just non-preferred.
+- The `#@description:` MUST note that the model is de-dimensionalized and ODE-only.
+- The population-conversion requirements in §1.3 (items 2-5: `NA`, volumes, `h_mem`, dimensional conversion functions) DO NOT APPLY. These parameters are meaningless in a dimensionless model and MUST NOT be included. All units comments MUST be `# dimensionless`.
+- The `#@keyword:` MUST include `dimensionless`.
+
+**Recognizing dimensionless models:** When converting from a source model (SBML, Antimony, or paper), check whether the model is already nondimensionalized. Indicators include: all parameters described as "dimensionless" or without physical units, concentrations normalized by a dissociation constant or carrying capacity, time normalized by a rate constant (often k_deg = 1 by construction), and compartment volume = 1 with no physical justification. If the source is dimensionless, keep it that way — do NOT add physical unit infrastructure (`NA`, `V_ref`, compartments) to a model that was not designed for it.
+
+**Feasibility rules for PSA and NFsim (REQUIRED):**
+- `psa` MUST be included **only if it runs successfully** under the intended BioNetGen/run_network version for the model.
+  - Models containing **zeroth-order creation reactions** (e.g., `0 -> X`) commonly cause PSA failure; if PSA fails, `psa` MUST NOT be included.
+- `nfr` MUST be included **only if it runs successfully** under the NFsim backend invoked by the intended BioNetGen version. Known NFsim limitations that preclude `nfr`:
+  - **Compartments:** If a `begin compartments` block is present, `nfr` MUST NOT be included (NFsim does not fully support compartments).
+  - **Time-dependent functions with inline data:** If the model uses lowercase `tfun` with inline tabulated data, `nfr` MUST NOT be included (NFsim does not support this feature).
+
+**Output suffix policy (MUST):**
+Every `simulate(...)` action that is present MUST specify a `suffix=>"<tag>"` identifying the simulation mode, using these reserved tags:
+- `ssa`  : generate-first SSA (`method=>"ssa"`)
+- `psa`  : SSA with partial scaling (`method=>"ssa", poplevel=>100`) (include only if feasible)
+- `ode`  : ODE solver (`method=>"ode"`)
+- `nfr`  : network-free NFsim (`method=>"nf"`) where `r` denotes rejection sampling in NFsim (include only if feasible)
+
+No other tags may be used unless this skill is updated.
+
+**Preferred simulation method policy (REQUIRED):**
+The actions block includes simulate commands for all feasible methods, but only the **preferred method** is uncommented. All other simulate commands (and their preceding `resetConcentrations()` calls) are commented out. This keeps the file runnable with a single click while preserving the full benchmark suite for easy activation.
+
+Choosing the preferred method:
+- **New models built from scratch**: Ask the user which method is preferred. If no guidance is given, default to `ode`.
+- **Models converted or adapted from existing BNGL files**: The preferred method is whichever method was already present (or uncommented) in the original file.
+
+Example actions block with `ode` as preferred:
+```
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>100,n_steps=>200})
+
+#  resetConcentrations()
+#  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>100,n_steps=>200})
+end actions
+```
+
+**Initial-state preservation policy (for house style models):**
+When multiple `simulate(...)` actions are uncommented (e.g., for benchmarking), each simulation MUST start from the same initial state. Without explicit state management, BioNetGen carries forward the final state of one simulation as the initial state of the next. To prevent this:
+1. After `generate_network(...)`, call `saveConcentrations()` to snapshot the initial state.
+2. Before **every** `simulate(...)` call (including the first), call `resetConcentrations()` to restore the saved snapshot.
+
+**Exception — sequential/stateful action chains:** Some models intentionally chain simulations where state carries forward between stages (e.g., a burn-in phase followed by a measurement phase, or parameter perturbations between runs). If an existing model's actions block uses serial execution without state resets, this is deliberate — do NOT inject `saveConcentrations`/`resetConcentrations` into such models.
+
+**SSA scaling convention (REQUIRED):**
+When a model considers a subvolume of a larger reference volume, it MUST define a **subvolume scaling factor** parameter named exactly `f` (0 < f ≤ 1) representing the fraction of the reference volume being simulated. The name `f` is reserved for this purpose (see §4.4.1) and MUST NOT be used for other meanings.
+
+When `f` is present:
+- initial molecule counts MUST be scaled by `f`,
+- and any interpretation of concentrations/volumes MUST be documented in header metadata.
+
+**Normalization requirement:** If a source model uses a different name for the subvolume fraction (e.g., `fraction`, `frac`, `vol_frac`, `scale`), it MUST be renamed to `f` during conversion to house style.
+
+### 1.2 Supported language features
+This skill targets BioNetGen **2.9.3 or later** BNGL syntax.
+
+In-scope features (MUST be supported by house style and tooling):
+- `begin parameters`, `begin molecule types`, `begin seed species`, `begin observables`, `begin reaction rules`
+  - Note: `begin species` is also accepted by BioNetGen/PyBioNetGen, but `begin seed species` is preferred for clarity and is the standard BNGL nomenclature.
+- Reversible and irreversible rules (`<->`, `->`)
+- Structured molecules with components, bonds, and state labels (`()`, `!`, `.`, `~`)
+- **Strict molecule typing** via `begin molecule types` (REQUIRED; see §1.2.3)
+- **Functions** (`begin functions`), including both global and local functional rate laws where supported
+- **Compartments** (`begin compartments`) when the model includes multiple compartments (REQUIRED; see §1.2.2)
+- **Constant species** (`$` prefix in seed species), for boundary conditions where a species concentration is held fixed during simulation
+- **Energy patterns** (allowed), with the additional requirement in §1.2.4
+Out-of-scope for v0.1 of this skill (MUST NOT be used unless this skill is updated):
+- **Population maps** (`begin population maps`) — hybrid particle/population simulation feature. Not needed for our models.
+- **PLA method** (`simulate_pla`) — partitioned leaping algorithm. Not supported by house style.
+- A dedicated “events” language construct (e.g., an `events` block). BioNetGen uses “events” in the SSA sense (reaction events), but BNGL is not treated here as having an SBML-style scheduled-events facility.
+
+#### 1.2.1 Actions support
+Models MAY include actions after `end model`. Actions may appear either bare (directly after `end model`) or wrapped in `begin actions` / `end actions`. Both forms are valid and supported by PyBioNetGen's parser.
+
+BioNetGen supports multiple action syntaxes:
+- Generic: `simulate({method=>"ssa", t_end=>100, n_steps=>50})`
+- Specific: `simulate_ode(...)`, `simulate_nf(...)`, `simulate_ssa(...)`
+- Network: `generate_network(...)` and `run_network(...)` (distinct operations)
+- Configuration: `setOption(...)`, `setModelName(...)`, `setParameter(...)`, `setConcentration(...)`
+
+Action usage is governed by the feasibility policy in §1.1 (generate-first vs network-free).
+
+#### 1.2.1a Before-model actions
+The following actions are recognized by PyBioNetGen as valid **before** `begin model` (or at the top of the file if `begin model` is omitted): `setOption`, `setModelName`, `substanceUnits`, `version`. All other actions MUST appear after `end model`.
+
+#### 1.2.2 Compartments policy
+- If a model **natively defines explicit compartments** (in the source formulation), the BNGL output MUST include a `begin compartments` block with all compartments defined explicitly.
+- If a source model handles multiple compartments **implicitly** (e.g., through rate expressions or parameter scaling without declaring compartment structure), the BNGL output MUST preserve that implicit treatment. Do NOT impose a `begin compartments` block on a model that was not designed for one — BioNetGen applies volume scaling to reaction rates in compartmentalized models, which would change the dynamics.
+- If a model includes **exactly one compartment** (explicit or implicit), the model MAY omit the `begin compartments` block, but it MUST still provide a reference volume for unit conversion (see §1.3) via `V_ref`.
+
+#### 1.2.3 Typing policy (strict)
+- All models MUST include `begin molecule types`.
+- All molecules in `seed species`, `reaction rules`, and `observables` MUST conform to declared molecule types (components and allowed state labels).
+
+#### 1.2.4 Energy patterns requirement (compartments)
+If energy patterns are used, the model MUST:
+- include explicit compartments (per §1.2.2), and
+- document the intent and thermodynamic interpretation in header metadata (see §6).
+
+#### 1.2.5 Functional rate law semantics (CRITICAL)
+BioNetGen treats rate laws identically regardless of whether they are parameters or functions: **the rate law is always a rate constant, and BioNetGen multiplies by reactant concentrations automatically.** This applies in the generated `.net` file and in both ODE and SSA simulation modes.
+
+Concretely:
+- `A() -> 0  k` (parameter): reaction rate = `k * [A]`
+- `A() -> 0  f()` (function): reaction rate = `f() * [A]`
+- `0 -> A()  f()` (no reactant): reaction rate = `f()`
+- `A() + B() -> C()  f()` (bimolecular): reaction rate = `f() * [A] * [B]`
+
+**Common error when decomposing ODEs into BNGL rules:**
+When converting an ODE term like `-β·z·L / (K_m + L)` into a degradation rule `L() -> 0  metab_L()`, the function `metab_L()` must NOT include `[L]` in the numerator — BNG supplies the `[L]` factor automatically. The correct function is:
+```
+  metab_L() = beta * Obs_Tot_Z / (K_m_l + Obs_Tot_L)
+```
+NOT:
+```
+  metab_L() = beta * Obs_Tot_Z * Obs_Tot_L / (K_m_l + Obs_Tot_L)  # WRONG — double-counts [L]
+```
+
+Note that `[L]` MAY still appear in the function's *denominator* (e.g., as part of a Michaelis-Menten `K_m + L` term) — only the numerator factor that corresponds to the reactant stoichiometry is supplied by BNG.
+
+For creation rules (`0 -> X()`), no reactant multiplication occurs, so the function gives the total reaction rate directly. If the ODE term is `+ν·β·z·L / (K_m + L)`, the function for `0 -> A()  prod_A()` should include all variables:
+```
+  prod_A() = nu * beta * Obs_Tot_Z * Obs_Tot_L / (K_m_l + Obs_Tot_L)
+```
+
+### 1.3 Units convention (required) and population-based conversion
+BNGL does not enforce units. This house style allows parameters to be written in any convenient unit system, but requires:
+
+1) **Units MUST be declared explicitly** in comments for each parameter (inline), e.g.
+   - `koff 1 # /s`
+   - `KD 1e-9 # M`
+   Use `# dimensionless` if unitless.
+
+   **Reciprocal unit notation (REQUIRED):** Omit the leading `1` in reciprocal units: write `/s` not `1/s`, `/M/s` not `1/M/s`, `/mol` not `1/mol`. The leading `1` is implicit and adds noise.
+
+2) **Models MUST be convertible to a population-based unit system** suitable for SSA/NFsim runs. To enable conversion, models MUST define:
+- `NA  6.02214076e23  # molecules/mol` (Avogadro constant; exact), and
+- at least one volume:
+  - If multiple compartments: every compartment MUST have a volume specified in the `begin compartments` block.
+  - If only one compartment and the compartments block is omitted: the model MUST define `V_ref` and document its meaning. Volume units MUST indicate the reactor context (e.g., `# L/cell`).
+
+3) **Surface reaction convention (if surface processes are modeled):**
+If surface reactions or membrane-localized species are present, the model MUST define `h_mem` representing the effective thin layer adjacent to the surface used to map area-based densities to an effective volume for population conversion.
+
+4) **Simulation intent MUST be declared:**
+Each model MUST declare in header metadata whether the primary interpretation is:
+- population-based (molecule counts), or
+- concentration-based with explicit conversion to populations via `NA` and volumes.
+
+5) **Dimensional conversion functions (REQUIRED when converting to population-based):**
+When a model is converted from concentration-based (dimensional) variables to population-based (dimensionless) variables, the `begin functions` block MUST include a conversion function for every observable and every active function whose value appears in output files (`.gdat`, `.scan`) and whose units changed during conversion. These conversion functions MUST be **commented out** by default to keep output files clean, but present and ready to uncomment when dimensional output is needed.
+
+Conversion formulas:
+- Volumetric species: `X_conc() = Obs_Tot_X / (NA * V)  # M`
+- Surface species: `X_density() = Obs_Tot_X / area  # molecules/um^2` (or appropriate area unit)
+
+Placement: dimensional conversion functions go at the end of the `begin functions` block, separated from active functions by a comment header.
+
+Example:
+```
+begin functions
+  # Active rate law functions
+  syn_R1() = alpha_1 / (1 + (Obs_Tot_R2)^n_2)
+  syn_R2() = alpha_2 / (1 + (Obs_Tot_R1)^n_1)
+
+  # Dimensional conversions (uncomment for concentration output)
+# R1_conc() = Obs_Tot_R1 / (NA * V_cell)  # M
+# R2_conc() = Obs_Tot_R2 / (NA * V_cell)  # M
+end functions
+```
+
+#### 1.3.1 Single-site parameter semantics (REQUIRED; strict)
+All kinetic and equilibrium constants for binding/unbinding MUST be specified as **single-site** constants: the value that would apply if only one binding site (one reactive site pair) were present.
+
+BioNetGen applies statistical/combinatoric factors implied by patterns automatically. Therefore:
+- Parameters MUST NOT be “pre-corrected” for multiplicity, symmetry, degeneracy, valency, or the number of available sites.
+- Parameters MUST NOT be described as “effective”, “apparent”, “multivalent”, “bivalent”, “avidity-corrected”, or similar. If such effects are intended, they MUST be represented explicitly in the model structure/rules, not baked into constants.
+
+Equilibrium definitions (REQUIRED):
+- Association constant: `K_a = k_on / k_off`
+- Dissociation constant: `K_d = k_off / k_on`
+
+Equilibrium-constant naming policy (RESERVED PREFIXES):
+- Names beginning with `Ka_`, `Kd_`, or `KD_` are reserved for equilibrium constants only.
+- Any `Ka_*`, `Kd_*`, or `KD_*` parameter MUST be used to define kinetic rates consistently with the equations above (typically via `begin functions`), and MUST use single-site semantics.
+
+---
+
+## 2. File Layout (Canonical Block Order)
+All models MUST follow this exact section order. Blocks that are not used MUST NOT be included, except where explicitly required by dependencies.
+
+Canonical order inside the model (REQUIRED when present):
+1. `begin model`
+2. Header metadata block (structured comments)
+3. `begin parameters` / `end parameters`                         (REQUIRED)
+4. `begin compartments` / `end compartments`                     (OPTIONAL; REQUIRED if multi-compartment or energy patterns used)
+5. `begin molecule types` / `end molecule types`                 (REQUIRED)
+6. `begin seed species` / `end seed species`                     (REQUIRED; `begin species` is also accepted but `seed species` is preferred)
+7. `begin observables` / `end observables`                       (REQUIRED)
+8. `begin functions` / `end functions`                           (OPTIONAL)
+9. `begin energy patterns` / `end energy patterns`               (OPTIONAL; REQUIRES compartments)
+10. `begin reaction rules` / `end reaction rules`                (REQUIRED)
+11. `end model`
+
+Canonical order outside the model (OPTIONAL but recommended when present):
+12. Actions (bare or wrapped in `begin actions` / `end actions`) (outside the model)
+
+This block order matches PyBioNetGen's canonical output: parameters → compartments → molecule_types → species → observables → functions → energy_patterns → rules → actions.
+
+Block inclusion rules (REQUIRED):
+- `parameters`, `molecule types`, `seed species`, `observables`, and `reaction rules` blocks MUST be present in every model file (even if empty).
+- `compartments`, `functions`, `energy patterns`, and `actions` blocks MUST be included only if used, subject to dependency rules below.
+- Empty blocks are allowed; if a block is included, it MAY be empty but MUST still appear with begin/end delimiters.
+
+Dependency rules (REQUIRED):
+- If the model has **multiple compartments**, a `compartments` block MUST be present and must define all compartments explicitly.
+- If an `energy patterns` block is present, a `compartments` block MUST also be present (even if the model has only one compartment).
+
+Actions rules (REQUIRED when actions are present):
+- All runnable actions (`generate_network`, `simulate`, `run_network`, and related action directives) MUST appear only after `end model`.
+- Both bare actions and `begin actions` / `end actions` wrappers are valid BNGL (PyBioNetGen's parser handles either). However, **house style REQUIRES** wrapping actions in `begin actions` / `end actions` for consistency and readability.
+- Simulation actions MUST follow feasibility and suffix policies in §1.1.
+- **Network size annotation (REQUIRED):** When a `generate_network(...)` action is present, it MUST have a same-line comment reporting the network size: the number of species and the number of unidirectional reactions. These values are obtained by running `generate_network` and inspecting the output. Format: `# N species, M reactions`
+
+Example:
+```
+begin actions
+  generate_network({overwrite=>1})  # 4 species, 6 reactions
+  saveConcentrations()
+```
+
+**Figure linkage (RECOMMENDED):** When simulation actions are designed to reproduce or approximate a figure from a source paper, the protocol SHOULD be annotated with `#@figure:` using full academic citation form (see §3.2.1 and §3.3.8 for placement rules). Examples:
+- `#@figure: Fig. 2a in Gardner et al. (2000)`
+- `#@figure: Fig. 3 in Savageau (1987), Fig. 1 in Hlavacek and Faeder (1998)`
+
+**Verification notebook (REQUIRED when `#@figure:` is present):** Every model folder that contains a `.bngl` file with one or more `#@figure:` tags MUST include a Jupyter notebook (`.ipynb`) that independently verifies the figure claims. The notebook MUST:
+1. Run the `.bngl` model via `bionetgen run`.
+2. Implement the paper's equations independently in Python/SciPy.
+3. Compare the BNG output against the independent solution, reporting max relative errors.
+4. Produce overlay plots showing both solutions (and experimental data if available).
+5. Save the plot as a `.png` in the same folder.
+
+**Overlay plot style (REQUIRED):** When two solutions overlap nearly perfectly, both curves MUST remain visually distinguishable. Use the following convention:
+- **BNG output:** solid lines (`lw=1.5`).
+- **Independent solution:** open (unfilled) markers subsampled every ~15th time point (`"o", mfc="none", mec=<color>, ms=5–6`). Use different marker shapes (`"o"`, `"s"`, `"^"`) to distinguish multiple independent traces in the same panel.
+- **Figure subtitle or legend** MUST state the convention, e.g. "Lines = BNG, open markers = independent SciPy ODE".
+
+This ensures that perfect agreement is immediately visible as markers sitting exactly on lines, rather than one curve hiding the other.
+
+The notebook is the proof that the `#@figure:` claim is valid. Naming convention: `verify_<author><year>.ipynb` (e.g., `verify_gardner2000.ipynb`). If a single notebook covers multiple figures or multiple `.bngl` files in the same folder, a general name is acceptable. The saved `.png` MUST use the same stem (e.g., `verify_gardner2000.png`).
+
+**Behavioral demonstration actions (RECOMMENDED):** For pedagogical models, the actions block SHOULD be designed to demonstrate the model's key dynamical features, not just run a default simulation. Examples:
+- A bistable model SHOULD include actions that demonstrate switching between steady states (e.g., transient parameter perturbation via `setParameter`).
+- An oscillatory model SHOULD simulate long enough to show multiple complete cycles.
+- A model with interesting parameter sensitivity SHOULD include a `parameter_scan` action exploring the relevant parameter range.
+
+Sequential action chains that carry forward state (e.g., simulate → setParameter → simulate with `continue=>1`) are the standard pattern for demonstrating dynamical features. These chains are exempt from the `saveConcentrations`/`resetConcentrations` policy (see §1.1 exception for sequential/stateful action chains).
+
+**`parameter_scan` state inheritance (CRITICAL):** `parameter_scan` inherits the current species concentrations as its starting state — it internally saves that state and resets to it for each scan point. When `parameter_scan` follows a sequential action chain (e.g., a bistability demo that leaves the system in a non-default state), the scan starts from that post-chain state, NOT from the seed species. This is often intentional (e.g., scanning from the v-dominant state to find the lower bifurcation boundary), but must be understood and documented. When verifying scan output independently, use the correct initial condition — starting from the origin when the scan starts from an alternate steady state will produce wildly different results.
+
+Indentation rule (REQUIRED):
+- All content lines inside any `begin ...` / `end ...` block MUST be indented by **2 spaces**.
+- The `begin <block>` and `end <block>` lines themselves MUST NOT be indented.
+
+---
+
+## 3. Formatting Rules
+
+### 3.1 Indentation, whitespace, and file encoding
+- Files MUST be UTF-8 encoded.
+- Content lines inside any `begin ...` / `end ...` block MUST be indented by **2 spaces**.
+- The `begin <block>` and `end <block>` lines themselves MUST NOT be indented.
+- Tabs MUST NOT be used.
+- **Line continuations**: A backslash `\` at the end of a line continues the statement to the next line. This is supported by BioNetGen and PyBioNetGen.
+- **Maximum line length of 100 characters** MUST be respected. Use multi-line form (`|` with continuation lines) for structured comments, and line continuations (`\`) for long action lines.
+- Blank lines are allowed within blocks, but:
+  - more than one consecutive blank line SHOULD NOT be used, and
+  - there MUST NOT be a blank line between an entity-annotation comment and the line it annotates (see §3.4).
+- **Comment indentation (REQUIRED):**
+  - **Active comments** (free comments and `#@` tags) inside a `begin ...` / `end ...` block follow the same 2-space indentation as content lines: `  # comment text` or `  #@tag: value`.
+  - **Free comment wrapping:** When a free comment spans multiple lines, all lines use the same indentation — `  #` followed by a space. Do NOT add extra indentation on continuation lines:
+    ```
+      # Hill-repressed synthesis rates (dimensionless
+      # propensities); see Eq. 1 in Gardner et al. (2000).
+    ```
+  - **Structured comment continuation** (`#@` multi-line values) uses `#  ` (hash + 2 spaces) for continuation lines, as specified in §3.2.3.
+  - **Commented-out code** (inactive actions, simulation stubs) uses `#` at column 0 followed by the original indentation. This keeps the visual indentation of the code while clearly distinguishing inactive code from active comments:
+    ```
+      # Bifurcation boundary scan
+    #  parameter_scan({method=>"ode",...})
+    ```
+    Here `# Bifurcation boundary scan` is an active comment (indented), while `#  parameter_scan(...)` is commented-out code (column 0).
+
+### 3.2 Comment types (YAML-like convention)
+BNGL comments start with `#`. This house style defines two comment classes:
+
+1) **Structured comments (machine-parseable)** use the prefix `#@` and MUST follow:
+- `#@key: value` (colon REQUIRED; `=` is forbidden)
+
+**Collapsibility design principle:** Structured `#@` comments are designed to be machine-parseable with clear boundaries: a `#@key:` line starts a section; a blank line or the next `#@` tag ends it. Editors and tools SHOULD be able to collapse `#@` sections (showing only the tag name), free-comment blocks (above entities), and entire protocols (to the protocol header line). The blank-line spacing rules in §6.1.1 and §3.3.8 ensure that section boundaries are unambiguous.
+- keys MUST be lowercase with underscores
+
+2) **Free comments (human-only)** use `#` (without `@`) and may contain any text.
+
+#### 3.2.1 General-purpose `#@note:` tag
+`#@note:` is a general-purpose structured comment tag for extended commentary that does not fit a dedicated tag (`#@description:`, `#@protocol:`, `#@figure:`, etc.). It can appear anywhere a `#@` tag is valid: in the header metadata block, inside any `begin`/`end` block, or in the actions block. Same spacing rules as other `#@` tags (blank line above and below). Single-line or multi-line (`|`) form. Content is freeform. Tooling treats it as collapsible.
+
+Use `#@note:` when:
+- A parameter group, reaction rule, or observable needs explanation that goes beyond a one-line free comment but should be collapsible
+- Conversion decisions, assumptions, or caveats need to be documented in-place
+- Any extended commentary that a reader might want to skip on first scan but find on demand
+
+Examples:
+```
+  #@note: |
+  #  The Hill coefficients beta and gamma correspond to the
+  #  cooperativity of repressor binding at each promoter. In the
+  #  original experiments, beta > 1 was achieved using the LacI
+  #  repressor with an engineered operator, while gamma ~ 1
+  #  reflects non-cooperative TetR binding.
+```
+
+#### 3.2.2 In-comment citation style (REQUIRED)
+When a comment references content from a source paper (equations, figures, tables, sections), it MUST use the standard cite-by-name form with the first author's full last name:
+- **Single author:** `Gardner (2000)`
+- **Two authors:** `Gardner and Collins (2000)`
+- **Three or more authors:** `Gardner et al. (2000)`
+
+Never use bare references like "the paper", "paper Eq. 1", or "Eq. 1" alone — these are ambiguous when a model has multiple references.
+
+Examples:
+- `# Max synthesis rate of u; see Eq. 1 in Gardner et al. (2000)`
+- `#@figure: Fig. 2 in Gardner et al. (2000)`
+- `# Bistability condition; see Sec. 3 in Savageau (1987)`
+
+#### 3.2.3 Multi-line structured values
+Use YAML-style multi-line structured values for any `#@` tag:
+- First line: `#@tag_name: |` (append `|` after the tag name)
+- Continuation lines: `#  ...` (hash + two spaces)
+
+### 3.3 Where comments must appear (block-specific rules)
+
+#### 3.3.1 Parameters block
+- Every parameter definition line MUST end with a same-line units comment containing **only the unit** (e.g., `# /s`, `# M`, `# dimensionless`). Do NOT add explanatory text, parenthetical notes, or descriptions on the same line as the parameter value.
+- Any parameter documentation beyond units (meaning, derivation, paper reference) MUST be placed immediately above the parameter line.
+- **Group comments:** When multiple parameters share the same logical role, a single comment MAY describe the group. The group comment appears above the first parameter in the group, and the parameters follow without blank lines between them. A blank line before the group comment separates it from the preceding entity or group.
+
+Examples:
+```
+  # Max synthesis rate of u; see Eq. 1 in Gardner et al. (2000)
+  alpha_1  156.25  # dimensionless
+
+  # Hill coefficients for mutual repression
+  beta     2.5     # dimensionless
+  gamma    1.0     # dimensionless
+```
+
+#### 3.3.2 Seed species block
+- Every seed species amount MUST end with a same-line units comment (`# molecules` or `# dimensionless`).
+
+#### 3.3.3 Compartments block (if present)
+- Compartment documentation MUST appear above the relevant compartment line(s).
+- Volume MUST be explicitly documented with units that indicate the reactor context (e.g., `# L/cell`, `# L/reactor`, `# L/vessel`). Bare `L` is insufficient — the unit must answer "volume of what?"
+- Area (for 2D compartments/surfaces) MUST be documented with reactor context (e.g., `# um^2/cell`, `# m^2/cell`).
+
+#### 3.3.4 Molecule types block
+Molecule-type documentation supports two levels: a brief high-level description and optional detailed notes.
+
+- A **one-line high-level annotation** for a molecule type MUST appear **immediately above** the BNGL molecule type line it describes.
+- **Supplemental annotation** MAY appear **immediately below** the BNGL molecule type line.
+- Comments for one molecule type MUST be contiguous with its definition.
+
+#### 3.3.5 Observables block
+- Each observable MUST specify its type as the first field: `Molecules` or `Species`.
+  - `Molecules` counts pattern matches (a single molecule can match multiple times).
+  - `Species` counts species matching the pattern. `Species` observables additionally support relational operators: `==`, `>`, `>=`, `<`, `<=` (e.g., `Species R2 R==2`).
+- Observable documentation MUST appear above the observable line it describes.
+- **Group comments:** When multiple observables share the same structure or purpose, a single comment MAY describe the group (same convention as §3.3.1).
+
+#### 3.3.6 Functions block (if present)
+- Function documentation MUST appear above the function definition line it describes.
+
+#### 3.3.7 Reaction rules block
+- Rule documentation MUST appear above the rule line it describes.
+- Same-line inline comments on rule lines SHOULD NOT be used.
+
+#### 3.3.8 Actions block (if present)
+All action commentary MUST appear **inside** the `begin actions` / `end actions` block, not outside it.
+
+Actions blocks are organized into **protocols** — logical units of one or more actions that together produce a result (e.g., a simulation, a parameter scan, or a multi-phase demonstration). Annotation rules:
+
+- An **overview comment** at the top of the block (after `generate_network`) MAY summarize the available protocols and which are active.
+- Each protocol MUST be preceded by a **protocol header comment** — a brief comment line naming the protocol.
+- After the protocol header, optional structured tags describe the protocol:
+  - `#@protocol:` — describes the simulation protocol (what the protocol does, as a multi-step experimental design). Use multi-line form (`#@protocol: |`) for protocols with multiple phases.
+  - `#@figure:` — links the protocol to a figure in a source paper. Use full citation form (§3.2.1): `#@figure: Fig. 2 in Gardner et al. (2000)`.
+- **Tag spacing:** Each `#@` tag MUST have a blank line above and below it, consistent with the header tag spacing rule in §6.1.1.
+- Protocols are separated by blank lines.
+- **Figure-linked protocols MUST be active (REQUIRED):** If a protocol has a `#@figure:` tag, its actions MUST NOT be commented out. The `#@figure:` tag is a claim that this protocol reproduces published data — the reader should be able to run it and verify.
+- Protocols without a `#@figure:` tag MAY be commented out (e.g., a simple relaxation alternative).
+
+Example:
+```
+begin actions
+  generate_network({overwrite=>1})  # 2 species, 4 reactions
+
+  # Bistability demonstration
+
+  #@protocol: |
+  #  Phase 1: Relax from (0, 0) to the u-dominant steady state.
+  #  Phase 2: Increase alpha_2 to 600 (IPTG induction), pushing
+  #  the system across the separatrix into the v-dominant basin.
+  #  Phase 3: Restore alpha_2; system remains in v-dominant state.
+
+  #@figure: Fig. 4a in Gardner et al. (2000)
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>8,\
+    n_steps=>400})
+  setParameter("alpha_2",600.0)
+  simulate({method=>"ode",suffix=>"ode",t_start=>8,t_end=>12,\
+    n_steps=>200,continue=>1})
+
+  # Bifurcation boundary scan
+
+  #@protocol: |
+  #  Scan alpha_2 at fixed alpha_1 across the
+  #  bistable-to-monostable transition.
+
+  #@figure: Fig. 2c in Gardner et al. (2000)
+
+  parameter_scan({method=>"ode",parameter=>"alpha_2",\
+    par_min=>1,par_max=>500,n_scan_pts=>100,\
+    t_start=>0,t_end=>20,n_steps=>200,suffix=>"scan"})
+end actions
+```
+
+### 3.4 Entity-level annotation attachment rule (strict)
+Entity-level structured annotations apply to the **immediately following non-comment line**.
+- No blank line may appear between annotation and target line.
+
+### 3.5 Alignment policy
+Column alignment is optional.
+
+### 3.6 Ordering preferences (non-binding)
+Ordering is not required, but stable ordering is recommended. Suggested conventions:
+- Parameters grouped by meaning/prefix, then alphabetical within groups.
+- Molecule types alphabetical by molecule name.
+- Observables grouped by intent, then alphabetical.
+- Reaction rules in logical process order (author-defined).
+
+---
+
+## 4. Naming Conventions
+
+### 4.1 General rules (REQUIRED)
+- Names MUST use only: `A–Z`, `a–z`, `0–9`, and `_`.
+- Names MUST start with a letter.
+- Names MUST NOT contain spaces or punctuation.
+
+### 4.2 Molecule names (REQUIRED)
+- Molecule type names representing gene products SHOULD follow community gene-symbol conventions:
+  - **Human**: HGNC-style (typically all-caps), e.g., `EGFR`, `GRB2`.
+  - **Mouse**: MGI-style (first letter uppercase, remainder lowercase), e.g., `Egfr`, `Grb2`.
+- If organism context is ambiguous, `#@organism:` SHOULD be present (verbose mode, §6.1.2) and naming MUST follow it.
+- Non-gene entities may use concise neutral names.
+
+### 4.3 Component (site) names and state labels (REQUIRED)
+- Component (site) names SHOULD be lowercase.
+- State labels MUST be short tokens; recommended patterns include `~u~p` or `~0~1`.
+- Molecule types MUST list all allowed states explicitly when states are used.
+
+### 4.4 Parameter names (REQUIRED)
+
+#### 4.4.1 Reserved global conversion parameters (REQUIRED)
+- `NA`     : Avogadro constant (`6.02214076e23 # molecules/mol`)
+- `V_ref`  : reference volume when no compartments block is present
+- `h_mem`  : effective membrane-adjacent layer thickness (surface processes)
+- `f`      : subvolume scaling factor (REQUIRED when a subvolume is modeled; see §1.1)
+
+#### 4.4.2 Reserved equilibrium-constant prefixes (REQUIRED)
+Prefixes reserved for equilibrium constants only:
+- `Ka_`  : association constants
+- `Kd_`  : dissociation constants
+- `KD_`  : synonymous with `Kd_`
+
+Any `Ka_*`, `Kd_*`, or `KD_*` MUST obey single-site semantics (§1.3.1) and MUST map consistently to kinetic rates.
+
+#### 4.4.3 Recommended kinetic prefixes (non-binding)
+- `kon_` / `koff_`, `kf_` / `kr_`, `kcat_`, `ksyn_` / `kdeg_`, `k_`.
+
+#### 4.4.4 Paper notation mapping (RECOMMENDED)
+When a model is derived from a published paper, parameter names SHOULD match the paper's notation where it is BNGL-safe (e.g., `alpha_1`, `beta`, `gamma`, `K_d`). This makes it easier to cross-reference the code against the paper's equations. If the paper uses notation that is not BNGL-safe (e.g., Greek letters, subscripts, superscripts), use the closest ASCII equivalent and document the mapping in a comment or in the `#@description:`. House style naming conventions (§4.4.1-4.4.3) take precedence for reserved names (`NA`, `V_ref`, `f`, etc.).
+
+### 4.5 Reaction rule labels (RECOMMENDED)
+Rule labels should be present and unique; recommended format:
+`R_<verb>_<object>[_<site>[_<detail>]]`.
+
+### 4.6 Observable names (RECOMMENDED)
+Use stable informative names, e.g., `Obs_Tot_*`, `Obs_State_*`, `Obs_Cplx_*`.
+
+### 4.7 Annotation restraint (policy)
+Beyond required units comments (§3.3) and required header metadata (§6.1), additional structured annotations SHOULD be used only when they add real value.
+
+### 4.8 Output file and folder naming (REQUIRED)
+The normalized `.bngl` filename and its containing folder within `models/` are derived from `#@title:` as a lowercase slug:
+- Spaces and hyphens become underscores.
+- The parenthetical citation `(Author et al., Year)` becomes a `_authoryear` suffix: first author's last name only (lowercase), four-digit year, no separator. Drop `et al.`, co-author names, commas, and periods.
+- All other punctuation is dropped.
+- The biology/concept comes first; the citation tag comes last.
+- If no source paper exists, the citation suffix is omitted.
+
+Examples:
+
+| `#@title:` | Folder / filename |
+|---|---|
+| `Genetic toggle switch (Gardner et al., 2000)` | `genetic_toggle_switch_gardner2000` |
+| `Lotka-Volterra predator-prey (Savageau, 1987)` | `lotka_volterra_predator_prey_savageau1987` |
+| `Brusselator (Hlavacek and Faeder, 1998)` | `brusselator_hlavacek1998` |
+| `SIR epidemic model` | `sir_epidemic_model` |
+
+**Primary and variant/related files (REQUIRED naming convention):**
+Each model folder MUST contain exactly one **primary file** — the recommended entry-point model — with the same stem name as the folder. The primary file is the self-contained, default representation of the model. In `metadata.yaml` (§5), this file has `role: primary`.
+
+A folder MAY also contain **variant files** (that extend or reconfigure the primary model) or **related files** (thematically grouped but not derived from the primary). Variant and related file naming rules:
+- The filename MUST use the folder stem as a prefix.
+- A descriptive suffix MUST be appended after an underscore, identifying the variant or related model.
+- The suffix SHOULD be short and descriptive (e.g., `_iptg`, `_stochastic`, `_fitted`).
+
+Example:
+```
+models/genetic_toggle_switch_gardner2000/
+  genetic_toggle_switch_gardner2000.bngl       # primary
+  genetic_toggle_switch_gardner2000_iptg.bngl  # variant
+  verify_gardner2000.ipynb                     # verification notebook
+  verify_gardner2000.png                       # verification plot
+```
+
+Each variant or related file MUST be independently runnable — it is a complete model, not a patch or diff against the primary file. The `#@description:` in a variant file SHOULD explain how it differs from the primary model.
+
+Author names MUST use the full last name, not initials (e.g., `savageau1987`, not `s1987`). When multiple models originate from the same paper, the descriptive portion of the slug MUST be distinct enough to disambiguate them.
+
+---
+
+## 5. Model Folder Metadata (`metadata.yaml`)
+
+Each model folder within `models/` MUST contain a `metadata.yaml` file that records provenance, attribution, and folder contents. This metadata is about the **library artifact** (who contributed it, where it came from, what the folder contains) — not about the model's scientific content, which belongs in the `.bngl` file's `#@` annotations (§6).
+
+### 5.1 Schema
+
+```yaml
+# metadata.yaml — provenance and manifest for a model folder
+id: <string>            # REQUIRED — folder name, used as stable identifier
+created: <YYYY-MM-DD>   # REQUIRED — date the model was first added to the library
+status: <string>        # DEPRECATED — replaced by per-file rating system (see rating.md)
+
+point_of_contact:       # REQUIRED — single person most knowledgeable about this folder
+  name: <string>        # REQUIRED
+  email: <string>       # REQUIRED — used for contact verification
+  orcid: <string>       # OPTIONAL
+  github: <string>      # OPTIONAL
+
+alternate_point_of_contact:  # OPTIONAL — backup contact if primary is unavailable
+  name: <string>        # REQUIRED — at least one of email/orcid/github also required
+  email: <string>       # OPTIONAL
+  orcid: <string>       # OPTIONAL
+  github: <string>      # OPTIONAL
+
+contributors:           # OPTIONAL — other people who contributed to this folder
+  - name: <string>      # REQUIRED per entry
+    email: <string>     # OPTIONAL
+    orcid: <string>     # OPTIONAL
+    github: <string>    # OPTIONAL
+    contribution: <string>  # RECOMMENDED — what they contributed
+
+source:                 # REQUIRED — where the model came from
+  tags: [<string>, ...]  # REQUIRED — one or more tags from controlled vocabulary (see §5.2)
+  description: <string> # OPTIONAL — free-form elaboration
+
+files:                  # REQUIRED — manifest of all files in the folder
+  - name: <string>      # REQUIRED — filename (not path)
+    role: <enum>        # REQUIRED — controlled vocabulary (see §5.3)
+    description: <string>  # OPTIONAL — what this file is or how it differs
+    documentation_target: <enum>  # OPTIONAL — none | minimal | standard | extra | comprehensive
+    rating: <number>    # COMPUTED — assigned by grader, do not edit manually
+    min_bionetgen_version: <string>  # OPTIONAL — minimum compatible BNG version (per-file)
+```
+
+### 5.2 Source tag vocabulary
+
+Tags describe provenance — where the model came from and how it was produced. Multiple tags can (and often should) be combined. For example, a model translated from SBML that originated in BioModels and is based on a published paper would use `[literature, adapted_from_sbml, biomodels_database]`.
+
+| Tag | Meaning |
+|---|---|
+| `literature` | Based on a published paper |
+| `new_model` | Novel/unpublished model, not derived from an existing source |
+| `classic` | Well-known foundational model (e.g., Lotka-Volterra, Brusselator) |
+| `originally_rule_based` | Source model was already formulated as rule-based |
+| `reformulation` | Substantially rewritten from an earlier version (e.g., reparameterized or re-derived) |
+| `extension` | Extends an existing model with new species, rules, or mechanisms |
+| `bug_fix` | Corrects errors in a prior version of the model |
+| `refinement` | Improves an existing model without changing its scope (e.g., better parameters, tighter annotations) |
+| `restructuration` | Rules rewritten but the generated reaction network is equivalent |
+| `translation` | Translated from another rule-based language (e.g., PySB, Kappa) |
+| `formulated_for_testing_purposes` | Created specifically to test BioNetGen features or skill compliance |
+| `ai_assisted` | LLM or other AI tool assisted in writing or converting the model |
+| `adapted_from_ode` | Translated from an ODE formulation |
+| `adapted_from_sbml` | Translated from an SBML model |
+| `adapted_from_antimony` | Translated from an Antimony model |
+| `adapted_from_bngl` | Adapted from an existing BNGL file |
+| `adapted_from_python` | Translated from Python/SciPy code |
+| `biomodels_database` | Source model obtained from the BioModels database |
+| `benchmark_collection` | Part of a curated benchmark or test suite |
+
+New tags MAY be added as needed; existing tags MUST NOT be removed or redefined.
+
+### 5.3 File role vocabulary
+
+| Value | Applies to | Meaning |
+|---|---|---|
+| `primary` | `.bngl` | The recommended entry-point model; exactly one per folder |
+| `variant` | `.bngl` | Derives from or modifies the primary model |
+| `related` | `.bngl` | Thematically grouped with primary but not a variant of it |
+| `verification` | `.ipynb` | Notebook that verifies model output against independent solutions |
+| `reference` | `.net`, `.gdat`, `.cdat`, `.scan`, `.xml`, etc. | Committed reference simulation data in `reference/` subdirectory |
+| `output` | `.net`, `.gdat`, `.cdat`, `.scan`, etc. | Transient generated output files (not committed) |
+| `figure` | `.png`, `.pdf`, `.svg` | Plots or figures |
+
+Every folder MUST have exactly one file with `role: primary`. The primary `.bngl` file MUST have the same stem name as the folder (per §4.8).
+
+### 5.4 Metadata rules
+
+1. **One `metadata.yaml` per folder.** The `id` field is the folder name — it identifies the collection, not individual files. Individual files are distinguished by the `files` manifest.
+2. **Point of contact is singular and MUST include an email.** List the person most knowledgeable about this folder. Email is required for contact verification (see `rating.md` §2, Rating 1). An `alternate_point_of_contact` MAY be listed as a backup. Additional contributors go in the optional `contributors` list. Per-file `point_of_contact` overrides in the `files` manifest are allowed when different people contribute different files.
+3. **Rating and documentation level.** Each `.bngl` file is rated per the system defined in `rating.md`. The `documentation_target` field on each file entry declares the intended annotation/formatting depth (`none`, `minimal`, `standard`, `extra`, `comprehensive`). The `rating` field is computed by the grader and MUST NOT be manually edited. The folder-level `status` field is deprecated in favor of per-file ratings.
+4. **Reference simulation data** lives in a `reference/` subdirectory within each model folder. This directory contains committed output files (`.net`, `.gdat`, `.cdat`, `.scan`, `.xml`, `.species`, and scan subdirectories) that serve as regression baselines. Files are organized flat — filenames encode the parent `.bngl` file via the naming convention. Reference files SHOULD be listed in the `files` manifest with `role: reference` and paths relative to the model folder (e.g., `reference/model_ode.gdat`).
+5. **Generated output files** outside `reference/` are transient and SHOULD NOT be committed. Use `.gitignore` or clean up after runs.
+6. **Git tracks version history.** Do not duplicate commit history or changelogs in `metadata.yaml`. Use `git log -- models/<folder>/` for history.
+
+### 5.5 Example
+
+```yaml
+# metadata.yaml — genetic_toggle_switch_gardner2000
+id: genetic_toggle_switch_gardner2000
+created: 2026-03-10
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_ode, ai_assisted]
+  description: >
+    Built from reading of Gardner et al. (2000), Nature 403:339-342.
+
+files:
+  - name: genetic_toggle_switch_gardner2000.bngl
+    role: primary
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: genetic_toggle_switch_gardner2000_iptg.bngl
+    role: variant
+    description: Adds IPTG induction mechanism
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">2.9.3"
+  - name: verify_gardner2000.ipynb
+    role: verification
+  - name: verify_gardner2000.png
+    role: figure
+  # Reference simulation data
+  - name: reference/genetic_toggle_switch_gardner2000.net
+    role: reference
+  - name: reference/genetic_toggle_switch_gardner2000_ode.gdat
+    role: reference
+  - name: reference/genetic_toggle_switch_gardner2000_scan.scan
+    role: reference
+```
+
+---
+
+## 6. Annotation Standard (Structured Comments)
+
+BNGL has limited native support for semantic annotation. This house style uses structured comments that are easy to read and parse, with minimal required metadata.
+
+### 6.1 Header metadata
+Immediately after `begin model`, every model MUST include a header metadata block using `#@key: value`. Two annotation modes are supported:
+
+#### 6.1.1 Minimal mode (default)
+Required keys:
+- `#@title:` — what is this model? (see title normalization below)
+- `#@description:` — what does this model do? (see description guidance below)
+- `#@keyword:` — freeform terms for search and retrieval (see below)
+- `#@reference:` — citation(s) for the model. May be multi-line (see below).
+
+**Title normalization (REQUIRED):** The `#@title:` value MUST be a descriptive, human-readable name for the model — not a reproduction of the source filename or catalog code. The title MUST describe the biology or concept first, with a parenthetical citation if the model is derived from a published source. Citation format rules:
+- **Single author:** `(Gardner, 2000)`
+- **Two authors:** `(Gardner and Collins, 2000)`
+- **Three or more authors:** `(Gardner et al., 2000)`
+
+The citation uses the first author's full last name (not initials), a comma before the year, and `et al.` (with period) for three or more authors. Titles MUST translate cleanly to filesystem slugs per §4.8: the slug uses only the first author's last name and year, dropping `et al.`, co-author names, and punctuation.
+
+**Multi-line values** use YAML-style block scalar syntax: append `|` to the key on the first line, then continue on subsequent lines prefixed with `#  ` (hash + two spaces). All lines (including the tag line) MUST respect the 100-character maximum (§3.1). If a single-line value would exceed 100 characters, use multi-line form instead.
+
+**Header tag spacing (REQUIRED):** Each `#@` tag section in the header metadata block MUST be separated from adjacent tags by a blank line above and below. This includes a blank line after `begin model` and before the first `begin` block. This spacing makes each tag visually distinct and scannable.
+
+**`#@description:` (REQUIRED; rich narrative encouraged):** The description MUST cover both the model's structure and its qualitative dynamics. A good description answers three questions:
+1. **What is it?** — the biology, components, and interactions (structural)
+2. **How does it work?** — the mathematical structure (Hill functions, mass action, feedback topology)
+3. **What does it do?** — the qualitative behavior when simulated (steady states, oscillations, bistability, transients)
+
+Short descriptions that only state what the model *is* (e.g., "Two mutually repressive gene products") are insufficient. Include what the model *does* — this is critical for retrieval and for anyone deciding whether this model is relevant to their work.
+
+Example (multi-line, with dynamics):
+```
+#@description: |
+#  Two mutually repressive gene products with Hill-type repression and
+#  first-order degradation, forming a bistable genetic toggle switch.
+#  Mutual inhibition via cooperative Hill functions (n_2=2.5, n_1=1.0)
+#  creates two stable steady states: R1-dominant (~156 molecules, R2
+#  suppressed) and R2-dominant. With default parameterization
+#  (alpha_1 >> alpha_2), trajectories from the origin converge to the
+#  R1-dominant state.
+```
+
+**`#@keyword:` (REQUIRED):** A comma-separated list of freeform terms that characterize the model for search and retrieval. No controlled vocabulary is enforced, but terms SHOULD cover:
+- **Domain:** e.g., gene regulation, signaling, metabolism, epidemiology, ecology, synthetic biology
+- **Dynamics:** e.g., bistable, oscillatory, monostable, damped, excitable, chaotic
+- **Math/topology:** e.g., Hill kinetics, mass action, Michaelis-Menten, negative feedback, positive feedback, mutual inhibition, feedforward
+- **Organism:** e.g., Escherichia coli, Homo sapiens, Mus musculus, generic
+
+**Keyword formatting rules:**
+- Proper names MUST be capitalized (e.g., `Hill kinetics` not `hill kinetics`, `Michaelis-Menten` not `michaelis-menten`).
+- Organism names MUST use the full binomial name (e.g., `Escherichia coli` not `E. coli`). Abbreviations are ambiguous in search and embedding contexts.
+- Common nouns are lowercase (e.g., `bistable`, `gene regulation`).
+
+Example:
+```
+#@keyword: |
+#  gene regulation, bistable, mutual inhibition, Hill kinetics,
+#  synthetic biology, Escherichia coli
+```
+
+**`#@reference:`** — for a single simple reference, a one-liner is fine. For full citations, use multi-line with the format: `Authors (Year). Title. Journal Volume:Pages. doi:XX.XXXX/XXXXX`. For models pulled from external repos, include a URL to the original file (e.g., a GitHub permalink). Multiple references are stacked:
+```
+#@reference: |
+#  Gardner TS, Cantor CR, Collins JJ (2000). Construction of a genetic toggle
+#  switch in Escherichia coli. Nature 403:339-342. doi:10.1038/35002131
+```
+
+Minimal example:
+```
+begin model
+
+#@title: Genetic toggle switch (Gardner et al., 2000)
+
+#@description: |
+#  Two mutually repressive gene products with Hill-type repression and
+#  first-order degradation, forming a bistable genetic toggle switch.
+#  With default parameterization (alpha_1 >> alpha_2), trajectories from
+#  the origin converge to the R1-dominant steady state.
+
+#@keyword: |
+#  gene regulation, bistable, mutual inhibition, Hill kinetics,
+#  synthetic biology, Escherichia coli
+
+#@reference: |
+#  Gardner TS, Cantor CR, Collins JJ (2000). Construction of a genetic
+#  toggle switch in Escherichia coli. Nature 403:339-342.
+#  doi:10.1038/35002131
+
+```
+
+#### 6.1.2 Verbose mode (deferred)
+A richer annotation mode with additional metadata keys is planned but not yet specified. Do not use verbose-mode keys until this section is implemented.
+
+### 6.2 Multi-line header fields (OPTIONAL)
+Use YAML-style multi-line values (`#@note: |` with `#  ...` lines).
+
+### 6.3 Entity-level structured annotations (OPTIONAL; use sparingly)
+Entity-level annotations MAY be used when they add value (provenance, non-obvious mappings, unit conversions). Use `#@entity:` and optional keys like `#@provenance:`, `#@ids:`, `#@note:`. The general-purpose `#@note:` tag (§3.2.1) is available for extended commentary at any level — header, entity, or protocol.
+
+### 6.4 Provenance vocabulary (RECOMMENDED)
+Suggested values for `#@provenance:`:
+`handwritten`, `from_antimony`, `from_sbml`, `from_paper`, `fitted`, `assumed`, `computed`, `placeholder`.
+
+### 6.5 Annotation restraint (REQUIRED policy)
+- Minimal header keys in §6.1.1 are REQUIRED; verbose keys in §6.1.2 are opt-in.
+- Entity-level annotations are OPTIONAL and SHOULD NOT be boilerplate.
+
+---
+
+## 7. House Requirements for Pedagogical and Benchmark Models
+
+### 7.1 Practical runtime expectation (non-binding)
+Models SHOULD run typical simulations in ~1 minute or less; if not, document why in `#@runtime_expectation:`.
+
+### 7.2 Required observables (REQUIRED minimal set)
+Every model MUST define at minimum:
+- at least **one** observable for a primary molecule/species of interest, and
+- at least **one** additional observable reflecting key behavior (state/complex/downstream).
+
+### 7.3 Required actions (conditional; see §1.1)
+If actions are present, include all feasible modes per §1.1. If actions are omitted, document why in header metadata.
+
+### 7.4 Required annotations (minimal; REQUIRED)
+- Required header metadata keys (§6.1)
+- Required same-line units comments for parameters and seed species (§3.3)
+
+### 7.5 Required unit-conversion readiness (REQUIRED)
+Models MUST be population-conversion ready (§1.3): define `NA` and provide volumes (`V_ref` or compartment volumes). Define `h_mem` if surface processes are modeled.
+
+---
+
+## 8. Antimony → BNGL Conversion Policy (SSA-First)
+
+### 8.1 Scope of conversion
+- Conversion is attempted only for the pre-selected target set.
+- Any model failing the SSA feasibility gate (§8.2) MUST be excluded (not converted).
+- All converted models MUST follow this house style and include feasible actions per §1.1.
+
+### 8.2 SSA feasibility gate (hard filter; REQUIRED)
+Exclude any model that requires:
+- delays/history dependence,
+- discontinuities/branching logic affecting dynamics (`piecewise`, `min`, `max`, thresholds),
+- algebraic constraints/DAEs (beyond parameter precomputation),
+- inherently non-population state variables without explicit conserved-pool interpretation,
+- propensities that cannot be made nonnegative without ad hoc guards.
+
+### 8.3 Conversion tiers (only SSA-natural conversion is allowed)
+Only conversions that preserve a natural population-based SSA interpretation are allowed.
+
+### 8.4 Parsing and normalization rules (REQUIRED)
+- Normalize identifiers to BNGL-safe names deterministically; document mapping in `#@note:` when needed.
+- Apply organism naming conventions (§4.2) in final BNGL.
+
+### 8.5 Compartments and volumes (REQUIRED)
+- Multi-compartment Antimony → BNGL MUST include explicit `begin compartments` with volumes.
+- Single-compartment models MAY omit `begin compartments` but MUST define `V_ref`.
+
+### 8.6 Kinetics mapping policy (REQUIRED)
+- Reaction-form Antimony maps directly to BNGL rules.
+- ODE-form Antimony is allowed only if it can be expressed as nonnegative production/consumption propensities over populations without semantic reinterpretation.
+
+### 8.7 Actions generation (REQUIRED for converted models)
+Baseline when network generation is feasible:
+- `generate_network({overwrite=>1})`
+- `simulate({method=>"ode",suffix=>"ode",...})`
+- `simulate({method=>"ssa",suffix=>"ssa",...})`
+
+Conditional modes:
+- include `psa` only if it runs successfully; omit otherwise and document in `#@note:`.
+- include `nfr` only if NFsim runs successfully for the model features (notably compartments); omit otherwise and document in `#@note:`.
+
+### 8.8 Required artifacts per converted model
+Each converted model MUST include:
+- house-style BNGL file
+- minimal observables (§7.2)
+- `#@source: from_antimony` and `#@note:` describing any nontrivial decisions.
+
+### 8.9 Exclusion reporting (REQUIRED)
+Maintain a record of excluded models (filename + reason category from §8.2).
+
+---
+
+## 9. Acceptance Criteria (Lint Rules)
+
+Severity levels:
+- **ERROR**: must fix; model is non-compliant
+- **WARN**: should fix; model is compliant but has issues
+- **INFO**: optional suggestions
+
+### 9.1 Structure and blocks
+- **ERROR**: Block order matches §2.
+- **ERROR**: Required blocks present: parameters, molecule types, seed species, observables, reaction rules.
+- **ERROR**: Optional blocks present only when used; energy patterns implies compartments.
+
+### 9.2 Formatting
+- **ERROR**: 2-space indentation inside blocks; no tabs.
+- **WARN**: lines exceed 100 characters without clear need.
+- **ERROR**: annotation attachment rule (§3.4) respected.
+
+### 9.3 Required comments and units
+- **ERROR**: every parameter line has same-line units comment.
+- **ERROR**: every seed species amount has same-line units comment.
+
+### 9.4 Header metadata
+- **ERROR**: required minimal header keys exist (§6.1.1): `#@title:`, `#@description:`, `#@keyword:`, `#@reference:`.
+- **WARN**: `#@modified:` not updated on substantive edits.
+
+### 9.4a Folder metadata
+- **ERROR**: `metadata.yaml` exists in each model folder under `models/`.
+- **ERROR**: required keys present: `id`, `created`, `point_of_contact`, `source`, `files`.
+- **ERROR**: `point_of_contact` has `name` and `email` (email is required for contact verification; see `rating.md`).
+- **ERROR**: `source.tags` is a non-empty list and all tags use values from the controlled vocabulary (§5.2).
+- **ERROR**: exactly one file has `role: primary`; its stem matches the folder name.
+- **ERROR**: all file roles use values from the controlled vocabulary (§5.3).
+- **WARN**: `.bngl`, `.ipynb`, and image files in the folder are not listed in the `files` manifest.
+- **WARN**: `.bngl` file entry missing `documentation_target`; grader will auto-detect.
+- **INFO**: `rating` field should not be manually edited; it is computed by the grader.
+
+### 9.5 Naming and reserved identifiers
+- **ERROR**: identifiers satisfy §4.1.
+- **ERROR**: reserved names used correctly when applicable (`NA`, `V_ref`, `h_mem`, `f`).
+- **ERROR**: `Ka_`, `Kd_`, `KD_` prefixes used only for equilibrium constants.
+- **ERROR**: single-site semantics not violated (§1.3.1).
+
+### 9.6 Action compliance and feasibility
+- **ERROR**: actions appear only after `end model` (bare or within `begin actions`/`end actions`).
+- **ERROR**: every `simulate(...)` action includes allowed suffix tag (`ssa`, `psa`, `ode`, `nfr`).
+
+Feasibility linting:
+- **WARN**: `psa` present in a model containing `0 -> X` reactions; PSA commonly fails. If PSA fails, remove `psa` and document.
+- **WARN**: `nfr` present with compartments; NFsim does not fully support compartments. Remove `nfr` and document.
+- **WARN**: `nfr` present in a model using lowercase `tfun` with inline data; NFsim does not support this. Remove `nfr` and document.
+
+Coverage suggestions:
+- **INFO**: if network generation is feasible, include both `ode` and `ssa` for benchmarking.
+- **INFO**: include `psa`/`nfr` only after verifying successful runs.
+
+### 9.7 Post-modification verification (REQUIRED)
+When a model is reformulated (e.g., concentration-to-population conversion, Antimony-to-BNGL conversion, compartment restructuring, parameter re-scaling, or any change that alters variable units or model structure), the modified model MUST be verified against the original to confirm that the dynamics are preserved.
+
+**Verification policy:**
+- Run ODE simulation on both the original and modified models.
+- Compare observable trajectories. Because units may differ between formulations (e.g., molar concentration vs molecule counts), comparison requires mapping both outputs to the same unit system — either by using the dimensional conversion functions (§1.3, item 5) in the modified model or by normalizing the original.
+- Trajectories MUST agree within a defined tolerance. Exact numerical match is not expected due to floating-point and solver differences.
+- Verification MUST be performed and documented before a modified model is considered complete.
+
+**Verification harness:**
+The script `skills/bngl/scripts/verify.py` implements the verification procedure. When modifying a model, invoke this script to automate the comparison. The script is responsible for:
+1. Running ODE on the original model (or accepting pre-computed `.gdat` output)
+2. Running ODE on the modified model
+3. Reconciling units between the two outputs
+4. Computing trajectory agreement (metric and tolerance TBD)
+5. Producing a pass/fail report
+
+**Status:** `scripts/verify.py` is implemented and supports ODE and SSA comparison modes. See the script's docstring for usage.
+
+**Verification against source figures (RECOMMENDED):**
+When a model includes `#@figure:` annotations linking protocols to figures in a source paper, the simulation output SHOULD be checked for qualitative consistency with the referenced figure. This is not an automated check — it requires human judgment. The verification protocol is:
+1. Run the protocol that references the figure.
+2. Inspect the output (`.gdat` or `.scan`) for qualitative agreement: correct steady-state values, correct oscillation period, correct bifurcation structure, etc.
+3. Document the expected qualitative behavior in the `#@protocol:` tag so that future reviewers know what to look for.
+
+Quantitative digitization of paper figures for automated comparison is deferred to future tooling.
+
+- **ERROR**: modified model released without verification against original.
+
+---
+
+## 10. Canonical Examples and Templates
+
+### 10.1 Canonical examples (REQUIRED repository content)
+`examples/` MUST contain at least:
+1. A minimal biochemical model with binding + modification and actions for all feasible modes.
+2. A multi-compartment model showing explicit volumes and unit-conversion readiness.
+3. (Optional) An energy-pattern model showing the compartments dependency.
+
+### 10.2 Template (REQUIRED workflow)
+`templates/` MUST contain a skeleton BNGL template including:
+- required header metadata keys (§6.1)
+- required blocks in canonical order (§2)
+- placeholders for optional blocks (commented) and action stubs with suffix tags
+- units comment placeholders for parameters and seed species.
+
+All new models SHOULD start from the template.
+
+---
+
+## 11. Change Control
+
+### 11.1 House style versioning (REQUIRED)
+Models using verbose annotation mode (§6.1.2) SHOULD include `#@house_style_version: X.Y`.
+
+- MAJOR bump: breaking change requiring edits to existing models.
+- MINOR bump: non-breaking clarifications/recommendations.
+
+### 11.2 Change log (REQUIRED)
+MAJOR changes MUST be recorded in an append-only change log in this document (version, date, summary, migration note).
+
+### 11.3 Deprecation policy (REQUIRED)
+Breaking changes SHOULD provide at least one MINOR release of deprecation when practical, with explicit replacement guidance.
+
+### 11.4 Model compliance policy (REQUIRED)
+A model is compliant if it satisfies the minimal header requirements (§6.1.1) and lint rules for the current style version.
