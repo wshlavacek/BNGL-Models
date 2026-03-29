@@ -1,0 +1,44 @@
+# metadata.yaml — genetic_switch_gardner2000
+id: genetic_switch_gardner2000
+created: 2026-03-19
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_ode, ai_assisted]
+  description: >
+    Built from reading of Gardner et al. (2000), Nature 403:339-342.
+
+files:
+  - name: genetic_switch_gardner2000.bngl
+    role: primary
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: genetic_switch_gardner2000_iptg.bngl
+    role: variant
+    description: Adds IPTG induction mechanism
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">2.9.3"
+  - name: verify_gardner2000.ipynb
+    role: verification
+  - name: verify_gardner2000.png
+    role: figure
+  # Reference simulation data (reference/ subdirectory)
+  - name: reference/genetic_switch_gardner2000.net
+    role: reference
+  - name: reference/genetic_switch_gardner2000_ode.gdat
+    role: reference
+  - name: reference/genetic_switch_gardner2000_scan.scan
+    role: reference
+  - name: reference/genetic_switch_gardner2000_iptg.net
+    role: reference
+  - name: reference/genetic_switch_gardner2000_iptg_init.gdat
+    role: reference
+  - name: reference/genetic_switch_gardner2000_iptg_scan.scan
+    role: reference

@@ -1,0 +1,48 @@
+# metadata.yaml — blbr_cooperativity_posner2004
+id: blbr_cooperativity_posner2004
+created: 2026-03-21
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, ai_assisted]
+  description: >
+    Built from reading of Posner RG, Paar JM, Licht A, Pecht I,
+    Conrad DH, Hlavacek WS (2004), Biochemistry 43:11352-11360,
+    and Wofsy C, Goldstein B (1987), Mol Immunol 24:151-161.
+    The reaction scheme (Fig. 1 in Wofsy 1987) describes bivalent
+    ligand binding to bivalent cell-surface receptor with negative
+    cooperativity. Two variants use parameters fit with and without
+    ring (cyclic aggregate) formation. Both use NFsim because
+    cross-linking generates unbounded chain species.
+
+files:
+  - name: blbr_cooperativity_posner2004.bngl
+    role: primary
+    description: No rings (J2 = 0); parameters from Table 1, "-rings" column
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">2.9.3"
+  - name: blbr_cooperativity_posner2004_rings.bngl
+    role: variant
+    description: With rings (J2 = 3.4); parameters from Table 1, "+rings" column
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">2.9.3"
+  - name: verify_posner2004.ipynb
+    role: verification
+  - name: verify_posner2004.png
+    role: figure
+  # Reference simulation data (reference/ subdirectory)
+  - name: reference/blbr_cooperativity_posner2004_scan.xml
+    role: reference
+  - name: reference/blbr_cooperativity_posner2004_scan.scan
+    role: reference
+  - name: reference/blbr_cooperativity_posner2004_rings_scan.xml
+    role: reference
+  - name: reference/blbr_cooperativity_posner2004_rings_scan.scan
+    role: reference
