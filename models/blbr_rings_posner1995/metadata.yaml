@@ -93,3 +93,21 @@ files:
     role: reference
   - name: reference/blbr_rings_posner1995_no_rings_nfr.xml
     role: reference
+  - name: reference/blbr_rings_posner1995_alt_formulation_low.gdat
+    role: reference
+    description: >
+      NFsim time course at LT_low=150 (below size-2-ring optimum, seed=1101).
+  - name: reference/blbr_rings_posner1995_alt_formulation_low.xml
+    role: reference
+  - name: reference/blbr_rings_posner1995_alt_formulation_peak.gdat
+    role: reference
+    description: >
+      NFsim time course at LT_peak=331 (size-2-ring optimum, seed=1201).
+  - name: reference/blbr_rings_posner1995_alt_formulation_peak.xml
+    role: reference
+  - name: reference/blbr_rings_posner1995_alt_formulation_high.gdat
+    role: reference
+    description: >
+      NFsim time course at LT_high=450 (above size-2-ring optimum, seed=1301).
+  - name: reference/blbr_rings_posner1995_alt_formulation_high.xml
+    role: reference
