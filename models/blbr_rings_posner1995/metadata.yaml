@@ -86,3 +86,10 @@ files:
     role: reference
   - name: reference/blbr_rings_posner1995_nfr.xml
     role: reference
+  - name: reference/blbr_rings_posner1995_no_rings_nfr.gdat
+    role: reference
+    description: NFsim time course (seed=42) for the no-rings variant.
+  - name: reference/blbr_rings_posner1995_no_rings_nfr.species
+    role: reference
+  - name: reference/blbr_rings_posner1995_no_rings_nfr.xml
+    role: reference

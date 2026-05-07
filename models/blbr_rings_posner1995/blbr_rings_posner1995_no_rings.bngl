@@ -132,6 +132,7 @@ begin actions
   #  runs three doses by modifying LT_per_cell separately.
 
   simulate({method=>"nf",suffix=>"nfr",t_start=>0,\
-    t_end=>3000,n_steps=>300,complex=>1,gml=>1000000})
+    t_end=>3000,n_steps=>300,complex=>1,gml=>1000000,\
+    seed=>42})
 
 end actions
