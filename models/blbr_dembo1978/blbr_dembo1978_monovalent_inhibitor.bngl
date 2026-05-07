@@ -201,6 +201,6 @@ begin actions
 
   simulate({method=>"nf",suffix=>"nfr",t_start=>0,\
     t_end=>3000,n_steps=>300,gml=>2147483647,\
-    param=>"-bscb"})
+    seed=>42,param=>"-bscb"})
 
 end actions

@@ -67,3 +67,24 @@ files:
       Perelson ODEs at three bivalent doses with fixed monovalent hapten.
   - name: verify_dembo1978_monovalent.png
     role: figure
+  # Reference simulation data (reference/ subdirectory)
+  - name: reference/blbr_dembo1978_nfr.gdat
+    role: reference
+    description: NFsim time course (seed=42) for the no-rings primary model.
+  - name: reference/blbr_dembo1978_nfr.species
+    role: reference
+  - name: reference/blbr_dembo1978_nfr.xml
+    role: reference
+  - name: reference/blbr_dembo1978_monovalent_inhibitor_nfr.gdat
+    role: reference
+    description: NFsim time course (seed=42) for the monovalent-inhibitor variant.
+  - name: reference/blbr_dembo1978_monovalent_inhibitor_nfr.species
+    role: reference
+  - name: reference/blbr_dembo1978_monovalent_inhibitor_nfr.xml
+    role: reference
+  - name: reference/blbr_dembo1978_with_rings_scan_k5.scan
+    role: reference
+  - name: reference/blbr_dembo1978_with_rings_scan_k10.scan
+    role: reference
+  - name: reference/blbr_dembo1978_with_rings_scan_k10_J2_10.scan
+    role: reference
