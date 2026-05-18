@@ -123,7 +123,8 @@ generate_network({overwrite=>1});
 # equilibrate
 
 parameter_scan({parameter=>"RT",par_min=>1.0e3,par_max=>1.0e6,\
-n_scan_pts=>101,\log_scale=>1,method=>"ode",\
+n_scan_pts=>101,\
+log_scale=>1,method=>"ode",\
 t_start=>0,t_end=>300,n_steps=>31})
 
 
