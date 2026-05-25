@@ -1,0 +1,8 @@
+# Normalize line endings so the parity corpus stays byte-stable across
+# platforms. BNGL and related model files are checked out with LF everywhere.
+*.bngl   text eol=lf
+*.net    text eol=lf
+*.tfun   text eol=lf
+*.species text eol=lf
+*.func   text eol=lf
+*.rxn    text eol=lf
