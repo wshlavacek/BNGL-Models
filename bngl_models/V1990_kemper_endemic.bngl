@@ -1,0 +1,80 @@
+begin model
+#@model_id: V1990_kemper_endemic
+#@title: Kemper endemic infection model (Voit 1990)
+#@description: SIA endemic infection model from Kemper (1978) with equal recovery rates for symptomatics and asymptomatics. Mass-action transmission. Population fractions scaled to molecule counts (x1000). Converted from Antimony to BNGL.
+#@organism: other
+#@created: 2026-03-08
+#@bng_version: >=2.9.3
+#@house_style_version: 0.1
+#@source: from_antimony
+#@reference: Voit (1990) Comput. Math. Applic. 20(4-6):161-173
+#@note: |
+#  Original variables are population fractions (S+I+A=1).
+#  Scaled by N=1000 to get molecule counts for stochastic simulation.
+#  Equal recovery rate gamma for both I and A (Kemper simplification).
+
+begin parameters
+  NA         6.02214076e23  # 1/mol
+  V_ref      1.0            # L  (reference volume)
+  f          1.0            # dimensionless
+
+  N_pop      1000           # scaling factor (fractions -> molecules)
+  frac       0.8            # fraction developing symptoms
+  gamma_rate 0.2            # 1/time  (recovery rate, same for both)
+  r1         0.5            # 1/time  (contact rate, symptomatics)
+  r2         0.3            # 1/time  (contact rate, asymptomatics)
+end parameters
+
+begin molecule types
+  S()
+  I()
+  A()
+end molecule types
+
+begin seed species
+  S()  900  # molecules (0.9 * 1000)
+  I()  50   # molecules (0.05 * 1000)
+  A()  50   # molecules (0.05 * 1000)
+end seed species
+
+begin observables
+  Molecules  Obs_S  S()
+  Molecules  Obs_I  I()
+  Molecules  Obs_A  A()
+end observables
+
+begin functions
+  # Infection force: S*(r1*I + r2*A), scaled by 1/N_pop for bimolecular terms
+  infection_force() = Obs_S * (r1 * Obs_I + r2 * Obs_A) / N_pop
+  # Recovery of I: gamma_rate*I
+  recovery_I() = gamma_rate * Obs_I
+  # Recovery of A: gamma_rate*A
+  recovery_A() = gamma_rate * Obs_A
+end functions
+
+begin reaction rules
+  # Recovery of I -> S
+  0 -> S()  recovery_I()
+  # Recovery of A -> S
+  0 -> S()  recovery_A()
+  # Infection removes S
+  S() -> 0  infection_force()
+  # Fraction frac of infected become symptomatic I
+  0 -> I()  frac * infection_force()
+  # Decay of I by recovery
+  I() -> 0  gamma_rate
+  # Fraction (1-frac) become asymptomatic A
+  0 -> A()  (1 - frac) * infection_force()
+  # Decay of A by recovery
+  A() -> 0  gamma_rate
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>20,n_steps=>400})
+  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>20,n_steps=>400})
+  simulate({method=>"nf",suffix=>"nfr",t_start=>0,t_end=>20,n_steps=>400,complex=>1})
+end actions
