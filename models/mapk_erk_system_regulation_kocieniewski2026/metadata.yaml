@@ -38,6 +38,13 @@ files:
       SciPy, and overlays BioNetGen and SciPy observables.
   - name: verify_kocieniewski2026.png
     role: figure
+  - name: reference/kocieniewski2026_fig3a_egf10000_digitized.csv
+    role: reference
+    description: >
+      Digitized colored trace pixels from the EGF = 10000 pg/ml panel of
+      Fig. 3a in Kocieniewski and Lipniacki (2026), extracted from a
+      400-dpi rendering of the paper PDF and calibrated to the published
+      axes for quantitative paper-data comparison.
   - name: reference/mapk_erk_system_regulation_kocieniewski2026.net
     role: reference
   - name: reference/mapk_erk_system_regulation_kocieniewski2026_ode.net
