@@ -1,0 +1,4 @@
+interface:
+  display_name: "Curate Model"
+  short_description: "Curate paper folders into BNGL models"
+  default_prompt: "Use $curate-model for dev/papers/<folder> and create the curated models/ entry."
