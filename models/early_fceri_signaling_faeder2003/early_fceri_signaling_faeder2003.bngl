@@ -1,0 +1,237 @@
+begin model
+
+#@title: Early FceRI signaling (Faeder et al., 2003)
+
+#@description: |
+#  Detailed rule-based model for early FceRI-mediated signaling in
+#  rat basophilic leukemia cells stimulated by covalently cross-linked
+#  IgE dimers. A bivalent ligand aggregates FceRI, Lyn phosphorylates
+#  receptor beta and gamma ITAMs and Syk linker sites, Syk binds
+#  phosphorylated gamma ITAMs, and Syk transphosphorylates activation
+#  loop sites on other aggregate-bound Syk molecules.
+#
+#  The source model uses scaled molecule counts: receptor, Lyn, and Syk
+#  populations are 1000-fold smaller than the per-cell values in Table I
+#  of Faeder et al. (2003), with bimolecular rate constants scaled
+#  upward to preserve deterministic ODE dynamics. The active protocol
+#  reproduces the Fig. 3-style time course of receptor aggregation,
+#  receptor ITAM phosphorylation, Lyn redistribution, and Syk
+#  phosphorylation over 600 s.
+
+#@keyword: |
+#  immunoreceptor signaling, FceRI, mast cell signaling, RBL-2H3,
+#  IgE receptor, Lyn, Syk, ITAM phosphorylation, receptor aggregation,
+#  mass action, rule-based model, deterministic ODE
+
+#@reference: |
+#  Faeder JR, Hlavacek WS, Reischl I, Blinov ML, Metzger H, Redondo A,
+#  Wofsy C, Goldstein B (2003). Investigation of early events in
+#  Fc epsilon RI-mediated signaling using a detailed mathematical model.
+#  Journal of Immunology 170:3769-3781.
+
+begin parameters
+  # Avogadro constant; included for unit-conversion readiness.
+  NA  6.02214076e23  # /mol
+
+  # Extracellular reference volume per cell at 1e6 cells/ml.
+  V_ref  1e-9  # L/cell
+
+  # Effective membrane-adjacent layer thickness for surface processes.
+  h_mem  1e-7  # m
+
+  # Source BNGL scaled initial populations.
+  Lig_tot  6.0e3  # molecules
+  Rec_tot  4.0e2  # molecules
+  Lyn_tot  2.8e1  # molecules
+  Syk_tot  4.0e2  # molecules
+
+  # Ligand-receptor binding and receptor aggregation rates.
+  kp1  1.32845238e-7  # /(molecule*s)
+  km1  0              # /s
+  kp2  2.5e-1         # /(molecule*s)
+  km2  0              # /s
+
+  # Constitutive Lyn binding to unphosphorylated receptor beta.
+  kpL  5e-2  # /(molecule*s)
+  kmL  20    # /s
+
+  # Lyn SH2 binding to phosphorylated receptor beta.
+  kpLs  5e-2  # /(molecule*s)
+  kmLs  0.12  # /s
+
+  # Syk tandem-SH2 binding to phosphorylated receptor gamma.
+  kpS  6e-2  # /(molecule*s)
+  kmS  0.13  # /s
+
+  # Syk binding rates after Syk phosphorylation; same values as basal Syk.
+  kpSs  6e-2  # /(molecule*s)
+  kmSs  0.13  # /s
+
+  # Lyn-mediated phosphorylation by constitutively associated Lyn.
+  pLb  30  # /s
+  pLg  1   # /s
+  pLS  30  # /s
+
+  # Lyn-mediated phosphorylation by SH2-bound Lyn.
+  pLbs  100  # /s
+  pLgs  3    # /s
+  pLSs  100  # /s
+
+  # Syk-mediated Syk activation-loop transphosphorylation.
+  pSS   100  # /s
+  pSSs  200  # /s
+
+  # Intrinsic membrane and cytosolic dephosphorylation rates.
+  dm  20  # /s
+  dc  20  # /s
+end parameters
+
+begin molecule types
+  # Bivalent IgE-dimer ligand with two equivalent receptor-binding sites.
+  Lig(l,l)
+  # Membrane-associated Lyn kinase with unique-domain and SH2 binding sites.
+  Lyn(U,SH2)
+  # Syk kinase with tandem SH2, linker, and activation-loop phosphorylation sites.
+  Syk(tSH2,l~Y~pY,a~Y~pY)
+  # FceRI with ligand-binding alpha and ITAM-containing beta and gamma subunits.
+  Rec(a,b~Y~pY,g~Y~pY)
+end molecule types
+
+begin seed species
+  Lig(l,l)           Lig_tot  # molecules
+  Lyn(U,SH2)         Lyn_tot  # molecules
+  Syk(tSH2,l~Y,a~Y)  Syk_tot  # molecules
+  Rec(a,b~Y,g~Y)     Rec_tot  # molecules
+end seed species
+
+begin observables
+  # Free Lyn not bound to a receptor.
+  Molecules  Obs_Free_Lyn       Lyn(U,SH2)
+  # Receptors not in dimers: free receptors plus singly ligated receptors.
+  Molecules  Obs_Rec_Monomer    Rec(a), Rec(a!1).Lig(l!1,l)
+  # Receptor molecules in ligand-crosslinked dimers.
+  Molecules  Obs_Rec_Dimer      Rec.Rec
+
+  # Receptors with phosphorylated beta ITAMs.
+  Molecules  Obs_Rec_BetaP      Rec(b~pY!?)
+  # Receptors with phosphorylated gamma ITAMs, unbound or Syk-bound.
+  Molecules  Obs_Rec_GammaP     Rec(g~pY), Rec(g~pY!+)
+  # Receptors with Syk bound to phosphorylated gamma.
+  Molecules  Obs_Rec_Syk        Rec(g~pY!1).Syk(tSH2!1)
+  # Receptors with gamma-bound Syk phosphorylated on the activation loop.
+  Molecules  Obs_Rec_Syk_AloopP Rec(g~pY!1).Syk(tSH2!1,a~pY)
+
+  # Conservation checks for the three protein species.
+  Molecules  Obs_Tot_Syk        Syk
+  Molecules  Obs_Tot_Lyn        Lyn
+  Molecules  Obs_Tot_Rec        Rec
+end observables
+
+begin reaction rules
+  # Ligand-receptor binding.
+  R1_bind_ligand: Rec(a) + Lig(l,l) <-> Rec(a!1).Lig(l!1,l)  kp1, km1
+
+  # Receptor aggregation through the second site on a singly-bound ligand.
+  R2_crosslink_receptor: \
+    Rec(a) + Lig(l,l!+) <-> Rec(a!2).Lig(l!2,l!+)  kp2, km2
+
+  # Constitutive Lyn-receptor binding through Lyn unique domain.
+  R3_bind_lyn_constitutive: \
+    Rec(b~Y) + Lyn(U,SH2) <-> Rec(b~Y!1).Lyn(U!1,SH2)  kpL, kmL
+
+  # Transphosphorylation of receptor beta by constitutively associated Lyn.
+  R4_phosphorylate_beta_constitutive_lyn: \
+    Lig(l!1,l!2).Lyn(U!3,SH2).Rec(a!2,b~Y!3).Rec(a!1,b~Y) -> \
+    Lig(l!1,l!2).Lyn(U!3,SH2).Rec(a!2,b~Y!3).Rec(a!1,b~pY)  pLb
+
+  # Transphosphorylation of receptor gamma by constitutively associated Lyn.
+  R5_phosphorylate_gamma_constitutive_lyn: \
+    Lig(l!1,l!2).Lyn(U!3,SH2).Rec(a!2,b~Y!3).Rec(a!1,g~Y) -> \
+    Lig(l!1,l!2).Lyn(U!3,SH2).Rec(a!2,b~Y!3).Rec(a!1,g~pY)  pLg
+
+  # Lyn SH2 binding to phosphorylated receptor beta.
+  R6_bind_lyn_sh2: \
+    Rec(b~pY) + Lyn(U,SH2) <-> Rec(b~pY!1).Lyn(U,SH2!1)  kpLs, kmLs
+
+  # Transphosphorylation of receptor beta by SH2-bound Lyn.
+  R7_phosphorylate_beta_sh2_lyn: \
+    Lig(l!1,l!2).Lyn(U,SH2!3).Rec(a!2,b~pY!3).Rec(a!1,b~Y) -> \
+    Lig(l!1,l!2).Lyn(U,SH2!3).Rec(a!2,b~pY!3).Rec(a!1,b~pY)  pLbs
+
+  # Transphosphorylation of receptor gamma by SH2-bound Lyn.
+  R8_phosphorylate_gamma_sh2_lyn: \
+    Lig(l!1,l!2).Lyn(U,SH2!3).Rec(a!2,b~pY!3).Rec(a!1,g~Y) -> \
+    Lig(l!1,l!2).Lyn(U,SH2!3).Rec(a!2,b~pY!3).Rec(a!1,g~pY)  pLgs
+
+  # Syk tandem-SH2 binding to phosphorylated receptor gamma.
+  R9_bind_syk: \
+    Rec(g~pY) + Syk(tSH2) <-> Rec(g~pY!1).Syk(tSH2!1)  kpS, kmS
+
+  # Transphosphorylation of Syk linker sites by constitutively associated Lyn.
+  R10_phosphorylate_syk_linker_constitutive_lyn: \
+    Lig(l!1,l!2).Lyn(U!3,SH2).Rec(a!2,b~Y!3).Rec(a!1,g~pY!4).Syk(tSH2!4,l~Y) -> \
+    Lig(l!1,l!2).Lyn(U!3,SH2).Rec(a!2,b~Y!3).Rec(a!1,g~pY!4).Syk(tSH2!4,l~pY)  pLS
+
+  # Transphosphorylation of Syk linker sites by SH2-bound Lyn.
+  R11_phosphorylate_syk_linker_sh2_lyn: \
+    Lig(l!1,l!2).Lyn(U,SH2!3).Rec(a!2,b~pY!3).Rec(a!1,g~pY!4).Syk(tSH2!4,l~Y) -> \
+    Lig(l!1,l!2).Lyn(U,SH2!3).Rec(a!2,b~pY!3).Rec(a!1,g~pY!4).Syk(tSH2!4,l~pY)  pLSs
+
+  # Syk activation-loop transphosphorylation by unactivated Syk.
+  R12_phosphorylate_syk_activation_loop_basal_syk: \
+    Lig(l!1,l!2).Syk(tSH2!3,a~Y).Rec(a!2,g~pY!3).Rec(a!1,g~pY!4).Syk(tSH2!4,a~Y) -> \
+    Lig(l!1,l!2).Syk(tSH2!3,a~Y).Rec(a!2,g~pY!3).Rec(a!1,g~pY!4).Syk(tSH2!4,a~pY)  pSS
+
+  # Syk activation-loop transphosphorylation by activation-loop phosphorylated Syk.
+  R13_phosphorylate_syk_activation_loop_active_syk: \
+    Lig(l!1,l!2).Syk(tSH2!3,a~pY).Rec(a!2,g~pY!3).Rec(a!1,g~pY!4).Syk(tSH2!4,a~Y) -> \
+    Lig(l!1,l!2).Syk(tSH2!3,a~pY).Rec(a!2,g~pY!3).Rec(a!1,g~pY!4).Syk(tSH2!4,a~pY)  pSSs
+
+  # Dephosphorylation of receptor beta and gamma ITAMs.
+  R14_dephosphorylate_beta: Rec(b~pY) -> Rec(b~Y)  dm
+  R15_dephosphorylate_gamma: Rec(g~pY) -> Rec(g~Y)  dm
+
+  # Dephosphorylation of membrane-bound Syk.
+  R16_dephosphorylate_membrane_syk_linker: Syk(tSH2!+,l~pY) -> Syk(tSH2!+,l~Y)  dm
+  R17_dephosphorylate_membrane_syk_activation_loop: \
+    Syk(tSH2!+,a~pY) -> Syk(tSH2!+,a~Y)  dm
+
+  # Dephosphorylation of cytosolic Syk.
+  R18_dephosphorylate_cytosolic_syk_linker: Syk(tSH2,l~pY) -> Syk(tSH2,l~Y)  dc
+  R19_dephosphorylate_cytosolic_syk_activation_loop: \
+    Syk(tSH2,a~pY) -> Syk(tSH2,a~Y)  dc
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 354 species, 3680 reactions
+
+  #@note: |
+  #  The legacy source BNGL used ODE simulation as the active protocol.
+  #  ODE remains the preferred protocol here. The model is a deterministic
+  #  scaled-population representation of the Faeder et al. (2003) network;
+  #  stochastic variants should be validated separately before use.
+
+  saveConcentrations()
+
+  # Early signaling time course.
+
+  #@protocol: |
+  #  Simulate receptor aggregation and downstream signaling for 600 s
+  #  from the scaled source initial condition. The output observables
+  #  track the quantities plotted in Fig. 3 of Faeder et al. (2003):
+  #  receptor dimers, receptor beta and gamma phosphorylation, Lyn
+  #  redistribution, Syk recruitment, and Syk activation-loop
+  #  phosphorylation.
+
+  #@figure: Fig. 3 in Faeder et al. (2003)
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>600,\
+    n_steps=>10,atol=>1e-8,rtol=>1e-8})
+
+#  resetConcentrations()
+#  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>600,\
+#    n_steps=>10})
+end actions

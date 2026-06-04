@@ -1,0 +1,45 @@
+# metadata.yaml - early_fceri_signaling_faeder2003
+id: early_fceri_signaling_faeder2003
+created: 2026-06-04
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, ai_assisted]
+  description: >
+    House-style curation of dev/papers/Faeder2003/fceri_ji.bngl,
+    based on Faeder et al. (2003), Journal of Immunology 170:3769-3781.
+    The source model encodes the early FceRI signaling network described
+    in the paper and uses scaled molecule counts with deterministic ODE
+    simulation.
+
+files:
+  - name: early_fceri_signaling_faeder2003.bngl
+    role: primary
+    description: >
+      Early FceRI signaling model for IgE-dimer-induced receptor
+      aggregation, Lyn-mediated receptor phosphorylation, Syk recruitment,
+      and Syk activation-loop transphosphorylation.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_faeder2003.ipynb
+    role: verification
+    description: >
+      Runs BioNetGen, confirms committed reference output, independently
+      integrates the generated 354-species mass-action ODE network with
+      SciPy, and overlays BioNetGen and SciPy observables.
+  - name: verify_faeder2003.png
+    role: figure
+  - name: reference/early_fceri_signaling_faeder2003.net
+    role: reference
+  - name: reference/early_fceri_signaling_faeder2003_ode.net
+    role: reference
+  - name: reference/early_fceri_signaling_faeder2003_ode.gdat
+    role: reference
+  - name: reference/early_fceri_signaling_faeder2003_ode.cdat
+    role: reference
