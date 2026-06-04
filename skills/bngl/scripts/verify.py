@@ -40,6 +40,7 @@ import numpy as np
 # Data I/O
 # ---------------------------------------------------------------------------
 
+
 def parse_data_file(path):
     """Parse a .gdat or .scan file (whitespace-delimited, # header row).
 
@@ -77,6 +78,7 @@ def parse_data_file(path):
 # ---------------------------------------------------------------------------
 # Simulation runner
 # ---------------------------------------------------------------------------
+
 
 def find_output_file(output_dir, model_basename, suffix, output_type):
     """Find the simulation output file in the output directory.
@@ -187,12 +189,8 @@ def simulate_model(model_path, fmt, output_type, sim_suffix="ode"):
 # Unit reconciliation: dimensional conversion functions
 # ---------------------------------------------------------------------------
 
-DIMENSIONAL_HEADER_RE = re.compile(
-    r"^\s*#\s*Dimensional\s+conversion", re.IGNORECASE
-)
-COMMENTED_FUNC_RE = re.compile(
-    r"^#\s+(\w+\(\))\s*=\s*(.+)$"
-)
+DIMENSIONAL_HEADER_RE = re.compile(r"^\s*#\s*Dimensional\s+conversion", re.IGNORECASE)
+COMMENTED_FUNC_RE = re.compile(r"^#\s+(\w+\(\))\s*=\s*(.+)$")
 
 
 def detect_dimensional_functions(model_path):
@@ -284,6 +282,7 @@ def get_dimensional_function_names(model_path):
 # Column mapping
 # ---------------------------------------------------------------------------
 
+
 def parse_column_map(map_str):
     """Parse a column map string like 'R1=R1_conc,R2=R2_conc'.
 
@@ -343,12 +342,13 @@ def auto_match_columns(orig_cols, mod_cols):
                 def shared_tail(a, b):
                     pa, pb = a.split("_")[::-1], b.split("_")[::-1]
                     count = 0
-                    for x, y in zip(pa, pb):
+                    for x, y in zip(pa, pb, strict=False):
                         if x == y:
                             count += 1
                         else:
                             break
                     return count
+
                 candidates.sort(key=lambda c: shared_tail(orig_name, c), reverse=True)
                 mapping[orig_name] = candidates[0]
         # If no match found, leave unmapped (will be reported)
@@ -373,6 +373,7 @@ def resolve_column_mapping(orig_cols, mod_cols, explicit_map_str=None):
 # ---------------------------------------------------------------------------
 # Comparison metrics
 # ---------------------------------------------------------------------------
+
 
 def pointwise_errors(a, b, atol):
     """Compute pointwise absolute error and scale for mixed tolerance.
@@ -442,6 +443,7 @@ def interpolate_to_common_grid(t_a, y_a, t_b, y_b):
 # ODE comparison
 # ---------------------------------------------------------------------------
 
+
 def compare_ode(orig_cols, orig_data, mod_cols, mod_data, column_map, rtol, atol):
     """Compare ODE trajectories column by column.
 
@@ -457,20 +459,24 @@ def compare_ode(orig_cols, orig_data, mod_cols, mod_data, column_map, rtol, atol
 
     for orig_name, mod_name in column_map.items():
         if orig_name not in orig_cols:
-            results.append({
-                "original_col": orig_name,
-                "modified_col": mod_name,
-                "status": "ERROR",
-                "message": f"Column {orig_name!r} not found in original data",
-            })
+            results.append(
+                {
+                    "original_col": orig_name,
+                    "modified_col": mod_name,
+                    "status": "ERROR",
+                    "message": f"Column {orig_name!r} not found in original data",
+                }
+            )
             continue
         if mod_name not in mod_cols:
-            results.append({
-                "original_col": orig_name,
-                "modified_col": mod_name,
-                "status": "ERROR",
-                "message": f"Column {mod_name!r} not found in modified data",
-            })
+            results.append(
+                {
+                    "original_col": orig_name,
+                    "modified_col": mod_name,
+                    "status": "ERROR",
+                    "message": f"Column {mod_name!r} not found in modified data",
+                }
+            )
             continue
 
         orig_idx = orig_cols.index(orig_name)
@@ -481,23 +487,23 @@ def compare_ode(orig_cols, orig_data, mod_cols, mod_data, column_map, rtol, atol
 
         # Interpolate to common grid if time vectors differ
         if len(orig_time) != len(mod_time) or not np.allclose(orig_time, mod_time):
-            _, orig_y, mod_y = interpolate_to_common_grid(
-                orig_time, orig_y, mod_time, mod_y
-            )
+            _, orig_y, mod_y = interpolate_to_common_grid(orig_time, orig_y, mod_time, mod_y)
 
         norm_max = normalized_max_error(orig_y, mod_y, atol)
         norm_l2 = normalized_l2_error(orig_y, mod_y, atol)
         passed = norm_max <= rtol
 
-        results.append({
-            "original_col": orig_name,
-            "modified_col": mod_name,
-            "status": "PASS" if passed else "FAIL",
-            "norm_max": norm_max,
-            "norm_l2": norm_l2,
-            "rtol": rtol,
-            "atol": atol,
-        })
+        results.append(
+            {
+                "original_col": orig_name,
+                "modified_col": mod_name,
+                "status": "PASS" if passed else "FAIL",
+                "norm_max": norm_max,
+                "norm_l2": norm_l2,
+                "rtol": rtol,
+                "atol": atol,
+            }
+        )
 
     return results
 
@@ -505,6 +511,7 @@ def compare_ode(orig_cols, orig_data, mod_cols, mod_data, column_map, rtol, atol
 # ---------------------------------------------------------------------------
 # SSA comparison (basic v1: ensemble means)
 # ---------------------------------------------------------------------------
+
 
 def run_ssa_ensemble(model_path, fmt, output_type, replicates, sim_suffix="ssa"):
     """Run SSA replicates and collect per-column means and variances.
@@ -526,9 +533,7 @@ def run_ssa_ensemble(model_path, fmt, output_type, replicates, sim_suffix="ssa")
             runner(model_path, tmpdir, suffix=sim_suffix)
             out_file = find_output_file(tmpdir, model_basename, sim_suffix, output_type)
             if out_file is None:
-                raise FileNotFoundError(
-                    f"No .{output_type} file found after SSA replicate {i}"
-                )
+                raise FileNotFoundError(f"No .{output_type} file found after SSA replicate {i}")
             cols, data = parse_data_file(out_file)
             if columns is None:
                 columns = cols
@@ -555,9 +560,11 @@ def compare_ssa(orig_cols, orig_mean, mod_cols, mod_mean, column_map, rtol, atol
 # Plotting
 # ---------------------------------------------------------------------------
 
+
 def generate_plots(orig_cols, orig_data, mod_cols, mod_data, column_map, plot_dir):
     """Generate comparison plots for each mapped column pair."""
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
@@ -574,8 +581,13 @@ def generate_plots(orig_cols, orig_data, mod_cols, mod_data, column_map, plot_di
 
         fig, ax = plt.subplots(figsize=(8, 5))
         ax.plot(orig_time, orig_data[:, orig_idx], label=f"Original: {orig_name}", linewidth=2)
-        ax.plot(mod_time, mod_data[:, mod_idx], label=f"Modified: {mod_name}",
-                linewidth=2, linestyle="--")
+        ax.plot(
+            mod_time,
+            mod_data[:, mod_idx],
+            label=f"Modified: {mod_name}",
+            linewidth=2,
+            linestyle="--",
+        )
         ax.set_xlabel(orig_cols[0])
         ax.set_ylabel("Value")
         ax.set_title(f"Verification: {orig_name} vs {mod_name}")
@@ -591,11 +603,12 @@ def generate_plots(orig_cols, orig_data, mod_cols, mod_data, column_map, plot_di
 # Report
 # ---------------------------------------------------------------------------
 
+
 def print_report(results, mode):
     """Print a pass/fail report to stdout."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Verification Report (mode: {mode})")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     all_passed = True
     for r in results:
@@ -613,15 +626,17 @@ def print_report(results, mode):
             atol = r["atol"]
             marker = "PASS" if status == "PASS" else "FAIL"
             print(f"  {marker}  {orig} -> {mod}")
-            print(f"         norm_max={norm_max:.6e}  norm_l2={norm_l2:.6e}  "
-                  f"rtol={rtol:.2e}  atol={atol:.2e}")
+            print(
+                f"         norm_max={norm_max:.6e}  norm_l2={norm_l2:.6e}  "
+                f"rtol={rtol:.2e}  atol={atol:.2e}"
+            )
             if status == "FAIL":
                 all_passed = False
 
-    print(f"\n{'─'*60}")
+    print(f"\n{'─' * 60}")
     overall = "PASS" if all_passed else "FAIL"
     print(f"Overall: {overall}")
-    print(f"{'─'*60}\n")
+    print(f"{'─' * 60}\n")
 
     return all_passed
 
@@ -630,35 +645,66 @@ def print_report(results, mode):
 # Main
 # ---------------------------------------------------------------------------
 
+
 def build_parser():
     p = argparse.ArgumentParser(
         description="Verify that a modified BNGL model reproduces the dynamics of the original.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    p.add_argument("--original", required=True,
-                   help="Path to original model (.bngl) or pre-computed output (.gdat/.scan)")
-    p.add_argument("--modified", required=True,
-                   help="Path to modified model (.bngl) or pre-computed output (.gdat/.scan)")
-    p.add_argument("--mode", choices=["ode", "ssa"], default="ode",
-                   help="Comparison mode (default: ode)")
-    p.add_argument("--tolerance", type=float, default=0.01,
-                   help="Relative tolerance (rtol) for trajectory agreement (default: 0.01)")
-    p.add_argument("--atol", type=float, default=1e-8,
-                   help="Absolute tolerance floor for near-zero values (default: 1e-8). "
-                        "Error criterion: |a-b| <= atol + rtol*|a|")
-    p.add_argument("--format", choices=["bngl", "sbml", "antimony"], default=None,
-                   help="Model format (auto-detected from extension if omitted)")
-    p.add_argument("--output-type", choices=["gdat", "scan"], default="gdat",
-                   help="Output file type to compare (default: gdat)")
-    p.add_argument("--column-map", default=None,
-                   help='Explicit column mapping, e.g. "R1=R1_conc,R2=R2_conc"')
-    p.add_argument("--replicates", type=int, default=100,
-                   help="Number of SSA replicates (default: 100, only used in ssa mode)")
-    p.add_argument("--plot", action="store_true",
-                   help="Generate comparison plots")
-    p.add_argument("--plot-dir", default="./verify_plots",
-                   help="Directory for comparison plots (default: ./verify_plots)")
+    p.add_argument(
+        "--original",
+        required=True,
+        help="Path to original model (.bngl) or pre-computed output (.gdat/.scan)",
+    )
+    p.add_argument(
+        "--modified",
+        required=True,
+        help="Path to modified model (.bngl) or pre-computed output (.gdat/.scan)",
+    )
+    p.add_argument(
+        "--mode", choices=["ode", "ssa"], default="ode", help="Comparison mode (default: ode)"
+    )
+    p.add_argument(
+        "--tolerance",
+        type=float,
+        default=0.01,
+        help="Relative tolerance (rtol) for trajectory agreement (default: 0.01)",
+    )
+    p.add_argument(
+        "--atol",
+        type=float,
+        default=1e-8,
+        help="Absolute tolerance floor for near-zero values (default: 1e-8). "
+        "Error criterion: |a-b| <= atol + rtol*|a|",
+    )
+    p.add_argument(
+        "--format",
+        choices=["bngl", "sbml", "antimony"],
+        default=None,
+        help="Model format (auto-detected from extension if omitted)",
+    )
+    p.add_argument(
+        "--output-type",
+        choices=["gdat", "scan"],
+        default="gdat",
+        help="Output file type to compare (default: gdat)",
+    )
+    p.add_argument(
+        "--column-map", default=None, help='Explicit column mapping, e.g. "R1=R1_conc,R2=R2_conc"'
+    )
+    p.add_argument(
+        "--replicates",
+        type=int,
+        default=100,
+        help="Number of SSA replicates (default: 100, only used in ssa mode)",
+    )
+    p.add_argument("--plot", action="store_true", help="Generate comparison plots")
+    p.add_argument(
+        "--plot-dir",
+        default="./verify_plots",
+        help="Directory for comparison plots (default: ./verify_plots)",
+    )
     return p
 
 
@@ -682,8 +728,10 @@ def main(argv=None):
     mod_run_path = mod_path
     tmp_reconcile_dir = None
     if not mod_is_data and mod_fmt == "bngl" and detect_dimensional_functions(mod_path):
-        print("Detected dimensional conversion functions in modified model — "
-              "uncommenting for comparison.")
+        print(
+            "Detected dimensional conversion functions in modified model — "
+            "uncommenting for comparison."
+        )
         tmp_reconcile_dir = tempfile.mkdtemp(prefix="verify_dim_")
         mod_run_path = uncomment_dimensional_functions(mod_path, tmp_reconcile_dir)
 
@@ -691,16 +739,10 @@ def main(argv=None):
         if args.mode == "ode":
             # --- ODE mode ---
             sim_suffix = "ode"
-            orig_cols, orig_data = simulate_model(
-                orig_path, orig_fmt, args.output_type, sim_suffix
-            )
-            mod_cols, mod_data = simulate_model(
-                mod_run_path, mod_fmt, args.output_type, sim_suffix
-            )
+            orig_cols, orig_data = simulate_model(orig_path, orig_fmt, args.output_type, sim_suffix)
+            mod_cols, mod_data = simulate_model(mod_run_path, mod_fmt, args.output_type, sim_suffix)
 
-            column_map = resolve_column_mapping(
-                orig_cols, mod_cols, args.column_map
-            )
+            column_map = resolve_column_mapping(orig_cols, mod_cols, args.column_map)
             if not column_map:
                 print("ERROR: No columns could be matched between original and modified output.")
                 print(f"  Original columns: {orig_cols}")
@@ -708,14 +750,17 @@ def main(argv=None):
                 sys.exit(1)
 
             results = compare_ode(
-                orig_cols, orig_data, mod_cols, mod_data,
-                column_map, args.tolerance, args.atol,
+                orig_cols,
+                orig_data,
+                mod_cols,
+                mod_data,
+                column_map,
+                args.tolerance,
+                args.atol,
             )
 
             if args.plot:
-                generate_plots(
-                    orig_cols, orig_data, mod_cols, mod_data, column_map, args.plot_dir
-                )
+                generate_plots(orig_cols, orig_data, mod_cols, mod_data, column_map, args.plot_dir)
                 print(f"Plots saved to {args.plot_dir}/")
 
         elif args.mode == "ssa":
@@ -741,22 +786,23 @@ def main(argv=None):
                     mod_run_path, mod_fmt, args.output_type, args.replicates, sim_suffix
                 )
 
-            column_map = resolve_column_mapping(
-                orig_cols, mod_cols, args.column_map
-            )
+            column_map = resolve_column_mapping(orig_cols, mod_cols, args.column_map)
             if not column_map:
                 print("ERROR: No columns could be matched between original and modified output.")
                 sys.exit(1)
 
             results = compare_ssa(
-                orig_cols, orig_mean, mod_cols, mod_mean,
-                column_map, args.tolerance, args.atol,
+                orig_cols,
+                orig_mean,
+                mod_cols,
+                mod_mean,
+                column_map,
+                args.tolerance,
+                args.atol,
             )
 
             if args.plot:
-                generate_plots(
-                    orig_cols, orig_mean, mod_cols, mod_mean, column_map, args.plot_dir
-                )
+                generate_plots(orig_cols, orig_mean, mod_cols, mod_mean, column_map, args.plot_dir)
                 print(f"Plots saved to {args.plot_dir}/")
 
     finally:

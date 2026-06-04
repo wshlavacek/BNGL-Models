@@ -1,5 +1,11 @@
 **/.DS_Store
-.envrc
+.venv/
+.envrc.local
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+__pycache__/
+*.py[cod]
 staging/
 my_models/reference/
 dev/

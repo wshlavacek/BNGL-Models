@@ -14,7 +14,18 @@ DEFAULT_TIMEOUT = 120
 DEFAULT_WORKERS = 12
 DEFAULT_OUTPUT_FILE = Path("bngl_results.txt")
 DEFAULT_REFERENCE_DIR = Path("reference")
-ARTIFACT_EXTENSIONS = {".gdat", ".cdat", ".xml", ".scan", ".net", ".species", ".graphml", ".m", ".tex", ".c"}
+ARTIFACT_EXTENSIONS = {
+    ".cdat",
+    ".c",
+    ".gdat",
+    ".graphml",
+    ".m",
+    ".net",
+    ".scan",
+    ".species",
+    ".tex",
+    ".xml",
+}
 PROTECTED_DIRS = {"nf", "ode", "ssa", "reference"}
 
 
@@ -34,8 +45,10 @@ def resolve_bngl_exe(cli_path):
         return path
     if DEFAULT_BNGL_EXE.is_file():
         return DEFAULT_BNGL_EXE
-    sys.exit(f"BNG2.pl not found at default location ({DEFAULT_BNGL_EXE}). "
-             f"Pass --bngl-exe or set $BNG2_PL.")
+    sys.exit(
+        f"BNG2.pl not found at default location ({DEFAULT_BNGL_EXE}). "
+        f"Pass --bngl-exe or set $BNG2_PL."
+    )
 
 
 def run_bngl(file_path, bngl_exe, timeout, log_dir):
@@ -49,13 +62,17 @@ def run_bngl(file_path, bngl_exe, timeout, log_dir):
         )
         if result.returncode == 0:
             return file_path, "complete"
-        _write_log(log_dir, file_path, "crash",
-                   returncode=result.returncode,
-                   stdout=result.stdout, stderr=result.stderr)
+        _write_log(
+            log_dir,
+            file_path,
+            "crash",
+            returncode=result.returncode,
+            stdout=result.stdout,
+            stderr=result.stderr,
+        )
         return file_path, "crash"
     except subprocess.TimeoutExpired as e:
-        _write_log(log_dir, file_path, "timeout",
-                   stdout=e.stdout or "", stderr=e.stderr or "")
+        _write_log(log_dir, file_path, "timeout", stdout=e.stdout or "", stderr=e.stderr or "")
         return file_path, "timeout"
     except Exception as e:
         return file_path, f"error: {e}"
@@ -68,26 +85,47 @@ def _write_log(log_dir, file_path, status, returncode=None, stdout="", stderr=""
     if returncode is not None:
         header.append(f"# returncode={returncode}")
     log_path.write_text(
-        "\n".join(header) + "\n\n"
-        f"--- STDOUT ---\n{stdout}\n\n--- STDERR ---\n{stderr}\n"
+        "\n".join(header) + f"\n\n--- STDOUT ---\n{stdout}\n\n--- STDERR ---\n{stderr}\n"
     )
 
 
 def parse_args():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--bngl-exe", help="Path to BNG2.pl (overrides $BNG2_PL and default)")
-    p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT,
-                   help=f"Per-model timeout in seconds (default: {DEFAULT_TIMEOUT})")
-    p.add_argument("--workers", type=int, default=DEFAULT_WORKERS,
-                   help=f"Parallel workers (default: {DEFAULT_WORKERS})")
-    p.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_FILE,
-                   help=f"Results summary file (default: {DEFAULT_OUTPUT_FILE})")
-    p.add_argument("--reference-dir", type=Path, default=DEFAULT_REFERENCE_DIR,
-                   help=f"Where to collect artifacts (default: {DEFAULT_REFERENCE_DIR})")
-    p.add_argument("--clean", action="store_true",
-                   help="Remove an existing reference dir before running (default: refuse)")
-    p.add_argument("--target-dir", type=Path,
-                   help="Directory to scan for .bngl files (default: this script's directory)")
+    p.add_argument(
+        "--timeout",
+        type=int,
+        default=DEFAULT_TIMEOUT,
+        help=f"Per-model timeout in seconds (default: {DEFAULT_TIMEOUT})",
+    )
+    p.add_argument(
+        "--workers",
+        type=int,
+        default=DEFAULT_WORKERS,
+        help=f"Parallel workers (default: {DEFAULT_WORKERS})",
+    )
+    p.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_OUTPUT_FILE,
+        help=f"Results summary file (default: {DEFAULT_OUTPUT_FILE})",
+    )
+    p.add_argument(
+        "--reference-dir",
+        type=Path,
+        default=DEFAULT_REFERENCE_DIR,
+        help=f"Where to collect artifacts (default: {DEFAULT_REFERENCE_DIR})",
+    )
+    p.add_argument(
+        "--clean",
+        action="store_true",
+        help="Remove an existing reference dir before running (default: refuse)",
+    )
+    p.add_argument(
+        "--target-dir",
+        type=Path,
+        help="Directory to scan for .bngl files (default: this script's directory)",
+    )
     return p.parse_args()
 
 
@@ -148,8 +186,10 @@ def main():
             print(f"Removing existing {reference_dir}/...")
             shutil.rmtree(reference_dir)
         else:
-            sys.exit(f"{reference_dir}/ already exists. Pass --clean to remove it, "
-                     f"or --reference-dir to use a different path.")
+            sys.exit(
+                f"{reference_dir}/ already exists. Pass --clean to remove it, "
+                f"or --reference-dir to use a different path."
+            )
     log_dir = reference_dir / "_logs"
     log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -165,8 +205,7 @@ def main():
     executor = concurrent.futures.ProcessPoolExecutor(max_workers=args.workers)
     try:
         future_to_file = {
-            executor.submit(run_bngl, f, bngl_exe, args.timeout, log_dir): f
-            for f in bngl_files
+            executor.submit(run_bngl, f, bngl_exe, args.timeout, log_dir): f for f in bngl_files
         }
         done = 0
         for future in concurrent.futures.as_completed(future_to_file):
