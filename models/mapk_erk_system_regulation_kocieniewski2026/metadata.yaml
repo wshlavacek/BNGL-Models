@@ -1,0 +1,48 @@
+# metadata.yaml - mapk_erk_system_regulation_kocieniewski2026
+id: mapk_erk_system_regulation_kocieniewski2026
+created: 2026-06-04
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, ai_assisted]
+  description: >
+    House-style curation of
+    dev/papers/Kocieniewski2026/Kocieniewski_Lipniacki_MAPK_ERK_model.bngl,
+    based on Kocieniewski and Lipniacki (2026), Scientific Reports 16:14437.
+    The source model encodes a rule-based MAPK/ERK signaling network with
+    RAF isoforms, MEK isoforms, ERK, RAS/SOS feedback, and 14-3-3-mediated
+    RAF regulation.
+
+files:
+  - name: mapk_erk_system_regulation_kocieniewski2026.bngl
+    role: primary
+    description: >
+      Rule-based MAPK/ERK signaling model for EGF stimulation at
+      10000 pg/ml, including EGFR, SOS, RAS, RasGAP, ARAF, BRAF, CRAF,
+      MEK1, MEK2, ERK, and 14-3-3 regulation. The active ODE protocol
+      reproduces the Fig. 3a relaxation-oscillation trajectories for
+      RAS-GTP, active RAF, MEK-PP, and ERK-PP.
+    documentation_target: minimal
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_kocieniewski2026.ipynb
+    role: verification
+    description: >
+      Runs BioNetGen, confirms committed reference output, independently
+      integrates the generated 609-species mass-action ODE network with
+      SciPy, and overlays BioNetGen and SciPy observables.
+  - name: verify_kocieniewski2026.png
+    role: figure
+  - name: reference/mapk_erk_system_regulation_kocieniewski2026.net
+    role: reference
+  - name: reference/mapk_erk_system_regulation_kocieniewski2026_ode.net
+    role: reference
+  - name: reference/mapk_erk_system_regulation_kocieniewski2026_ode.gdat
+    role: reference
+  - name: reference/mapk_erk_system_regulation_kocieniewski2026_ode.cdat
+    role: reference
