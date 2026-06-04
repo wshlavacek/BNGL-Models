@@ -1,6 +1,6 @@
 # BNGL-Models
 
-A collection models drawn from the literature. Models are formulated using the BioNetGen language (BNGL). Provided BNGL files include annotation and simulation protocols. Model contributions include provenance and reference simulation results. Simulation results generated from BNGL files are independently verified.
+A collection curated models (in models/) drawn from the literature. Models are formulated using the BioNetGen language (BNGL). Provided BNGL files include annotation and simulation protocols. Model contributions include provenance and reference simulation results. Simulation results generated from BNGL files are independently verified.
 
 ## Models
 
