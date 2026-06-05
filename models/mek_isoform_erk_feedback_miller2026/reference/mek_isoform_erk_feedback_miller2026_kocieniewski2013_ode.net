@@ -1,0 +1,873 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 MEK1_fraction  0.67  # Constant
+    2 X              5.0  # Constant
+    3 EGFR_0         4.999382777809e5  # Constant
+    4 SOS1_0         1.999753111124e5  # Constant
+    5 RAS_0          5.0e5  # Constant
+    6 RAF_0          5.0e5  # Constant
+    7 MEK_tot_0      2.0e5  # Constant
+    8 MEK1_0         MEK_tot_0*MEK1_fraction  # ConstantExpression
+    9 MEK1_0_T292p   0.0  # Constant
+   10 MEK2_0         MEK_tot_0*(1-MEK1_fraction)  # ConstantExpression
+   11 ERK_0          3.0e6  # Constant
+   12 PHP_MEK_0      3.0e6  # Constant
+   13 c1_L           2.0e-2  # Constant
+   14 c1_init        0.0  # Constant
+   15 c2             2.0e-7  # Constant
+   16 t1             100.0  # Constant
+   17 d3             1.0e-3  # Constant
+   18 b1             4.0e-8  # Constant
+   19 n1             2.0e-3  # Constant
+   20 b2             1.0e-5  # Constant
+   21 n2             1.0e-3  # Constant
+   22 b3             1.0e-5  # Constant
+   23 n3             3.0e-2  # Constant
+   24 b4             1.0e-5  # Constant
+   25 n4             1.0e-3  # Constant
+   26 a1             1.5e-7  # Constant
+   27 i1             2.0e-2  # Constant
+   28 a2             4.0e-8  # Constant
+   29 i2             1.0e-2  # Constant
+   30 p1             1.5e-7  # Constant
+   31 u1             5.0e-3  # Constant
+   32 p2a            1.0e-6  # Constant
+   33 p2b            5.0e-6  # Constant
+   34 u2             2.0e-2  # Constant
+   35 p3             2.0e-9  # Constant
+   36 u3             1.0e-3  # Constant
+   37 p4             1.2e-9  # Constant
+   38 u4             2.0e-4  # Constant
+   39 b5             4.0e-9  # Constant
+   40 n5             2.0e-4  # Constant
+   41 u5             20.0  # Constant
+   42 scalepEGFR     5.2709948217252634e-05  # Constant
+   43 scalepERK      3.891540224026214e-06  # Constant
+   44 scalepSos1     2.0032075222804925e-04  # Constant
+   45 _rateLaw1      2*p1  # ConstantExpression
+   46 _rateLaw2      2*u1  # ConstantExpression
+   47 _rateLaw3      2*p1  # ConstantExpression
+   48 _rateLaw4      2*u1  # ConstantExpression
+   49 _rateLaw5      2*p2a  # ConstantExpression
+   50 _rateLaw6      2*p2b  # ConstantExpression
+   51 _rateLaw7      2*u2  # ConstantExpression
+   52 _rateLaw8      2*u5  # ConstantExpression
+   53 _rateLaw9      2*u5  # ConstantExpression
+   54 _rateLaw10     2*u5  # ConstantExpression
+end parameters
+begin functions
+    1 c1() c1_L
+    2 scaled_pEGFR() pEGFR_wt*scalepEGFR
+    3 scaled_pERK() pERK1_2_wt*scalepERK
+    4 scaled_pSOS1() pSos1_wt*scalepSos1
+end functions
+begin species
+    1 EGFR_wt(S~U,dim,lig~U,sos) EGFR_0
+    2 SOS1_wt(S~U,egfr) SOS1_0
+    3 RAS_wt(nt~GDP) RAS_0
+    4 RAF_wt(S~I) RAF_0
+    5 MEK1_wt(S1~Y,T292~Y,d) MEK1_0
+    6 MEK1_wt(S1~Y,T292~Yp,d) MEK1_0_T292p
+    7 MEK2_wt(S1~Y,d) MEK2_0
+    8 ERK_wt(S1~Y) ERK_0
+    9 PHP_wt(mek) PHP_MEK_0
+   10 MEK1_wt(S1~Y,T292~Y,d!1).MEK1_wt(S1~Y,T292~Y,d!1) 0
+   11 MEK1_wt(S1~Y,T292~Y,d!1).MEK1_wt(S1~Y,T292~Yp,d!1) 0
+   12 MEK1_wt(S1~Y,T292~Yp,d!1).MEK1_wt(S1~Y,T292~Yp,d!1) 0
+   13 MEK2_wt(S1~Y,d!1).MEK2_wt(S1~Y,d!1) 0
+   14 MEK1_wt(S1~Y,T292~Y,d!1).MEK2_wt(S1~Y,d!1) 0
+   15 MEK1_wt(S1~Y,T292~Yp,d!1).MEK2_wt(S1~Y,d!1) 0
+   16 EGFR_wt(S~U,dim,lig~B,sos) 0
+   17 MEK1_wt(S1~Y,T292~Yp!1,d).PHP_wt(mek!1) 0
+   18 MEK1_wt(S1~Y,T292~Y,d!1).MEK1_wt(S1~Y,T292~Yp!2,d!1).PHP_wt(mek!2) 0
+   19 MEK1_wt(S1~Y,T292~Yp!1,d!2).MEK1_wt(S1~Y,T292~Yp,d!2).PHP_wt(mek!1) 0
+   20 MEK1_wt(S1~Y,T292~Yp!1,d!2).MEK1_wt(S1~Y,T292~Yp!3,d!2).PHP_wt(mek!1).PHP_wt(mek!3) 0
+   21 MEK1_wt(S1~Y,T292~Yp!1,d!2).MEK2_wt(S1~Y,d!2).PHP_wt(mek!1) 0
+   22 EGFR_wt(S~U,dim!1,lig~B,sos).EGFR_wt(S~U,dim!1,lig~B,sos) 0
+   23 EGFR_wt(S~P,dim!1,lig~B,sos).EGFR_wt(S~U,dim!1,lig~B,sos) 0
+   24 EGFR_wt(S~P,dim!1,lig~B,sos).EGFR_wt(S~P,dim!1,lig~B,sos) 0
+   25 EGFR_wt(S~P,dim!1,lig~B,sos!2).EGFR_wt(S~U,dim!1,lig~B,sos).SOS1_wt(S~U,egfr!2) 0
+   26 EGFR_wt(S~P,dim!1,lig~B,sos!2).EGFR_wt(S~P,dim!1,lig~B,sos).SOS1_wt(S~U,egfr!2) 0
+   27 Sink_wt() 0
+   28 RAS_wt(nt~GTP) 0
+   29 EGFR_wt(S~P,dim!1,lig~B,sos!2).EGFR_wt(S~P,dim!1,lig~B,sos!3).SOS1_wt(S~U,egfr!2).SOS1_wt(S~U,egfr!3) 0
+   30 RAF_wt(S~A) 0
+   31 MEK1_wt(S1~Yp,T292~Y,d) 0
+   32 MEK1_wt(S1~Yp,T292~Yp,d) 0
+   33 MEK1_wt(S1~Y,T292~Y,d!1).MEK1_wt(S1~Yp,T292~Y,d!1) 0
+   34 MEK1_wt(S1~Y,T292~Yp,d!1).MEK1_wt(S1~Yp,T292~Y,d!1) 0
+   35 MEK1_wt(S1~Y,T292~Y,d!1).MEK1_wt(S1~Yp,T292~Yp,d!1) 0
+   36 MEK1_wt(S1~Y,T292~Yp,d!1).MEK1_wt(S1~Yp,T292~Yp,d!1) 0
+   37 MEK1_wt(S1~Yp,T292~Y,d!1).MEK2_wt(S1~Y,d!1) 0
+   38 MEK1_wt(S1~Yp,T292~Yp,d!1).MEK2_wt(S1~Y,d!1) 0
+   39 MEK1_wt(S1~Yp,T292~Yp!1,d).PHP_wt(mek!1) 0
+   40 MEK1_wt(S1~Y,T292~Yp!1,d!2).MEK1_wt(S1~Yp,T292~Y,d!2).PHP_wt(mek!1) 0
+   41 MEK1_wt(S1~Y,T292~Y,d!1).MEK1_wt(S1~Yp,T292~Yp!2,d!1).PHP_wt(mek!2) 0
+   42 MEK1_wt(S1~Y,T292~Yp,d!1).MEK1_wt(S1~Yp,T292~Yp!2,d!1).PHP_wt(mek!2) 0
+   43 MEK1_wt(S1~Y,T292~Yp!1,d!2).MEK1_wt(S1~Yp,T292~Yp,d!2).PHP_wt(mek!1) 0
+   44 MEK1_wt(S1~Y,T292~Yp!1,d!2).MEK1_wt(S1~Yp,T292~Yp!3,d!2).PHP_wt(mek!3).PHP_wt(mek!1) 0
+   45 MEK1_wt(S1~Yp,T292~Yp!1,d!2).MEK2_wt(S1~Y,d!2).PHP_wt(mek!1) 0
+   46 MEK2_wt(S1~Yp,d) 0
+   47 MEK2_wt(S1~Y,d!1).MEK2_wt(S1~Yp,d!1) 0
+   48 MEK1_wt(S1~Y,T292~Y,d!1).MEK2_wt(S1~Yp,d!1) 0
+   49 MEK1_wt(S1~Y,T292~Yp,d!1).MEK2_wt(S1~Yp,d!1) 0
+   50 MEK1_wt(S1~Y,T292~Yp!1,d!2).MEK2_wt(S1~Yp,d!2).PHP_wt(mek!1) 0
+   51 MEK1_wt(S1~Yp,T292~Y,d!1).MEK1_wt(S1~Yp,T292~Y,d!1) 0
+   52 MEK1_wt(S1~Yp,T292~Y,d!1).MEK1_wt(S1~Yp,T292~Yp,d!1) 0
+   53 MEK1_wt(S1~Yp,T292~Y,d!1).MEK1_wt(S1~Yp,T292~Yp!2,d!1).PHP_wt(mek!2) 0
+   54 MEK1_wt(S1~Yp,T292~Yp,d!1).MEK1_wt(S1~Yp,T292~Yp,d!1) 0
+   55 MEK1_wt(S1~Yp,T292~Yp!1,d!2).MEK1_wt(S1~Yp,T292~Yp,d!2).PHP_wt(mek!1) 0
+   56 MEK1_wt(S1~Yp,T292~Yp!1,d!2).MEK1_wt(S1~Yp,T292~Yp!3,d!2).PHP_wt(mek!1).PHP_wt(mek!3) 0
+   57 MEK2_wt(S1~Yp,d!1).MEK2_wt(S1~Yp,d!1) 0
+   58 MEK1_wt(S1~Yp,T292~Y,d!1).MEK2_wt(S1~Yp,d!1) 0
+   59 MEK1_wt(S1~Yp,T292~Yp,d!1).MEK2_wt(S1~Yp,d!1) 0
+   60 MEK1_wt(S1~Yp,T292~Yp!1,d!2).MEK2_wt(S1~Yp,d!2).PHP_wt(mek!1) 0
+   61 MEK1_wt(S1~Ypp,T292~Y,d) 0
+   62 MEK1_wt(S1~Ypp,T292~Yp,d) 0
+   63 MEK1_wt(S1~Y,T292~Y,d!1).MEK1_wt(S1~Ypp,T292~Y,d!1) 0
+   64 MEK1_wt(S1~Y,T292~Yp,d!1).MEK1_wt(S1~Ypp,T292~Y,d!1) 0
+   65 MEK1_wt(S1~Y,T292~Y,d!1).MEK1_wt(S1~Ypp,T292~Yp,d!1) 0
+   66 MEK1_wt(S1~Y,T292~Yp,d!1).MEK1_wt(S1~Ypp,T292~Yp,d!1) 0
+   67 MEK1_wt(S1~Ypp,T292~Y,d!1).MEK2_wt(S1~Y,d!1) 0
+   68 MEK1_wt(S1~Ypp,T292~Yp,d!1).MEK2_wt(S1~Y,d!1) 0
+   69 MEK1_wt(S1~Ypp,T292~Yp!1,d).PHP_wt(mek!1) 0
+   70 MEK1_wt(S1~Y,T292~Yp!1,d!2).MEK1_wt(S1~Ypp,T292~Y,d!2).PHP_wt(mek!1) 0
+   71 MEK1_wt(S1~Y,T292~Y,d!1).MEK1_wt(S1~Ypp,T292~Yp!2,d!1).PHP_wt(mek!2) 0
+   72 MEK1_wt(S1~Y,T292~Yp,d!1).MEK1_wt(S1~Ypp,T292~Yp!2,d!1).PHP_wt(mek!2) 0
+   73 MEK1_wt(S1~Y,T292~Yp!1,d!2).MEK1_wt(S1~Ypp,T292~Yp,d!2).PHP_wt(mek!1) 0
+   74 MEK1_wt(S1~Y,T292~Yp!1,d!2).MEK1_wt(S1~Ypp,T292~Yp!3,d!2).PHP_wt(mek!3).PHP_wt(mek!1) 0
+   75 MEK1_wt(S1~Ypp,T292~Yp!1,d!2).MEK2_wt(S1~Y,d!2).PHP_wt(mek!1) 0
+   76 MEK2_wt(S1~Ypp,d) 0
+   77 MEK2_wt(S1~Y,d!1).MEK2_wt(S1~Ypp,d!1) 0
+   78 MEK1_wt(S1~Y,T292~Y,d!1).MEK2_wt(S1~Ypp,d!1) 0
+   79 MEK1_wt(S1~Y,T292~Yp,d!1).MEK2_wt(S1~Ypp,d!1) 0
+   80 MEK1_wt(S1~Y,T292~Yp!1,d!2).MEK2_wt(S1~Ypp,d!2).PHP_wt(mek!1) 0
+   81 MEK1_wt(S1~Yp,T292~Y,d!1).MEK1_wt(S1~Ypp,T292~Y,d!1) 0
+   82 MEK1_wt(S1~Yp,T292~Y,d!1).MEK1_wt(S1~Ypp,T292~Yp,d!1) 0
+   83 MEK1_wt(S1~Yp,T292~Y,d!1).MEK1_wt(S1~Ypp,T292~Yp!2,d!1).PHP_wt(mek!2) 0
+   84 MEK1_wt(S1~Yp,T292~Yp,d!1).MEK1_wt(S1~Ypp,T292~Y,d!1) 0
+   85 MEK1_wt(S1~Yp,T292~Yp,d!1).MEK1_wt(S1~Ypp,T292~Yp,d!1) 0
+   86 MEK1_wt(S1~Yp,T292~Yp,d!1).MEK1_wt(S1~Ypp,T292~Yp!2,d!1).PHP_wt(mek!2) 0
+   87 MEK1_wt(S1~Yp,T292~Yp!1,d!2).MEK1_wt(S1~Ypp,T292~Y,d!2).PHP_wt(mek!1) 0
+   88 MEK1_wt(S1~Yp,T292~Yp!1,d!2).MEK1_wt(S1~Ypp,T292~Yp,d!2).PHP_wt(mek!1) 0
+   89 MEK1_wt(S1~Yp,T292~Yp!1,d!2).MEK1_wt(S1~Ypp,T292~Yp!3,d!2).PHP_wt(mek!1).PHP_wt(mek!3) 0
+   90 MEK1_wt(S1~Ypp,T292~Y,d!1).MEK1_wt(S1~Ypp,T292~Y,d!1) 0
+   91 MEK1_wt(S1~Ypp,T292~Y,d!1).MEK1_wt(S1~Ypp,T292~Yp,d!1) 0
+   92 MEK1_wt(S1~Ypp,T292~Y,d!1).MEK1_wt(S1~Ypp,T292~Yp!2,d!1).PHP_wt(mek!2) 0
+   93 MEK1_wt(S1~Ypp,T292~Yp,d!1).MEK1_wt(S1~Ypp,T292~Yp,d!1) 0
+   94 MEK1_wt(S1~Ypp,T292~Yp!1,d!2).MEK1_wt(S1~Ypp,T292~Yp,d!2).PHP_wt(mek!1) 0
+   95 MEK1_wt(S1~Ypp,T292~Yp!1,d!2).MEK1_wt(S1~Ypp,T292~Yp!3,d!2).PHP_wt(mek!1).PHP_wt(mek!3) 0
+   96 MEK2_wt(S1~Yp,d!1).MEK2_wt(S1~Ypp,d!1) 0
+   97 MEK2_wt(S1~Ypp,d!1).MEK2_wt(S1~Ypp,d!1) 0
+   98 MEK1_wt(S1~Ypp,T292~Y,d!1).MEK2_wt(S1~Yp,d!1) 0
+   99 MEK1_wt(S1~Ypp,T292~Yp,d!1).MEK2_wt(S1~Yp,d!1) 0
+  100 MEK1_wt(S1~Ypp,T292~Yp!1,d!2).MEK2_wt(S1~Yp,d!2).PHP_wt(mek!1) 0
+  101 MEK1_wt(S1~Yp,T292~Y,d!1).MEK2_wt(S1~Ypp,d!1) 0
+  102 MEK1_wt(S1~Yp,T292~Yp,d!1).MEK2_wt(S1~Ypp,d!1) 0
+  103 MEK1_wt(S1~Yp,T292~Yp!1,d!2).MEK2_wt(S1~Ypp,d!2).PHP_wt(mek!1) 0
+  104 MEK1_wt(S1~Ypp,T292~Y,d!1).MEK2_wt(S1~Ypp,d!1) 0
+  105 MEK1_wt(S1~Ypp,T292~Yp,d!1).MEK2_wt(S1~Ypp,d!1) 0
+  106 MEK1_wt(S1~Ypp,T292~Yp!1,d!2).MEK2_wt(S1~Ypp,d!2).PHP_wt(mek!1) 0
+  107 ERK_wt(S1~Yp) 0
+  108 ERK_wt(S1~Ypp) 0
+  109 SOS1_wt(S~P,egfr) 0
+end species
+begin reactions
+    1 5,5 10 0.5*b2 #_R1
+    2 5,6 11 b2 #_R1
+    3 6,6 12 0.5*b2 #_R1
+    4 7,7 13 0.5*b3 #_R2
+    5 5,7 14 b4 #_R3
+    6 6,7 15 b4 #_R3
+    7 1 16 c1 #_R4
+    8 6 5 u4 #_R30
+    9 6,9 17 b5 #_R31
+   10 5,17 18 b2 #_R1
+   11 6,17 19 b2 #_R1
+   12 17,17 20 0.5*b2 #_R1
+   13 10 5,5 n2 #_reverse__R1
+   14 11 5,6 n2 #_reverse__R1
+   15 12 6,6 n2 #_reverse__R1
+   16 13 7,7 n3 #_reverse__R2
+   17 7,17 21 b4 #_R3
+   18 14 5,7 n4 #_reverse__R3
+   19 15 6,7 n4 #_reverse__R3
+   20 16,16 22 0.5*c2 #_R5
+   21 11 10 u4 #_R30
+   22 12 11 2*u4 #_R30
+   23 15 14 u4 #_R30
+   24 9,11 18 b5 #_R31
+   25 9,12 19 2*b5 #_R31
+   26 9,15 21 b5 #_R31
+   27 17 6,9 n5 #_reverse__R31
+   28 18 5,17 n2 #_reverse__R1
+   29 19 6,17 n2 #_reverse__R1
+   30 20 17,17 n2 #_reverse__R1
+   31 21 7,17 n4 #_reverse__R3
+   32 22 23 2*t1 #_R6
+   33 19 18 u4 #_R30
+   34 9,19 20 b5 #_R31
+   35 18 9,11 n5 #_reverse__R31
+   36 19 9,12 n5 #_reverse__R31
+   37 20 9,19 2*n5 #_reverse__R31
+   38 21 9,15 n5 #_reverse__R31
+   39 23 24 t1 #_R6
+   40 2,23 25 b1 #_R7
+   41 25 26 t1 #_R6
+   42 2,24 26 2*b1 #_R7
+   43 25 2,23 n1 #_reverse__R7
+   44 24 27 d3 #_R8
+   45 3,25 25,28 a1 #_R9
+   46 2,26 29 b1 #_R7
+   47 26 2,24 n1 #_reverse__R7
+   48 26 27 d3 #_R8
+   49 3,26 26,28 a1 #_R9
+   50 28 3 i1 #_R10
+   51 4,28 28,30 a2 #_R11
+   52 29 2,26 2*n1 #_reverse__R7
+   53 29 27 d3 #_R8
+   54 3,29 28,29 a1 #_R9
+   55 30 4 i2 #_R12
+   56 5,30 30,31 _rateLaw1 #_R13
+   57 6,30 30,32 _rateLaw1 #_R13
+   58 10,30 30,33 2*_rateLaw1 #_R13
+   59 11,30 30,34 _rateLaw1 #_R13
+   60 11,30 30,35 _rateLaw1 #_R13
+   61 12,30 30,36 2*_rateLaw1 #_R13
+   62 14,30 30,37 _rateLaw1 #_R13
+   63 15,30 30,38 _rateLaw1 #_R13
+   64 17,30 30,39 _rateLaw1 #_R13
+   65 18,30 30,40 _rateLaw1 #_R13
+   66 18,30 30,41 _rateLaw1 #_R13
+   67 19,30 30,42 _rateLaw1 #_R13
+   68 19,30 30,43 _rateLaw1 #_R13
+   69 20,30 30,44 2*_rateLaw1 #_R13
+   70 21,30 30,45 _rateLaw1 #_R13
+   71 7,30 30,46 _rateLaw3 #_R17
+   72 13,30 30,47 2*_rateLaw3 #_R17
+   73 14,30 30,48 _rateLaw3 #_R17
+   74 15,30 30,49 _rateLaw3 #_R17
+   75 21,30 30,50 _rateLaw3 #_R17
+   76 5,31 33 b2 #_R1
+   77 5,32 35 b2 #_R1
+   78 5,39 41 b2 #_R1
+   79 6,31 34 b2 #_R1
+   80 6,32 36 b2 #_R1
+   81 6,39 42 b2 #_R1
+   82 17,31 40 b2 #_R1
+   83 17,32 43 b2 #_R1
+   84 17,39 44 b2 #_R1
+   85 31,31 51 0.5*b2 #_R1
+   86 31,32 52 b2 #_R1
+   87 31,39 53 b2 #_R1
+   88 32,32 54 0.5*b2 #_R1
+   89 32,39 55 b2 #_R1
+   90 39,39 56 0.5*b2 #_R1
+   91 33 5,31 n2 #_reverse__R1
+   92 34 6,31 n2 #_reverse__R1
+   93 35 5,32 n2 #_reverse__R1
+   94 36 6,32 n2 #_reverse__R1
+   95 40 17,31 n2 #_reverse__R1
+   96 41 5,39 n2 #_reverse__R1
+   97 42 6,39 n2 #_reverse__R1
+   98 43 17,32 n2 #_reverse__R1
+   99 44 17,39 n2 #_reverse__R1
+  100 7,46 47 b3 #_R2
+  101 46,46 57 0.5*b3 #_R2
+  102 47 7,46 n3 #_reverse__R2
+  103 7,31 37 b4 #_R3
+  104 7,32 38 b4 #_R3
+  105 7,39 45 b4 #_R3
+  106 5,46 48 b4 #_R3
+  107 6,46 49 b4 #_R3
+  108 17,46 50 b4 #_R3
+  109 31,46 58 b4 #_R3
+  110 32,46 59 b4 #_R3
+  111 39,46 60 b4 #_R3
+  112 37 7,31 n4 #_reverse__R3
+  113 38 7,32 n4 #_reverse__R3
+  114 45 7,39 n4 #_reverse__R3
+  115 48 5,46 n4 #_reverse__R3
+  116 49 6,46 n4 #_reverse__R3
+  117 50 17,46 n4 #_reverse__R3
+  118 30,33 30,51 _rateLaw1 #_R13
+  119 30,34 30,52 _rateLaw1 #_R13
+  120 30,35 30,52 _rateLaw1 #_R13
+  121 30,36 30,54 _rateLaw1 #_R13
+  122 30,40 30,53 _rateLaw1 #_R13
+  123 30,41 30,53 _rateLaw1 #_R13
+  124 30,42 30,55 _rateLaw1 #_R13
+  125 30,43 30,55 _rateLaw1 #_R13
+  126 30,44 30,56 _rateLaw1 #_R13
+  127 30,48 30,58 _rateLaw1 #_R13
+  128 30,49 30,59 _rateLaw1 #_R13
+  129 30,50 30,60 _rateLaw1 #_R13
+  130 30,31 30,61 p1 #_R14
+  131 30,32 30,62 p1 #_R14
+  132 30,33 30,63 p1 #_R14
+  133 30,34 30,64 p1 #_R14
+  134 30,35 30,65 p1 #_R14
+  135 30,36 30,66 p1 #_R14
+  136 30,37 30,67 p1 #_R14
+  137 30,38 30,68 p1 #_R14
+  138 30,39 30,69 p1 #_R14
+  139 30,40 30,70 p1 #_R14
+  140 30,41 30,71 p1 #_R14
+  141 30,42 30,72 p1 #_R14
+  142 30,43 30,73 p1 #_R14
+  143 30,44 30,74 p1 #_R14
+  144 30,45 30,75 p1 #_R14
+  145 31 5 u1 #_R16
+  146 32 6 u1 #_R16
+  147 33 10 u1 #_R16
+  148 34 11 u1 #_R16
+  149 35 11 u1 #_R16
+  150 36 12 u1 #_R16
+  151 37 14 u1 #_R16
+  152 38 15 u1 #_R16
+  153 39 17 u1 #_R16
+  154 40 18 u1 #_R16
+  155 41 18 u1 #_R16
+  156 42 19 u1 #_R16
+  157 43 19 u1 #_R16
+  158 44 20 u1 #_R16
+  159 45 21 u1 #_R16
+  160 30,37 30,58 _rateLaw3 #_R17
+  161 30,38 30,59 _rateLaw3 #_R17
+  162 30,45 30,60 _rateLaw3 #_R17
+  163 30,47 30,57 _rateLaw3 #_R17
+  164 30,46 30,76 p1 #_R18
+  165 30,47 30,77 p1 #_R18
+  166 30,48 30,78 p1 #_R18
+  167 30,49 30,79 p1 #_R18
+  168 30,50 30,80 p1 #_R18
+  169 46 7 u1 #_R20
+  170 47 13 u1 #_R20
+  171 48 14 u1 #_R20
+  172 49 15 u1 #_R20
+  173 50 21 u1 #_R20
+  174 32 31 u4 #_R30
+  175 34 33 u4 #_R30
+  176 35 33 u4 #_R30
+  177 36 35 u4 #_R30
+  178 36 34 u4 #_R30
+  179 38 37 u4 #_R30
+  180 42 41 u4 #_R30
+  181 43 40 u4 #_R30
+  182 49 48 u4 #_R30
+  183 9,32 39 b5 #_R31
+  184 9,34 40 b5 #_R31
+  185 9,35 41 b5 #_R31
+  186 9,36 43 b5 #_R31
+  187 9,36 42 b5 #_R31
+  188 9,38 45 b5 #_R31
+  189 9,42 44 b5 #_R31
+  190 9,43 44 b5 #_R31
+  191 9,49 50 b5 #_R31
+  192 39 9,32 n5 #_reverse__R31
+  193 40 9,34 n5 #_reverse__R31
+  194 41 9,35 n5 #_reverse__R31
+  195 42 9,36 n5 #_reverse__R31
+  196 43 9,36 n5 #_reverse__R31
+  197 44 9,42 n5 #_reverse__R31
+  198 44 9,43 n5 #_reverse__R31
+  199 45 9,38 n5 #_reverse__R31
+  200 50 9,49 n5 #_reverse__R31
+  201 39 17 u5 #_R33
+  202 41 18 u5 #_R33
+  203 42 19 u5 #_R33
+  204 44 20 2*u5 #_R33,_R35
+  205 45 21 u5 #_R33
+  206 40 18 u5 #_R35
+  207 43 19 u5 #_R35
+  208 50 21 u5 #_R37
+  209 5,61 63 b2 #_R1
+  210 5,62 65 b2 #_R1
+  211 5,69 71 b2 #_R1
+  212 6,61 64 b2 #_R1
+  213 6,62 66 b2 #_R1
+  214 6,69 72 b2 #_R1
+  215 17,61 70 b2 #_R1
+  216 17,62 73 b2 #_R1
+  217 17,69 74 b2 #_R1
+  218 31,61 81 b2 #_R1
+  219 31,62 82 b2 #_R1
+  220 31,69 83 b2 #_R1
+  221 32,61 84 b2 #_R1
+  222 32,62 85 b2 #_R1
+  223 32,69 86 b2 #_R1
+  224 39,61 87 b2 #_R1
+  225 39,62 88 b2 #_R1
+  226 39,69 89 b2 #_R1
+  227 61,61 90 0.5*b2 #_R1
+  228 61,62 91 b2 #_R1
+  229 61,69 92 b2 #_R1
+  230 62,62 93 0.5*b2 #_R1
+  231 62,69 94 b2 #_R1
+  232 69,69 95 0.5*b2 #_R1
+  233 51 31,31 n2 #_reverse__R1
+  234 52 31,32 n2 #_reverse__R1
+  235 53 31,39 n2 #_reverse__R1
+  236 54 32,32 n2 #_reverse__R1
+  237 55 32,39 n2 #_reverse__R1
+  238 56 39,39 n2 #_reverse__R1
+  239 63 5,61 n2 #_reverse__R1
+  240 64 6,61 n2 #_reverse__R1
+  241 65 5,62 n2 #_reverse__R1
+  242 66 6,62 n2 #_reverse__R1
+  243 70 17,61 n2 #_reverse__R1
+  244 71 5,69 n2 #_reverse__R1
+  245 72 6,69 n2 #_reverse__R1
+  246 73 17,62 n2 #_reverse__R1
+  247 74 17,69 n2 #_reverse__R1
+  248 7,76 77 b3 #_R2
+  249 46,76 96 b3 #_R2
+  250 76,76 97 0.5*b3 #_R2
+  251 57 46,46 n3 #_reverse__R2
+  252 77 7,76 n3 #_reverse__R2
+  253 7,61 67 b4 #_R3
+  254 7,62 68 b4 #_R3
+  255 7,69 75 b4 #_R3
+  256 46,61 98 b4 #_R3
+  257 46,62 99 b4 #_R3
+  258 46,69 100 b4 #_R3
+  259 5,76 78 b4 #_R3
+  260 6,76 79 b4 #_R3
+  261 17,76 80 b4 #_R3
+  262 31,76 101 b4 #_R3
+  263 32,76 102 b4 #_R3
+  264 39,76 103 b4 #_R3
+  265 61,76 104 b4 #_R3
+  266 62,76 105 b4 #_R3
+  267 69,76 106 b4 #_R3
+  268 58 31,46 n4 #_reverse__R3
+  269 59 32,46 n4 #_reverse__R3
+  270 60 39,46 n4 #_reverse__R3
+  271 67 7,61 n4 #_reverse__R3
+  272 68 7,62 n4 #_reverse__R3
+  273 75 7,69 n4 #_reverse__R3
+  274 78 5,76 n4 #_reverse__R3
+  275 79 6,76 n4 #_reverse__R3
+  276 80 17,76 n4 #_reverse__R3
+  277 30,63 30,81 _rateLaw1 #_R13
+  278 30,64 30,84 _rateLaw1 #_R13
+  279 30,65 30,82 _rateLaw1 #_R13
+  280 30,66 30,85 _rateLaw1 #_R13
+  281 30,70 30,87 _rateLaw1 #_R13
+  282 30,71 30,83 _rateLaw1 #_R13
+  283 30,72 30,86 _rateLaw1 #_R13
+  284 30,73 30,88 _rateLaw1 #_R13
+  285 30,74 30,89 _rateLaw1 #_R13
+  286 30,78 30,101 _rateLaw1 #_R13
+  287 30,79 30,102 _rateLaw1 #_R13
+  288 30,80 30,103 _rateLaw1 #_R13
+  289 30,51 30,81 2*p1 #_R14
+  290 30,52 30,84 p1 #_R14
+  291 30,52 30,82 p1 #_R14
+  292 30,53 30,87 p1 #_R14
+  293 30,53 30,83 p1 #_R14
+  294 30,54 30,85 2*p1 #_R14
+  295 30,55 30,86 p1 #_R14
+  296 30,55 30,88 p1 #_R14
+  297 30,56 30,89 2*p1 #_R14
+  298 30,58 30,98 p1 #_R14
+  299 30,59 30,99 p1 #_R14
+  300 30,60 30,100 p1 #_R14
+  301 61 31 _rateLaw2 #_R15
+  302 62 32 _rateLaw2 #_R15
+  303 63 33 _rateLaw2 #_R15
+  304 64 34 _rateLaw2 #_R15
+  305 65 35 _rateLaw2 #_R15
+  306 66 36 _rateLaw2 #_R15
+  307 67 37 _rateLaw2 #_R15
+  308 68 38 _rateLaw2 #_R15
+  309 69 39 _rateLaw2 #_R15
+  310 70 40 _rateLaw2 #_R15
+  311 71 41 _rateLaw2 #_R15
+  312 72 42 _rateLaw2 #_R15
+  313 73 43 _rateLaw2 #_R15
+  314 74 44 _rateLaw2 #_R15
+  315 75 45 _rateLaw2 #_R15
+  316 51 33 2*u1 #_R16
+  317 52 35 u1 #_R16
+  318 52 34 u1 #_R16
+  319 53 41 u1 #_R16
+  320 53 40 u1 #_R16
+  321 54 36 2*u1 #_R16
+  322 55 43 u1 #_R16
+  323 55 42 u1 #_R16
+  324 56 44 2*u1 #_R16
+  325 58 48 u1 #_R16
+  326 59 49 u1 #_R16
+  327 60 50 u1 #_R16
+  328 30,67 30,98 _rateLaw3 #_R17
+  329 30,68 30,99 _rateLaw3 #_R17
+  330 30,75 30,100 _rateLaw3 #_R17
+  331 30,77 30,96 _rateLaw3 #_R17
+  332 30,57 30,96 2*p1 #_R18
+  333 30,58 30,101 p1 #_R18
+  334 30,59 30,102 p1 #_R18
+  335 30,60 30,103 p1 #_R18
+  336 76 46 _rateLaw4 #_R19
+  337 77 47 _rateLaw4 #_R19
+  338 78 48 _rateLaw4 #_R19
+  339 79 49 _rateLaw4 #_R19
+  340 80 50 _rateLaw4 #_R19
+  341 57 47 2*u1 #_R20
+  342 58 37 u1 #_R20
+  343 59 38 u1 #_R20
+  344 60 45 u1 #_R20
+  345 8,61 61,107 _rateLaw5 #_R21
+  346 8,62 62,107 _rateLaw5 #_R21
+  347 8,63 63,107 _rateLaw5 #_R21
+  348 8,64 64,107 _rateLaw5 #_R21
+  349 8,65 65,107 _rateLaw5 #_R21
+  350 8,66 66,107 _rateLaw5 #_R21
+  351 8,67 67,107 _rateLaw5 #_R21
+  352 8,68 68,107 _rateLaw5 #_R21
+  353 8,69 69,107 _rateLaw5 #_R21
+  354 8,70 70,107 _rateLaw5 #_R21
+  355 8,71 71,107 _rateLaw5 #_R21
+  356 8,72 72,107 _rateLaw5 #_R21
+  357 8,73 73,107 _rateLaw5 #_R21
+  358 8,74 74,107 _rateLaw5 #_R21
+  359 8,75 75,107 _rateLaw5 #_R21
+  360 8,76 76,107 _rateLaw6 #_R23
+  361 8,77 77,107 _rateLaw6 #_R23
+  362 8,78 78,107 _rateLaw6 #_R23
+  363 8,79 79,107 _rateLaw6 #_R23
+  364 8,80 80,107 _rateLaw6 #_R23
+  365 52 51 u4 #_R30
+  366 54 52 2*u4 #_R30
+  367 55 53 u4 #_R30
+  368 59 58 u4 #_R30
+  369 62 61 u4 #_R30
+  370 64 63 u4 #_R30
+  371 65 63 u4 #_R30
+  372 66 65 u4 #_R30
+  373 66 64 u4 #_R30
+  374 68 67 u4 #_R30
+  375 72 71 u4 #_R30
+  376 73 70 u4 #_R30
+  377 79 78 u4 #_R30
+  378 9,52 53 b5 #_R31
+  379 9,54 55 2*b5 #_R31
+  380 9,55 56 b5 #_R31
+  381 9,59 60 b5 #_R31
+  382 9,62 69 b5 #_R31
+  383 9,64 70 b5 #_R31
+  384 9,65 71 b5 #_R31
+  385 9,66 73 b5 #_R31
+  386 9,66 72 b5 #_R31
+  387 9,68 75 b5 #_R31
+  388 9,72 74 b5 #_R31
+  389 9,73 74 b5 #_R31
+  390 9,79 80 b5 #_R31
+  391 53 9,52 n5 #_reverse__R31
+  392 55 9,54 n5 #_reverse__R31
+  393 56 9,55 2*n5 #_reverse__R31
+  394 60 9,59 n5 #_reverse__R31
+  395 69 9,62 n5 #_reverse__R31
+  396 70 9,64 n5 #_reverse__R31
+  397 71 9,65 n5 #_reverse__R31
+  398 72 9,66 n5 #_reverse__R31
+  399 73 9,66 n5 #_reverse__R31
+  400 74 9,72 n5 #_reverse__R31
+  401 74 9,73 n5 #_reverse__R31
+  402 75 9,68 n5 #_reverse__R31
+  403 80 9,79 n5 #_reverse__R31
+  404 69 39 _rateLaw8 #_R32
+  405 71 41 _rateLaw8 #_R32
+  406 72 42 _rateLaw8 #_R32
+  407 74 44 _rateLaw8 #_R32
+  408 75 45 _rateLaw8 #_R32
+  409 53 40 u5 #_R33
+  410 55 43 u5 #_R33
+  411 56 44 4*u5 #_R33,_R35,_R35
+  412 60 50 u5 #_R33
+  413 70 40 _rateLaw9 #_R34
+  414 73 43 _rateLaw9 #_R34
+  415 74 44 _rateLaw9 #_R34
+  416 53 41 u5 #_R35
+  417 55 42 u5 #_R35
+  418 80 50 _rateLaw10 #_R36
+  419 60 45 u5 #_R37
+  420 81 31,61 n2 #_reverse__R1
+  421 82 31,62 n2 #_reverse__R1
+  422 83 31,69 n2 #_reverse__R1
+  423 84 32,61 n2 #_reverse__R1
+  424 85 32,62 n2 #_reverse__R1
+  425 86 32,69 n2 #_reverse__R1
+  426 87 39,61 n2 #_reverse__R1
+  427 88 39,62 n2 #_reverse__R1
+  428 89 39,69 n2 #_reverse__R1
+  429 90 61,61 n2 #_reverse__R1
+  430 91 61,62 n2 #_reverse__R1
+  431 92 61,69 n2 #_reverse__R1
+  432 93 62,62 n2 #_reverse__R1
+  433 94 62,69 n2 #_reverse__R1
+  434 95 69,69 n2 #_reverse__R1
+  435 96 46,76 n3 #_reverse__R2
+  436 97 76,76 n3 #_reverse__R2
+  437 98 46,61 n4 #_reverse__R3
+  438 99 46,62 n4 #_reverse__R3
+  439 100 46,69 n4 #_reverse__R3
+  440 101 31,76 n4 #_reverse__R3
+  441 102 32,76 n4 #_reverse__R3
+  442 103 39,76 n4 #_reverse__R3
+  443 104 61,76 n4 #_reverse__R3
+  444 105 62,76 n4 #_reverse__R3
+  445 106 69,76 n4 #_reverse__R3
+  446 30,81 30,90 p1 #_R14
+  447 30,82 30,91 p1 #_R14
+  448 30,83 30,92 p1 #_R14
+  449 30,84 30,91 p1 #_R14
+  450 30,85 30,93 p1 #_R14
+  451 30,86 30,94 p1 #_R14
+  452 30,87 30,92 p1 #_R14
+  453 30,88 30,94 p1 #_R14
+  454 30,89 30,95 p1 #_R14
+  455 30,101 30,104 p1 #_R14
+  456 30,102 30,105 p1 #_R14
+  457 30,103 30,106 p1 #_R14
+  458 81 51 _rateLaw2 #_R15
+  459 82 52 _rateLaw2 #_R15
+  460 83 53 _rateLaw2 #_R15
+  461 84 52 _rateLaw2 #_R15
+  462 85 54 _rateLaw2 #_R15
+  463 86 55 _rateLaw2 #_R15
+  464 87 53 _rateLaw2 #_R15
+  465 88 55 _rateLaw2 #_R15
+  466 89 56 _rateLaw2 #_R15
+  467 90 81 2*_rateLaw2 #_R15
+  468 91 82 _rateLaw2 #_R15
+  469 91 84 _rateLaw2 #_R15
+  470 92 83 _rateLaw2 #_R15
+  471 92 87 _rateLaw2 #_R15
+  472 93 85 2*_rateLaw2 #_R15
+  473 94 88 _rateLaw2 #_R15
+  474 94 86 _rateLaw2 #_R15
+  475 95 89 2*_rateLaw2 #_R15
+  476 98 58 _rateLaw2 #_R15
+  477 99 59 _rateLaw2 #_R15
+  478 100 60 _rateLaw2 #_R15
+  479 104 101 _rateLaw2 #_R15
+  480 105 102 _rateLaw2 #_R15
+  481 106 103 _rateLaw2 #_R15
+  482 81 63 u1 #_R16
+  483 82 65 u1 #_R16
+  484 83 71 u1 #_R16
+  485 84 64 u1 #_R16
+  486 85 66 u1 #_R16
+  487 86 72 u1 #_R16
+  488 87 70 u1 #_R16
+  489 88 73 u1 #_R16
+  490 89 74 u1 #_R16
+  491 101 78 u1 #_R16
+  492 102 79 u1 #_R16
+  493 103 80 u1 #_R16
+  494 30,96 30,97 p1 #_R18
+  495 30,98 30,104 p1 #_R18
+  496 30,99 30,105 p1 #_R18
+  497 30,100 30,106 p1 #_R18
+  498 96 57 _rateLaw4 #_R19
+  499 97 96 2*_rateLaw4 #_R19
+  500 101 58 _rateLaw4 #_R19
+  501 102 59 _rateLaw4 #_R19
+  502 103 60 _rateLaw4 #_R19
+  503 104 98 _rateLaw4 #_R19
+  504 105 99 _rateLaw4 #_R19
+  505 106 100 _rateLaw4 #_R19
+  506 96 77 u1 #_R20
+  507 98 67 u1 #_R20
+  508 99 68 u1 #_R20
+  509 100 75 u1 #_R20
+  510 8,81 81,107 _rateLaw5 #_R21
+  511 8,82 82,107 _rateLaw5 #_R21
+  512 8,83 83,107 _rateLaw5 #_R21
+  513 8,84 84,107 _rateLaw5 #_R21
+  514 8,85 85,107 _rateLaw5 #_R21
+  515 8,86 86,107 _rateLaw5 #_R21
+  516 8,87 87,107 _rateLaw5 #_R21
+  517 8,88 88,107 _rateLaw5 #_R21
+  518 8,89 89,107 _rateLaw5 #_R21
+  519 8,90 90,107 _rateLaw5 #_R21
+  520 8,91 91,107 _rateLaw5 #_R21
+  521 8,92 92,107 _rateLaw5 #_R21
+  522 8,93 93,107 _rateLaw5 #_R21
+  523 8,94 94,107 _rateLaw5 #_R21
+  524 8,95 95,107 _rateLaw5 #_R21
+  525 8,98 98,107 _rateLaw5 #_R21
+  526 8,99 99,107 _rateLaw5 #_R21
+  527 8,100 100,107 _rateLaw5 #_R21
+  528 8,104 104,107 _rateLaw5 #_R21
+  529 8,105 105,107 _rateLaw5 #_R21
+  530 8,106 106,107 _rateLaw5 #_R21
+  531 61,107 61,108 p2a #_R22
+  532 62,107 62,108 p2a #_R22
+  533 63,107 63,108 p2a #_R22
+  534 64,107 64,108 p2a #_R22
+  535 65,107 65,108 p2a #_R22
+  536 66,107 66,108 p2a #_R22
+  537 67,107 67,108 p2a #_R22
+  538 68,107 68,108 p2a #_R22
+  539 69,107 69,108 p2a #_R22
+  540 70,107 70,108 p2a #_R22
+  541 71,107 71,108 p2a #_R22
+  542 72,107 72,108 p2a #_R22
+  543 73,107 73,108 p2a #_R22
+  544 74,107 74,108 p2a #_R22
+  545 75,107 75,108 p2a #_R22
+  546 81,107 81,108 p2a #_R22
+  547 82,107 82,108 p2a #_R22
+  548 83,107 83,108 p2a #_R22
+  549 84,107 84,108 p2a #_R22
+  550 85,107 85,108 p2a #_R22
+  551 86,107 86,108 p2a #_R22
+  552 87,107 87,108 p2a #_R22
+  553 88,107 88,108 p2a #_R22
+  554 89,107 89,108 p2a #_R22
+  555 90,107 90,108 p2a #_R22
+  556 91,107 91,108 p2a #_R22
+  557 92,107 92,108 p2a #_R22
+  558 93,107 93,108 p2a #_R22
+  559 94,107 94,108 p2a #_R22
+  560 95,107 95,108 p2a #_R22
+  561 98,107 98,108 p2a #_R22
+  562 99,107 99,108 p2a #_R22
+  563 100,107 100,108 p2a #_R22
+  564 104,107 104,108 p2a #_R22
+  565 105,107 105,108 p2a #_R22
+  566 106,107 106,108 p2a #_R22
+  567 8,96 96,107 _rateLaw6 #_R23
+  568 8,97 97,107 _rateLaw6 #_R23
+  569 8,101 101,107 _rateLaw6 #_R23
+  570 8,102 102,107 _rateLaw6 #_R23
+  571 8,103 103,107 _rateLaw6 #_R23
+  572 8,104 104,107 _rateLaw6 #_R23
+  573 8,105 105,107 _rateLaw6 #_R23
+  574 8,106 106,107 _rateLaw6 #_R23
+  575 76,107 76,108 p2b #_R24
+  576 77,107 77,108 p2b #_R24
+  577 78,107 78,108 p2b #_R24
+  578 79,107 79,108 p2b #_R24
+  579 80,107 80,108 p2b #_R24
+  580 96,107 96,108 p2b #_R24
+  581 97,107 97,108 p2b #_R24
+  582 101,107 101,108 p2b #_R24
+  583 102,107 102,108 p2b #_R24
+  584 103,107 103,108 p2b #_R24
+  585 104,107 104,108 p2b #_R24
+  586 105,107 105,108 p2b #_R24
+  587 106,107 106,108 p2b #_R24
+  588 107 8 u2 #_R26
+  589 82 81 u4 #_R30
+  590 84 81 u4 #_R30
+  591 85 82 u4 #_R30
+  592 85 84 u4 #_R30
+  593 86 83 u4 #_R30
+  594 88 87 u4 #_R30
+  595 91 90 u4 #_R30
+  596 93 91 2*u4 #_R30
+  597 94 92 u4 #_R30
+  598 99 98 u4 #_R30
+  599 102 101 u4 #_R30
+  600 105 104 u4 #_R30
+  601 9,82 83 b5 #_R31
+  602 9,84 87 b5 #_R31
+  603 9,85 88 b5 #_R31
+  604 9,85 86 b5 #_R31
+  605 9,86 89 b5 #_R31
+  606 9,88 89 b5 #_R31
+  607 9,91 92 b5 #_R31
+  608 9,93 94 2*b5 #_R31
+  609 9,94 95 b5 #_R31
+  610 9,99 100 b5 #_R31
+  611 9,102 103 b5 #_R31
+  612 9,105 106 b5 #_R31
+  613 83 9,82 n5 #_reverse__R31
+  614 86 9,85 n5 #_reverse__R31
+  615 87 9,84 n5 #_reverse__R31
+  616 88 9,85 n5 #_reverse__R31
+  617 89 9,86 n5 #_reverse__R31
+  618 89 9,88 n5 #_reverse__R31
+  619 92 9,91 n5 #_reverse__R31
+  620 94 9,93 n5 #_reverse__R31
+  621 95 9,94 2*n5 #_reverse__R31
+  622 100 9,99 n5 #_reverse__R31
+  623 103 9,102 n5 #_reverse__R31
+  624 106 9,105 n5 #_reverse__R31
+  625 83 53 _rateLaw8 #_R32
+  626 86 55 _rateLaw8 #_R32
+  627 89 56 _rateLaw8 #_R32
+  628 92 87 _rateLaw8 #_R32
+  629 94 88 _rateLaw8 #_R32
+  630 95 89 2*_rateLaw8 #_R32
+  631 100 60 _rateLaw8 #_R32
+  632 106 103 _rateLaw8 #_R32
+  633 87 70 u5 #_R33
+  634 88 73 u5 #_R33
+  635 89 74 2*u5 #_R33,_R35
+  636 103 80 u5 #_R33
+  637 87 53 _rateLaw9 #_R34
+  638 88 55 _rateLaw9 #_R34
+  639 89 56 _rateLaw9 #_R34
+  640 92 83 _rateLaw9 #_R34
+  641 94 86 _rateLaw9 #_R34
+  642 95 89 2*_rateLaw9 #_R34
+  643 83 71 u5 #_R35
+  644 86 72 u5 #_R35
+  645 103 60 _rateLaw10 #_R36
+  646 106 100 _rateLaw10 #_R36
+  647 100 75 u5 #_R37
+  648 108 107 _rateLaw7 #_R25
+  649 2,108 108,109 p3 #_R27
+  650 5,108 6,108 p4 #_R29
+  651 10,108 11,108 2*p4 #_R29
+  652 11,108 12,108 p4 #_R29
+  653 14,108 15,108 p4 #_R29
+  654 18,108 19,108 p4 #_R29
+  655 31,108 32,108 p4 #_R29
+  656 33,108 34,108 p4 #_R29
+  657 33,108 35,108 p4 #_R29
+  658 34,108 36,108 p4 #_R29
+  659 35,108 36,108 p4 #_R29
+  660 37,108 38,108 p4 #_R29
+  661 40,108 43,108 p4 #_R29
+  662 41,108 42,108 p4 #_R29
+  663 48,108 49,108 p4 #_R29
+  664 51,108 52,108 2*p4 #_R29
+  665 52,108 54,108 p4 #_R29
+  666 53,108 55,108 p4 #_R29
+  667 58,108 59,108 p4 #_R29
+  668 61,108 62,108 p4 #_R29
+  669 63,108 64,108 p4 #_R29
+  670 63,108 65,108 p4 #_R29
+  671 64,108 66,108 p4 #_R29
+  672 65,108 66,108 p4 #_R29
+  673 67,108 68,108 p4 #_R29
+  674 70,108 73,108 p4 #_R29
+  675 71,108 72,108 p4 #_R29
+  676 78,108 79,108 p4 #_R29
+  677 81,108 84,108 p4 #_R29
+  678 81,108 82,108 p4 #_R29
+  679 82,108 85,108 p4 #_R29
+  680 83,108 86,108 p4 #_R29
+  681 84,108 85,108 p4 #_R29
+  682 87,108 88,108 p4 #_R29
+  683 90,108 91,108 2*p4 #_R29
+  684 91,108 93,108 p4 #_R29
+  685 92,108 94,108 p4 #_R29
+  686 98,108 99,108 p4 #_R29
+  687 101,108 102,108 p4 #_R29
+  688 104,108 105,108 p4 #_R29
+  689 109 2 u3 #_R28
+end reactions
+begin groups
+    1 pSos1_wt             109
+    2 pEGFR_wt             23,24,25,26,29
+    3 pERK1_2_wt           108
+    4 MEK1_pRDS_wt         61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,98,99,100,104,105,106
+    5 MEK2_pRDS_wt         76,77,78,79,80,96,97,101,102,103,104,105,106
+    6 MEK_pRDS             61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,2*104,2*105,2*106
+end groups

@@ -1,0 +1,78 @@
+# metadata.yaml - mek_isoform_erk_feedback_miller2026
+id: mek_isoform_erk_feedback_miller2026
+created: 2026-06-05
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, refinement, ai_assisted]
+  description: >
+    House-style curation of the wild-type MEK1/MEK2 ERK cascade model from
+    Kocieniewski and Lipniacki (2013), Physical Biology 10:035006, and the
+    Miller et al. (2026) PyBioNetFit reparameterization example in
+    lanl/PyBNF examples/Miller2025_MEK_Isoforms. The primary model uses the
+    Miller et al. (2026) maximum-likelihood parameterization, and the variant
+    preserves the original Kocieniewski and Lipniacki (2013) WT parameterization
+    for side-by-side comparison.
+
+files:
+  - name: mek_isoform_erk_feedback_miller2026.bngl
+    role: primary
+    description: >
+      Wild-type MEK isoform ERK cascade model using the Miller et al. (2026)
+      maximum-likelihood parameterization. The active ODE protocol simulates
+      3600 s after ligand stimulation and prints scaled WT pSOS1, pEGFR, and
+      pERK outputs for comparison with the Miller et al. quantitative data.
+    documentation_target: minimal
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: mek_isoform_erk_feedback_miller2026_kocieniewski2013.bngl
+    role: variant
+    description: >
+      Same wild-type model structure using the original Kocieniewski and
+      Lipniacki (2013) parameterization.
+    documentation_target: minimal
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_miller2026.ipynb
+    role: verification
+    description: >
+      Re-runs BioNetGen for both BNGL files, compares generated outputs with
+      committed reference outputs, independently integrates each generated
+      109-species mass-action ODE network with SciPy, compares the scaled
+      WT trajectories with the Miller et al. quantitative data table, and
+      compares the original-parameter WT trajectories with digitized
+      Kocieniewski and Lipniacki (2013) Figure 4 model-prediction curves.
+  - name: verify_miller2026.png
+    role: figure
+  - name: reference/miller2026_wt_exp.csv
+    role: reference
+    description: >
+      WT quantitative time-series data from the Miller et al. PyBNF example
+      WT.exp file, converted to CSV for verification.
+  - name: reference/kocieniewski2013_figure4_wt_model_predictions_digitized.csv
+    role: reference
+    description: >
+      Digitized WT model-prediction curves for MEK pRDS and pERK1/2 from
+      Kocieniewski and Lipniacki (2013) Figure 4 lower panels, generated from
+      a 300 dpi rendering of PhysBiol.pdf with explicit axis-pixel calibration.
+  - name: reference/mek_isoform_erk_feedback_miller2026.net
+    role: reference
+  - name: reference/mek_isoform_erk_feedback_miller2026_ode.net
+    role: reference
+  - name: reference/mek_isoform_erk_feedback_miller2026_ode.gdat
+    role: reference
+  - name: reference/mek_isoform_erk_feedback_miller2026_ode.cdat
+    role: reference
+  - name: reference/mek_isoform_erk_feedback_miller2026_kocieniewski2013.net
+    role: reference
+  - name: reference/mek_isoform_erk_feedback_miller2026_kocieniewski2013_ode.net
+    role: reference
+  - name: reference/mek_isoform_erk_feedback_miller2026_kocieniewski2013_ode.gdat
+    role: reference
+  - name: reference/mek_isoform_erk_feedback_miller2026_kocieniewski2013_ode.cdat
+    role: reference
