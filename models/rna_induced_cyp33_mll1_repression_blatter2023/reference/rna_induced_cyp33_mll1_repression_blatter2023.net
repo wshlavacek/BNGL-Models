@@ -1,0 +1,132 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA                         6.02214076e23  # Constant
+    2 V_ref                      1e-15  # Constant
+    3 ksyn_RNA                   0  # Constant
+    4 ksyn_Cyp33                 0  # Constant
+    5 input_on                   0  # Constant
+    6 kdeg_input                 0.015  # Constant
+    7 PHD3_0                     100  # Constant
+    8 H3K4me3_0                  100  # Constant
+    9 kon_h3_free                81  # Constant
+   10 kon_cyp_phd3_h3            75  # Constant
+   11 kon_rna_cyp                76  # Constant
+   12 kon_cyp_phd3               76  # Constant
+   13 kon_h3_cyp_phd3            98  # Constant
+   14 kon_rna_h3                 76  # Constant
+   15 Kd_h3_cis                  4.3  # Constant
+   16 Kd_h3_trans                52  # Constant
+   17 Kd_cyp_phd3_h3             6.6  # Constant
+   18 Kd_rna_cyp                 79  # Constant
+   19 Kd_cyp_phd3                5  # Constant
+   20 Kd_h3_cyp_phd3_free        24  # Constant
+   21 Kd_h3_cyp_phd3_parallel    69  # Constant
+   22 Kd_rna_h3                  30  # Constant
+   23 koff_h3_cis                Kd_h3_cis*kon_h3_free  # ConstantExpression
+   24 koff_h3_trans              Kd_h3_trans*kon_h3_free  # ConstantExpression
+   25 koff_cyp_phd3_h3           Kd_cyp_phd3_h3*kon_cyp_phd3_h3  # ConstantExpression
+   26 koff_rna_cyp               Kd_rna_cyp*kon_rna_cyp  # ConstantExpression
+   27 koff_cyp_phd3              Kd_cyp_phd3*kon_cyp_phd3  # ConstantExpression
+   28 koff_h3_cyp_phd3_free      Kd_h3_cyp_phd3_free*kon_h3_cyp_phd3  # ConstantExpression
+   29 koff_h3_cyp_phd3_parallel  Kd_h3_cyp_phd3_parallel*kon_h3_cyp_phd3  # ConstantExpression
+   30 koff_rna_h3                Kd_rna_h3*kon_rna_h3  # ConstantExpression
+   31 k_a3_free_to_perp          1.3e7  # Constant
+   32 k_a3_perp_to_free          1.1e6  # Constant
+   33 k_a3_free_to_a2            1.3e7  # Constant
+   34 k_a3_a2_to_free            4.4e6  # Constant
+   35 k_a3_free_to_parallel      1.3e7  # Constant
+   36 k_a3_parallel_to_free      4.4e6  # Constant
+   37 k_iso_cis_to_trans_base    0.01  # Constant
+   38 k_iso_trans_to_cis_base    0.074  # Constant
+   39 kcat_iso                   1027.5  # Constant
+   40 Km_iso                     500  # Constant
+   41 iso_cyp_eq_ratio           0.135  # Constant
+end parameters
+begin functions
+    1 iso_cis_to_trans() k_iso_cis_to_trans_base+(((input_on*kcat_iso)*Obs_Tot_Cyp33)/(Km_iso+Obs_Tot_PHD3))
+    2 iso_trans_to_cis() k_iso_trans_to_cis_base+((((input_on*iso_cyp_eq_ratio)*kcat_iso)*Obs_Tot_Cyp33)/(Km_iso+Obs_Tot_PHD3))
+end functions
+begin species
+    1 PHD3(cyp,h,pro~cis) PHD3_0
+    2 H3(mll,rna) H3K4me3_0
+    3 Cyp33(a3~perp,phd3,rna) 0
+    4 RNA(cyp,h3) 0
+    5 H3(mll!1,rna).PHD3(cyp,h!1,pro~cis) 0
+    6 Cyp33(a3~free,phd3,rna) 0
+    7 H3(mll,rna!1).RNA(cyp,h3!1) 0
+    8 PHD3(cyp,h,pro~trans) 0
+    9 H3(mll!1,rna).PHD3(cyp,h!1,pro~trans) 0
+   10 Cyp33(a3~free,phd3,rna!1).RNA(cyp!1,h3) 0
+   11 Cyp33(a3~free,phd3!1,rna).PHD3(cyp!1,h,pro~trans) 0
+   12 Cyp33(a3~a2,phd3,rna) 0
+   13 Cyp33(a3~free,phd3!1,rna).H3(mll!2,rna).PHD3(cyp!1,h!2,pro~trans) 0
+   14 Cyp33(a3~a2,phd3,rna!1).RNA(cyp!1,h3) 0
+   15 Cyp33(a3~parallel,phd3!1,rna).PHD3(cyp!1,h,pro~trans) 0
+   16 Cyp33(a3~parallel,phd3!1,rna).H3(mll!2,rna).PHD3(cyp!1,h!2,pro~trans) 0
+end species
+begin reactions
+    1 1,2 5 kon_h3_free #R1A_bind_cis_h3
+    2 3 6 k_a3_perp_to_free #_reverse_R5_a3_perp
+    3 2,4 7 kon_rna_h3 #R10_bind_rna_h3
+    4 0 4 ksyn_RNA #R11_synth_rna
+    5 0 3 ksyn_Cyp33 #R11_synth_cyp
+    6 4 0 kdeg_input #R11_deg_rna_free
+    7 3 0 kdeg_input #R11_deg_cyp_perp
+    8 1 8 iso_cis_to_trans #R12_iso_free_ct
+    9 5 1,2 koff_h3_cis #_reverse_R1A_bind_cis_h3
+   10 2,8 9 kon_h3_free #R1B_bind_trans_h3
+   11 4,6 10 kon_rna_cyp #R3_bind_rna_cyp_free
+   12 6,8 11 kon_cyp_phd3 #R4_bind_cyp_phd3
+   13 6 3 k_a3_free_to_perp #R5_a3_perp
+   14 6 12 k_a3_free_to_a2 #R6_a3_a2
+   15 7 2,4 koff_rna_h3 #_reverse_R10_bind_rna_h3
+   16 7 2 kdeg_input #R11_deg_rna_from_h3
+   17 6 0 kdeg_input #R11_deg_cyp_free
+   18 8 1 iso_trans_to_cis #R12_iso_free_tc
+   19 5 9 iso_cis_to_trans #R12_iso_h3_ct
+   20 9 2,8 koff_h3_trans #_reverse_R1B_bind_trans_h3
+   21 6,9 13 kon_cyp_phd3_h3 #R2_bind_cyp_to_phd3_h3
+   22 10 4,6 koff_rna_cyp #_reverse_R3_bind_rna_cyp_free
+   23 4,12 14 kon_rna_cyp #R3_bind_rna_cyp_a2
+   24 11 6,8 koff_cyp_phd3 #_reverse_R4_bind_cyp_phd3
+   25 12 6 k_a3_a2_to_free #_reverse_R6_a3_a2
+   26 11 15 k_a3_free_to_parallel #R7_a3_parallel_binary
+   27 2,11 13 kon_h3_cyp_phd3 #R8_bind_h3_cyp_phd3_free
+   28 10 6 kdeg_input #R11_deg_rna_from_cyp_free
+   29 12 0 kdeg_input #R11_deg_cyp_a2
+   30 10 4 kdeg_input #R11_deg_cyp_from_rna_free
+   31 11 8 kdeg_input #R11_deg_cyp_from_phd3_free
+   32 9 5 iso_trans_to_cis #R12_iso_h3_tc
+   33 13 6,9 koff_cyp_phd3_h3 #_reverse_R2_bind_cyp_to_phd3_h3
+   34 14 4,12 koff_rna_cyp #_reverse_R3_bind_rna_cyp_a2
+   35 15 11 k_a3_parallel_to_free #_reverse_R7_a3_parallel_binary
+   36 13 16 k_a3_free_to_parallel #R7_a3_parallel_ternary
+   37 13 2,11 koff_h3_cyp_phd3_free #_reverse_R8_bind_h3_cyp_phd3_free
+   38 2,15 16 kon_h3_cyp_phd3 #R9_bind_h3_cyp_phd3_parallel
+   39 14 12 kdeg_input #R11_deg_rna_from_cyp_a2
+   40 14 4 kdeg_input #R11_deg_cyp_from_rna_a2
+   41 15 8 kdeg_input #R11_deg_cyp_from_phd3_parallel
+   42 13 9 kdeg_input #R11_deg_cyp_from_ternary_free
+   43 16 13 k_a3_parallel_to_free #_reverse_R7_a3_parallel_ternary
+   44 16 2,15 koff_h3_cyp_phd3_parallel #_reverse_R9_bind_h3_cyp_phd3_parallel
+   45 16 9 kdeg_input #R11_deg_cyp_from_ternary_parallel
+end reactions
+begin groups
+    1 Obs_Tot_PHD3         1,5,8,9,11,13,15,16
+    2 Obs_Tot_H3K4me3      2,5,7,9,13,16
+    3 Obs_Tot_Cyp33        3,6,10,11,12,13,14,15,16
+    4 Obs_Tot_RNA          4,7,10,14
+    5 Obs_Active_H3K4me3   5,9,13,16
+    6 Obs_Repressive_H3K4me3 2,7
+    7 Obs_MLL1_H3K4me3     5,9
+    8 Obs_Cyp33_MLL1       11,15
+    9 Obs_Cyp33_MLL1_H3K4me3 13,16
+   10 Obs_RNA_H3K4me3      7
+   11 Obs_Free_H3K4me3     2
+   12 Obs_PHD3_Cis         1,5
+   13 Obs_PHD3_Trans       8,9,11,13,15,16
+   14 Obs_Cyp33_FreeA3     6,10,11,13
+   15 Obs_Cyp33_PerpA3     3
+   16 Obs_Cyp33_A2A3       12,14
+   17 Obs_Cyp33_ParallelA3 15,16
+end groups

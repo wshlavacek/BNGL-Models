@@ -1,0 +1,307 @@
+begin model
+
+#@title: RNA-induced Cyp33-MLL1 repression (Blatter et al., 2023)
+
+#@description: |
+#  Concentration-based ODE model of the Cyp33-RRM, MLL1-PHD3, H3K4me3,
+#  and RNA interaction network proposed by Blatter et al. (2023). The model
+#  represents MLL1 PHD3 cis/trans proline isomerization, Cyp33 alpha3 helix
+#  conformational exchange, RNA and H3K4me3 competition, and Cyp33-PHD3-H3
+#  ternary complexes. The active protocol reproduces the Fig. 5B switch:
+#  MLL1-bound H3K4me3 is high before RNA/Cyp33 recruitment, decreases during
+#  RNA and Cyp33 input, and recovers after RNA transcription is turned off.
+
+#@keyword: |
+#  epigenetic regulation, transcription repression, Cyp33, MLL1, H3K4me3,
+#  RNA recognition motif, allosteric switch, proline isomerization,
+#  mass action, ODE, Homo sapiens
+
+#@reference: |
+#  Blatter M, Meylan C, Clery A, Giambruno R, Nikolaev Y, Heidecker M,
+#  Solanki JA, Diaz MO, Gabellini D, Allain FHT (2023). RNA binding induces
+#  an allosteric switch in Cyp33 to repress MLL1-mediated transcription.
+#  Science Advances 9:eadf5330. doi:10.1126/sciadv.adf5330
+
+#@note: |
+#  BioModels accession MODEL2201310002 is cited by Blatter et al. (2023), but
+#  the public API reported it as submitted and unreleased during this curation.
+#  This BNGL file was reconstructed from Fig. S4 and Supplementary Table S2.
+#  The source rates are concentration based, with time in seconds and species
+#  amounts in micromolar, so only the ODE protocol is active.
+
+begin parameters
+  # Avogadro constant retained for house-style population-conversion context.
+  NA                         6.02214076e23  # molecules/mol
+
+  # Nominal reactor volume; not used by the concentration-based ODE protocol.
+  V_ref                      1e-15          # L/reactor
+
+  # RNA and Cyp33 synthesis are activated by the Fig. 5B protocol actions.
+  ksyn_RNA                   0              # uM/s
+  ksyn_Cyp33                 0              # uM/s
+  input_on                   0              # dimensionless
+
+  # Removal rate for RNA and Cyp33; see reaction 11 in Blatter et al. (2023).
+  kdeg_input                 0.015          # /s
+
+  # Initial MLL1-PHD3 and H3K4me3 concentrations used in Fig. 5B.
+  PHD3_0                     100            # uM
+  H3K4me3_0                  100            # uM
+
+  # Bimolecular on-rates converted from M^-1 s^-1 to uM^-1 s^-1.
+  kon_h3_free                81             # /uM/s
+  kon_cyp_phd3_h3            75             # /uM/s
+  kon_rna_cyp                76             # /uM/s
+  kon_cyp_phd3               76             # /uM/s
+  kon_h3_cyp_phd3            98             # /uM/s
+  kon_rna_h3                 76             # /uM/s
+
+  # Dissociation constants from Supplementary Table S2.
+  Kd_h3_cis                  4.3            # uM
+  Kd_h3_trans                52             # uM
+  Kd_cyp_phd3_h3             6.6            # uM
+  Kd_rna_cyp                 79             # uM
+  Kd_cyp_phd3                5              # uM
+  Kd_h3_cyp_phd3_free        24             # uM
+  Kd_h3_cyp_phd3_parallel    69             # uM
+  Kd_rna_h3                  30             # uM
+
+  # Off-rates computed as Kd * kon in the micromolar unit system.
+  koff_h3_cis                Kd_h3_cis*kon_h3_free                # /s
+  koff_h3_trans              Kd_h3_trans*kon_h3_free              # /s
+  koff_cyp_phd3_h3           Kd_cyp_phd3_h3*kon_cyp_phd3_h3       # /s
+  koff_rna_cyp               Kd_rna_cyp*kon_rna_cyp               # /s
+  koff_cyp_phd3              Kd_cyp_phd3*kon_cyp_phd3             # /s
+  koff_h3_cyp_phd3_free      Kd_h3_cyp_phd3_free*kon_h3_cyp_phd3  # /s
+  koff_h3_cyp_phd3_parallel  Kd_h3_cyp_phd3_parallel*kon_h3_cyp_phd3  # /s
+  koff_rna_h3                Kd_rna_h3*kon_rna_h3                 # /s
+
+  # Cyp33 alpha3-helix conformational exchange rates from reactions 5 to 7.
+  k_a3_free_to_perp          1.3e7          # /s
+  k_a3_perp_to_free          1.1e6          # /s
+  k_a3_free_to_a2            1.3e7          # /s
+  k_a3_a2_to_free            4.4e6          # /s
+  k_a3_free_to_parallel      1.3e7          # /s
+  k_a3_parallel_to_free      4.4e6          # /s
+
+  # Intrinsic proline isomerization rates chosen to preserve the no-Cyp33
+  # cis/trans equilibrium from Supplementary Table S2.
+  k_iso_cis_to_trans_base    0.01           # /s
+  k_iso_trans_to_cis_base    0.074          # /s
+
+  # Cyp33-stimulated PPIase term from Supplementary Table S2.
+  kcat_iso                   1027.5         # /s
+  Km_iso                     500            # uM
+  iso_cyp_eq_ratio           0.135          # dimensionless
+end parameters
+
+begin molecule types
+  # MLL1 third PHD domain with Pro1629 cis/trans state.
+  PHD3(pro~cis~trans,h,cyp)
+
+  # H3K4me3 histone tail peptide.
+  H3(mll,rna)
+
+  # Cyp33 RRM/PPIase construct with the alpha3 helix conformational state.
+  Cyp33(a3~free~perp~a2~parallel,rna,phd3)
+
+  # UAAUGU-containing RNA input species.
+  RNA(cyp,h3)
+end molecule types
+
+begin seed species
+  PHD3(pro~cis,h,cyp)          PHD3_0     # uM
+  H3(mll,rna)                  H3K4me3_0  # uM
+  Cyp33(a3~perp,rna,phd3)      0          # uM
+  RNA(cyp,h3)                  0          # uM
+end seed species
+
+begin observables
+  # Total species pools.
+  Molecules  Obs_Tot_PHD3              PHD3()
+  Molecules  Obs_Tot_H3K4me3           H3()
+  Molecules  Obs_Tot_Cyp33             Cyp33()
+  Molecules  Obs_Tot_RNA               RNA()
+
+  # Fig. 5B active state: H3K4me3 bound to MLL1 PHD3, with or without Cyp33.
+  Molecules  Obs_Active_H3K4me3        H3(mll!+)
+
+  # Fig. 5B repressive state: free H3K4me3 plus RNA-bound H3K4me3.
+  Molecules  Obs_Repressive_H3K4me3    H3(mll,rna) H3(mll,rna!+)
+
+  # Right-panel species reported in Fig. 5B.
+  Molecules  Obs_MLL1_H3K4me3          PHD3(h!1,cyp).H3(mll!1)
+  Molecules  Obs_Cyp33_MLL1            Cyp33(phd3!1).PHD3(cyp!1,h)
+  Molecules  Obs_Cyp33_MLL1_H3K4me3    Cyp33(phd3!1).PHD3(cyp!1,h!2).H3(mll!2)
+  Molecules  Obs_RNA_H3K4me3           RNA(h3!1).H3(rna!1)
+  Molecules  Obs_Free_H3K4me3          H3(mll,rna)
+
+  # State diagnostics used by the verification notebook.
+  Molecules  Obs_PHD3_Cis              PHD3(pro~cis)
+  Molecules  Obs_PHD3_Trans            PHD3(pro~trans)
+  Molecules  Obs_Cyp33_FreeA3          Cyp33(a3~free)
+  Molecules  Obs_Cyp33_PerpA3          Cyp33(a3~perp)
+  Molecules  Obs_Cyp33_A2A3            Cyp33(a3~a2)
+  Molecules  Obs_Cyp33_ParallelA3      Cyp33(a3~parallel)
+end observables
+
+begin functions
+  # Effective cis-to-trans proline isomerization rate. BioNetGen multiplies
+  # this rate by the matched cis-PHD3 concentration.
+  iso_cis_to_trans() = k_iso_cis_to_trans_base + \
+    input_on*kcat_iso*Obs_Tot_Cyp33/(Km_iso + Obs_Tot_PHD3)
+
+  # Reverse isomerization rate, constrained by the Cyp33-bound cis/trans
+  # equilibrium ratio in Supplementary Table S2.
+  iso_trans_to_cis() = k_iso_trans_to_cis_base + \
+    input_on*iso_cyp_eq_ratio*kcat_iso*Obs_Tot_Cyp33/(Km_iso + Obs_Tot_PHD3)
+end functions
+
+begin reaction rules
+  # Reaction 1A: cis-PHD3-BRD binds H3K4me3 with high affinity.
+  R1A_bind_cis_h3: \
+    PHD3(pro~cis,h,cyp) + H3(mll,rna) <-> \
+    PHD3(pro~cis,h!1,cyp).H3(mll!1,rna) \
+    kon_h3_free,koff_h3_cis
+
+  # Reaction 1B: trans-PHD3 binds H3K4me3 more weakly.
+  R1B_bind_trans_h3: \
+    PHD3(pro~trans,h,cyp) + H3(mll,rna) <-> \
+    PHD3(pro~trans,h!1,cyp).H3(mll!1,rna) \
+    kon_h3_free,koff_h3_trans
+
+  # Reaction 2: free-alpha3 Cyp33 binds the preformed PHD3-H3K4me3 complex.
+  R2_bind_cyp_to_phd3_h3: \
+    Cyp33(a3~free,rna,phd3) + PHD3(pro~trans,h!1,cyp).H3(mll!1,rna) <-> \
+    Cyp33(a3~free,rna,phd3!2).PHD3(pro~trans,h!1,cyp!2).H3(mll!1,rna) \
+    kon_cyp_phd3_h3,koff_cyp_phd3_h3
+
+  # Reaction 3: RNA binds Cyp33 when the beta-sheet surface is exposed.
+  R3_bind_rna_cyp_free: \
+    Cyp33(a3~free,rna,phd3) + RNA(cyp,h3) <-> \
+    Cyp33(a3~free,rna!1,phd3).RNA(cyp!1,h3) \
+    kon_rna_cyp,koff_rna_cyp
+
+  # Reaction 3: the alpha3-alpha2 state has the same RNA affinity.
+  R3_bind_rna_cyp_a2: \
+    Cyp33(a3~a2,rna,phd3) + RNA(cyp,h3) <-> \
+    Cyp33(a3~a2,rna!1,phd3).RNA(cyp!1,h3) \
+    kon_rna_cyp,koff_rna_cyp
+
+  # Reaction 4: free trans-PHD3 binds Cyp33.
+  R4_bind_cyp_phd3: \
+    Cyp33(a3~free,rna,phd3) + PHD3(pro~trans,h,cyp) <-> \
+    Cyp33(a3~free,rna,phd3!1).PHD3(pro~trans,h,cyp!1) \
+    kon_cyp_phd3,koff_cyp_phd3
+
+  # Reaction 5: alpha3 closes over the Cyp33 RRM beta sheet.
+  R5_a3_perp: Cyp33(a3~free,rna,phd3) <-> Cyp33(a3~perp,rna,phd3) \
+    k_a3_free_to_perp,k_a3_perp_to_free
+
+  # Reaction 6: alpha3-alpha2 exchange in free Cyp33.
+  R6_a3_a2: Cyp33(a3~free,rna,phd3) <-> Cyp33(a3~a2,rna,phd3) \
+    k_a3_free_to_a2,k_a3_a2_to_free
+
+  # Reaction 7: alpha3 becomes parallel when Cyp33 is bound to PHD3.
+  R7_a3_parallel_binary: \
+    Cyp33(a3~free,rna,phd3!1).PHD3(pro~trans,h,cyp!1) <-> \
+    Cyp33(a3~parallel,rna,phd3!1).PHD3(pro~trans,h,cyp!1) \
+    k_a3_free_to_parallel,k_a3_parallel_to_free
+
+  # Reaction 7: the same alpha3 transition in the Cyp33-PHD3-H3 ternary complex.
+  R7_a3_parallel_ternary: \
+    Cyp33(a3~free,rna,phd3!1).PHD3(pro~trans,h!2,cyp!1).H3(mll!2,rna) <-> \
+    Cyp33(a3~parallel,rna,phd3!1).PHD3(pro~trans,h!2,cyp!1).H3(mll!2,rna) \
+    k_a3_free_to_parallel,k_a3_parallel_to_free
+
+  # Reaction 8: H3K4me3 binds Cyp33-PHD3 when alpha3 is not parallel.
+  R8_bind_h3_cyp_phd3_free: \
+    Cyp33(a3~free,rna,phd3!1).PHD3(pro~trans,h,cyp!1) + H3(mll,rna) <-> \
+    Cyp33(a3~free,rna,phd3!1).PHD3(pro~trans,h!2,cyp!1).H3(mll!2,rna) \
+    kon_h3_cyp_phd3,koff_h3_cyp_phd3_free
+
+  # Reaction 9: H3K4me3 binds the alpha3-parallel Cyp33-PHD3 complex weakly.
+  R9_bind_h3_cyp_phd3_parallel: \
+    Cyp33(a3~parallel,rna,phd3!1).PHD3(pro~trans,h,cyp!1) + H3(mll,rna) <-> \
+    Cyp33(a3~parallel,rna,phd3!1).PHD3(pro~trans,h!2,cyp!1).H3(mll!2,rna) \
+    kon_h3_cyp_phd3,koff_h3_cyp_phd3_parallel
+
+  # Reaction 10: RNA binds free H3K4me3.
+  R10_bind_rna_h3: RNA(cyp,h3) + H3(mll,rna) <-> RNA(cyp,h3!1).H3(mll,rna!1) \
+    kon_rna_h3,koff_rna_h3
+
+  # Reaction 11: transcription-like RNA input and coupled Cyp33 recruitment.
+  R11_synth_rna: 0 -> RNA(cyp,h3) ksyn_RNA
+  R11_synth_cyp: 0 -> Cyp33(a3~perp,rna,phd3) ksyn_Cyp33
+
+  # Reaction 11: RNA removal from free, Cyp33-bound, and H3K4me3-bound states.
+  R11_deg_rna_free: RNA(cyp,h3) -> 0 kdeg_input
+  R11_deg_rna_from_cyp_free: Cyp33(a3~free,rna!1,phd3).RNA(cyp!1,h3) -> \
+    Cyp33(a3~free,rna,phd3) kdeg_input
+  R11_deg_rna_from_cyp_a2: Cyp33(a3~a2,rna!1,phd3).RNA(cyp!1,h3) -> \
+    Cyp33(a3~a2,rna,phd3) kdeg_input
+  R11_deg_rna_from_h3: RNA(cyp,h3!1).H3(mll,rna!1) -> H3(mll,rna) \
+    kdeg_input
+
+  # Reaction 11: Cyp33 removal from free and bound states, preserving partners.
+  R11_deg_cyp_free: Cyp33(a3~free,rna,phd3) -> 0 kdeg_input
+  R11_deg_cyp_perp: Cyp33(a3~perp,rna,phd3) -> 0 kdeg_input
+  R11_deg_cyp_a2: Cyp33(a3~a2,rna,phd3) -> 0 kdeg_input
+  R11_deg_cyp_from_rna_free: Cyp33(a3~free,rna!1,phd3).RNA(cyp!1,h3) -> \
+    RNA(cyp,h3) kdeg_input
+  R11_deg_cyp_from_rna_a2: Cyp33(a3~a2,rna!1,phd3).RNA(cyp!1,h3) -> \
+    RNA(cyp,h3) kdeg_input
+  R11_deg_cyp_from_phd3_free: Cyp33(a3~free,rna,phd3!1).PHD3(cyp!1,h) -> \
+    PHD3(pro~trans,h,cyp) kdeg_input
+  R11_deg_cyp_from_phd3_parallel: \
+    Cyp33(a3~parallel,rna,phd3!1).PHD3(cyp!1,h) -> \
+    PHD3(pro~trans,h,cyp) kdeg_input
+  R11_deg_cyp_from_ternary_free: \
+    Cyp33(a3~free,rna,phd3!1).PHD3(pro~trans,cyp!1,h!2).H3(mll!2,rna) -> \
+    PHD3(pro~trans,cyp,h!2).H3(mll!2,rna) kdeg_input
+  R11_deg_cyp_from_ternary_parallel: \
+    Cyp33(a3~parallel,rna,phd3!1).PHD3(pro~trans,cyp!1,h!2).H3(mll!2,rna) -> \
+    PHD3(pro~trans,cyp,h!2).H3(mll!2,rna) kdeg_input
+
+  # Reaction 12: cis/trans proline isomerization for free PHD3.
+  R12_iso_free_ct: PHD3(pro~cis,h,cyp) -> PHD3(pro~trans,h,cyp) \
+    iso_cis_to_trans()
+  R12_iso_free_tc: PHD3(pro~trans,h,cyp) -> PHD3(pro~cis,h,cyp) \
+    iso_trans_to_cis()
+
+  # Reaction 12: cis/trans proline isomerization for H3-bound PHD3.
+  R12_iso_h3_ct: PHD3(pro~cis,h!1,cyp).H3(mll!1,rna) -> \
+    PHD3(pro~trans,h!1,cyp).H3(mll!1,rna) iso_cis_to_trans()
+  R12_iso_h3_tc: PHD3(pro~trans,h!1,cyp).H3(mll!1,rna) -> \
+    PHD3(pro~cis,h!1,cyp).H3(mll!1,rna) iso_trans_to_cis()
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 16 species, 45 reactions
+
+  # Fig. 5B RNA+Cyp33 switch protocol
+
+  #@protocol: |
+  #  Phase 1 equilibrates 100 uM MLL1-PHD3 and 100 uM H3K4me3 without RNA or
+  #  Cyp33. Phase 2 activates RNA synthesis and Cyp33 recruitment from 5.6 to
+  #  22 min. Phase 3 turns synthesis off and allows RNA and Cyp33 removal;
+  #  input_on is reduced, not zeroed, to reproduce the finite recovery time in
+  #  the published trace during residual Cyp33/RNA clearance.
+
+  #@figure: Fig. 5B in Blatter et al. (2023)
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>336,\
+    n_steps=>105,rtol=>1e-9,atol=>1e-12})
+  setParameter("ksyn_RNA",1.5)
+  setParameter("ksyn_Cyp33",1.5)
+  setParameter("input_on",1)
+  simulate({method=>"ode",suffix=>"ode",t_start=>336,t_end=>1320,\
+    n_steps=>307,continue=>1,rtol=>1e-9,atol=>1e-12})
+  setParameter("ksyn_RNA",0)
+  setParameter("ksyn_Cyp33",0)
+  setParameter("input_on",0.1)
+  simulate({method=>"ode",suffix=>"ode",t_start=>1320,t_end=>1920,\
+    n_steps=>188,continue=>1,rtol=>1e-9,atol=>1e-12})
+end actions
