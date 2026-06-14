@@ -1,0 +1,56 @@
+# metadata.yaml - rna_induced_cyp33_mll1_repression_blatter2023
+id: rna_induced_cyp33_mll1_repression_blatter2023
+created: 2026-06-13
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_ode, reformulation, ai_assisted]
+  description: >
+    Reconstructed from the reaction schema in Fig. S4 and parameter values in
+    Supplementary Table S2 of Blatter et al. (2023), Science Advances
+    9:eadf5330. The paper cites BioModels accession MODEL2201310002 for the
+    final reaction network model, but the public BioModels API reported the
+    accession as submitted and unreleased during curation, so no source BNGL
+    file was available for direct adaptation.
+
+files:
+  - name: rna_induced_cyp33_mll1_repression_blatter2023.bngl
+    role: primary
+    description: >
+      Concentration-based ODE reconstruction of the Cyp33 RRM, MLL1 PHD3,
+      H3K4me3, and RNA allosteric switch network. The active protocol
+      reproduces the Fig. 5B RNA+Cyp33 stimulation and removal trajectory.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_blatter2023.ipynb
+    role: verification
+    description: >
+      Runs BioNetGen, checks regenerated outputs against committed reference
+      files, independently integrates the generated 16-species reaction network
+      with SciPy/LSODA, and compares model trajectories to digitized Fig. 5B
+      traces.
+  - name: verify_blatter2023.png
+    role: figure
+    description: >
+      Verification overlay plot for BioNetGen, independent SciPy integration,
+      and digitized Fig. 5B reported simulation traces.
+  - name: reference/blatter2023_fig5b_digitized.csv
+    role: reference
+    description: >
+      Pixel-digitized Fig. 5B traces from a 220-dpi rendering of the source
+      paper PDF, calibrated to the published axes and filtered to remove
+      disconnected label/neighbor-curve pixels.
+  - name: reference/rna_induced_cyp33_mll1_repression_blatter2023.net
+    role: reference
+  - name: reference/rna_induced_cyp33_mll1_repression_blatter2023_ode.net
+    role: reference
+  - name: reference/rna_induced_cyp33_mll1_repression_blatter2023_ode.gdat
+    role: reference
+  - name: reference/rna_induced_cyp33_mll1_repression_blatter2023_ode.cdat
+    role: reference
