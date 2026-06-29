@@ -1,0 +1,121 @@
+#@model_id: reversible_bimolecular_association
+#@title: Reversible bimolecular association
+#@description: Three-variable ODE model for A + B <-> C with mass-action forward and reverse rate constants. The analytical solution is reported through BNGL functions using the conserved totals A+C and B+C.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous concentrations in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  The simulated ODEs are dA/dt = -kf*A*B + kr*C,
+#  dB/dt = -kf*A*B + kr*C, and dC/dt = kf*A*B - kr*C.
+#  The functions block gives the closed-form solution for kf > 0.
+
+begin model
+
+begin parameters
+  # Forward association rate constant.
+  kf  0.01  # /AU/day
+
+  # Reverse dissociation rate constant.
+  kr  0.5   # /day
+
+  # Initial concentration of free A.
+  A0  100.0  # AU
+
+  # Initial concentration of free B.
+  B0  75.0   # AU
+
+  # Initial concentration of complex C.
+  C0  10.0   # AU
+
+  # Conserved total concentration of A-containing material.
+  Atot  A0 + C0  # AU
+
+  # Conserved total concentration of B-containing material.
+  Btot  B0 + C0  # AU
+
+  # Sum coefficient in the scalar Riccati equation for C(t).
+  S_assoc  kf*(Atot + Btot) + kr  # /day
+
+  # Difference between the two Riccati roots, multiplied by kf.
+  D_assoc  sqrt(S_assoc*S_assoc - 4*kf*kf*Atot*Btot)  # /day
+
+  # Stable physical root for C.
+  C_low  (S_assoc - D_assoc)/(2*kf)  # AU
+
+  # Unstable upper root for C.
+  C_high  (S_assoc + D_assoc)/(2*kf)  # AU
+
+  # Initial value of the transformed Riccati ratio.
+  R_init  (C0 - C_low)/(C0 - C_high)  # dimensionless
+end parameters
+
+begin molecule types
+  A()
+  # Free A.
+
+  B()
+  # Free B.
+
+  C()
+  # Associated complex.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  A()  A0  # AU
+  B()  B0  # AU
+  C()  C0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Free A concentration.
+  Molecules  Obs_A  A()
+
+  # Free B concentration.
+  Molecules  Obs_B  B()
+
+  # Complex C concentration.
+  Molecules  Obs_C  C()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Closed-form solution for A(t).
+  Analytical_A() = Atot - ((C_low - R_init*exp(-D_assoc*t)*C_high)/(1 - R_init*exp(-D_assoc*t)))
+
+  # Closed-form solution for B(t).
+  Analytical_B() = Btot - ((C_low - R_init*exp(-D_assoc*t)*C_high)/(1 - R_init*exp(-D_assoc*t)))
+
+  # Closed-form solution for C(t).
+  Analytical_C() = (C_low - R_init*exp(-D_assoc*t)*C_high)/(1 - R_init*exp(-D_assoc*t))
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Reversible bimolecular association.
+  R_assoc: A() + B() <-> C()  kf, kr
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>10,n_steps=>200,print_functions=>1})
+end actions

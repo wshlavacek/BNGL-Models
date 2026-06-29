@@ -1,0 +1,137 @@
+#@model_id: birth_death_immigration_moments
+#@title: Birth-death-immigration moment dynamics
+#@description: Closed mean and variance ODEs for a linear birth-death-immigration branching process with immigration 0 -> X, birth X -> 2X, and death X -> 0.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous moment values; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  This BNGL file models the closed moment ODEs, not stochastic trajectories.
+#  The analytical functions assume birth_rate != death_rate.
+
+begin model
+
+begin parameters
+  # Constant immigration rate.
+  s  1.0  # individuals/day
+
+  # Per-individual birth rate.
+  birth_rate  0.4  # /day
+
+  # Per-individual death rate.
+  death_rate  0.8  # /day
+
+  # Initial mean.
+  Mean0  0.0  # individuals
+
+  # Initial variance.
+  Variance0  0.0  # individuals^2
+
+  # Net per-individual growth rate.
+  a_net  birth_rate - death_rate  # /day
+
+  # Sum of per-individual event rates.
+  c_event  birth_rate + death_rate  # /day
+
+  # Stable mean steady state for the default subcritical parameterization.
+  Mean_ss  -s/a_net  # individuals
+
+  # Initial deviation of the mean from steady state.
+  Mean_delta  Mean0 - Mean_ss  # individuals
+
+  # Constant term in the variance solution.
+  Variance_const  -(s + c_event*Mean_ss)/(2*a_net)  # individuals^2
+
+  # Coefficient of exp(a_net*t) in the variance solution.
+  Variance_exp1  -(c_event*Mean_delta)/a_net  # individuals^2
+
+  # Coefficient of exp(2*a_net*t) in the variance solution.
+  Variance_exp2  Variance0 - Variance_const - Variance_exp1  # individuals^2
+end parameters
+
+begin molecule types
+  Mean()
+  # Mean population size E[X].
+
+  Variance()
+  # Population variance Var[X].
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  Mean()  Mean0  # individuals
+  Variance()  Variance0  # individuals^2
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Mean population size.
+  Molecules  Obs_Mean  Mean()
+
+  # Population variance.
+  Molecules  Obs_Variance  Variance()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Birth contribution to dm/dt.
+  mean_birth() = birth_rate*Obs_Mean
+
+  # Birth and death event contribution to dv/dt through the mean.
+  variance_event_drive() = c_event*Obs_Mean
+
+  # Birth contribution to variance amplification.
+  variance_birth_amplification() = 2*birth_rate*Obs_Variance
+
+  # Closed-form mean trajectory.
+  Analytical_Mean() = Mean_ss + Mean_delta*exp(a_net*t)
+
+  # Closed-form variance trajectory.
+  Analytical_Variance() = Variance_const + Variance_exp1*exp(a_net*t) + Variance_exp2*exp(2*a_net*t)
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Immigration contribution to the mean.
+  R_mean_immigration: 0 -> Mean()  s
+
+  # Birth contribution to the mean.
+  R_mean_birth: 0 -> Mean()  mean_birth()
+
+  # Death contribution to the mean.
+  R_mean_death: Mean() -> 0  death_rate
+
+  # Immigration contribution to the variance.
+  R_variance_immigration: 0 -> Variance()  s
+
+  # Birth/death event contribution to the variance through the mean.
+  R_variance_event_drive: 0 -> Variance()  variance_event_drive()
+
+  # Birth contribution to variance amplification.
+  R_variance_birth_amplification: 0 -> Variance()  variance_birth_amplification()
+
+  # Death contribution to variance damping.
+  R_variance_death_damping: Variance() -> 0  2*death_rate
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>20,n_steps=>400,print_functions=>1})
+end actions

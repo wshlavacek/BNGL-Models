@@ -1,0 +1,104 @@
+#@model_id: sis_epidemic_threshold
+#@title: SIS epidemic threshold
+#@description: Two-variable deterministic SIS epidemic model with conserved population, infection S + I -> 2I, and recovery I -> S. The infected population follows a logistic threshold equation.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous population counts in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  The analytical functions assume beta > gamma and I0 > 0, giving a positive
+#  endemic infected steady state.
+
+begin model
+
+begin parameters
+  # Transmission rate.
+  beta  1.2  # /day
+
+  # Recovery rate.
+  gamma  0.4  # /day
+
+  # Initial susceptible population.
+  S0  990.0  # individuals
+
+  # Initial infected population.
+  I0  10.0  # individuals
+
+  # Conserved total population.
+  N_total  S0 + I0  # individuals
+
+  # Effective bimolecular infection rate constant.
+  k_infect  beta/N_total  # /individual/day
+
+  # Net initial exponential growth rate of infection.
+  r_net  beta - gamma  # /day
+
+  # Endemic infected steady state.
+  I_star  N_total*r_net/beta  # individuals
+
+  # Initial logistic ratio.
+  R_init  (I_star - I0)/I0  # dimensionless
+end parameters
+
+begin molecule types
+  S()
+  # Susceptible population.
+
+  I()
+  # Infected population.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  S()  S0  # individuals
+  I()  I0  # individuals
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Susceptible population.
+  Molecules  Obs_S  S()
+
+  # Infected population.
+  Molecules  Obs_I  I()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Closed-form infected population for beta > gamma.
+  Analytical_I() = I_star/(1 + R_init*exp(-r_net*t))
+
+  # Closed-form susceptible population from conservation.
+  Analytical_S() = N_total - Analytical_I()
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Infection.
+  R_infection: S() + I() -> I() + I()  k_infect
+
+  # Recovery.
+  R_recovery: I() -> S()  gamma
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>20,n_steps=>400,print_functions=>1})
+end actions

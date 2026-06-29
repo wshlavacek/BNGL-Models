@@ -1,0 +1,121 @@
+#@model_id: quantum_rabi_two_level
+#@title: Quantum two-level Rabi oscillation
+#@description: ODE-only Bloch-coordinate model for resonant coherent Rabi oscillation in a closed two-level quantum system. V and W are signed continuous state variables, not stochastic molecule counts.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: dimensionless signed Bloch coordinates; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  This file intentionally uses signed ODE state variables. It is not suitable
+#  for SSA or NFsim. The derived probabilities are P_excited=(1+W)/2 and
+#  P_ground=(1-W)/2.
+
+begin model
+
+begin parameters
+  # Resonant Rabi angular frequency.
+  Omega  2.0  # /day
+
+  # Initial Bloch U component.
+  U0  0.0  # dimensionless
+
+  # Initial Bloch V component.
+  V0  0.0  # dimensionless
+
+  # Initial Bloch W component. W=-1 is the ground state.
+  W0  -1.0  # dimensionless
+end parameters
+
+begin molecule types
+  U()
+  # Signed Bloch U component; constant under resonant drive about the U axis.
+
+  V()
+  # Signed Bloch V component.
+
+  W()
+  # Signed Bloch W component, equal to P_excited - P_ground.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  U()  U0  # dimensionless
+  V()  V0  # dimensionless
+  W()  W0  # dimensionless
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Signed Bloch U component.
+  Molecules  Obs_U  U()
+
+  # Signed Bloch V component.
+  Molecules  Obs_V  V()
+
+  # Signed Bloch W component.
+  Molecules  Obs_W  W()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # ODE right-hand side for V.
+  dV_dt() = -Omega*Obs_W
+
+  # ODE right-hand side for W.
+  dW_dt() = Omega*Obs_V
+
+  # Excited-state probability derived from W.
+  P_Excited() = (1 + Obs_W)/2
+
+  # Ground-state probability derived from W.
+  P_Ground() = (1 - Obs_W)/2
+
+  # Bloch-vector squared norm.
+  Bloch_Norm2() = Obs_U^2 + Obs_V^2 + Obs_W^2
+
+  # Closed-form U component.
+  Analytical_U() = U0
+
+  # Closed-form V component.
+  Analytical_V() = V0*cos(Omega*t) - W0*sin(Omega*t)
+
+  # Closed-form W component.
+  Analytical_W() = V0*sin(Omega*t) + W0*cos(Omega*t)
+
+  # Closed-form excited-state probability.
+  Analytical_P_Excited() = (1 + Analytical_W())/2
+
+  # Closed-form ground-state probability.
+  Analytical_P_Ground() = (1 - Analytical_W())/2
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Signed ODE update for V.
+  R_dV: 0 -> V()  dV_dt()
+
+  # Signed ODE update for W.
+  R_dW: 0 -> W()  dW_dt()
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>10,n_steps=>400,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions

@@ -1,0 +1,122 @@
+#@model_id: erlang_transit_chain_n4
+#@title: Erlang transit-chain delay, N=4
+#@description: Five-variable linear ODE model for T0 -> T1 -> T2 -> T3 -> Product with equal first-order transit rates. The product trajectory is an Erlang cumulative distribution function.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous amount in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  The simulated ODEs form a four-stage first-order transit chain.
+#  The closed forms are finite polynomials in k*t multiplied by exp(-k*t).
+
+begin model
+
+begin parameters
+  # Common first-order transit rate.
+  k  0.8  # /day
+
+  # Initial amount in the first transit state.
+  Dose  100.0  # AU
+end parameters
+
+begin molecule types
+  T0()
+  # First transit state.
+
+  T1()
+  # Second transit state.
+
+  T2()
+  # Third transit state.
+
+  T3()
+  # Fourth transit state.
+
+  Product()
+  # Accumulated terminal product.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  T0()  Dose  # AU
+  T1()  0.0  # AU
+  T2()  0.0  # AU
+  T3()  0.0  # AU
+  Product()  0.0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Amount in the first transit state.
+  Molecules  Obs_T0  T0()
+
+  # Amount in the second transit state.
+  Molecules  Obs_T1  T1()
+
+  # Amount in the third transit state.
+  Molecules  Obs_T2  T2()
+
+  # Amount in the fourth transit state.
+  Molecules  Obs_T3  T3()
+
+  # Accumulated product amount.
+  Molecules  Obs_Product  Product()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Dimensionless transit time.
+  tau() = k*t
+
+  # Closed-form amount in the first transit state.
+  Analytical_T0() = Dose*exp(-tau())
+
+  # Closed-form amount in the second transit state.
+  Analytical_T1() = Dose*exp(-tau())*tau()
+
+  # Closed-form amount in the third transit state.
+  Analytical_T2() = Dose*exp(-tau())*tau()^2/2
+
+  # Closed-form amount in the fourth transit state.
+  Analytical_T3() = Dose*exp(-tau())*tau()^3/6
+
+  # Closed-form accumulated product amount.
+  Analytical_Product() = Dose*(1 - exp(-tau())*(1 + tau() + tau()^2/2 + tau()^3/6))
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # First transit step.
+  R_t0_to_t1: T0() -> T1()  k
+
+  # Second transit step.
+  R_t1_to_t2: T1() -> T2()  k
+
+  # Third transit step.
+  R_t2_to_t3: T2() -> T3()  k
+
+  # Fourth transit step into accumulated product.
+  R_t3_to_product: T3() -> Product()  k
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>15,n_steps=>300,print_functions=>1})
+end actions

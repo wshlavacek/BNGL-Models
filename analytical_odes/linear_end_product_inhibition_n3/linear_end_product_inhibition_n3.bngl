@@ -1,0 +1,157 @@
+#@model_id: linear_end_product_inhibition_n3
+#@title: Linear end-product inhibition pathway, N=3
+#@description: Three-stage linear pathway x0 -> x1 -> x2 -> x3 -> 0 with constant x0 and linear end-product feedback on x1 input. The downstream rates are equal to keep the closed-form solution compact in BNGL functions.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous concentrations in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  The simulated ODEs are dx1/dt = k0*x0 - h*x3 - k*x1,
+#  dx2/dt = k*x1 - k*x2, and dx3/dt = k*x2 - k*x3.
+#  The functions block gives the closed-form solution for k > 0 and h > 0.
+
+begin model
+
+begin parameters
+  # Constant upstream substrate concentration.
+  x0  10.0  # AU
+
+  # Zeroth-order production coefficient from x0.
+  k0  1.0  # /day
+
+  # Common first-order pathway rate.
+  k  1.0  # /day
+
+  # Linear end-product inhibition coefficient.
+  h  0.5  # /day
+
+  # Initial concentration of x1.
+  X1_0  0.0  # AU
+
+  # Initial concentration of x2.
+  X2_0  0.0  # AU
+
+  # Initial concentration of x3.
+  X3_0  0.0  # AU
+
+  # Uninhibited upstream input flux.
+  J  k0*x0  # AU/day
+
+  # Common steady-state concentration of x1, x2, and x3.
+  X_ss  J/(k + h)  # AU
+
+  # Cubic modal scale for the shifted three-stage feedback system.
+  alpha  (h*k*k)^0.3333333333333333  # /day
+
+  # Oscillation frequency for the complex-conjugate modal pair.
+  omega  sqrt(3)*alpha/2  # /day
+
+  # Initial deviation of x1 from steady state.
+  u1_init  X1_0 - X_ss  # AU
+
+  # Initial deviation of x2 from steady state.
+  u2_init  X2_0 - X_ss  # AU
+
+  # Initial deviation of x3 from steady state.
+  u3_init  X3_0 - X_ss  # AU
+
+  # Real-mode coefficient for W(t).
+  A_mode  (k*k*u1_init - alpha*k*u2_init + alpha*alpha*u3_init)/(3*alpha*alpha)  # AU
+
+  # Cosine coefficient for W(t).
+  B_mode  u3_init - A_mode  # AU
+
+  # Sine coefficient for W(t).
+  C_mode  (2*k*u2_init/alpha - u3_init + 3*A_mode)/sqrt(3)  # AU
+end parameters
+
+begin molecule types
+  X1()
+  # First pathway intermediate.
+
+  X2()
+  # Second pathway intermediate.
+
+  X3()
+  # End product that inhibits upstream input.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  X1()  X1_0  # AU
+  X2()  X2_0  # AU
+  X3()  X3_0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Concentration of x1.
+  Molecules  Obs_X1  X1()
+
+  # Concentration of x2.
+  Molecules  Obs_X2  X2()
+
+  # Concentration of x3.
+  Molecules  Obs_X3  X3()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Net upstream input flux after linear end-product inhibition.
+  input_X1() = J - h*Obs_X3
+
+  # Modal solution W(t) for y3(t) = exp(-k*t)*W(t).
+  W_mode() = A_mode*exp(-alpha*t) + exp(alpha*t/2)*(B_mode*cos(omega*t) + C_mode*sin(omega*t))
+
+  # First derivative W'(t).
+  Wp_mode() = -alpha*A_mode*exp(-alpha*t) + exp(alpha*t/2)*((alpha/2)*(B_mode*cos(omega*t) + C_mode*sin(omega*t)) + omega*(-B_mode*sin(omega*t) + C_mode*cos(omega*t)))
+
+  # Second derivative W''(t).
+  Wpp_mode() = alpha*alpha*A_mode*exp(-alpha*t) + exp(alpha*t/2)*((-alpha*alpha/2)*(B_mode*cos(omega*t) + C_mode*sin(omega*t)) + alpha*omega*(-B_mode*sin(omega*t) + C_mode*cos(omega*t)))
+
+  # Closed-form solution for x1(t).
+  Analytical_X1() = X_ss + exp(-k*t)*Wpp_mode()/(k*k)
+
+  # Closed-form solution for x2(t).
+  Analytical_X2() = X_ss + exp(-k*t)*Wp_mode()/k
+
+  # Closed-form solution for x3(t).
+  Analytical_X3() = X_ss + exp(-k*t)*W_mode()
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Feedback-regulated input into x1.
+  R_input: 0 -> X1()  input_X1()
+
+  # First pathway conversion.
+  R_x1_to_x2: X1() -> X2()  k
+
+  # Second pathway conversion.
+  R_x2_to_x3: X2() -> X3()  k
+
+  # End-product removal.
+  R_x3_clear: X3() -> 0  k
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>20,n_steps=>400,print_functions=>1})
+end actions

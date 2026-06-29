@@ -1,0 +1,89 @@
+#@model_id: autocatalytic_conversion
+#@title: Autocatalytic conversion
+#@description: Two-variable nonlinear ODE model for A + B -> 2B. The conserved total A+B reduces the system to a logistic equation for B(t).
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous concentrations in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  The simulated ODEs are dA/dt = -k_auto*A*B and dB/dt = k_auto*A*B.
+#  The logistic closed form in the functions block assumes B0 > 0.
+
+begin model
+
+begin parameters
+  # Autocatalytic conversion rate constant.
+  k_auto  0.01  # /AU/day
+
+  # Initial concentration of A.
+  A0  90.0  # AU
+
+  # Initial concentration of B. Must be positive for autocatalysis to start.
+  B0  10.0  # AU
+
+  # Conserved total concentration.
+  T_total  A0 + B0  # AU
+
+  # Initial logistic ratio (T_total - B0)/B0 = A0/B0.
+  R_init  A0/B0  # dimensionless
+end parameters
+
+begin molecule types
+  A()
+  # Substrate converted by autocatalytic B.
+
+  B()
+  # Autocatalytic product.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  A()  A0  # AU
+  B()  B0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Concentration of A.
+  Molecules  Obs_A  A()
+
+  # Concentration of B.
+  Molecules  Obs_B  B()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Closed-form logistic solution for B(t).
+  Analytical_B() = T_total/(1 + R_init*exp(-k_auto*T_total*t))
+
+  # Closed-form solution for A(t), using conservation of A+B.
+  Analytical_A() = T_total - Analytical_B()
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Autocatalytic conversion.
+  R_autocat: A() + B() -> B() + B()  k_auto
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>10,n_steps=>200,print_functions=>1})
+end actions

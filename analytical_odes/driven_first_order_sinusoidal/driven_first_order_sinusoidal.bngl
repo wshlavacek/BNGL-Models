@@ -1,0 +1,94 @@
+#@model_id: driven_first_order_sinusoidal
+#@title: Sinusoidally driven first-order system
+#@description: One-variable linear ODE model dX/dt = J0 + J1*sin(omega*t) - k*X. The analytical solution is a decaying transient plus a phase-lagged sinusoidal steady response.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous abundance in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  The simulated ODE is dX/dt = J0 + J1*sin(omega_drive*t) - k*X.
+#  J0 is larger than J1 so the input flux remains nonnegative.
+
+begin model
+
+begin parameters
+  # First-order decay rate.
+  k  0.5  # /day
+
+  # Baseline input flux.
+  J0  2.0  # AU/day
+
+  # Sinusoidal input amplitude.
+  J1  1.0  # AU/day
+
+  # Input angular frequency.
+  omega_drive  1.5  # /day
+
+  # Initial abundance.
+  X0  0.0  # AU
+
+  # Frequency response denominator.
+  denom  k*k + omega_drive*omega_drive  # /day^2
+
+  # Forced steady-response value at t=0.
+  X_forced_0  J0/k - J1*omega_drive/denom  # AU
+end parameters
+
+begin molecule types
+  X()
+  # Driven abundance variable.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  X()  X0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Abundance.
+  Molecules  Obs_X  X()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Nonnegative sinusoidal input flux.
+  input_X() = J0 + J1*sin(omega_drive*t)
+
+  # Forced phase-lagged steady response.
+  forced_X() = J0/k + J1*(k*sin(omega_drive*t) - omega_drive*cos(omega_drive*t))/denom
+
+  # Closed-form driven first-order trajectory.
+  Analytical_X() = forced_X() + (X0 - X_forced_0)*exp(-k*t)
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Time-varying input.
+  R_input: 0 -> X()  input_X()
+
+  # First-order decay.
+  R_decay: X() -> 0  k
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>20,n_steps=>400,print_functions=>1})
+end actions
