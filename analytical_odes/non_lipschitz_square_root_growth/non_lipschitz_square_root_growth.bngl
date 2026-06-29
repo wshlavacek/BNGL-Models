@@ -1,0 +1,85 @@
+#@model_id: non_lipschitz_square_root_growth
+#@title: Non-Lipschitz square-root growth
+#@description: One-variable ODE model dX/dt = a*sqrt(X). For X0 > 0 the solution is unique and quadratic in time; for X0 = 0 the ODE has infinitely many delayed-start solutions.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous abundance in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  The ODE right-hand side is continuous but not Lipschitz at X=0.
+#  The default X0 is positive to verify the unique nontrivial branch.
+
+begin model
+
+begin parameters
+  # Square-root growth coefficient.
+  a  1.0  # AU^0.5/day
+
+  # Positive initial abundance for the unique branch used in simulation.
+  X0  0.25  # AU
+
+  # Square root of the initial abundance.
+  sqrt_X0  sqrt(X0)  # AU^0.5
+
+  # Delay time used only for an illustrative zero-initial-condition branch.
+  delay_tau  2.0  # days
+end parameters
+
+begin molecule types
+  X()
+  # Abundance variable with non-Lipschitz square-root growth.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  X()  X0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Abundance.
+  Molecules  Obs_X  X()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Non-Lipschitz growth flux.
+  sqrt_growth() = a*sqrt(Obs_X)
+
+  # Closed-form solution for the positive initial condition X0 > 0.
+  Analytical_X() = (sqrt_X0 + a*t/2)^2
+
+  # Stationary zero-initial-condition branch.
+  ZeroInitial_Stationary_X() = 0
+
+  # Delayed-start zero-initial-condition branch.
+  ZeroInitial_Delayed_X() = if(t<delay_tau,0,(a*(t - delay_tau)/2)^2)
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Square-root growth.
+  R_growth: 0 -> X()  sqrt_growth()
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>10,n_steps=>400,print_functions=>1})
+end actions

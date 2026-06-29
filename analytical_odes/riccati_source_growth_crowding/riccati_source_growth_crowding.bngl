@@ -1,0 +1,102 @@
+#@model_id: riccati_source_growth_crowding
+#@title: Riccati source-growth-crowding
+#@description: One-variable nonlinear ODE model dX/dt = s + r*X - q*X^2 with constant source, linear growth, and quadratic crowding loss. The analytical solution follows from the two roots of the quadratic right-hand side.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous abundance in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  The simulated ODE is dX/dt = s + r*X - q*X^2.
+#  The quadratic loss is encoded as a first-order removal rule with a functional
+#  rate law q*Obs_X, so BioNetGen's reactant multiplication supplies the second
+#  factor of X.
+
+begin model
+
+begin parameters
+  # Constant source rate.
+  s  1.0  # AU/day
+
+  # Linear growth rate.
+  r  0.8  # /day
+
+  # Quadratic crowding coefficient.
+  q  0.05  # /AU/day
+
+  # Initial abundance.
+  X0  2.0  # AU
+
+  # Discriminant square root.
+  D_riccati  sqrt(r*r + 4*q*s)  # /day
+
+  # Stable positive root of the quadratic right-hand side.
+  X_plus  (r + D_riccati)/(2*q)  # AU
+
+  # Unstable lower root of the quadratic right-hand side.
+  X_minus  (r - D_riccati)/(2*q)  # AU
+
+  # Initial value of the transformed Riccati ratio.
+  R_init  (X0 - X_plus)/(X0 - X_minus)  # dimensionless
+end parameters
+
+begin molecule types
+  X()
+  # Abundance variable with source, growth, and crowding.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  X()  X0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Abundance.
+  Molecules  Obs_X  X()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Linear growth flux.
+  linear_growth() = r*Obs_X
+
+  # Per-molecule crowding loss rate; BioNetGen multiplies by Obs_X again.
+  crowding_loss() = q*Obs_X
+
+  # Closed-form Riccati trajectory.
+  Analytical_X() = (X_plus - R_init*exp(-D_riccati*t)*X_minus)/(1 - R_init*exp(-D_riccati*t))
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Constant source.
+  R_source: 0 -> X()  s
+
+  # Linear growth.
+  R_growth: 0 -> X()  linear_growth()
+
+  # Quadratic crowding loss.
+  R_crowding: X() -> 0  crowding_loss()
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>20,n_steps=>400,print_functions=>1})
+end actions

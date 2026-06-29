@@ -1,0 +1,80 @@
+#@model_id: hiv_art_viral_decay
+#@title: HIV viral decay under fully suppressive antiretroviral therapy
+#@description: One-variable ODE model for plasma HIV viral load after therapy starts at t=0. Pre-treatment production P_pre defines the initial steady state V(0)=P_pre/c; post-treatment production P_art is zero for 100% effective therapy.
+#@organism: human
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous viral load in HIV RNA copies/mL; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  For t < 0, dV/dt = P_pre - c*V and V is assumed to be at steady state.
+#  For t >= 0, fully effective therapy sets active production P_art = 0, so
+#  dV/dt = -c*V with V(0) = P_pre/c.
+
+begin model
+
+begin parameters
+  # Pre-treatment viral production rate. This parameter sets the initial condition.
+  P_pre  1.0e5  # copies/mL/day
+
+  # Post-treatment viral production rate. Fully effective therapy sets this to zero.
+  P_art  0.0    # copies/mL/day
+
+  # First-order viral clearance rate.
+  c      1.0    # /day
+
+  # Pre-treatment steady-state viral load.
+  V_init P_pre/c  # copies/mL
+end parameters
+
+begin molecule types
+  V()
+  # Plasma HIV viral load represented as a continuous ODE variable.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  V()  V_init  # copies/mL
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Plasma HIV viral load.
+  Molecules  Obs_V  V()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Closed-form solution for dV/dt = P_art - c*V with V(0) = P_pre/c.
+  Analytical_V() = P_art/c + (P_pre/c - P_art/c)*exp(-c*t)
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Therapy-blocked production. With P_art = 0, this contributes no post-treatment input.
+  R_prod_blocked: 0 -> V()  P_art
+
+  # First-order viral clearance.
+  R_clear: V() -> 0  c
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>14,n_steps=>280,print_functions=>1})
+end actions

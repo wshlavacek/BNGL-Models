@@ -1,0 +1,133 @@
+#@model_id: three_state_irreversible_cycle
+#@title: Three-state irreversible cycle
+#@description: Three-variable linear ODE model for X1 -> X2 -> X3 -> X1 with equal first-order rates. The conserved total and complex eigenvalue pair yield damped sine/cosine relaxation to the uniform steady state.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous concentrations in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  The simulated ODEs are dX1/dt = k*X3 - k*X1,
+#  dX2/dt = k*X1 - k*X2, and dX3/dt = k*X2 - k*X3.
+#  The functions block gives the closed-form damped oscillatory solution.
+
+begin model
+
+begin parameters
+  # Common first-order cycle rate.
+  k  1.0  # /day
+
+  # Initial concentration of X1.
+  X1_0  90.0  # AU
+
+  # Initial concentration of X2.
+  X2_0  10.0  # AU
+
+  # Initial concentration of X3.
+  X3_0  0.0  # AU
+
+  # Conserved total concentration.
+  T_total  X1_0 + X2_0 + X3_0  # AU
+
+  # Uniform steady-state concentration.
+  X_ss  T_total/3  # AU
+
+  # Exponential decay rate of the nonzero modes.
+  gamma  3*k/2  # /day
+
+  # Oscillation frequency of the nonzero modes.
+  omega  sqrt(3)*k/2  # /day
+
+  # Initial deviation of X1 from steady state.
+  u1_init  X1_0 - X_ss  # AU
+
+  # Initial deviation of X2 from steady state.
+  u2_init  X2_0 - X_ss  # AU
+
+  # Initial deviation of X3 from steady state.
+  u3_init  X3_0 - X_ss  # AU
+
+  # Sine coefficient for X1(t).
+  q1_init  (u3_init - u2_init)/sqrt(3)  # AU
+
+  # Sine coefficient for X2(t).
+  q2_init  (u1_init - u3_init)/sqrt(3)  # AU
+
+  # Sine coefficient for X3(t).
+  q3_init  (u2_init - u1_init)/sqrt(3)  # AU
+end parameters
+
+begin molecule types
+  X1()
+  # First cycle state.
+
+  X2()
+  # Second cycle state.
+
+  X3()
+  # Third cycle state.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  X1()  X1_0  # AU
+  X2()  X2_0  # AU
+  X3()  X3_0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Concentration of X1.
+  Molecules  Obs_X1  X1()
+
+  # Concentration of X2.
+  Molecules  Obs_X2  X2()
+
+  # Concentration of X3.
+  Molecules  Obs_X3  X3()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Closed-form solution for X1(t).
+  Analytical_X1() = X_ss + exp(-gamma*t)*(u1_init*cos(omega*t) + q1_init*sin(omega*t))
+
+  # Closed-form solution for X2(t).
+  Analytical_X2() = X_ss + exp(-gamma*t)*(u2_init*cos(omega*t) + q2_init*sin(omega*t))
+
+  # Closed-form solution for X3(t).
+  Analytical_X3() = X_ss + exp(-gamma*t)*(u3_init*cos(omega*t) + q3_init*sin(omega*t))
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # First irreversible cycle step.
+  R_x1_to_x2: X1() -> X2()  k
+
+  # Second irreversible cycle step.
+  R_x2_to_x3: X2() -> X3()  k
+
+  # Third irreversible cycle step.
+  R_x3_to_x1: X3() -> X1()  k
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>10,n_steps=>200,print_functions=>1})
+end actions

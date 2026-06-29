@@ -1,0 +1,76 @@
+#@model_id: gompertz_growth
+#@title: Gompertz growth
+#@description: One-variable nonlinear ODE model dX/dt = r*X*ln(K/X). The logarithmic transform ln(X/K) gives a closed-form analytical solution.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous abundance in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  The simulated ODE is dX/dt = r*X*ln(K/X).
+#  The analytical solution is X(t) = K*exp(ln(X0/K)*exp(-r*t)).
+
+begin model
+
+begin parameters
+  # Gompertz growth-rate parameter.
+  r  0.4  # /day
+
+  # Carrying capacity.
+  K  100.0  # AU
+
+  # Initial abundance. Must be positive.
+  X0  10.0  # AU
+end parameters
+
+begin molecule types
+  X()
+  # Growing abundance variable.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  X()  X0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Abundance.
+  Molecules  Obs_X  X()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Gompertz growth flux.
+  gompertz_growth() = r*Obs_X*ln(K/Obs_X)
+
+  # Closed-form Gompertz trajectory.
+  Analytical_X() = K*exp(ln(X0/K)*exp(-r*t))
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Nonlinear Gompertz growth.
+  R_growth: 0 -> X()  gompertz_growth()
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>20,n_steps=>400,print_functions=>1})
+end actions

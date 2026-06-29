@@ -1,0 +1,122 @@
+#@model_id: two_compartment_pharmacokinetics
+#@title: Two-compartment pharmacokinetics
+#@description: Linear two-compartment pharmacokinetic model with central-peripheral exchange and first-order elimination from the central compartment. The analytical solution is biexponential.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-29
+#@modified: 2026-06-29
+#@bng_version: >=2.9.3
+#@units_convention: continuous amount in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  The simulated ODEs are dCentral/dt = -(k12+ke)*Central + k21*Peripheral
+#  and dPeripheral/dt = k12*Central - k21*Peripheral.
+
+begin model
+
+begin parameters
+  # Central-to-peripheral transfer rate.
+  k12  0.8  # /day
+
+  # Peripheral-to-central transfer rate.
+  k21  0.4  # /day
+
+  # Central elimination rate.
+  ke  0.3  # /day
+
+  # Initial central amount.
+  Central_0  100.0  # AU
+
+  # Initial peripheral amount.
+  Peripheral_0  0.0  # AU
+
+  # Trace coefficient for the two-compartment coefficient matrix.
+  s_rate  k12 + k21 + ke  # /day
+
+  # Eigenvalue separation.
+  d_rate  sqrt(s_rate*s_rate - 4*ke*k21)  # /day
+
+  # Slower eigenvalue.
+  lambda_1  (-s_rate + d_rate)/2  # /day
+
+  # Faster eigenvalue.
+  lambda_2  (-s_rate - d_rate)/2  # /day
+
+  # Initial central-compartment derivative.
+  Central_dot_0  -(k12 + ke)*Central_0 + k21*Peripheral_0  # AU/day
+
+  # Coefficient of the slower central-compartment mode.
+  coef_1  (Central_dot_0 - lambda_2*Central_0)/(lambda_1 - lambda_2)  # AU
+
+  # Coefficient of the faster central-compartment mode.
+  coef_2  (lambda_1*Central_0 - Central_dot_0)/(lambda_1 - lambda_2)  # AU
+
+  # Peripheral coefficient associated with the slower mode.
+  pcoef_1  ((lambda_1 + k12 + ke)/k21)*coef_1  # AU
+
+  # Peripheral coefficient associated with the faster mode.
+  pcoef_2  ((lambda_2 + k12 + ke)/k21)*coef_2  # AU
+end parameters
+
+begin molecule types
+  Central()
+  # Drug amount in the central compartment.
+
+  Peripheral()
+  # Drug amount in the peripheral compartment.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  Central()  Central_0  # AU
+  Peripheral()  Peripheral_0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Central compartment amount.
+  Molecules  Obs_Central  Central()
+
+  # Peripheral compartment amount.
+  Molecules  Obs_Peripheral  Peripheral()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Closed-form central-compartment amount.
+  Analytical_Central() = coef_1*exp(lambda_1*t) + coef_2*exp(lambda_2*t)
+
+  # Closed-form peripheral-compartment amount.
+  Analytical_Peripheral() = pcoef_1*exp(lambda_1*t) + pcoef_2*exp(lambda_2*t)
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Transfer from central to peripheral compartment.
+  R_central_to_peripheral: Central() -> Peripheral()  k12
+
+  # Transfer from peripheral to central compartment.
+  R_peripheral_to_central: Peripheral() -> Central()  k21
+
+  # First-order elimination from central compartment.
+  R_elimination: Central() -> 0  ke
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>20,n_steps=>400,print_functions=>1})
+end actions
