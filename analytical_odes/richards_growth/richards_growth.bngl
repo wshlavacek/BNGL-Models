@@ -1,0 +1,96 @@
+#@model_id: richards_growth
+#@title: Richards growth
+#@description: One-variable generalized logistic growth model dN/dt = r*N*(1 - (N/K)^b) from Tsoularis and Wallace (2002). The analytical solution is an elementary power transform of an exponential.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-30
+#@modified: 2026-06-30
+#@bng_version: >=2.9.3
+#@units_convention: continuous abundance in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@reference: doi:10.1016/S0025-5564(02)00096-2
+#@note: |
+#  Richards growth is the a=c=1 special case of the generalized logistic
+#  growth equation reviewed by Tsoularis and Wallace. b=1 recovers the
+#  Verhulst logistic model; b -> 0 gives Gompertz growth after rescaling.
+
+begin model
+
+begin parameters
+  # Intrinsic per-capita growth rate.
+  r  1.5  # /day
+
+  # Carrying capacity.
+  K  100.0  # AU
+
+  # Richards shape exponent.
+  b  2.0  # dimensionless
+
+  # Initial abundance.
+  N0  1.0  # AU
+
+  # Dimensionless initial-condition ratio in the closed-form solution.
+  A_richards  (K/N0)^b - 1  # dimensionless
+
+  # Abundance at the inflection point.
+  N_inflection  K/(1 + b)^(1/b)  # AU
+end parameters
+
+begin molecule types
+  N()
+  # Growing abundance.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  N()  N0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Growing abundance.
+  Molecules  Obs_N  N()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Per-capita density-dependent loss rate; BioNetGen multiplies by Obs_N.
+  density_loss_rate() = r*(Obs_N/K)^b
+
+  # Closed-form Richards trajectory.
+  Analytical_N() = K/(1 + A_richards*exp(-b*r*t))^(1/b)
+
+  # Relative abundance.
+  Fraction_Of_K() = Obs_N/K
+
+  # Analytical inflection abundance.
+  Inflection_N() = N_inflection
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Exponential growth term.
+  R_growth: 0 -> N()  r*Obs_N
+
+  # Richards density-dependent loss term.
+  R_density_loss: N() -> 0  density_loss_rate()
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>5,n_steps=>500,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions

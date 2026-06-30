@@ -1,0 +1,151 @@
+#@model_id: transit_absorption_pk_n2
+#@title: Transit-compartment absorption pharmacokinetics, N=2
+#@description: Single-bolus specialization of the Hof and Bridge transit-compartment pharmacokinetic model with two equal-rate transit compartments, an absorption compartment, and first-order central elimination.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-30
+#@modified: 2026-06-30
+#@bng_version: >=2.9.3
+#@units_convention: continuous drug amounts in mg; time in hours; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@reference: doi:10.1007/s10928-020-09719-8
+#@note: |
+#  The source paper gives general n-transit and multi-dose formulas using
+#  lower incomplete gamma functions. This catalog entry fixes n=2 and a
+#  single bolus dose, so the solution reduces to elementary exponentials
+#  and a t*exp(-k*t) repeated-pole term that BioNetGen can report directly.
+
+begin model
+
+begin parameters
+  # Administered bolus dose.
+  Dose  3.5  # mg
+
+  # Bioavailability fraction.
+  F_bio  0.69  # dimensionless
+
+  # Effective dose entering the first transit compartment.
+  Effective_Dose  F_bio*Dose  # mg
+
+  # Common first-order transit rate through the two transit compartments.
+  k_transit  12.76  # /hour
+
+  # First-order absorption rate into the central compartment.
+  k_abs  9.11  # /hour
+
+  # First-order elimination rate from the central compartment.
+  k_elim  0.96  # /hour
+
+  # Transit-minus-absorption rate separation.
+  d_transit_abs  k_transit - k_abs  # /hour
+
+  # Absorption-minus-transit rate separation.
+  d_abs_transit  k_abs - k_transit  # /hour
+
+  # Elimination-minus-transit rate separation.
+  d_elim_transit  k_elim - k_transit  # /hour
+
+  # Scale factor for the absorption-compartment solution.
+  absorption_scale  Effective_Dose*k_transit*k_transit/(d_transit_abs*d_transit_abs)  # mg
+
+  # Scale factor for the central-compartment solution.
+  central_scale  Effective_Dose*k_transit*k_transit*k_abs  # mg/hour^3
+
+  # Coefficient of exp(-k_transit*t) in the central solution.
+  central_coef_transit_exp  -(k_abs + k_elim - 2*k_transit)/(d_abs_transit*d_abs_transit*d_elim_transit*d_elim_transit)  # hour^3
+
+  # Coefficient of t*exp(-k_transit*t) in the central solution.
+  central_coef_transit_t  1/(d_abs_transit*d_elim_transit)  # hour^2
+
+  # Coefficient of exp(-k_abs*t) in the central solution.
+  central_coef_abs  1/((k_transit - k_abs)*(k_transit - k_abs)*(k_elim - k_abs))  # hour^3
+
+  # Coefficient of exp(-k_elim*t) in the central solution.
+  central_coef_elim  1/((k_transit - k_elim)*(k_transit - k_elim)*(k_abs - k_elim))  # hour^3
+end parameters
+
+begin molecule types
+  Transit1()
+  # First transit compartment.
+
+  Transit2()
+  # Second transit compartment.
+
+  Absorption()
+  # Absorption compartment upstream of systemic circulation.
+
+  Central()
+  # Central blood compartment.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  Transit1()  Effective_Dose  # mg
+  Transit2()  0.0  # mg
+  Absorption()  0.0  # mg
+  Central()  0.0  # mg
+  Clock()  0.0  # hours
+end seed species
+
+begin observables
+  # Amount in the first transit compartment.
+  Molecules  Obs_Transit1  Transit1()
+
+  # Amount in the second transit compartment.
+  Molecules  Obs_Transit2  Transit2()
+
+  # Amount in the absorption compartment.
+  Molecules  Obs_Absorption  Absorption()
+
+  # Amount in the central compartment.
+  Molecules  Obs_Central  Central()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Closed-form amount in the first transit compartment.
+  Analytical_Transit1() = Effective_Dose*exp(-k_transit*t)
+
+  # Closed-form amount in the second transit compartment.
+  Analytical_Transit2() = Effective_Dose*k_transit*t*exp(-k_transit*t)
+
+  # Closed-form amount in the absorption compartment.
+  Analytical_Absorption() = absorption_scale*(exp(-k_abs*t) - exp(-k_transit*t)*(1 + d_transit_abs*t))
+
+  # Closed-form amount in the central compartment.
+  Analytical_Central() = central_scale*(central_coef_transit_exp*exp(-k_transit*t) + central_coef_transit_t*t*exp(-k_transit*t) + central_coef_abs*exp(-k_abs*t) + central_coef_elim*exp(-k_elim*t))
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Transfer from the first to second transit compartment.
+  R_transit1_to_transit2: Transit1() -> Transit2()  k_transit
+
+  # Transfer from the second transit compartment to the absorption compartment.
+  R_transit2_to_absorption: Transit2() -> Absorption()  k_transit
+
+  # Absorption into the central compartment.
+  R_absorption_to_central: Absorption() -> Central()  k_abs
+
+  # Elimination from the central compartment.
+  R_elimination: Central() -> 0  k_elim
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>8,n_steps=>800,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions

@@ -14,6 +14,7 @@ verify against an independently implemented formula.
 | Autocatalytic conversion | `A + B -> 2B` with conserved total `A+B` | Logistic solution for `B(t)` | `autocatalytic_conversion/autocatalytic_conversion.bngl` |
 | Three-state irreversible cycle | `X1 -> X2 -> X3 -> X1` with equal first-order rate `k` | Conserved total plus damped sine/cosine relaxation modes | `three_state_irreversible_cycle/three_state_irreversible_cycle.bngl` |
 | Von Bertalanffy growth | `dW/dt = a*W^(2/3) - b*W` | Cube-root transform solution | `von_bertalanffy_growth/von_bertalanffy_growth.bngl` |
+| Logistic growth | `dN/dt = r*N*(1 - N/K)` | Verhulst-Pearl rational-exponential solution | `logistic_growth/logistic_growth.bngl` |
 | Two-compartment pharmacokinetics | `Central <-> Peripheral`, `Central -> 0` | Biexponential solution from the two eigenmodes | `two_compartment_pharmacokinetics/two_compartment_pharmacokinetics.bngl` |
 | Gompertz growth | `dX/dt = r*X*ln(K/X)` | Log-transform solution | `gompertz_growth/gompertz_growth.bngl` |
 | Sinusoidally driven first-order system | `dX/dt = J0 + J1*sin(omega*t) - k*X` | Transient plus phase-lagged sinusoidal steady response | `driven_first_order_sinusoidal/driven_first_order_sinusoidal.bngl` |
@@ -23,6 +24,9 @@ verify against an independently implemented formula.
 | SIS epidemic threshold | `S + I -> 2I`, `I -> S` with conserved `S+I` | Logistic endemic-threshold solution for `I(t)` | `sis_epidemic_threshold/sis_epidemic_threshold.bngl` |
 | Quantum two-level Rabi oscillation | Resonant Bloch equations `dV/dt=-Omega*W`, `dW/dt=Omega*V` | Coherent sine/cosine population oscillations | `quantum_rabi_two_level/quantum_rabi_two_level.bngl` |
 | Non-Lipschitz square-root growth | `dX/dt = a*sqrt(X)` | Square-law branch; zero initial condition is nonunique | `non_lipschitz_square_root_growth/non_lipschitz_square_root_growth.bngl` |
+| Two-species harmonic oscillator | Linear 2SHO network with constrained `k3=k1+k2`, `k5=k3+kd` | Matrix-exponential sinusoid with `theta=sqrt(k2*kd)` | `two_species_harmonic_oscillator/two_species_harmonic_oscillator.bngl` |
+| Transit-compartment absorption pharmacokinetics, N=2 | `Transit1 -> Transit2 -> Absorption -> Central -> 0` with equal transit rates | Elementary specialization of the transit-compartment PK solution | `transit_absorption_pk_n2/transit_absorption_pk_n2.bngl` |
+| Richards growth | `dN/dt = r*N*(1 - (N/K)^b)` | Generalized logistic power-transform solution | `richards_growth/richards_growth.bngl` |
 
 ## Conventions
 
