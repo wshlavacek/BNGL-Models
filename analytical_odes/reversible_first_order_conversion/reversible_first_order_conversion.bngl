@@ -1,0 +1,65 @@
+#@model_id: reversible_first_order_conversion
+#@title: Reversible first-order conversion
+#@description: Two-state reversible first-order conversion A <-> B with conserved total and single-exponential relaxation to equilibrium.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-30
+#@modified: 2026-06-30
+#@bng_version: >=2.9.3
+#@units_convention: continuous abundance in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+
+begin model
+
+begin parameters
+  kf  0.7  # /day
+  kr  0.2  # /day
+  A0  80.0  # AU
+  B0  20.0  # AU
+  T_total  A0 + B0  # AU
+  s_rate  kf + kr  # /day
+  A_eq  kr*T_total/s_rate  # AU
+  B_eq  kf*T_total/s_rate  # AU
+end parameters
+
+begin molecule types
+  A()
+  B()
+  Clock()
+end molecule types
+
+begin seed species
+  A()  A0
+  B()  B0
+  Clock()  0.0
+end seed species
+
+begin observables
+  Molecules  Obs_A  A()
+  Molecules  Obs_B  B()
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  Analytical_A() = A_eq + (A0 - A_eq)*exp(-s_rate*t)
+  Analytical_B() = B_eq + (B0 - B_eq)*exp(-s_rate*t)
+  Conserved_Total() = Obs_A + Obs_B
+end functions
+
+begin reaction rules
+  R_clock: 0 -> Clock()  1.0
+  R_forward: A() -> B()  kf
+  R_reverse: B() -> A()  kr
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>12,n_steps=>300,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions

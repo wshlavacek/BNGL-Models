@@ -1,0 +1,76 @@
+#@model_id: linearized_lotka_volterra
+#@title: Linearized Lotka-Volterra near equilibrium
+#@description: Two-variable linearized predator-prey Lotka-Volterra dynamics around coexistence equilibrium, giving elementary sinusoidal relative deviations.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-30
+#@modified: 2026-06-30
+#@bng_version: >=2.9.3
+#@units_convention: signed dimensionless relative deviations; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  P and Q are signed relative deviations from the nonlinear LV coexistence
+#  equilibrium, not molecule counts.
+
+begin model
+
+begin parameters
+  alpha  1.2  # /day
+  beta  0.6  # /predator/day
+  gamma  0.8  # /day
+  delta  0.4  # /prey/day
+  P0  0.20  # dimensionless
+  Q0  -0.10  # dimensionless
+  omega  sqrt(alpha*gamma)  # /day
+  prey_star  gamma/delta  # AU
+  predator_star  alpha/beta  # AU
+  P_sin_coeff  -alpha*Q0/omega  # dimensionless
+  Q_sin_coeff  gamma*P0/omega  # dimensionless
+end parameters
+
+begin molecule types
+  P()
+  Q()
+  Clock()
+end molecule types
+
+begin seed species
+  P()  P0
+  Q()  Q0
+  Clock()  0.0
+end seed species
+
+begin observables
+  Molecules  Obs_P  P()
+  Molecules  Obs_Q  Q()
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  dP_dt() = -alpha*Obs_Q
+  dQ_dt() = gamma*Obs_P
+  Analytical_P() = P0*cos(omega*t) + P_sin_coeff*sin(omega*t)
+  Analytical_Q() = Q0*cos(omega*t) + Q_sin_coeff*sin(omega*t)
+  Linearized_Prey() = prey_star*(1 + Obs_P)
+  Linearized_Predator() = predator_star*(1 + Obs_Q)
+  Analytical_Prey() = prey_star*(1 + Analytical_P())
+  Analytical_Predator() = predator_star*(1 + Analytical_Q())
+end functions
+
+begin reaction rules
+  R_clock: 0 -> Clock()  1.0
+  R_dP: 0 -> P()  dP_dt()
+  R_dQ: 0 -> Q()  dQ_dt()
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>12,n_steps=>600,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions

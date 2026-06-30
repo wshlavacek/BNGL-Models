@@ -1,0 +1,72 @@
+#@model_id: reversible_linear_chain_three_state
+#@title: Reversible linear chain, three states
+#@description: Symmetric first-order chain A <-> B <-> C with conserved total and two elementary exponential relaxation modes.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-30
+#@modified: 2026-06-30
+#@bng_version: >=2.9.3
+#@units_convention: continuous abundance in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+
+begin model
+
+begin parameters
+  k  0.45  # /day
+  A0  90.0  # AU
+  B0  10.0  # AU
+  C0  0.0  # AU
+  T_total  A0 + B0 + C0  # AU
+  D0  A0 - C0  # AU
+  E0  A0 - 2*B0 + C0  # AU
+end parameters
+
+begin molecule types
+  A()
+  B()
+  C()
+  Clock()
+end molecule types
+
+begin seed species
+  A()  A0
+  B()  B0
+  C()  C0
+  Clock()  0.0
+end seed species
+
+begin observables
+  Molecules  Obs_A  A()
+  Molecules  Obs_B  B()
+  Molecules  Obs_C  C()
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  Mode_D() = D0*exp(-k*t)
+  Mode_E() = E0*exp(-3*k*t)
+  Analytical_A() = (2*T_total + Mode_E() + 3*Mode_D())/6
+  Analytical_B() = (T_total - Mode_E())/3
+  Analytical_C() = (2*T_total + Mode_E() - 3*Mode_D())/6
+  Conserved_Total() = Obs_A + Obs_B + Obs_C
+end functions
+
+begin reaction rules
+  R_clock: 0 -> Clock()  1.0
+  R_A_to_B: A() -> B()  k
+  R_B_to_A: B() -> A()  k
+  R_B_to_C: B() -> C()  k
+  R_C_to_B: C() -> B()  k
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>15,n_steps=>300,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions

@@ -1,0 +1,63 @@
+#@model_id: step_input_first_order
+#@title: Step-input first-order system
+#@description: One-variable linear ODE with a time-dependent step input and a piecewise-exponential analytical solution.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-30
+#@modified: 2026-06-30
+#@bng_version: >=2.9.3
+#@units_convention: continuous abundance in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+
+begin model
+
+begin parameters
+  k  0.6  # /day
+  J_base  1.2  # AU/day
+  J_step  2.4  # AU/day
+  tau  4.0  # days
+  X0  0.5  # AU
+  X_ss0  J_base/k  # AU
+  X_ss1  (J_base + J_step)/k  # AU
+  X_tau  X_ss0 + (X0 - X_ss0)*exp(-k*tau)  # AU
+end parameters
+
+begin molecule types
+  X()
+  Clock()
+end molecule types
+
+begin seed species
+  X()  X0
+  Clock()  0.0
+end seed species
+
+begin observables
+  Molecules  Obs_X  X()
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  Input_X() = if(t<tau,J_base,J_base + J_step)
+  Analytical_X() = if(t<tau,X_ss0 + (X0 - X_ss0)*exp(-k*t),X_ss1 + (X_tau - X_ss1)*exp(-k*(t - tau)))
+  PreStep_Steady_X() = X_ss0
+  PostStep_Steady_X() = X_ss1
+end functions
+
+begin reaction rules
+  R_clock: 0 -> Clock()  1.0
+  R_input: 0 -> X()  Input_X()
+  R_decay: X() -> 0  k
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>12,n_steps=>480,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions

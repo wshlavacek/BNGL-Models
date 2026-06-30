@@ -1,0 +1,63 @@
+#@model_id: infusion_washout_pk
+#@title: One-compartment infusion-washout pharmacokinetics
+#@description: One-compartment PK model with constant infusion followed by washout; the solution is a continuous pair of exponentials.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-30
+#@modified: 2026-06-30
+#@bng_version: >=2.9.3
+#@units_convention: drug amount in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+
+begin model
+
+begin parameters
+  kel  0.35  # /day
+  R_in  12.0  # AU/day
+  t_infusion  6.0  # days
+  A0  0.0  # AU
+  Vd  10.0  # volume units
+  A_ss  R_in/kel  # AU
+  A_stop  A_ss + (A0 - A_ss)*exp(-kel*t_infusion)  # AU
+end parameters
+
+begin molecule types
+  Drug()
+  Clock()
+end molecule types
+
+begin seed species
+  Drug()  A0
+  Clock()  0.0
+end seed species
+
+begin observables
+  Molecules  Obs_Drug  Drug()
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  Infusion_Input() = if(t<t_infusion,R_in,0)
+  Analytical_Drug() = if(t<t_infusion,A_ss + (A0 - A_ss)*exp(-kel*t),A_stop*exp(-kel*(t - t_infusion)))
+  Analytical_Concentration() = Analytical_Drug()/Vd
+  Observed_Concentration() = Obs_Drug/Vd
+  Infusion_Stop_Amount() = A_stop
+end functions
+
+begin reaction rules
+  R_clock: 0 -> Clock()  1.0
+  R_infusion: 0 -> Drug()  Infusion_Input()
+  R_elimination: Drug() -> 0  kel
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>18,n_steps=>720,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions
