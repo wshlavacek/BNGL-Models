@@ -1,0 +1,178 @@
+#@model_id: two_species_harmonic_oscillator
+#@title: Two-species harmonic oscillator
+#@description: Linear two-species reaction network from Hellerstein (2023) with sustained sinusoidal oscillations and a closed-form matrix-exponential solution.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-30
+#@modified: 2026-06-30
+#@bng_version: >=2.9.3
+#@units_convention: continuous concentrations in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@reference: doi:10.1186/s12859-023-05600-w
+#@note: |
+#  The paper calls this the two species harmonic oscillator (2SHO).
+#  Constraints k3 = k1 + k2 and k5 = k3 + kd give the Jacobian
+#  A = [[k2, k2], [-(k2 + kd), -k2]], with A^2 = -theta^2 I and
+#  theta = sqrt(k2*kd). R4 and R5 are represented as signed ODE
+#  contribution rules so the global functions are total fluxes, not
+#  per-reactant rate constants.
+
+begin model
+
+begin parameters
+  # S1 -> S2 first-order rate. This value does not change the constrained Jacobian.
+  k1  1.0  # /day
+
+  # S2 -> S1 first-order rate.
+  k2  3.91  # /day
+
+  # Positive excess of negative feedback over autocatalytic feedback.
+  kd  10.09  # /day
+
+  # Autocatalytic S1 -> 2S1 rate, constrained by zero Jacobian trace.
+  k3  k1 + k2  # /day
+
+  # S1-controlled S2 degradation coefficient, constrained by k5 > k3.
+  k5  k3 + kd  # /day
+
+  # Fixed S1 removal flux.
+  k4  41.77  # AU/day
+
+  # Fixed S2 synthesis flux.
+  k6  92.2  # AU/day
+
+  # Initial concentration of S1.
+  S1_0  5.00  # AU
+
+  # Initial concentration of S2.
+  S2_0  10.49  # AU
+
+  # Oscillation angular frequency.
+  theta  sqrt(k2*kd)  # /day
+
+  # DC offset for S1, equal to the forced equilibrium value.
+  S1_offset  (k6 - k4)/kd  # AU
+
+  # DC offset for S2, equal to the forced equilibrium value.
+  S2_offset  k4/k2 - S1_offset  # AU
+
+  # Initial deviation of S1 from its offset.
+  S1_delta0  S1_0 - S1_offset  # AU
+
+  # Initial deviation of S2 from its offset.
+  S2_delta0  S2_0 - S2_offset  # AU
+
+  # Sine coefficient in the closed-form S1 trajectory.
+  S1_sin_coeff  (k2*S1_delta0 + k2*S2_delta0)/theta  # AU
+
+  # Sine coefficient in the closed-form S2 trajectory.
+  S2_sin_coeff  (-(k2 + kd)*S1_delta0 - k2*S2_delta0)/theta  # AU
+
+  # Oscillation amplitude for S1.
+  S1_amplitude  sqrt(S1_delta0*S1_delta0 + S1_sin_coeff*S1_sin_coeff)  # AU
+
+  # Oscillation amplitude for S2.
+  S2_amplitude  sqrt(S2_delta0*S2_delta0 + S2_sin_coeff*S2_sin_coeff)  # AU
+end parameters
+
+begin molecule types
+  S1()
+  # First oscillator species.
+
+  S2()
+  # Second oscillator species.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  S1()  S1_0  # AU
+  S2()  S2_0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Concentration of S1.
+  Molecules  Obs_S1  S1()
+
+  # Concentration of S2.
+  Molecules  Obs_S2  S2()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Fixed total flux removing S1 in the published network.
+  R4_fixed_S1_sink() = k4
+
+  # Total S2 removal flux controlled by S1 in the published network.
+  R5_S1_controlled_S2_sink() = k5*Obs_S1
+
+  # Closed-form S1 trajectory from exp(A*t) because A^2 = -theta^2 I.
+  Analytical_S1() = S1_offset + S1_delta0*cos(theta*t) + S1_sin_coeff*sin(theta*t)
+
+  # Closed-form S2 trajectory from exp(A*t) because A^2 = -theta^2 I.
+  Analytical_S2() = S2_offset + S2_delta0*cos(theta*t) + S2_sin_coeff*sin(theta*t)
+
+  # Oscillation angular frequency.
+  Frequency() = theta
+
+  # S1 oscillation amplitude.
+  Amplitude_S1() = S1_amplitude
+
+  # S2 oscillation amplitude.
+  Amplitude_S2() = S2_amplitude
+
+  # S1 DC offset.
+  Offset_S1() = S1_offset
+
+  # S2 DC offset.
+  Offset_S2() = S2_offset
+
+  # Minimum S1 concentration implied by the closed-form solution.
+  Minimum_S1() = S1_offset - S1_amplitude
+
+  # Minimum S2 concentration implied by the closed-form solution.
+  Minimum_S2() = S2_offset - S2_amplitude
+
+  # Jacobian determinant under the 2SHO constraints.
+  Det_A() = theta*theta
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # R1: S1 -> S2.
+  R1_s1_to_s2: S1() -> S2()  k1
+
+  # R2: S2 -> S1.
+  R2_s2_to_s1: S2() -> S1()  k2
+
+  # R3: S1 -> 2S1 autocatalysis.
+  R3_s1_autocatalysis: S1() -> S1() + S1()  k3
+
+  # R4: fixed total S1 removal flux, encoded as a signed ODE contribution.
+  R4_s1_fixed_sink: 0 -> S1()  -R4_fixed_S1_sink()
+
+  # R5: total S2 removal flux controlled by S1, encoded as a signed ODE contribution.
+  R5_s2_s1_controlled_sink: 0 -> S2()  -R5_S1_controlled_S2_sink()
+
+  # R6: fixed S2 synthesis flux.
+  R6_s2_source: 0 -> S2()  k6
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>4,n_steps=>400,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions
