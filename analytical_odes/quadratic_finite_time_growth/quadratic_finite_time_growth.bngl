@@ -1,0 +1,84 @@
+#@model_id: quadratic_finite_time_growth
+#@title: Quadratic finite-time growth
+#@description: One-variable nonlinear ODE model dX/dt = k*X^2 from the Carleman-linearization example in Caravelli and Lin (2023). The analytical solution is an elementary rational function with a finite-time pole.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-30
+#@modified: 2026-06-30
+#@bng_version: >=2.9.3
+#@units_convention: continuous abundance in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@reference: arXiv:2308.13653v1
+#@note: |
+#  The full Lotka-Volterra solution in the paper is formal. This model captures
+#  the elementary x_dot = x^2 example used to introduce the paper's
+#  Carleman-linearization and generating-function machinery.
+
+begin model
+
+begin parameters
+  # Quadratic growth coefficient.
+  k  0.5  # /AU/day
+
+  # Initial abundance. The verified branch assumes X0 > 0.
+  X0  0.2  # AU
+
+  # Finite-time pole of the analytical solution.
+  t_blowup  1/(k*X0)  # days
+end parameters
+
+begin molecule types
+  X()
+  # Abundance variable with quadratic positive feedback.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  X()  X0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Abundance.
+  Molecules  Obs_X  X()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Quadratic growth flux.
+  quadratic_growth() = k*Obs_X^2
+
+  # Denominator of the closed-form solution.
+  Analytical_Denominator() = 1 - k*X0*t
+
+  # Closed-form trajectory before t_blowup.
+  Analytical_X() = X0/Analytical_Denominator()
+
+  # Analytical finite-time pole.
+  Blowup_Time() = t_blowup
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Quadratic finite-time growth.
+  R_growth: 0 -> X()  quadratic_growth()
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>6,n_steps=>400,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions
