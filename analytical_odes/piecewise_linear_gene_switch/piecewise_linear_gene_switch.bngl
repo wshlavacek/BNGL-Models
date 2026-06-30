@@ -1,0 +1,151 @@
+#@model_id: piecewise_linear_gene_switch
+#@title: Piecewise-linear gene switch
+#@description: Two-gene Glass-Kauffman style piecewise-linear regulatory network from Casey, de Jong, and Gouze (2006). The default trajectory has one transparent threshold crossing and an elementary piecewise-exponential analytical solution.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-30
+#@modified: 2026-06-30
+#@bng_version: >=2.9.3
+#@units_convention: continuous protein concentration in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@reference: doi:10.1007/s00285-005-0338-2
+#@note: |
+#  Synthesis rules are encoded as global total-flux functions because their
+#  rates depend on threshold comparisons of both protein concentrations.
+#  The default initial condition avoids ambiguous Filippov sliding modes.
+
+begin model
+
+begin parameters
+  # Lower activation threshold for protein A.
+  theta_A_low  4.0  # AU
+
+  # Upper self-inhibition threshold for protein A.
+  theta_A_high  8.0  # AU
+
+  # Lower activation threshold for protein B.
+  theta_B_low  4.0  # AU
+
+  # Upper self-inhibition threshold for protein B.
+  theta_B_high  8.0  # AU
+
+  # Maximum synthesis flux for protein A.
+  kappa_A  20.0  # AU/day
+
+  # Maximum synthesis flux for protein B.
+  kappa_B  20.0  # AU/day
+
+  # First-order degradation rate for protein A.
+  gamma_A  2.0  # /day
+
+  # First-order degradation rate for protein B.
+  gamma_B  2.0  # /day
+
+  # Initial protein A concentration.
+  A0  2.0  # AU
+
+  # Initial protein B concentration.
+  B0  5.0  # AU
+
+  # Focal value for A before B crosses theta_B_low.
+  A_on  kappa_A/gamma_A  # AU
+
+  # Known time at which B crosses theta_B_low.
+  t_switch  ln(B0/theta_B_low)/gamma_B  # days
+
+  # A value at the known threshold crossing.
+  A_switch  A_on + (A0 - A_on)*exp(-gamma_A*t_switch)  # AU
+end parameters
+
+begin molecule types
+  A()
+  # Protein A concentration.
+
+  B()
+  # Protein B concentration.
+
+  Clock()
+  # Auxiliary clock variable used only to report the analytical solution.
+end molecule types
+
+begin seed species
+  A()  A0  # AU
+  B()  B0  # AU
+  Clock()  0.0  # days
+end seed species
+
+begin observables
+  # Protein A concentration.
+  Molecules  Obs_A  A()
+
+  # Protein B concentration.
+  Molecules  Obs_B  B()
+
+  # Simulation time for analytical-solution functions.
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  # Step function: A above its lower activation threshold.
+  Step_A_Above_Low() = if(Obs_A>theta_A_low,1,0)
+
+  # Step function: A below its upper self-inhibition threshold.
+  Step_A_Below_High() = if(Obs_A<theta_A_high,1,0)
+
+  # Step function: B above its lower activation threshold.
+  Step_B_Above_Low() = if(Obs_B>theta_B_low,1,0)
+
+  # Step function: B below its upper self-inhibition threshold.
+  Step_B_Below_High() = if(Obs_B<theta_B_high,1,0)
+
+  # Total synthesis flux for A.
+  Synthesis_A() = kappa_A*Step_B_Above_Low()*Step_A_Below_High()
+
+  # Total synthesis flux for B.
+  Synthesis_B() = kappa_B*Step_A_Above_Low()*Step_B_Below_High()
+
+  # Time elapsed after the known threshold crossing.
+  t_after_switch() = t - t_switch
+
+  # Closed-form A trajectory for the default initial condition.
+  Analytical_A() = if(t<t_switch,A_on + (A0 - A_on)*exp(-gamma_A*t),A_switch*exp(-gamma_A*t_after_switch()))
+
+  # Closed-form B trajectory for the default initial condition.
+  Analytical_B() = if(t<t_switch,B0*exp(-gamma_B*t),theta_B_low*exp(-gamma_B*t_after_switch()))
+
+  # Known switch time for the default trajectory.
+  Switch_Time() = t_switch
+
+  # A concentration at the switch time.
+  Switch_A() = A_switch
+end functions
+
+begin reaction rules
+  # Auxiliary clock: dt/dt = 1.
+  R_clock: 0 -> Clock()  1.0
+
+  # Protein A synthesis, controlled by the piecewise-linear step logic.
+  R_A_synthesis: 0 -> A()  Synthesis_A()
+
+  # Protein B synthesis, controlled by the piecewise-linear step logic.
+  R_B_synthesis: 0 -> B()  Synthesis_B()
+
+  # Protein A degradation.
+  R_A_degradation: A() -> 0  gamma_A
+
+  # Protein B degradation.
+  R_B_degradation: B() -> 0  gamma_B
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>3,n_steps=>600,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions
