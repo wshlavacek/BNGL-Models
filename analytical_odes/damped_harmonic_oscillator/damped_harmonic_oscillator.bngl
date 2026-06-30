@@ -1,0 +1,70 @@
+#@model_id: damped_harmonic_oscillator
+#@title: Damped harmonic oscillator
+#@description: Underdamped harmonic oscillator represented as dx/dt=v, dv/dt=-omega0^2*x-2*zeta*omega0*v with elementary decaying sine/cosine solution.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-30
+#@modified: 2026-06-30
+#@bng_version: >=2.9.3
+#@units_convention: signed displacement and velocity in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+#@note: |
+#  X and V are signed continuous ODE state variables. This model is not
+#  suitable for stochastic simulation methods.
+
+begin model
+
+begin parameters
+  omega0  2.0  # /day
+  zeta  0.2  # dimensionless
+  X0  1.0  # AU
+  V0  0.3  # AU/day
+  a_damp  zeta*omega0  # /day
+  omega_d  omega0*sqrt(1 - zeta*zeta)  # /day
+  X_sin_coeff  (V0 + a_damp*X0)/omega_d  # AU
+  V_sin_coeff  -(omega0*omega0*X0 + a_damp*V0)/omega_d  # AU/day
+end parameters
+
+begin molecule types
+  X()
+  V()
+  Clock()
+end molecule types
+
+begin seed species
+  X()  X0
+  V()  V0
+  Clock()  0.0
+end seed species
+
+begin observables
+  Molecules  Obs_X  X()
+  Molecules  Obs_V  V()
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  dX_dt() = Obs_V
+  dV_dt() = -omega0*omega0*Obs_X - 2*zeta*omega0*Obs_V
+  Analytical_X() = exp(-a_damp*t)*(X0*cos(omega_d*t) + X_sin_coeff*sin(omega_d*t))
+  Analytical_V() = exp(-a_damp*t)*(V0*cos(omega_d*t) + V_sin_coeff*sin(omega_d*t))
+  Envelope_X0() = sqrt(X0*X0 + X_sin_coeff*X_sin_coeff)*exp(-a_damp*t)
+end functions
+
+begin reaction rules
+  R_clock: 0 -> Clock()  1.0
+  R_dX: 0 -> X()  dX_dt()
+  R_dV: 0 -> V()  dV_dt()
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>12,n_steps=>600,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions

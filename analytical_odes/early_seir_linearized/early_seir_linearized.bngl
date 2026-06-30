@@ -1,0 +1,78 @@
+#@model_id: early_seir_linearized
+#@title: Early linearized SEIR
+#@description: Early-epidemic SEIR linearization with constant susceptible pool, solved by two exponential eigenmodes.
+#@organism: other
+#@authors: BNGL-Models contributors
+#@created: 2026-06-30
+#@modified: 2026-06-30
+#@bng_version: >=2.9.3
+#@units_convention: continuous population in arbitrary units; time in days; ODE-only
+#@runtime_expectation: ~<1 min typical runs
+#@license: internal
+#@house_style_version: analytical-odes-0.1
+#@source: handwritten
+
+begin model
+
+begin parameters
+  beta_eff  0.8  # /day
+  sigma  0.5  # /day
+  gamma  0.3  # /day
+  E0  1.0  # individuals
+  I0  0.0  # individuals
+  R0_init  0.0  # individuals
+  trace_rate  sigma + gamma  # /day
+  eigen_gap  sqrt((sigma - gamma)*(sigma - gamma) + 4*sigma*beta_eff)  # /day
+  lambda_1  (-trace_rate + eigen_gap)/2  # /day
+  lambda_2  (-trace_rate - eigen_gap)/2  # /day
+  E_dot_0  beta_eff*I0 - sigma*E0  # individuals/day
+  E_coef_1  (E_dot_0 - lambda_2*E0)/(lambda_1 - lambda_2)  # individuals
+  E_coef_2  (lambda_1*E0 - E_dot_0)/(lambda_1 - lambda_2)  # individuals
+  I_coef_1  ((lambda_1 + sigma)/beta_eff)*E_coef_1  # individuals
+  I_coef_2  ((lambda_2 + sigma)/beta_eff)*E_coef_2  # individuals
+end parameters
+
+begin molecule types
+  E()
+  I()
+  R()
+  Clock()
+end molecule types
+
+begin seed species
+  E()  E0
+  I()  I0
+  R()  R0_init
+  Clock()  0.0
+end seed species
+
+begin observables
+  Molecules  Obs_E  E()
+  Molecules  Obs_I  I()
+  Molecules  Obs_R  R()
+  Molecules  t  Clock()
+end observables
+
+begin functions
+  infection_input() = beta_eff*Obs_I
+  Analytical_E() = E_coef_1*exp(lambda_1*t) + E_coef_2*exp(lambda_2*t)
+  Analytical_I() = I_coef_1*exp(lambda_1*t) + I_coef_2*exp(lambda_2*t)
+  Analytical_R() = R0_init + gamma*(I_coef_1*(exp(lambda_1*t)-1)/lambda_1 + I_coef_2*(exp(lambda_2*t)-1)/lambda_2)
+  Growth_Eigenvalue() = lambda_1
+end functions
+
+begin reaction rules
+  R_clock: 0 -> Clock()  1.0
+  R_exposure: 0 -> E()  infection_input()
+  R_incubation: E() -> I()  sigma
+  R_recovery: I() -> R()  gamma
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+  saveConcentrations()
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>12,n_steps=>600,atol=>1e-12,rtol=>1e-12,print_functions=>1})
+end actions
