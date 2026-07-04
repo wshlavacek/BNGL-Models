@@ -9,7 +9,7 @@ begin model
 #@bng_version: >=2.9.3
 #@units_convention: population-based; molecule counts
 #@runtime_expectation: ~<1 min typical runs
-#@license: internal
+#@license: CC-BY-4.0
 #@house_style_version: 0.1
 #@source: from_antimony
 #@note: |

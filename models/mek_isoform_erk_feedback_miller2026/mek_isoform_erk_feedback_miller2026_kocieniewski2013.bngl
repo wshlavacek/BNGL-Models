@@ -41,7 +41,7 @@ begin model
 
 #@runtime_expectation: ~20 s for network generation and ODE simulation.
 
-#@license: inherited from published supplementary model and PyBNF example
+#@license: CC-BY-4.0
 
 #@house_style_version: 0.1
 
