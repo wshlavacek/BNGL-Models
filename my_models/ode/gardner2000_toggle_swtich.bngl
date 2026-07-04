@@ -9,7 +9,7 @@ begin model
 #@bng_version: >=2.9.3
 #@units_convention: Parameters authored in 1/s and molecules; repression implemented as propensity depending on molecule counts. NA and compartment volume supplied for convertibility.
 #@runtime_expectation: ~<1 min typical runs
-#@license: internal
+#@license: CC-BY-4.0
 #@house_style_version: 0.1
 #@source: from_antimony
 #@references: doi:10.1038/35002131

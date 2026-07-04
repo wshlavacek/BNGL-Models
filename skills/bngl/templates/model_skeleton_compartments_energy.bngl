@@ -8,7 +8,7 @@
 #@bng_version: >=2.9.3
 #@units_convention: TODO_authoring_units_and_population_conversion_basis
 #@runtime_expectation: ~<1 min typical runs
-#@license: internal
+#@license: CC-BY-4.0
 #@house_style_version: X.Y
 #@source: handwritten
 #@reference: TODO_optional_DOI_or_PMID
