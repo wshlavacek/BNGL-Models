@@ -291,7 +291,7 @@ nu4_theory=(n-4)*H4 # <1 for n=15 (0 by assumption that m=4)
 #     already bound and vice versa.
 #   - A Monte Carlo method was used to calculate site availability at different 
 #     occupancy levels. The method is implemented in a Fortran program named 
-#     avail_sites.f (for source code, see the /Users/wish/Simulations/Fortran/sites 
+#     avail_sites.f (for source code, see the ~/Simulations/Fortran/sites
 #     folder on lat2.lanl.gov).
 nu0_structure 3.000
 nu1_structure 1.766
