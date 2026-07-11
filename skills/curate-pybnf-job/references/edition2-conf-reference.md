@@ -191,7 +191,7 @@ Fields (any order, only `data:` required):
 
 | field | meaning |
 |---|---|
-| `data: <f…>` | comma list of `.exp` (replicates) / `.con` / `.prop` files |
+| `data: <f…>` | comma list of `.exp` (replicates) / `.con` / `.prop` (BPSL constraints) files. Mixing `.exp` + `.prop` = data fusion; `.prop` alone = constraint-only (then `t_end:` is required). BPSL makes the job native-only — see `bpsl-constraints.md` |
 | `condition: <c>` | apply a named Condition (omitted ⇒ wildtype) |
 | `preequilibrate: <c0>` | equilibrate to steady state under `<c0>`, unmeasured, before measuring; state carries over (ADR-0052) |
 | `type: time_course \| parameter_scan` | overrides the data-driven inference |

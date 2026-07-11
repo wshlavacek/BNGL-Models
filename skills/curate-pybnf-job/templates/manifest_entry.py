@@ -20,3 +20,9 @@ RealWorldExample(
 
 # --- Optional parameter-recovery targets (paper's reported best-fit values) ---
 # ..., recover={'<param>': <published_value>}, tol=0.5),
+
+# --- BPSL (constraint-bearing) example ---
+# A job that attaches a .prop/.con is NATIVE-ONLY (not PEtab-exportable). There is no
+# dedicated manifest field for this -- note it in `system` (e.g. "... ; BPSL constraints,
+# native-only"), mark it in the README coverage row, and use the export-refused / check
+# assertion instead of the PEtab-lint test. See references/bpsl-constraints.md.

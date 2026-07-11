@@ -46,7 +46,7 @@ express. Author the conf to avoid them:
 | `neg_bin` noise | removed from PEtab v2 | use `chi_sq`/`sos`/`sod` or Gaussian/Laplace `noise_model` |
 | `lognormal` noise | PyBNF log10 vs PEtab natural log | Gaussian on log-transformed data |
 | `kl` / `wasserstein` `profile_objective` | column-joint, no PEtab shape | per-point objective |
-| `.con` / `.prop` BPSL constraints on `data:` | PyBNF-native (ADR-0028 addendum) | keep the fit data-only; constraints are a separate native job |
+| `.con` / `.prop` BPSL constraints on `data:` | PyBNF-native, no PEtab shape (ADR-0028) | *first-class native feature* — if the paper's qualitative facts matter, author a **BPSL example** (native-only, verified with `job_type = check`) rather than dropping them; see `bpsl-constraints.md` |
 | legacy data linkage (`model = X:Y.exp`, `mutant`, `param_scan` dict) | not new-era | use `experiment:` / `condition:` (you're on edition 2 anyway) |
 | Antimony (`.ant`) model | export in native language only | use BNGL (`.bngl`) or SBML (`.xml`) |
 
