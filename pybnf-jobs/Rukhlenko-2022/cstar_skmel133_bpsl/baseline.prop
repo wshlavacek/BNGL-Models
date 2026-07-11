@@ -1,0 +1,3 @@
+# BPSL constraints on the DPD (Sval) -- SKMEL-133, NO DRUG.
+# Untreated cells sit deep in the proliferative basin (S well above Sp = +2).
+Sval > 2 at 100000 weight 10

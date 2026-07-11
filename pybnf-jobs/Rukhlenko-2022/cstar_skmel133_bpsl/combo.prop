@@ -1,0 +1,6 @@
+# SKMEL-133, COMBINED IRS + AKT: crosses the barrier into the death/arrest basin (S < 0)
+# -- the cSTAR phenotype switch neither single agent achieves.
+Sval < 0 at 100000 weight 20
+# Synergy / super-additivity: the combination drives S below EITHER single agent.
+Sval < akt_hi.Sval at 100000 weight 10
+Sval < irs_hi.Sval at 100000 weight 10

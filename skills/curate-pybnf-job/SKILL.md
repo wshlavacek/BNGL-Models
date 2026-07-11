@@ -22,10 +22,20 @@ Use curate-pybnf-job for PMC5334499  (or: for dev/papers/<Folder>)
 
 - **Input:** a paper in PubMed Central (PMCID or URL), a DOI, or a local paper folder
   (e.g. `dev/papers/<Folder>` with a PDF + any author-provided model/data files).
-- **Output:** a new folder `~/Code/PyBNF/examples/real-world/<name>/` (in the *PyBNF*
-  repo, a separate working directory), plus edits to that repo's `_manifest.py`,
-  `README.md`, and test suite. Do **not** commit or push unless asked; leave a clean,
-  PR-ready set of changes.
+- **Output:** job folders are **filed by source paper under a `<FirstAuthor>-<Year>/`
+  directory** — one such directory per paper, holding one or more job **slugs**, because a
+  single paper often yields several fitting problems (e.g.
+  `Rukhlenko-2022/{cstar_trka, cstar_trkb, cstar_skmel133, cstar_skmel133_bpsl}/`). Unless
+  the user names another location, create it under the PyBNF repo's real-world corpus:
+  `~/Code/PyBNF/examples/real-world/<FirstAuthor>-<Year>/<slug>/`, plus edits to that repo's
+  `_manifest.py`, `README.md`, and test suite. Do **not** commit or push unless asked; leave
+  a clean, PR-ready set of changes.
+- **Paper-level landing README:** when the grouping directory holds more than one slug, add
+  a `<FirstAuthor>-<Year>/README.md` that ties them together — the full paper citation, the
+  shared model (what was reconstructed, from which supplementary file), a one-row-per-slug
+  table (what each fits · flavor · data source · verification status), and the source-file
+  links. It complements the corpus-level coverage matrix, and *is* the entry point when the
+  output is a self-contained per-folder set (the pattern below).
 
 ## Required reading
 
@@ -64,7 +74,7 @@ absolute paths:
 export BNGPATH="$HOME/Simulations/BioNetGen-2.9.3"   # folder containing BNG2.pl
 PY=~/Code/PyBNF/.venv/bin/python
 SKILL=~/Code/BNGL-Models/skills/curate-pybnf-job     # this skill's directory
-CONF=~/Code/PyBNF/examples/real-world/<name>/<name>.conf
+CONF=~/Code/PyBNF/examples/real-world/<FirstAuthor>-<Year>/<slug>/<slug>.conf
 ```
 
 If BNGPATH/BNG2.pl or the PyBNF venv can't be found, ask the user rather than guessing.
@@ -90,9 +100,16 @@ If BNGPATH/BNG2.pl or the PyBNF venv can't be found, ask the user rather than gu
    Prefer capturing the paper's qualitative claims as constraints when they carry real
    information — a BPSL example is often a *more* compelling addition than a plain fit.
 
-2. **Name and create the folder.** Choose a short, descriptive slug like the corpus
-   (`receptor`, `egfr_ode`, `tlbr`); disambiguate with `_<firstauthor><year>` only if
-   needed. Create `~/Code/PyBNF/examples/real-world/<name>/`.
+2. **Name and create the folder.** File the job under its source paper: a
+   `<FirstAuthor>-<Year>/` directory (e.g. `Rukhlenko-2022/`) holding a short, descriptive
+   slug like the corpus (`receptor`, `egfr_ode`, `tlbr`) — e.g. `Rukhlenko-2022/cstar_trka/`.
+   One author-year directory per paper; for each additional fitting problem the same paper
+   yields (a second cell line, a dose-response, a BPSL landscape job, …) add a new slug
+   *beside* the others in the same directory. Append `b`/`c` to the year (`Smith-2020b`) only
+   to disambiguate two papers sharing a first author and year. Create the folder at the
+   output location from "Inputs & where things go". Once the directory holds more than one
+   slug, add (or update) the paper-level `<FirstAuthor>-<Year>/README.md` landing page
+   described in "Inputs & where things go".
 
 3. **Reconstruct the BNGL model from scratch**, fitting-ready and on the edition-2
    surface (differences from a curate-model reference model):
@@ -143,8 +160,11 @@ If BNGPATH/BNG2.pl or the PyBNF venv can't be found, ask the user rather than gu
      against the quantitative objective. This job is native-only — that's expected, not a
      defect (`references/bpsl-constraints.md`).
 
-6. **Verify end-to-end** (the completion bar). Run from the PyBNF repo root with BNGPATH
-   set:
+6. **Verify end-to-end** (the completion bar), with BNGPATH set. The `scripts/*`
+   (`check_conf.py`, `petab_roundtrip.py`) `chdir` into the conf's folder themselves, so run
+   them from anywhere with an absolute `$CONF`. Run `pybnf` itself **from inside the job
+   folder** (`cd <FirstAuthor>-<Year>/<slug>`), since its relative paths — `model:`, `data:`,
+   `output_dir` — resolve against the working directory:
    - **Tier-1 (parses & well-formed):** `$PY $SKILL/scripts/check_conf.py $CONF`
      — edition 2, `job_type` resolves, data and/or constraints bound, free params bind by
      id. It reports whether the job carries BPSL constraints (i.e. is native-only).
@@ -212,11 +232,14 @@ If BNGPATH/BNG2.pl or the PyBNF venv can't be found, ask the user rather than gu
 ## Deliverables
 
 ```text
-~/Code/PyBNF/examples/real-world/<name>/
-├── <name>.bngl          # edition-2, fitting-ready, no actions block
-├── <name>.conf          # edition-2 job setup, banner-commented
-├── <data>.exp           # column headers == model observable names (quantitative / fusion)
-└── <name>.prop          # optional: BPSL constraints (data-fusion or constraint-only example)
+~/Code/PyBNF/examples/real-world/<FirstAuthor>-<Year>/       # e.g. Rukhlenko-2022/
+├── README.md            # paper-level landing page (when >1 slug): citation, shared model,
+│                        #   one-row-per-slug table (fits · flavor · data · status), sources
+└── <slug>/                                                  # e.g. cstar_trka/
+    ├── <slug>.bngl      # edition-2, fitting-ready, no actions block
+    ├── <slug>.conf      # edition-2 job setup, banner-commented
+    ├── <data>.exp       # column headers == model observable names (quantitative / fusion)
+    └── <slug>.prop      # optional: BPSL constraints (data-fusion or constraint-only example)
 # plus, in the PyBNF repo:
 #   _manifest.py         # one RealWorldExample(...) entry
 #   README.md            # coverage-matrix row (+ limitations if heavy; note native-only if BPSL)

@@ -20,9 +20,13 @@ A new example = **a folder of `{model, conf, exp}` + one `_manifest.py` entry + 
 
 ## 1. File inventory
 
-Each example lives in its own self-contained subfolder; all paths inside the `.conf`
-resolve relative to that folder (`README.md:98`; the test `chdir`s in before parsing —
-`test_real_world_examples.py:57-60`).
+Each example lives in its own self-contained slug folder, **grouped by source paper under
+a `<FirstAuthor>-<Year>/` directory** (e.g. `Rukhlenko-2022/cstar_trka/`; one paper's
+several jobs sit side by side there — see the skill's "Name and create the folder" step).
+All paths inside the `.conf` resolve relative to the slug folder (`README.md:98`; the test
+`chdir`s in before parsing — `test_real_world_examples.py:57-60`), so the grouping directory
+is transparent to the conf. Where a `_manifest.py`/README/test row names the folder, use the
+paper-relative path `<FirstAuthor>-<Year>/<slug>`.
 
 | file | role | required |
 |---|---|---|

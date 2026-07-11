@@ -31,7 +31,7 @@ case-insensitive.
 Canonical order (matches every real-world conf and the tutorial):
 
 ```conf
-output_dir = output/real-world/<name>
+output_dir = output       # relative -> lands in <slug>/output/ (run pybnf from the job folder)
 edition = 2
 bngl_backend = bngsim
 model: <name>.bngl
@@ -227,7 +227,7 @@ reference in the model/observable instead.
 
 | key | default | meaning |
 |---|---|---|
-| `output_dir` | `pybnf_output` | results dir (use `output/real-world/<name>`) |
+| `output_dir` | `pybnf_output` | results dir; **relative to where you invoke pybnf**, not the conf's location — use a plain `output` and run pybnf from inside the job folder, so results land in `<slug>/output/` |
 | `bngl_backend` | `auto` | **set `bngsim`** (new-era default; required for gradient fits) |
 | `delete_old_files` | `1` | clear stale output |
 | `verbosity` | *(required)* | 0–3 |
