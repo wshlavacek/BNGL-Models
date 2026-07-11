@@ -1,0 +1,4 @@
+# SKMEL-133, single-agent IRS inhibition: does NOT flip -- stays proliferative (S > 0)...
+Sval > 0 at 100000 weight 10
+# ... but is pushed below the untreated baseline.
+Sval < baseline.Sval at 100000 weight 5
