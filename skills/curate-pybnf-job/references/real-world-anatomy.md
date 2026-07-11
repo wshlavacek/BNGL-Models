@@ -28,7 +28,8 @@ resolve relative to that folder (`README.md:98`; the test `chdir`s in before par
 |---|---|---|
 | `<name>.bngl` | the BioNetGen model — **no `begin actions` block** (the sim is synthesized from the conf) | yes |
 | `<name>.conf` | the edition-2 job setup (this *is* the test input) | yes |
-| `<data>.exp` | ≥1 data file; each `experiment:` line binds one; column headers ARE model observable/function names | yes (≥1) |
+| `<data>.exp` | ≥1 data file; each `experiment:` line binds one; column headers ARE model observable/function names | yes, unless the example is constraint-only |
+| `<data>.prop` | BPSL constraint file(s) for a data-fusion or constraint-only example; attached on an `experiment:`'s `data:`. Makes the job native-only (not PEtab-exportable). See `bpsl-constraints.md` | only for BPSL examples |
 | `*_ground_truth.bngl` | only for synthetic-data examples: the model at known-true params (documentation; not referenced by conf/tests) | no |
 
 There is **no per-folder README**; documentation lives in `examples/real-world/README.md`
@@ -155,8 +156,13 @@ Adding an example touches the new folder plus:
      too heavy for routine CI.
    - Only if the example is cluster-scale, add a **Known limitations** bullet
      (`README.md:85-94`).
-3. **PEtab test assertion (this skill's completion bar):** add an assertion that the new
-   example round-trips through PEtab v2 (export → `petab.v2` lint clean → import). The
-   real-world manifest does not yet assert this; add a parametrized test (or extend the
-   existing test module) that runs `pybnf.petab.export_job` + `lint_problem` for the
-   example, mirroring `scripts/petab_roundtrip.py`. See `petab-compliance.md`.
+3. **Compliance test assertion (this skill's completion bar):**
+   - *Quantitative example:* assert the new example round-trips through PEtab v2 (export →
+     `petab.v2` lint clean → import). The real-world manifest does not yet assert this; add
+     a parametrized test (or extend the existing module) that runs
+     `pybnf.petab.export_job` + `lint_problem`, mirroring `scripts/petab_roundtrip.py`. See
+     `petab-compliance.md`.
+   - *BPSL example:* PEtab export is (correctly) refused, so assert instead that
+     `export_job` raises `NotImplementedError` (a guard the constraint stays native-only)
+     and/or that a `job_type = check` run reports the expected satisfaction. See
+     `bpsl-constraints.md`.

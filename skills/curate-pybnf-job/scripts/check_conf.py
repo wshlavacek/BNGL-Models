@@ -79,10 +79,23 @@ def check(conf_path: Path) -> int:
         f"fit_type={fit_type!r}",
     )
 
-    report(bool(conf.exp_data), "an experiment bound its data", f"exp_data keys={list(conf.exp_data)}")
+    # A job may carry quantitative data (.exp), BPSL constraints (.prop/.con), or both
+    # (data fusion). At least one must be present.
+    n_constraints = len(getattr(conf, "constraints", ()) or ())
+    has_data = bool(conf.exp_data)
+    report(
+        has_data or n_constraints,
+        "an experiment bound data and/or BPSL constraints",
+        f"exp_data keys={list(conf.exp_data)}, constraint sets={n_constraints}",
+    )
 
+    # `check` jobs evaluate a single point (no search) -> free params are optional;
+    # every fitting job_type needs at least one.
     names = [v.name for v in conf.variables]
-    report(bool(names), "at least one free parameter", f"{len(names)} declared")
+    if fit_type == "check":
+        print(f"info  job_type=check: model checking, no fitting ({len(names)} free params, not required)")
+    else:
+        report(bool(names), "at least one free parameter", f"{len(names)} declared")
     aliased = [n for n in names if "__FREE" in n]
     report(not aliased, "no free parameter uses a __FREE alias", f"offenders={aliased}" if aliased else "")
 
@@ -94,6 +107,12 @@ def check(conf_path: Path) -> int:
         f"(simulator is 'ssa' or 'nf' if stochastic else 'ode'; confirm which from the conf's method:)"
     )
     print(f"info  free parameters: {', '.join(names)}")
+    if n_constraints:
+        print(
+            f"info  BPSL constraints present ({n_constraints} set(s)) -> this job is "
+            f"NATIVE-ONLY: not PEtab-exportable. Verify with `job_type = check` "
+            f"(satisfaction), not petab_roundtrip.py. See references/bpsl-constraints.md."
+        )
 
     print()
     print("PASS" if ok else "FAILED (fix the FAIL lines above before committing)")
