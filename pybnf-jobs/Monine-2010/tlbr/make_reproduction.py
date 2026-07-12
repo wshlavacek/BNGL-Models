@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-"""Reproduction figure for the tlbr job (Monine et al. 2010 model; Posner et al. 2007 data).
+"""Reproduction figure for the tlbr job (Monine et al. 2010 model AND binding data).
 
-Simulates the trivalent-ligand / bivalent-receptor model NETWORK-FREE with NFsim at the PyBNF
-best-fit parameters, across the 12-dose LTconc titration, and overlays the model FL (bound-ligand
-fraction) on the Posner data. The whole titration is run with one BNGL `parameter_scan` per
+Simulates the trivalent-ligand / bivalent-receptor model NETWORK-FREE with NFsim at Monine 2010's
+OWN reported best-fit (Table 1, TLBR model), across the 12-dose LTconc titration, and overlays the
+model FL (bound-ligand fraction) on the Monine 2010 Fig 2a binding data. The whole titration is run
+with one BNGL `parameter_scan` per
 replicate (exactly as the classic model's actions block did); NFsim is stochastic, so the doses
 are averaged over several replicate scans (as the conf's `smoothing` does during a fit). The
 readout is computed from the raw species columns (robust to NFsim function output):
@@ -30,11 +31,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 BNG = os.path.join(os.environ["BNGPATH"], "BNG2.pl")
 MODEL = os.path.join(HERE, "tlbr.bngl")
 
-# PyBNF best-fit, RuleHub Published/Mitra2019/11-TLBR/fit_ss init7 (sos = 0.00214, the lowest
-# objective across the paper's four algorithms). The shipped .bngl nominals (alpha=1, K1=0.467,
-# K2=87.03, "from Brandon") are a STARTING point, ~4x off in K1/K2; these fitted values are what
-# the Posner titration pins down.
-BESTFIT = dict(alpha=0.7456800512415742, K1=0.10914506382245572, K2=33.576441689317285)
+# Monine 2010 Table 1 best-fit for the TLBR model (the paper's OWN reported result):
+#   K1 = 0.467 /nM (CI 0.111-0.767), K2 = 87.03 /nM (CI 31.6-128.1), alpha = 0.816 (CI 0.758-0.881).
+# These ARE the shipped .bngl nominals. (A separate PyBNF/Mitra-2019 re-fit -- RuleHub
+# Published/Mitra2019/11-TLBR/fit_ss init7, alpha=0.746, K1=0.109, K2=33.6, sos=0.00214 -- lands at
+# a DIFFERENT point of the same sloppy K1-K2 valley; it reproduces the normalized FL1 but not the
+# paper's lambda curve. See VALIDATION.md.)
+BESTFIT = dict(alpha=0.816, K1=0.467, K2=87.03)
 ALPHA = BESTFIT["alpha"]
 T_END = 5000
 N_STEPS = 10
@@ -52,7 +55,7 @@ def scan_fl(doses, seed):
     """One network-free NFsim parameter_scan over all doses; returns final FL per dose."""
     with open(MODEL) as fh:
         src = fh.read().split("end model")[0] + "end model\n"
-    for k, v in BESTFIT.items():   # override the fitted params (starting-point -> best-fit)
+    for k, v in BESTFIT.items():   # set the fitted params to Monine's Table-1 best-fit
         src = re.sub(rf"(^{k}\s+)[\d.eE+-]+", rf"\g<1>{v:.12g}", src, count=1, flags=re.M)
     vals = ",".join(f"{d:.10g}" for d in doses)
     with tempfile.TemporaryDirectory() as d:
@@ -75,7 +78,7 @@ def main():
     exp = np.loadtxt(os.path.join(HERE, "tlbr.exp"))
     doses = exp[:, 0]
     fl_data = exp[:, 1]
-    print(f"tlbr NFsim reproduction at the PyBNF best-fit (Mitra 2019, 11-TLBR/fit_ss init7) "
+    print(f"tlbr NFsim reproduction at Monine 2010 Table 1 (TLBR: K1=0.467, K2=87.03, alpha=0.816) "
           f"(reps={N_REPS}):")
 
     fl_model = np.mean([scan_fl(doses, seed=1000 + r) for r in range(N_REPS)], axis=0)
@@ -86,19 +89,22 @@ def main():
     sos = float(np.sum((fl_model - fl_data) ** 2))
     big = np.abs(fl_data) > 0.05
     rel = np.abs(fl_model[big] - fl_data[big]) / np.abs(fl_data[big])
-    print(f"  sos (fit objective)        = {sos:.5f}   (published best sos = 0.00214)")
+    # Monine 2010 fit the same data with RMS (SI Eq 11) and kept fits with RMS<0.02 (lambda space).
+    rmslam = float(np.sqrt(np.mean((0.816 * fl_model - 0.816 * fl_data) ** 2)))
+    print(f"  sos (fit objective, FL)    = {sos:.5f}")
+    print(f"  RMS (lambda space)         = {rmslam:.4f}   (Monine kept fits with RMS<0.02, SI Eq 11)")
     print(f"  median |rel err| (FL>0.05) = {np.median(rel):.3f}")
     print(f"  max    |rel err| (FL>0.05) = {rel.max():.3f}")
 
     fig, ax = plt.subplots(figsize=(7.5, 5.5))
     ax.plot(doses, fl_data, "o", color="#222", ms=8, zorder=5,
-            label="Posner 2007 data (Org Lett 9:3551)")
+            label="Monine 2010 Fig 2a data (Biophys J 98:48)")
     ax.plot(doses, fl_model, "s-", color="#1f77b4", lw=2, ms=6,
-            label="NFsim @ PyBNF best-fit (sos=%.4f)" % sos)
+            label="NFsim @ Monine Table 1 (sos=%.4f)" % sos)
     ax.set(xscale="log", xlabel="total ligand LTconc (nM)",
            ylabel="FL  (bound-ligand fraction = lambda/alpha)",
            title="Trivalent ligand / bivalent receptor -- network-free (NFsim)\n"
-                 "Monine 2010 model, Posner 2007 data (PyBNF corpus 11-TLBR)")
+                 "Monine 2010 model + Fig 2a data at Monine's Table-1 fit (PyBNF corpus 11-TLBR)")
     ax.legend(frameon=False)
     ax.grid(alpha=0.25, which="both")
     fig.tight_layout()

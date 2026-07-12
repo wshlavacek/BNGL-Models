@@ -4,14 +4,16 @@
 # is simulated network-free. No `begin actions` block -- network-free models need no
 # generate_network; the dose-response scan is synthesized from tlbr.conf (ADR-0028/0046).
 #
-# The model is from (primary):
+# The model AND the fit data are from (primary):
 #   Monine MI, Posner RG, Savage PB, Faeder JR, Hlavacek WS. "Modeling multivalent
 #   ligand-receptor interactions with steric constraints on configurations of cell-surface
 #   receptor aggregates." Biophys J 2010; 98(1):48-56.  PMID: 20074516  DOI: 10.1016/j.bpj.2009.09.043
-# fit to the trivalent-antigen binding data of:
+#   -- tlbr.exp is Monine 2010 Fig 2a (flow-cytometric binding of Alexa-488 compound 6a to
+#      IgE-FceRI on RBL cells); the fitted params are Monine 2010 Table 1 (TLBR column).
+# The trivalent ligand (compound 6a) was synthesized, and its DEGRANULATION response measured, by:
 #   Posner RG, Geng D, Haymore S, Bogert J, Pecht I, Licht A, Savage PB. "Trivalent antigens
 #   for degranulation of mast cells." Org Lett 2007; 9(18):3551-3554.  PMID: 17691814
-#   DOI: 10.1021/ol071231z
+#   DOI: 10.1021/ol071231z   (Posner 2007 reports degranulation, NOT the binding titration fit here.)
 #
 # Provenance (unchanged model network): the trivalent-ligand/bivalent-receptor model of Monine
 #   et al. (2010); the same fitting problem as BioNetFit 1 example 3 (Thomas et al. 2016,
@@ -26,8 +28,8 @@
 begin model
 
 # Reference:
-# 1. Monine MI et al. (2010) Biophys J 98: 48-56. <-- model and fitting results
-# 2. Posner RG et al. (2007) Org Lett 9: 3551-3554. <-- data
+# 1. Monine MI et al. (2010) Biophys J 98: 48-56. <-- model, Fig 2a binding data, Table 1 fit
+# 2. Posner RG et al. (2007) Org Lett 9: 3551-3554. <-- ligand (compound 6a) + degranulation data
 
 begin parameters
 
@@ -56,14 +58,17 @@ koff 0.01 # [=] /s, from Table 1 in Ref
 kr1=koff # [=] /s
 kr2=koff # [=] /s
 
-# FITTED (bind by id, ADR-0034): overall scale for the FL readout. Nominal = 1.
-alpha	1
+# FITTED (bind by id, ADR-0034): overall scale for the FL readout.
+# Nominal = Monine 2010 Table 1 best-fit (TLBR model): alpha = 0.816 (CI 0.758-0.881).
+alpha	0.816
 
 inverse_alpha=1.0/alpha # 1/alpha
 
-# FITTED (bind by id, ADR-0034): free-ligand and crosslinking equilibrium constants (/nM).
-K1	0.467 # [=] /nM, from Brandon
-K2	87.03 # [=] /nM, from Brandon
+# FITTED (bind by id, ADR-0034): free-ligand (K1) and crosslinking (K2) equilibrium constants (/nM).
+# Nominals = Monine 2010 Table 1 best-fit (TLBR model): K1 = 0.467 /nM (CI 0.111-0.767),
+# K2 = 87.03 /nM (CI 31.6-128.1). (These fit the Fig 2a titration -- see README + VALIDATION.md.)
+K1	0.467 # [=] /nM, Monine 2010 Table 1 (TLBR)
+K2	87.03 # [=] /nM, Monine 2010 Table 1 (TLBR)
 
 kf1=K1*1.0e9*kr1/(NA*Vref) # [=] /(molecule/cell)/s
 kf2=K2*1.0e9*kr2/(NA*Vref) # [=] /(molecule/cell)/s

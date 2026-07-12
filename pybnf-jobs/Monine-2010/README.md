@@ -1,17 +1,20 @@
 # Monine-2010 — trivalent-ligand / bivalent-receptor aggregation (PyBNF fitting job)
 
 A PyBNF edition-2 parameter-fitting job derived from the classic multivalent-ligand aggregation
-model. The **model** is from Monine et al. (2010); the **fit data** come from the trivalent-antigen
-titration of Posner et al. (2007):
+model. The **model, the fit data, and the fitted parameters** all come from Monine et al. (2010);
+the trivalent ligand itself (compound 6a) was made — and its degranulation response measured — by
+Posner et al. (2007):
 
-> **[model + fitting results]** Monine MI, Posner RG, Savage PB, Faeder JR, Hlavacek WS.
+> **[model + Fig 2a binding data + Table 1 fit]** Monine MI, Posner RG, Savage PB, Faeder JR,
+> Hlavacek WS.
 > **"Modeling multivalent ligand-receptor interactions with steric constraints on
 > configurations of cell-surface receptor aggregates."**
 > *Biophys J* 2010; **98**(1):48–56.
 > PMID: [20074516](https://pubmed.ncbi.nlm.nih.gov/20074516/) ·
 > DOI: [10.1016/j.bpj.2009.09.043](https://doi.org/10.1016/j.bpj.2009.09.043)
 >
-> **[fit data]** Posner RG, Geng D, Haymore S, Bogert J, Pecht I, Licht A, Savage PB.
+> **[ligand (compound 6a) + degranulation data — NOT the binding fit]** Posner RG, Geng D,
+> Haymore S, Bogert J, Pecht I, Licht A, Savage PB.
 > **"Trivalent antigens for degranulation of mast cells."**
 > *Org Lett* 2007; **9**(18):3551–3554.
 > PMID: [17691814](https://pubmed.ncbi.nlm.nih.gov/17691814/) ·
@@ -38,7 +41,7 @@ and the cell geometry (Table 1 of Monine 2010) are fixed.
 
 | slug | fits | simulator | flavor | status |
 |---|---|---|---|---|
-| [`tlbr`](tlbr/) | bound-ligand fraction FL vs. total-ligand dose-response, 12 doses (3 params) | **NF** (NFsim, network-free) | quantitative, **PEtab-exportable**, `sos` | ✅ tier-1 + PEtab round-trip + reproduction (median 3.4 % rel err) |
+| [`tlbr`](tlbr/) | bound-ligand fraction FL vs. total-ligand dose-response, 12 doses (3 params) | **NF** (NFsim, network-free) | quantitative, **PEtab-exportable**, `sos` | ✅ tier-1 + PEtab round-trip + reproduction (median 2.4 % rel err) · **validated** (`tlbr/VALIDATION.md`, 91/100) |
 
 Quantitative and **PEtab-v2-exportable** (unlike the native-only `Kirsch-2020` /
 `Rukhlenko-2022` fold-change jobs). Network-free but **not heavy** — a single 12-dose scan runs
@@ -47,10 +50,14 @@ still best on a cluster (the published fit used a large population there).
 
 ## Source materials
 
-- **Model / data / classic conf:** PyBNF `examples/real-world/tlbr/` and `examples/tlbr/`
-  (BioNetFit-1-era), and RuleHub `Published/Mitra2019/11-TLBR/` (per-algorithm best fits).
-- **Published best-fit** used for the reproduction: RuleHub `11-TLBR/fit_ss/` init7
-  (`sos = 0.00214`, the lowest objective across the paper's `de`/`ade`/`pso`/`ss` runs).
+- **Primary paper (model, Fig 2a binding data, Table 1 fit, SI):** Monine 2010 *Biophys J* 98:48–56
+  (+ Supporting Material). Validated against these — see [`tlbr/VALIDATION.md`](tlbr/VALIDATION.md).
+- **Model / classic conf lineage:** PyBNF `examples/real-world/tlbr/` and `examples/tlbr/`
+  (BioNetFit-1-era) — model blocks identical to the paper's TLBR model.
+- **Best-fit used for the reproduction:** **Monine 2010 Table 1 (TLBR): α=0.816, K1=0.467,
+  K2=87.03** — the paper's *own* reported result. (A separate PyBNF/Mitra-2019 re-fit, RuleHub
+  `11-TLBR/fit_ss` init7 α=0.746/K1=0.109/K2=33.6, is a different point of the same sloppy K1–K2
+  valley; it minimizes the FL-space `sos` but not Monine's λ-space RMS, and is **not** used here.)
 
 ## Run
 
@@ -58,6 +65,6 @@ still best on a cluster (the published fit used a large population there).
 export BNGPATH="$HOME/Simulations/BioNetGen-2.9.3"   # folder with BNG2.pl
 cd pybnf-jobs/Monine-2010/tlbr
 pybnf -c tlbr.conf
-# reproduction figure (NFsim at the published best-fit):
+# reproduction figure (NFsim at Monine's Table-1 fit vs. Fig 2a):
 python make_reproduction.py
 ```
