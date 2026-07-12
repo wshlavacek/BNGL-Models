@@ -10,8 +10,10 @@
 # PERTURBATION panel: equilibrate the network to its proliferative steady state, then
 # apply a targeted-kinase inhibitor and read out the new steady state at 24 h. The DPD
 # force is BISTABLE (Sd = death/arrest, Sp = proliferation); combined inhibition drives
-# the switch Sp -> Sd (Extended Data Figs. 16-17). The paper fit this model with
-# pyBioNetFit; the .exp files here are the authors' own fit targets.
+# the switch Sp -> Sd. The paper fit this model with pyBioNetFit (scatter search + simplex,
+# under BMRA-CI inequality constraints; Methods p.24); the .exp files here are the authors'
+# own single-drug TRAINING targets. The paper's model-vs-data figure is Extended Data Fig. 17A
+# (DPD vs dose/Kd); underlying RPPA from Korkut et al., eLife 2015;4:e04640.
 #
 # Differences from the published model (all documented):
 #   * NO `begin actions` block -- the equilibrate -> perturb -> measure protocol is
