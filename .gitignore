@@ -9,3 +9,4 @@ __pycache__/
 staging/
 my_models/reference/
 dev/
+bnf_*.log
