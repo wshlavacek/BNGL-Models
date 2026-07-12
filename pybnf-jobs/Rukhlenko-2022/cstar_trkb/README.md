@@ -9,12 +9,28 @@ core signalling network. Same paper, same method, same verification discipline.
 > PMCID: [PMC9644236](https://pmc.ncbi.nlm.nih.gov/articles/PMC9644236/) ·
 > DOI: [10.1038/s41586-022-05194-y](https://doi.org/10.1038/s41586-022-05194-y)
 
+> ⚠️ **Scope: reduced *demonstration* fit — NOT a reconstruction of the paper's fit.**
+> This job frees **8 hand-picked parameters** over ±1-decade bounds against a **subset** of the
+> data (the single DMSO/BDNF arm), as a small, runnable PyBNF example built on the paper's
+> **authentic model and data**. The paper's *actual* fit freed the full parameter set under
+> **BMRA-derived confidence-interval inequality constraints**, across the full joint TrkA+TrkB ×
+> multi-inhibitor dataset, with scatter search + simplex (Methods p.22). This demo therefore does
+> **not** recover the published parameters (`VALIDATION.md` Gate 3b, PARTIAL/sloppy). A
+> BMRA-constrained **real-world** fit is planned as a separate slug (see the paper-level README).
+
 ## What is fit
 
 SH-SY5Y/TrkB cells stimulated with **BDNF** (DMSO, no-inhibitor arm). Seven phospho
-**fold changes vs. t=0** at **0 / 10 / 45 min** (paper Fig. 4B), fit by the TrkB cSTAR
-model. Design: pre-equilibrate (no BDNF, `Lig_on = 0`) → add BDNF (`Lig_on = 1`) → measure
+**fold changes vs. t=0** at **0 / 10 / 45 min**, fit by the TrkB cSTAR model and overlaid on
+data in the paper's **Fig. 4A** (pAKT/pERK/pJNK/pS6K/pRSK/pERBB) + **4B** (pTRK), TrkB in red.
+Design: pre-equilibrate (no BDNF, `Lig_on = 0`) → add BDNF (`Lig_on = 1`) → measure
 over 0–2700 s (= 45 min), synthesized from `preequilibrate: basal` → `condition: stim`.
+
+**Fit method (paper).** Same as the TrkA twin: **pyBioNetFit** (scatter search + simplex,
+sum-of-squares) under **BMRA-CI inequality constraints** (Methods p.22); **10-min** RPPA +
+Western = training, **45-min** RPPA = validation. See **[`VALIDATION.md`](VALIDATION.md)** for
+the primary-source audit (confidence 84/100; model byte-identical to the authors'
+`TrkB_S_model.bngl`, `.exp` byte-reproducible from their RPPA).
 
 ## How TrkB differs from TrkA (`../cstar_trka`)
 

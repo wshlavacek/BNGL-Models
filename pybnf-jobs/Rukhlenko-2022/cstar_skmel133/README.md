@@ -9,22 +9,42 @@ Third cSTAR example, and a **different flavor** from the two Trk time-course fit
 > PMCID: [PMC9644236](https://pmc.ncbi.nlm.nih.gov/articles/PMC9644236/) ·
 > DOI: [10.1038/s41586-022-05194-y](https://doi.org/10.1038/s41586-022-05194-y)
 
+> ⚠️ **Scope: reduced *demonstration* fit — NOT a reconstruction of the paper's fit.**
+> This job frees **8 hand-picked parameters** over ±1-decade bounds against **4 of the panel's
+> inhibitor conditions**, as a small, runnable PyBNF example built on the paper's **authentic
+> model and data**. The paper's *actual* fit freed the full parameter set under **BMRA-derived
+> confidence-interval inequality constraints**, across all six single-drug dose responses, with
+> scatter search + simplex (Methods p.24). This demo therefore does **not** recover the published
+> parameters (`VALIDATION.md` Gate 3b, PARTIAL/sloppy). A BMRA-constrained **real-world** fit is
+> planned as a separate slug (see the paper-level README).
+
 ## What is fit
 
 **SKMEL-133** is a BRAF-V600E / PTEN-null, **RAF-inhibitor-resistant** melanoma line. Unlike
 the Trk models (ligand time courses), the design is a **steady-state inhibitor perturbation
 panel**: equilibrate the network to its proliferative steady state (no drug), then apply a
 targeted-kinase inhibitor and read out the new steady state at **24 h** (86400 s). Nine
-phospho / total-protein **fold changes vs. the no-drug baseline** are fit per perturbation
-(Extended Data Figs. 16–17). The DPD force is **bistable** (Sd = arrest/death, Sp =
-proliferation); combined inhibition drives the switch Sp → Sd.
+phospho / total-protein **fold changes vs. the no-drug baseline** are fit per perturbation.
+The DPD force is **bistable** (Sd = arrest/death, Sp = proliferation); combined inhibition
+drives the switch Sp → Sd.
+
+These nine-readout fold changes are the authors' **pyBioNetFit training data** (single-drug
+dose responses; Methods p.24: "the model-generated dose responses were fitted to these
+training set data" with the objective = sum of squares, using scatter search + simplex and
+BMRA-inferred connection-coefficient confidence intervals as inequality constraints). The
+paper's *published* SKMEL-133 model-vs-data figure is **Extended Data Fig. 17A**, which plots
+the resulting **DPD** (S) vs. inhibitor dose in units of Kd — a derived output — not the nine
+individual readouts; **Extended Data Fig. 16** is the SVM state separation. The underlying RPPA
+measurements are from **Korkut A et al., *eLife* 2015;4:e04640** (238 proteins × 89
+perturbations), which the authors processed into the fold-change targets.
 
 **Perturbations:** ERK inhibitor (dose1 + dose2), AKT inhibitor (dose1), SRC inhibitor
 (dose1). dose1 = the published `I_<x>_conc`; dose2 = 2×.
 
 The fit data are the **authors' own pyBioNetFit `.exp` files** (from
 `SKMEL-133_preproc/`), so no digitization was needed. Each carries per-point `_SD`
-→ **`chi_sq`** objective.
+→ **`chi_sq`** objective. See **[`VALIDATION.md`](VALIDATION.md)** for the primary-source
+audit (confidence 88/100; model + data byte-identical to the authors' files).
 
 ## Files
 

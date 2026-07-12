@@ -11,15 +11,34 @@ A PyBNF edition-2, parameter-fitting job setup derived from:
 Built with the `curate-pybnf-job` skill. The paper's core signalling model was itself
 fit with **pyBioNetFit**, so it is a natural real-world example.
 
+> ⚠️ **Scope: reduced *demonstration* fit — NOT a reconstruction of the paper's fit.**
+> This job frees **8 hand-picked parameters** over ±1-decade bounds against a **subset** of the
+> data (the single DMSO/NGF arm), as a small, runnable PyBNF example built on the paper's
+> **authentic model and data**. The paper's *actual* fit freed the full parameter set under
+> **BMRA-derived confidence-interval inequality constraints**, across the full joint TrkA+TrkB ×
+> multi-inhibitor dataset, with scatter search + simplex (Methods p.22). This demo therefore does
+> **not** recover the published parameters (`VALIDATION.md` Gate 3b, PARTIAL/sloppy). A
+> BMRA-constrained **real-world** fit is planned as a separate slug (see the paper-level README).
+
 ## What is fit
 
 SH-SY5Y/TrkA human neuroblastoma cells stimulated with **NGF** (DMSO, no-inhibitor arm).
-Seven phospho-protein **fold changes vs. t=0** at **0 / 10 / 45 min** (paper Fig. 4A) are
-fit by the cSTAR core signalling network (TRK → ERBB → ERK/AKT/JNK/S6K/RSK).
+Seven phospho-protein **fold changes vs. t=0** at **0 / 10 / 45 min** are fit by the cSTAR
+core signalling network (TRK → ERBB → ERK/AKT/JNK/S6K/RSK). The paper overlays this model on
+data in **Fig. 4A** (pAKT, pERK, pJNK, pS6K, pRSK, pERBB) + **Fig. 4B** (pTRK), TrkA in blue.
+
+**Fit method (paper).** The authors fit the model with **pyBioNetFit** (scatter search +
+simplex, sum-of-squares objective) under **BMRA-inferred connection-coefficient confidence
+intervals as inequality constraints** (Methods p.22). The **10-min** RPPA + Western Trk time
+course was the *training* set; the **45-min** RPPA the *validation* set — so at the published
+parameters the 45-min points fit less tightly than the 10-min ones (see `VALIDATION.md`).
 
 **Experimental design.** Pre-equilibrate with no NGF (`Lig_on = 0`, receptors reach basal
 phosphorylation), then add NGF (`Lig_on = 1`) and measure over 0–2700 s (= 45 min). PyBNF
 synthesizes the two-phase protocol from `preequilibrate: basal` → `condition: stim`.
+
+See **[`VALIDATION.md`](VALIDATION.md)** for the primary-source audit (confidence 86/100; model
+byte-identical to the authors' `TrkA_S_model.bngl`, `.exp` byte-reproducible from their RPPA).
 
 ## Files
 
