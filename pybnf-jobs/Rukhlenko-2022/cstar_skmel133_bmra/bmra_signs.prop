@@ -1,0 +1,57 @@
+# BMRA-CI sign constraints on the SKMEL-133 connection coefficients (withMyc).
+# One line per connection: the sign of (g-1) [Eq. 24: g>1 activation, g<1
+# inhibition] is pinned to the BMRA-inferred sign, weight = z = |rm|/rs (the
+# BMRA confidence). Evaluated at the settled no-drug steady state (at 100000).
+# Enforces 'connection coefficients within the BMRA CIs' (Methods p.24) as its
+# BPSL-expressible projection. cc_*() = (g_* - 1)*totERK; totERK==1 (conserved).
+
+# IRS->ERK BMRA r=+0.494+/-0.560 (z=0.88); g>1 => activation
+cc_IRSERK > 0 at 100000 weight 0.883
+# mTOR->ERK BMRA r=+0.377+/-0.563 (z=0.67); g>1 => activation
+cc_mTORERK > 0 at 100000 weight 0.671
+# SRC->ERK BMRA r=+0.381+/-0.564 (z=0.68); g>1 => activation
+cc_SRCERK > 0 at 100000 weight 0.675
+# CDK->ERK BMRA r=-0.142+/-0.391 (z=0.36); g<1 => inhibition
+cc_CDKERK < 0 at 100000 weight 0.363
+# ERK->AKT BMRA r=-0.738+/-0.465 (z=1.59); g<1 => inhibition
+cc_ERKAKT < 0 at 100000 weight 1.589
+# PKC->AKT BMRA r=+0.964+/-0.462 (z=2.09); g>1 => activation
+cc_PKCAKT > 0 at 100000 weight 2.086
+# CDK->AKT BMRA r=+0.415+/-0.458 (z=0.91); g>1 => activation
+cc_CDKAKT > 0 at 100000 weight 0.906
+# IRS->AKT BMRA r=+1.322+/-0.460 (z=2.87); g>1 => activation
+cc_IRSAKT > 0 at 100000 weight 2.87
+# MYC->AKT BMRA r=+0.563+/-0.462 (z=1.22); g>1 => activation
+cc_MYCAKT > 0 at 100000 weight 1.219
+# ERK->SRC BMRA r=+0.341+/-0.719 (z=0.47); g>1 => activation
+cc_ERKSRC > 0 at 100000 weight 0.474
+# PKC->SRC BMRA r=+0.423+/-0.710 (z=0.60); g>1 => activation
+cc_PKCSRC > 0 at 100000 weight 0.597
+# MYC->SRC BMRA r=-0.536+/-0.713 (z=0.75); g<1 => inhibition
+cc_MYCSRC < 0 at 100000 weight 0.752
+# ERK->CDK BMRA r=+0.281+/-0.585 (z=0.48); g>1 => activation
+cc_ERKCDK > 0 at 100000 weight 0.481
+# mTOR->CDK BMRA r=+0.182+/-0.579 (z=0.32); g>1 => activation
+cc_mTORCDK > 0 at 100000 weight 0.315
+# MYC->CDK BMRA r=+0.672+/-0.584 (z=1.15); g>1 => activation
+cc_MYCCDK > 0 at 100000 weight 1.152
+# AKT->mTOR BMRA r=+0.297+/-0.516 (z=0.57); g>1 => activation
+cc_AKTmTOR > 0 at 100000 weight 0.575
+# SRC->mTOR BMRA r=+0.187+/-0.476 (z=0.39); g>1 => activation
+cc_SRCmTOR > 0 at 100000 weight 0.392
+# PKC->mTOR BMRA r=+0.338+/-0.499 (z=0.68); g>1 => activation
+cc_PKCmTOR > 0 at 100000 weight 0.678
+# CDK->mTOR BMRA r=+0.993+/-0.506 (z=1.96); g>1 => activation
+cc_CDKmTOR > 0 at 100000 weight 1.96
+# CDK->MYC BMRA r=+0.408+/-0.108 (z=3.79); g<1 => inhibition [degradation term: g-side flipped vs r sign]
+cc_CDKMYC < 0 at 100000 weight 3.786
+
+# DPD driving-force coefficients beta_j (Eq. 25): force = +beta_mTOR*pmTOR
+# +beta_PKC*pPKC -beta_SRC*pSRC, so the signed force coefficient matches r_Sj.
+# betas stay positive; the structural +/- fixes the DPD-row sign. weight = z(r_Sj).
+# DPD<-mTOR BMRA r=+1.628+/-0.469 (z=3.47); force coeff +beta_mTOR
+cc_SmTOR > 0 at 100000 weight 3.47
+# DPD<-PKC BMRA r=+0.647+/-0.473 (z=1.37); force coeff +beta_PKC
+cc_SPKC > 0 at 100000 weight 1.368
+# DPD<-SRC BMRA r=-0.272+/-0.477 (z=0.57); force coeff -beta_SRC
+cc_SSRC > 0 at 100000 weight 0.57

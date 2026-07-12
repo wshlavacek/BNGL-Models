@@ -1,0 +1,17 @@
+# BMRA-CI sign constraints on the TrkB connection coefficients (10-min posterior).
+# g>1 activation / g<1 inhibition (Eq. 24). Kept iff the BMRA CI is >= 1 std
+# from zero (statistically significant) AND the published model carries that sign;
+# weight = z = |rm|/rs. Evaluated at the no-ligand steady state (at 100000).
+
+# ERK->RTK BMRA r=+0.616+/-0.536 (z=1.15); g>1 => activation
+cc_B_ERKRTK > 0 at 100000 weight 1.149
+# RSK->RTK BMRA r=+0.788+/-0.542 (z=1.45); g>1 => activation
+cc_B_RSKRTK > 0 at 100000 weight 1.453
+# ERK->JNK BMRA r=+0.869+/-0.284 (z=3.06); g>1 => activation
+cc_B_ERKJNK > 0 at 100000 weight 3.062
+# RTK->AKT BMRA r=+0.532+/-0.525 (z=1.01); g>1 => activation
+cc_B_RTKAKT > 0 at 100000 weight 1.014
+# ERK->AKT BMRA r=+0.552+/-0.518 (z=1.06); g>1 => activation
+cc_B_ERKAKT > 0 at 100000 weight 1.065
+# AKT->S6K BMRA r=+0.490+/-0.033 (z=14.88); g>1 => activation
+cc_B_AKTS6K > 0 at 100000 weight 14.881
