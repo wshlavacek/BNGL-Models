@@ -85,10 +85,13 @@ the default is to **correct the job to match what was published**, not to keep t
 
 - A paper with **multiple models / multiple fits** yields **multiple slugs**; validate (and, if
   missing, build) each one that is tractable. Do not collapse them into one easier problem.
-- Example already known: `Erickson-2019/igf1r` currently fits a reduced 3-parameter problem; the
-  literature reports a fuller rate-constant model. Re-scope to the published model/fit (or, only if
-  re-scoping is genuinely infeasible, keep it but **relabel it explicitly** as a reduced variant,
-  not as "the paper's fit", and score Gate 3b accordingly).
+- Worked example: `Erickson-2019/igf1r` was a reduced 3-parameter (`K1`/`K2`/`K1prime`), F5B-only
+  distillation; the paper (its SI ships the authors' own BioNetFit files) reports a fuller
+  7-rate-constant fit to three datasets. It was **re-scoped** to the published model/fit — the
+  authors' model verbatim, three datasets, detailed balance — and required **legacy (edition-1)**
+  mode because edition-2 `experiment:` directives cannot express the F5D preincubate/wash/reset
+  protocol. (If re-scoping is genuinely infeasible, the fallback is to keep the reduced form but
+  **relabel it explicitly** as a reduced variant, not "the paper's fit", and score Gate 3b down.)
 
 When a correction is required, apply it to the job files (model/conf/exp/README + reproduction),
 re-run the affected gates, and note the change in both `VALIDATION.md` and the job `README.md`.
