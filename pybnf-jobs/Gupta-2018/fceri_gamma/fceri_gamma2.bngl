@@ -1,0 +1,151 @@
+# FceRI (IgE receptor) gamma-chain signaling -- edition-2, fitting-ready STOCHASTIC (Gillespie
+# SSA) model. The 20 fitted rate/probability constants bind to model ids BY NAME (ADR-0028/0034,
+# no __FREE aliases; the nominals here are overridden by the optimizer).
+#
+# ** This model KEEPS its network-definition directive. ** The reaction network is large
+# (~58,000 reactions) but finite -- a bivalent ligand Lig(l,l) bridges at most two receptors
+# (each Rec has a single aggregation site `a`), so aggregates are capped at receptor dimers; the
+# 58k reactions are the combinatorial phospho / Lyn- / Syk-binding states of that dimer. The
+# classic model generates it with `generate_network({max_iter=>100})`; that directive is part of
+# the MODEL and is RETAINED here (as generate_network({overwrite=>1,max_iter=>100})). Stripping
+# it makes pybnf fall back to a bare generate_network({overwrite=>1}) (pset.py:638) -- see
+# lanl/PyBNF#473 and references/real-world-anatomy.md. Only the *simulation* action (simulate)
+# is removed; the SSA experiment is synthesized from fceri_gamma.conf.
+#
+# Benchmark problem from:
+#   Gupta A, Mendes P. "An Overview of Network-Based and -Free Approaches for Stochastic
+#   Simulation of Biochemical Systems." Computation 2018; 6(1):9.  DOI: 10.3390/computation6010009
+# As a fitting problem, SYNTHETIC data (fceri_gamma2.exp) were generated at the Gupta study's
+# ground-truth parameters (fceri_gamma2_ground_truth.bngl) and the fit tries to RECOVER them.
+# The FceRI gamma-chain model itself originates with Faeder/Goldstein/Hlavacek et al.; see the
+# BioNetGen distribution's fceri models. Part of the PyBNF 2019 paper corpus (Mitra et al.,
+# iScience 2019). Upgraded to the edition-2 surface for the curate-pybnf-job corpus.
+
+begin parameters
+Lig_tot  6000
+Rec_tot  400
+Lyn_tot  28
+Syk_tot  400
+
+# The 20 FITTED rate/probability constants (bind by id, ADR-0034). Nominals here are generic
+# starting values (0.01/1); the recovery target is fceri_gamma2_ground_truth.bngl. km1/km2 are
+# fixed at 0 (not fit).
+ kp1	0.01
+ km1  0
+ kp2	0.01
+ km2  0
+ kpL	0.01
+ kmL	0.01
+kpLs	0.01
+kmLs	0.01
+ kpS	0.01
+ kmS	0.01
+kpSs	0.01
+kmSs	0.01
+ pLb	1
+pLbs	1
+ pLg	1
+pLgs	1
+ pLS	1
+pLSs	1
+ pSS	1
+pSSs	1
+  dm	1
+  dc	1
+end parameters
+
+
+# Added molecule type definition block so that the
+# xml properly defines all extra possible states for
+# each component - sneddon
+begin molecule types
+Lig(l,l)
+Lyn(U,SH2)
+Syk(tSH2,l~Y~pY,a~Y~pY)
+Rec(a,b~Y~pY,g~Y~pY,g~Y~pY)
+end molecule types
+
+begin species
+Lig(l,l) Lig_tot
+Lyn(U,SH2) Lyn_tot
+Syk(tSH2,l~Y,a~Y) Syk_tot
+Rec(a,b~Y,g~Y,g~Y) Rec_tot
+end species
+
+
+begin observables
+Molecules     LynFree     Lyn(U,SH2)
+Molecules     RecMon	  Rec(a) Rec(a!1).Lig(l!1,l)
+Molecules     RecPbeta    Rec(b~pY!?)
+Molecules     RecPgamma   Rec(g~pY) Rec(g~pY!+)
+Molecules     RecSyk      Rec(g~pY!1).Syk(tSH2!1)
+Molecules     RecSykPS    Rec(g~pY!1).Syk(tSH2!1,a~pY)
+
+end observables
+
+
+begin reaction rules
+# Ligand-receptor binding
+Rec(a) + Lig(l,l) <-> Rec(a!1).Lig(l!1,l) kp1, km1
+
+# Receptor-aggregation
+Rec(a) + Lig(l,l!+) <-> Rec(a!2).Lig(l!2,l!+) kp2,km2
+
+# Constitutive Lyn-receptor binding
+Rec(b~Y) + Lyn(U,SH2) <-> Rec(b~Y!1).Lyn(U!1,SH2) kpL, kmL
+
+# Transphosphorylation of beta by constitutive Lyn
+Lig(l!1,l!2).Lyn(U!3,SH2).Rec(a!2,b~Y!3).Rec(a!1,b~Y) -> Lig(l!1,l!2).Lyn(U!3,SH2).Rec(a!2,b~Y!3).Rec(a!1,b~pY) pLb
+
+# Transphosphorylation of gamma by constitutive Lyn
+Lig(l!1,l!2).Lyn(U!3,SH2).Rec(a!2,b~Y!3).Rec(a!1,g~Y) -> Lig(l!1,l!2).Lyn(U!3,SH2).Rec(a!2,b~Y!3).Rec(a!1,g~pY) pLg
+
+# Lyn-receptor binding through SH2 domain
+Rec(b~pY) + Lyn(U,SH2) <-> Rec(b~pY!1).Lyn(U,SH2!1) kpLs, kmLs
+
+# Transphosphorylation of beta by SH2-bound Lyn
+Lig(l!1,l!2).Lyn(U,SH2!3).Rec(a!2,b~pY!3).Rec(a!1,b~Y) -> Lig(l!1,l!2).Lyn(U,SH2!3).Rec(a!2,b~pY!3).Rec(a!1,b~pY) pLbs
+
+# Transphosphorylation of gamma by SH2-bound Lyn
+Lig(l!1,l!2).Lyn(U,SH2!3).Rec(a!2,b~pY!3).Rec(a!1,g~Y) -> Lig(l!1,l!2).Lyn(U,SH2!3).Rec(a!2,b~pY!3).Rec(a!1,g~pY) pLgs
+
+# Syk-receptor binding through tSH2 domain
+Rec(g~pY) + Syk(tSH2) <-> Rec(g~pY!1).Syk(tSH2!1) kpS, kmS
+
+# Transphosphorylation of Syk by constitutive Lyn
+Lig(l!1,l!2).Lyn(U!3,SH2).Rec(a!2,b~Y!3).Rec(a!1,g~pY!4).Syk(tSH2!4,l~Y) -> \
+Lig(l!1,l!2).Lyn(U!3,SH2).Rec(a!2,b~Y!3).Rec(a!1,g~pY!4).Syk(tSH2!4,l~pY) pLS
+
+# Transphosphorylation of Syk by SH2-bound Lyn
+Lig(l!1,l!2).Lyn(U,SH2!3).Rec(a!2,b~pY!3).Rec(a!1,g~pY!4).Syk(tSH2!4,l~Y) -> \
+Lig(l!1,l!2).Lyn(U,SH2!3).Rec(a!2,b~pY!3).Rec(a!1,g~pY!4).Syk(tSH2!4,l~pY) pLSs
+
+# Transphosphorylation of Syk by Syk not phosphorylated on aloop
+Lig(l!1,l!2).Syk(tSH2!3,a~Y).Rec(a!2,g~pY!3).Rec(a!1,g~pY!4).Syk(tSH2!4,a~Y) -> \
+Lig(l!1,l!2).Syk(tSH2!3,a~Y).Rec(a!2,g~pY!3).Rec(a!1,g~pY!4).Syk(tSH2!4,a~pY) pSS
+
+# Transphosphorylation of Syk by Syk phosphorylated on aloop
+Lig(l!1,l!2).Syk(tSH2!3,a~pY).Rec(a!2,g~pY!3).Rec(a!1,g~pY!4).Syk(tSH2!4,a~Y) -> \
+Lig(l!1,l!2).Syk(tSH2!3,a~pY).Rec(a!2,g~pY!3).Rec(a!1,g~pY!4).Syk(tSH2!4,a~pY) pSSs
+
+# Dephosphorylation of Rec beta
+Rec(b~pY)-> Rec(b~Y) dm
+
+# Dephosphorylation of Rec gamma
+Rec(g~pY)-> Rec(g~Y) dm
+
+# Dephosphorylation of Syk at membrane
+Syk(tSH2!+,l~pY)-> Syk(tSH2!+,l~Y) dm
+Syk(tSH2!+,a~pY)-> Syk(tSH2!+,a~Y) dm
+
+# Dephosphorylation of Syk in cytosol
+Syk(tSH2,l~pY)-> Syk(tSH2,l~Y) dc
+Syk(tSH2,a~pY)-> Syk(tSH2,a~Y) dc
+
+end reaction rules
+
+# RETAINED network-definition directive (part of the model, not the experiment): expand the
+# finite ~58k-reaction network under a max_iter cap. pybnf captures this line (pset.py:617) in
+# place of its bare-default generate_network; the SSA `simulate` action is dropped (synthesized
+# from fceri_gamma.conf). See lanl/PyBNF#473 and references/real-world-anatomy.md.
+generate_network({overwrite=>1,max_iter=>100})
