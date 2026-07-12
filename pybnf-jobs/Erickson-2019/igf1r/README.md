@@ -1,123 +1,123 @@
-# igf1r — IGF1 / IGF1R competition dose-response, deterministic ODE (PyBNF edition-2 job)
+# igf1r — IGF1 / IGF1R harmonic-oscillator binding fit (Erickson 2019's actual published fit)
 
-A PyBNF edition-2, parameter-fitting job setup. The **fitting problem** — a 3-parameter fit of
-the two site affinities and the cross-site cooperativity to the Fig-5B competition curve — is from:
+A PyBNF **legacy (edition-1)** parameter-fitting job. It reproduces the IGF1-IGF1R binding fit of
+Erickson et al. 2019 (**Table 1**, **Fig 3**): **seven** rate constants fit **simultaneously to
+three** Kiselyov-2009 datasets — the steady-state competition curve (Fig 5B) and the 20- and
+60-minute dissociation curves (Fig 5D). The eighth constant (`a2prime`) is fixed by the
+detailed-balance constraint (Erickson Eq 1).
 
-> Erickson KE, Rukhlenko OS, Shahinuzzaman M, Slavkova KP, Kholodenko BN, Hlavacek WS, et al.
-> **"Modeling cell line-specific recruitment of signaling proteins to the insulin-like growth
-> factor 1 receptor."**
+> **[fitting problem / job source]** Erickson KE, Rukhlenko OS, Shahinuzzaman M, Slavkova KP,
+> Kholodenko BN, Hlavacek WS, et al. **"Modeling cell line-specific recruitment of signaling
+> proteins to the insulin-like growth factor 1 receptor."**
 > *PLoS Comput Biol* 2019; **15**(1):e1006706.
 > PMCID: [PMC6353226](https://pmc.ncbi.nlm.nih.gov/articles/PMC6353226/) ·
 > DOI: [10.1371/journal.pcbi.1006706](https://doi.org/10.1371/journal.pcbi.1006706)
-> *(parameter estimation performed with BioNetFit 1)*
-
-The underlying **model and data** are from:
-
-> Kiselyov VV, Versteyhe S, Gauguin L, De Meyts P.
+> *(parameter estimation performed with BioNetFit 1; model + data files in the paper's SI
+> "S2 Compressed File Archive")*
+>
+> **[model + data origin]** Kiselyov VV, Versteyhe S, Gauguin L, De Meyts P.
 > **"Harmonic oscillator model of the insulin and IGF1 receptors' allosteric binding and
 > activation."** *Mol Syst Biol* 2009; **5**:243.
 > PMID: [19225456](https://pubmed.ncbi.nlm.nih.gov/19225456/) ·
-> DOI: [10.1038/msb.2008.78](https://doi.org/10.1038/msb.2008.78) (K1/K2 = Table-1 site KDs;
-> data = the Fig-5B radioligand competition curve).
+> DOI: [10.1038/msb.2008.78](https://doi.org/10.1038/msb.2008.78)
+> (Fig 5B = competition; Fig 5D = 20/60-min dissociation — the F5B / F5D_20min / F5D_60min data.)
 
-> **Citation note.** The *job* (this 3-affinity fit of the normalized F5B curve) is Erickson
-> et al. 2019 — citing Kiselyov alone would mis-attribute the fitting problem. The PyBNF 2019
-> corpus problem **15-igf1r** (Mitra et al., *iScience* 2019) fits the *fuller* 7-rate-constant
-> model to three datasets; **this example is the distilled 3-affinity, F5B-only fit** carried by
-> the classic PyBNF `examples/igf1r/`.
+> **Re-scoped 2026-07-11 to match the literature.** This slug previously carried a reduced
+> 3-parameter (`K1`/`K2`/`K1prime`) fit of **F5B only** — a PyBNF teaching distillation that is
+> **not** in Erickson's paper. The paper's SI ships the authors' own BioNetFit model+conf (the
+> exact files that produced Table 1); this job is now built from those, so the model, the three
+> datasets, the seven free constants, the detailed-balance constraint, and the objective all match
+> what was published. See [`VALIDATION.md`](VALIDATION.md).
 
-## The model
+## The biochemistry
 
-A **radioligand competition assay**. IGF1R is a pre-formed, disulfide-bonded **dimer**; each IGF1
-ligand can engage **Site 1** and **Site 2** (with a steric constraint) and can **crosslink** the
-two sites *within* a dimer (avidity). Labelled ("hot") IGF1 is held fixed at 7 pM (= 8852
-copies/cell, the seed default); unlabelled ("cold") IGF1 is titrated, and the readout is
-hot-ligand binding vs. cold dose. Deterministic **ODE**. **Finite network without a cap** —
-crosslinking is confined to the dimer, so the classic model used a bare
-`generate_network({overwrite=>1})` and generation terminates; no network directive needs to be
-retained (contrast `Kozer-2013-2014/egfr_ode`).
+A **radioligand competition / dissociation assay** on the IGF1 receptor. IGF1R is a pre-formed,
+disulfide-bonded **dimer** with two ligand sites (Site 1, Site 2); a single IGF1 can engage a site
+and **crosslink** the two sites *within* the dimer (avidity), following the Kiselyov harmonic-
+oscillator mechanism. Labelled ("hot") IGF1 is held fixed while unlabelled ("cold") IGF1 is
+titrated; the readout is hot-ligand binding vs. cold dose. Deterministic **ODE**; **finite network
+without a cap** (crosslinking is confined to the dimer, so the bare `generate_network({overwrite=>1})`
+terminates).
 
 ## What is fit
 
-| dataset | observable | design | source |
+| dataset | design | observable → data | source |
 |---|---|---|---|
-| hot-ligand binding vs. cold-IGF1 dose (18 doses, 1.3×10⁻¹²–6.6×10⁻⁷ M) | `IGF1_hot_bound` (normalized to no-competitor) | ODE competition **parameter scan** over `IGF1_cold_conc`, each dose to steady state (t_end=14400 s) | Kiselyov 2009 Fig. 5B |
+| `F5B` | 4 h steady-state competition at **7 pM** hot IGF1; parameter scan over cold dose (18 doses) | `IGF1_hot_bound`, normalized to no-competitor | Kiselyov 2009 **Fig 5B** |
+| `F5D_20min` | **2 h preincubation at 24 pM** hot, wash (free hot→0), then **20 min** cold competition; scan over cold (10 doses) | `IGF1_hot_bound`, % remaining | Kiselyov 2009 **Fig 5D** (20 min) |
+| `F5D_60min` | same protocol, **60 min** competition | `IGF1_hot_bound`, % remaining | Kiselyov 2009 **Fig 5D** (60 min) |
 
-`F5B.exp` carries per-point `_SD` columns → **`chi_sq`**. Three free params: `K1`, `K2`, `K1prime`.
+All three fit **jointly**. Seven free rate constants (`a1_perMpers`, `d1`, `a2_perMpers`, `d2`,
+`kcr`=a′₁, `d1prime`=d′₁, `d2prime`=d′₂); `a1prime=kcr` and `a2prime` is set by detailed balance
+`a2prime = (a2·a1prime·d1·d2prime)/(a1·d1prime·d2)`. Objective **`chi_sq`** (weighted LS by the
+per-point `_SD`), **`normalization=init`**.
+
+## Free parameters — Kiselyov nominal vs. Erickson Table 1 (the fit target)
+
+The model ships `__FREE` placeholders (the fit estimates them); `make_reproduction.py` sets them to
+the Erickson Table-1 values below. The "Kiselyov" column is the earlier estimate the paper compares
+against (Table 1, right column).
+
+| token (paper symbol) | Kiselyov 2009 | **Erickson 2019 Table 1** (best-fit) | 95% CI (Table 1) |
+|---|---|---|---|
+| `a1_perMpers` (a₁, M⁻¹s⁻¹) | 3.5×10⁵ | **2.8×10⁵** | 2.3×10⁵ – 9.7×10⁵ |
+| `d1` (d₁, s⁻¹) | 3.2×10⁻³ | **5.0×10⁻²** | 1.1×10⁻² – 0.13 |
+| `a2_perMpers` (a₂, M⁻¹s⁻¹) | 8.7×10³ | **1.5×10⁴** | 3.5×10³ – 2.2×10⁴ |
+| `d2` (d₂, s⁻¹) | 4.2×10⁻³ | **1.9×10⁻⁴** | 1.1×10⁻⁵ – 2.6×10⁻⁴ |
+| `kcr` (a′₁, s⁻¹) | 0.33 | **5.6×10⁻³** | 1.6×10⁻⁴ – 0.29 |
+| `d1prime` (d′₁, s⁻¹) | =d₁ | **1.9×10⁻⁵** | 3.8×10⁻⁷ – 6.9×10⁻⁴ |
+| `d2prime` (d′₂, s⁻¹) | =d₂ | **1.3×10⁻²** | 3.8×10⁻³ – 2.7×10⁻² |
+| `a2prime` (a′₂, s⁻¹) — *derived* | =a′₁ | **52** (detailed balance) | 0.45 – 5.7×10⁴ |
+
+From Table 1, site KDs are d₁/a₁ = 179 nM and d₂/a₂ = 13 nM ("13 nM and 180 nM" in the paper).
 
 ## Files
 
 | file | role |
 |---|---|
-| `igf1r.bngl` | edition-2, fitting-ready ODE model (finite network; **no** actions block / `generate_network` directive needed) |
-| `igf1r.conf` | the edition-2 job setup (`normalization = init`, `chi_sq`, `ss` + Simplex refine) |
-| `F5B.exp` | fit target — IGF1_hot_bound vs. cold dose, pre-normalized, with SD |
-| `make_reproduction.py` | regenerates the reproduction PNG (ODE `parameter_scan` at the PyBNF best-fit vs. data) |
-| `igf1r_reproduction.png` | verification figure |
+| `igf1r.bngl` | Erickson's SI binding model **verbatim** (7 `__FREE` tokens + detailed balance + the full incubate/wash/scan actions block) |
+| `igf1r.conf` | legacy PyBNF job (`model = igf1r.bngl : F5B.exp, F5D_20min.exp, F5D_60min.exp`, `chi_sq`, `normalization=init`, `ss`+refine) |
+| `F5B.exp` · `F5D_20min.exp` · `F5D_60min.exp` | the three fit targets (Kiselyov Fig 5B/5D; per-point `_SD`) |
+| `make_reproduction.py` | reproduces Erickson Fig 3A/3B at the Table-1 params |
+| `igf1r_reproduction.png` | reproduction figure |
+| `VALIDATION.md` | primary-source validation scorecard (five gates + earned confidence) |
+
+## ⚠️ Legacy (edition-1) mode — required, not a shortcut
+
+PyBNF's edition-2 `experiment:` directives **cannot** express the F5D pre-incubate → wash →
+reset → scan protocol (`config.py:1487` forbids `parameter_scan` + pre-equilibration, and there is
+no directive for mid-protocol `setConcentration`/`resetConcentrations`). So the actions live in
+`igf1r.bngl`, the three datasets ride the `model=` line (colon-separated), and the three
+`parameter_scan` suffixes (`F5B`/`F5D_20min`/`F5D_60min`) match the `.exp` stems. Omitting
+`edition`/`bngl_backend` selects legacy mode + the classic BNG2.pl backend. The free-parameter
+tokens use PyBNF's `X__FREE` spelling (BioNetFit's SI wrote `X__FREE__`).
 
 ## ⚠️ NATIVE-ONLY (not PEtab-exportable)
 
-`normalization = init` normalizes the simulated `IGF1_hot_bound` to its no-competitor
-(first-scan-row) value — a PyBNF-native prediction transform PEtab v2 cannot express
-(`export.py:798-827`). `export_job` raises `NotImplementedError`. This is a **property of the
-flavor, not a defect**: the data are reported relative to the no-competitor baseline, so the init
-normalization is intrinsic to the problem. (The shipped `igf1r.conf` in the PyBNF corpus is the
-canonical cautionary example of a non-exportable `normalization` job — see
-`skills/curate-pybnf-job/references/petab-compliance.md`.)
+`normalization=init` plus an in-model multi-phase `parameter_scan` protocol have no PEtab v2 shape.
 
-## ⚠️ Nominals are Kiselyov's KDs — they do NOT fit the normalized F5B curve
+## Verification (see VALIDATION.md for the full scorecard)
 
-Unlike the GenFit-starting-point nominals elsewhere in this corpus, the model's nominal `K1`/`K2`
-**are** the Kiselyov 2009 Table-1 site KDs. But under this reduced 3-parameter, init-normalized
-setup they place the competition midpoint ~1–2 orders of magnitude to the *right* of the data —
-which is exactly why Erickson **fit** the parameters. The **PyBNF best-fit** (this repo's Scatter
-Search + Simplex run of `igf1r.conf`, `chi_sq = 1.08`) is used for the figure:
-
-| id | nominal (Kiselyov Table 1) | **PyBNF best-fit** | role |
-|---|---|---|---|
-| `K1` | 9.2×10⁻⁹ M | **5.42×10⁻⁹ M** | Site-1 dissociation constant |
-| `K2` | 4.83×10⁻⁷ M | **8.37×10⁻³ M** | Site-2 dissociation constant (→ weak; binding is Site-1 + avidity driven) |
-| `K1prime` | 0.1 | **1.44×10⁻⁸** | cross-site cooperativity (→ strong intradimer crosslinking / avidity) |
-
-> **Sloppy / non-identifiable.** The competition curve pins down the *apparent* affinity
-> (IC₅₀ ≈ 1.3×10⁻¹⁰ M), not the individual constants: a second basin (`K1≈2.5×10⁻⁹`,
-> `K1prime≈1.7×10⁻³`, `K2` at the 10⁻¹⁵ lower bound) sits at nearly-equal objective (1.101 vs
-> 1.083). Both describe "tight Site-1 binding + strong avidity." A `recover` assertion should use
-> a loose tolerance or be omitted; the *reproduction* (curve through the data) is the meaningful
-> check.
-
-## Changes from the source model (documented in `igf1r.bngl`)
-
-- **No actions block** — the 7 verbose commented-out dissociation-experiment protocols of the
-  classic model are dropped; the competition scan is synthesized from `igf1r.conf`. A concise
-  protocol note is kept at the file's end.
-- Fitted constants (`K1`, `K2`, `K1prime`) bind to model ids **by name** (ADR-0034, no `__FREE`).
-  The reaction network is otherwise byte-identical to the classic
-  `IGF1R_Model_receptor_activation_bnf.bngl`.
-
-## Verification
-
-- **Tier-1** (`scripts/check_conf.py`): edition 2, `job_type=ss` resolves, the experiment binds
-  data, `model.stochastic = False` (→ `simulator='ode'`), 3 free params bind by id, no `__FREE`.
-  **PASS.**
-- **Native-only guard** (instead of PEtab round-trip): `pybnf.petab.export_job` raises
-  **`NotImplementedError`** ("This job normalizes the whole fit ('init') … PEtab v2 cannot
-  express"). **PASS** (asserted; the export-refused guard keeps the job native-only).
-- **Bounded bngsim fit reaches a finite objective:** the full `igf1r.conf` (Scatter Search,
-  pop 12 × 50 it + 20-step Simplex refine) converges to **chi_sq = 1.083** — a finite objective;
-  the simulate→score→propose loop ran end-to-end.
-- **Reproduction** (`igf1r_reproduction.png`, ODE `parameter_scan` at the best-fit,
-  init-normalized): the competition curve passes through **every** Fig-5B point within its SD —
-  **median 2.5 % / max 14.5 % relative error** over the 8 doses with y > 0.05; **chi_sq ≈ 1.10**
-  (BNG2.pl vs. the fit's bngsim; the near-zero high-cold tail dominates the max rel err).
+- **Gate 1 (data):** `F5B.exp` is byte-identical to the SI copy; all three `.exp` are the authors'
+  own extractions of Kiselyov Fig 5B/5D (confirmed against the rendered figure).
+- **Gate 2 (model):** the model is **byte-identical** to the SI `IGF1R_fit.bngl` (the file that
+  produced Table 1), modulo the `__FREE__`→`__FREE` token spelling; generated network 27 species /
+  96 reactions.
+- **Gate 3a (reproduce Fig 3 at Table-1 params):** `make_reproduction.py` overlays the model at
+  Erickson's Table-1 values on all three datasets — **F5B median 1.1 % rel err**, **F5D_20min 6.2 %**,
+  **F5D_60min 6.5 %** (see `igf1r_reproduction.png`); reproduces Fig 3A/3B.
+- **Gate 3b (recover Table 1 by fitting):** a scatter-search run converges to **Obj 6.74 ≤ the
+  Table-1 objective (7.65)** — **6/7 constants within 3×** and **7/7 within the paper's own 95 % CIs**
+  (the one 3× miss is `d1prime`, a crosslinking constant the paper reports as non-identifiable). See
+  VALIDATION.md.
 
 ## Run
 
 ```bash
 export BNGPATH="$HOME/Simulations/BioNetGen-2.9.3"   # folder with BNG2.pl
 cd pybnf-jobs/Erickson-2019/igf1r
-pybnf -c igf1r.conf                   # ODE; a full fit runs on a workstation in a few minutes
-python make_reproduction.py           # reproduction figure at the PyBNF best-fit
+pybnf -c igf1r.conf                    # legacy ODE fit; ~4 BNG runs per evaluation
+python make_reproduction.py            # reproduction figure at the Erickson Table-1 params
 ```
 
 ## `_manifest.py` entry (if promoted to the PyBNF real-world corpus)
@@ -126,10 +126,11 @@ python make_reproduction.py           # reproduction figure at the PyBNF best-fi
 RealWorldExample(
     folder='igf1r', conf='igf1r.conf', simulator='ode',
     observables=('IGF1_hot_bound',),
-    system='IGF1/IGF1R competition dose-response (Erickson 2019 fit, PMC6353226; Kiselyov 2009 '
-           'model+data, PMID 19225456, Fig 5B); ODE parameter_scan, chi_sq, normalization=init '
-           '-> NATIVE-ONLY (not PEtab-exportable)'),
-    # NATIVE-ONLY: assert export_job raises NotImplementedError (do NOT assert PEtab round-trip).
-    # Sloppy fit (apparent affinity identifiable, individual K's not) -> no recover assertion,
-    # or recover={'K1': 5.42e-9} with a loose tol. PyBNF best-fit chi_sq = 1.08.
+    system='IGF1/IGF1R harmonic-oscillator binding (Erickson 2019 fit, PMC6353226, Table 1/Fig 3; '
+           'Kiselyov 2009 model+data, PMID 19225456, Fig 5B/5D); LEGACY (edition-1) job: 7 free '
+           'rate constants + detailed balance, 3 datasets (F5B+F5D_20min+F5D_60min), in-model '
+           'multi-phase parameter_scan, chi_sq, normalization=init -> NATIVE-ONLY (not exportable)'),
+    # LEGACY mode (actions in model; edition-2 cannot express the F5D preincubate/wash/reset).
+    # Sloppy fit (site KDs / apparent affinity identifiable; individual constants less so) ->
+    # a recover assertion, if any, needs a loose tol. Reproduction at Table-1: F5B ~1% rel err.
 ```

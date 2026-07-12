@@ -1,17 +1,21 @@
 #!/usr/bin/env python
-"""Reproduction figure for the igf1r job (Erickson et al. 2019 fit of the Kiselyov 2009 model).
+"""Reproduction figure for the igf1r job -- Erickson 2019 Fig 3 at the paper's Table-1 params.
 
-Simulates the IGF1/IGF1R competition assay with the deterministic ODE method at the PyBNF
-best-fit parameters, across the Fig-5B cold-ligand titration, and overlays the model on the
-Kiselyov data. Hot ("labelled") IGF1 is fixed at 7 pM (= 8852 copies/cell, the seed default);
-cold IGF1_cold_conc is scanned over the F5B doses; each dose is integrated to steady state
-(t_end = 14400 s) and the readout IGF1_hot_bound is taken at t_end.
+Runs the authors' own multi-phase protocol (the actions block in igf1r.bngl) through BNG2.pl with
+the seven free rate constants set to Erickson 2019 Table 1 ("This Study"), then overlays the model
+on the three fit datasets (Kiselyov 2009 Fig 5B/5D):
 
-This job is NATIVE-ONLY (`normalization = init`, not PEtab-exportable): the simulated
-IGF1_hot_bound is normalized to its no-competitor (first-scan-row) value before comparison to
-the pre-normalized F5B data -- exactly `Data.normalize_to_init` (pybnf/data.py:389, divide each
-column by row 0). The whole titration is run with one BNGL `parameter_scan` (as the classic
-model's actions block generated the data). Requires BNGPATH set (uses BNG2.pl) and matplotlib/numpy.
+  * Panel A (F5B, steady-state competition, 4 h at 7 pM hot): model IGF1_hot_bound normalized to
+    its no-competitor (first / lowest-cold scan row) value -- this is PyBNF's normalization=init.
+  * Panel B (F5D_20min / F5D_60min, dissociation: 2 h preincubation at 24 pM hot, wash, then cold
+    competition): model IGF1_hot_bound at 20 / 60 min normalized to B0 = the pre-wash bound amount
+    (hot_bound at the end of the incubation = start of the dissociation phase). This "% remaining"
+    normalization is what Erickson Fig 3B plots (the curves start at ~0.98, not pinned to 1.0);
+    it differs from PyBNF's fit-time normalization=init (divide by first scan row) by a small
+    per-experiment uniform factor (B0/row0 ~ 1.02 for 20 min, ~1.07 for 60 min).
+
+The eighth constant a2prime is computed inside the model by the detailed-balance constraint.
+Requires BNGPATH set (uses BNG2.pl) and matplotlib/numpy.
 Usage:  BNGPATH=... python make_reproduction.py
 """
 import glob
@@ -28,74 +32,114 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 BNG = os.path.join(os.environ["BNGPATH"], "BNG2.pl")
 MODEL = os.path.join(HERE, "igf1r.bngl")
 
-# PyBNF best-fit (this repo's Scatter Search + Simplex run of igf1r.conf; chi_sq recorded in
-# README.md). There is no published 3-param (K1/K2/K1prime) best-fit to cite -- the Mitra 2019
-# corpus (RuleHub 15-igf1r) fits the fuller 7-rate-constant model to three datasets, and the
-# shipped nominals (K1=9.2nM, K2=483nM: Kiselyov 2009 Table-1 KDs) do NOT reproduce the
-# normalized F5B curve under this reduced parameterization. These fitted affinities do.
-BESTFIT = dict(K1=5.419475967259732e-09, K2=0.00837237152600558, K1prime=1.4377272779785423e-08)
-T_END = 14400
-HOT_COPIES = 8852        # 7 pM labelled IGF1 (the model's seed default; set explicitly for parity)
-
-# F5B doses (M), in F5B.exp row order -- the scan order, and row 0 is the `init` reference.
-DOSES = [2.5822e-12, 6.9016e-12, 1.3065e-11, 1.3178e-12, 2.6498e-11, 6.6104e-11, 1.2953e-10,
-         2.5822e-10, 6.5536e-10, 1.2841e-9, 2.6498e-9, 6.7254e-9, 1.3178e-8, 2.5822e-8,
-         6.5536e-8, 1.2841e-7, 2.6498e-7, 6.6104e-7]
+# Erickson 2019 Table 1 ("This Study") best-fit rate constants -> the model's __FREE tokens.
+#   a1prime = kcr ; a2prime is derived in-model by detailed balance (Table 1 reports a2prime=52).
+TABLE1 = {
+    "a1_perMpers": 2.8e5,   # a1  (M^-1 s^-1)
+    "d1":          5.0e-2,  # d1  (s^-1)
+    "a2_perMpers": 1.5e4,   # a2  (M^-1 s^-1)
+    "d2":          1.9e-4,  # d2  (s^-1)
+    "kcr":         5.6e-3,  # a'1 (s^-1)
+    "d1prime":     1.9e-5,  # d'1 (s^-1)
+    "d2prime":     1.3e-2,  # d'2 (s^-1)
+}
 
 
-def scan_hot_bound():
-    """One ODE parameter_scan over the F5B cold doses; returns raw IGF1_hot_bound per dose."""
+def run_protocol():
+    """Set the model to Table-1 params, run its full actions block, return the raw outputs.
+
+    Returns (scans, B0) where scans maps suffix -> (cold_doses, hot_bound) and B0 is the pre-wash
+    bound hot (hot_bound at the end of the 2 h incubation = start of the dissociation phase).
+    """
     with open(MODEL) as fh:
-        src = fh.read().split("end model")[0] + "end model\n"
-    for k, v in BESTFIT.items():   # override the fitted params (nominal Kiselyov KD -> best-fit)
-        src = re.sub(rf"(^{k}\s+)[\d.eE+-]+", rf"\g<1>{v:.10g}", src, count=1, flags=re.M)
-    vals = ",".join(f"{d:.10g}" for d in DOSES)
+        src = fh.read()
+    # Substitute the seven free tokens (declared as `name  name__FREE`) with the Table-1 values.
+    for name, val in TABLE1.items():
+        src = re.sub(rf"(?m)^{re.escape(name)}\s+{re.escape(name)}__FREE\b",
+                     f"{name} {val:.10g}", src)
+    params_block = re.search(r"begin parameters(.*?)end parameters", src, re.S).group(1)
+    assert "__FREE" not in params_block, "unsubstituted __FREE token remains in parameters block"
     with tempfile.TemporaryDirectory() as d:
         path = os.path.join(d, "igf1r.bngl")
         with open(path, "w") as fh:
             fh.write(src)
-            fh.write(f'\nsetConcentration("IGF1(ds,hs,label~hot)",{HOT_COPIES})\n'
-                     f'parameter_scan({{suffix=>"F5B",parameter=>"IGF1_cold_conc",'
-                     f'par_scan_vals=>[{vals}],method=>"ode",t_start=>0,t_end=>{T_END},'
-                     f'n_steps=>10,steady_state=>0}})\n')
         subprocess.run(["perl", BNG, path], cwd=d, check=True,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        scan = np.loadtxt(glob.glob(os.path.join(d, "*.scan"))[0])
-    return scan[:, 1]   # IGF1_hot_bound column
+        scans = {}
+        for suf in ("F5B", "F5D_20min", "F5D_60min"):
+            arr = np.loadtxt(glob.glob(os.path.join(d, f"*_{suf}.scan"))[0])
+            scans[suf] = (arr[:, 0], arr[:, 1])
+        inc = np.loadtxt(glob.glob(os.path.join(d, "*_incubate.gdat"))[0])
+        B0 = float(inc[-1, 1])   # hot_bound at t_end of the 2 h incubation
+    return scans, B0
+
+
+def matched(scan_dose, scan_val, exp_dose):
+    """Model value at each experimental dose (nearest scan dose in log space)."""
+    return np.array([scan_val[int(np.argmin(np.abs(np.log(scan_dose) - np.log(d))))]
+                     for d in exp_dose])
+
+
+def metrics(name, ym, ey, esd):
+    chisq = 0.5 * float(np.sum(((ym - ey) / esd) ** 2))
+    big = ey > 0.05
+    rel = np.abs(ym[big] - ey[big]) / ey[big]
+    print(f"  {name:10s} chi_sq(0.5*)={chisq:6.3f}  median|rel|={np.median(rel):.3f}  "
+          f"max|rel|={rel.max():.3f}  (n={len(ey)}, y>0.05: {big.sum()})")
+    return chisq
 
 
 def main():
-    if BESTFIT["K1"] is None:
-        raise SystemExit("Fill BESTFIT with the fitted K1/K2/K1prime (see README.md) first.")
-    exp = np.loadtxt(os.path.join(HERE, "F5B.exp"))
-    dose, y_data, sd = exp[:, 0], exp[:, 1], exp[:, 2]
+    scans, B0 = run_protocol()
+    exp = {s: np.loadtxt(os.path.join(HERE, f"{s}.exp")) for s in ("F5B", "F5D_20min", "F5D_60min")}
 
-    raw = scan_hot_bound()
-    y_model = raw / raw[0]          # normalization = init: divide by the first scan row (pybnf/data.py:389)
+    print("igf1r reproduction at Erickson 2019 Table 1 (BNG2.pl, full protocol):")
+    print(f"  B0 (pre-wash bound hot) = {B0:.1f} copies")
 
-    chisq = 0.5 * float(np.sum(((y_model - y_data) / sd) ** 2))
-    # relative error only where the data are meaningfully above the near-zero tail
-    big = y_data > 0.05
-    rel = np.abs(y_model[big] - y_data[big]) / y_data[big]
-    print(f"igf1r ODE reproduction at the PyBNF best-fit "
-          f"(K1={BESTFIT['K1']:.3g} M, K2={BESTFIT['K2']:.3g} M, K1prime={BESTFIT['K1prime']:.3g}):")
-    print(f"  chi_sq (fit objective)      = {chisq:.4f}")
-    print(f"  median |rel err| (y>0.05)   = {np.median(rel):.3f}")
-    print(f"  max    |rel err| (y>0.05)   = {rel.max():.3f}")
+    # Panel A: F5B, normalize to the first (lowest-cold) scan row  (== normalization=init).
+    d, y, sd = exp["F5B"][:, 0], exp["F5B"][:, 1], exp["F5B"][:, 2]
+    sc_d, sc_v = scans["F5B"]
+    raw = matched(sc_d, sc_v, d)
+    yA = raw / raw[0]
+    cA = metrics("F5B", yA, y, sd)
 
-    order = np.argsort(dose)   # plot sorted by dose (data rows are not monotonic)
-    fig, ax = plt.subplots(figsize=(7.5, 5.5))
-    ax.errorbar(dose[order], y_data[order], yerr=sd[order], fmt="o", color="#222", ms=7,
-                capsize=3, zorder=5, label="Kiselyov 2009 Fig. 5B (mean +/- SD)")
-    ax.plot(dose[order], y_model[order], "s-", color="#1f77b4", lw=2, ms=6,
-            label="ODE @ PyBNF best-fit (chi_sq=%.2f)" % chisq)
-    ax.set(xscale="log", xlabel="cold (unlabelled) IGF1  IGF1_cold_conc (M)",
-           ylabel="IGF1_hot_bound  (normalized to no-competitor)",
-           title="IGF1 / IGF1R competition -- deterministic ODE\n"
-                 "Erickson 2019 fit of the Kiselyov 2009 model (PyBNF corpus 15-igf1r)")
-    ax.legend(frameon=False)
-    ax.grid(alpha=0.25, which="both")
-    fig.tight_layout()
+    # Panel B: F5D_20/60, normalize to B0 ("% remaining", as Erickson Fig 3B plots).
+    B = {}
+    for suf in ("F5D_20min", "F5D_60min"):
+        d2, y2, sd2 = exp[suf][:, 0], exp[suf][:, 1], exp[suf][:, 2]
+        sc_d2, sc_v2 = scans[suf]
+        B[suf] = (d2, matched(sc_d2, sc_v2, d2) / B0, y2, sd2)
+    cB20 = metrics("F5D_20min", B["F5D_20min"][1], B["F5D_20min"][2], B["F5D_20min"][3])
+    cB60 = metrics("F5D_60min", B["F5D_60min"][1], B["F5D_60min"][2], B["F5D_60min"][3])
+    print(f"  TOTAL chi_sq (0.5*sum over 3 datasets) = {cA + cB20 + cB60:.3f}")
+
+    fig, (axA, axB) = plt.subplots(1, 2, figsize=(13, 5.2))
+
+    oa = np.argsort(d)
+    axA.errorbar(d[oa], y[oa], yerr=sd[oa], fmt="o", color="#222", ms=6, capsize=3, zorder=5,
+                 label="Kiselyov 2009 Fig 5B (mean +/- SD)")
+    axA.plot(d[oa], yA[oa], "s-", color="#1f77b4", lw=2, ms=5, label="model @ Erickson Table 1")
+    axA.set(xscale="log", xlabel="unlabeled IGF1 concentration (M)",
+            ylabel="relative level of bound hot IGF1",
+            title="A  Competition, steady state (F5B)")
+    axA.legend(frameon=False, fontsize=9)
+    axA.grid(alpha=0.25, which="both")
+
+    for suf, col, lab in (("F5D_20min", "#222", "20 min"), ("F5D_60min", "#17becf", "60 min")):
+        dd, ym, yy, ss = B[suf]
+        ob = np.argsort(dd)
+        axB.errorbar(dd[ob], yy[ob], yerr=ss[ob], fmt="o", color=col, ms=6, capsize=3, zorder=5,
+                     label=f"data {lab} (Fig 5D)")
+        axB.plot(dd[ob], ym[ob], "s-", color=col, lw=2, ms=5, label=f"model {lab}")
+    axB.set(xscale="log", xlabel="unlabeled IGF1 concentration (M)",
+            ylabel="relative level of bound hot IGF1 (% remaining)",
+            title="B  Dissociation after 2 h preincubation (F5D)")
+    axB.legend(frameon=False, fontsize=9)
+    axB.grid(alpha=0.25, which="both")
+
+    fig.suptitle("IGF1 / IGF1R binding -- Erickson 2019 fit reproduced at the paper's Table-1 "
+                 "parameters (reproduces Fig 3A/3B)", fontsize=11)
+    fig.tight_layout(rect=(0, 0, 1, 0.96))
     out = os.path.join(HERE, "igf1r_reproduction.png")
     fig.savefig(out, dpi=130)
     print("wrote", out)
