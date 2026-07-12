@@ -113,7 +113,16 @@ If BNGPATH/BNG2.pl or the PyBNF venv can't be found, ask the user rather than gu
 
 3. **Reconstruct the BNGL model from scratch**, fitting-ready and on the edition-2
    surface (differences from a curate-model reference model):
-   - **No `begin actions` block** — the simulation is synthesized from the conf.
+   - **Strip the *simulation* actions, but KEEP *network-definition* directives.** Remove
+     `simulate`/`parameter_scan`/`setConcentration` (synthesized from the conf), but
+     **retain a `generate_network({...,max_stoich=>{...}})` line** whenever the model's
+     network is only finite under a `max_stoich`/`max_agg`/`max_iter` cap. That cap is part
+     of the *model*, not the experiment: strip it and pybnf defaults to a bare
+     `generate_network({overwrite=>1})` (`pset.py:638`) → **unbounded network → silent hang**
+     (or a wrong finite network). pybnf captures a retained `generate_network` line
+     (`pset.py:617`) and the job stays PEtab-exportable. Network-free (NFsim) models keep no
+     actions block. See `references/real-world-anatomy.md` §2 and the
+     `Kozer-2013-2014/egfr_ode` example.
    - Fitted rate constants are bare `id nominal` declarations; the free-parameter names
      in the conf bind to these ids **by name** (no `__FREE` alias, ADR-0034).
    - **Observable/function names are the contract with the `.exp` header *and* any
@@ -236,7 +245,8 @@ If BNGPATH/BNG2.pl or the PyBNF venv can't be found, ask the user rather than gu
 ├── README.md            # paper-level landing page (when >1 slug): citation, shared model,
 │                        #   one-row-per-slug table (fits · flavor · data · status), sources
 └── <slug>/                                                  # e.g. cstar_trka/
-    ├── <slug>.bngl      # edition-2, fitting-ready, no actions block
+    ├── <slug>.bngl      # edition-2, fitting-ready; no *simulation* actions, but KEEP a
+    │                    #   generate_network(...max_stoich...) directive if the net needs it
     ├── <slug>.conf      # edition-2 job setup, banner-commented
     ├── <data>.exp       # column headers == model observable names (quantitative / fusion)
     └── <slug>.prop      # optional: BPSL constraints (data-fusion or constraint-only example)

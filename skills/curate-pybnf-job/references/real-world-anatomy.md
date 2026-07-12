@@ -30,7 +30,7 @@ paper-relative path `<FirstAuthor>-<Year>/<slug>`.
 
 | file | role | required |
 |---|---|---|
-| `<name>.bngl` | the BioNetGen model — **no `begin actions` block** (the sim is synthesized from the conf) | yes |
+| `<name>.bngl` | the BioNetGen model — **no *simulation* actions** (`simulate`/`parameter_scan`; synthesized from the conf). **RETAIN network-generation directives** (`generate_network` with `max_stoich`/`max_agg`/`max_iter`) when the model's network is only finite/correct under them — see §2 | yes |
 | `<name>.conf` | the edition-2 job setup (this *is* the test input) | yes |
 | `<data>.exp` | ≥1 data file; each `experiment:` line binds one; column headers ARE model observable/function names | yes, unless the example is constraint-only |
 | `<data>.prop` | BPSL constraint file(s) for a data-fusion or constraint-only example; attached on an `experiment:`'s `data:`. Makes the job native-only (not PEtab-exportable). See `bpsl-constraints.md` | only for BPSL examples |
@@ -47,8 +47,26 @@ and metadata in `examples/real-world/_manifest.py`.
 - Standard `begin model … end model` with `parameters`, `molecule types`, `seed
   species`, `observables`, `functions`, `reaction rules`. Follow `skills/bngl/skill.md`
   house style.
-- **No `begin actions` block** (`receptor.bngl:2-7`) — actions are synthesized from the
-  conf's `experiment:`/`condition:` lines.
+- **Actions block: strip *simulation* actions, but KEEP *network-definition* directives.**
+  The two kinds of action are not the same thing:
+  - *Simulation/experiment actions* (`simulate`, `parameter_scan`, `setConcentration`,
+    `t_end`, `method`) → **remove them**; they are synthesized from the conf's
+    `experiment:`/`condition:` lines (`receptor.bngl:2-7`), PEtab-style.
+  - *Network-generation directives* (`generate_network({...,max_stoich=>{...},max_agg=>...,
+    max_iter=>...})`) → **KEEP them** when the model needs them. `max_stoich`/`max_agg`/
+    `max_iter` are part of the *model's specification* (they are what make an
+    aggregation/polymerization network **finite**), not the experiment design. Strip them
+    and pybnf falls back to a bare `generate_network({overwrite=>1})` (`pset.py:638-639`) —
+    **no cap → unbounded network → generation never terminates** (a silent hang), or, worse,
+    a finite-but-*different* network → quietly wrong results. pybnf **captures** an existing
+    `generate_network` line from the model and uses it in place of that default
+    (`pset.py:617-619`; bngsim routes it to the `.net` backend,
+    `bngsim_model/classification.py:291`), and the job stays PEtab-exportable, so keeping the
+    directive is the supported fix. **Test:** if your model is network-generating and its
+    rules do not *themselves* bound complex size, it needs a retained `generate_network` with
+    the cap. Network-**free** (NFsim) models have no `generate_network` and correctly keep no
+    actions block. Canonical example: `Kozer-2013-2014/egfr_ode` keeps only
+    `generate_network({overwrite=>1,max_stoich=>{EGF=>4,EGFR=>4}})`.
 - Fitted rate constants are bare `id nominal` declarations, e.g. `KD1 1.0`
   (`receptor.bngl:52`); the optimizer overrides them in place. The free-parameter names
   in the conf must exactly equal these ids (ADR-0034).
