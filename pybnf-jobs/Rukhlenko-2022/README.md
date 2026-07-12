@@ -31,6 +31,8 @@ the framework, idioms, and native-only fold-change flavor rather than one `.bngl
 | [`cstar_trkb`](cstar_trkb/) | TrkB/BDNF 7-phospho fold changes at 0/10/45 min (8 params) | quantitative, **native-only** | authors' RPPA (repo), **Fig. 4A/4B** | ✅ validated **84/100** ([`VALIDATION.md`](cstar_trkb/VALIDATION.md)); 3a ~27 % median err |
 | [`cstar_skmel133`](cstar_skmel133/) | SKMEL-133 kinase-inhibitor panel, 9 readouts × 4 perturbations at 24 h (8 params) | quantitative, **native-only**, `chi_sq` | authors' pyBNF `.exp` (repo; Korkut 2015 RPPA), fit fig **ED 17A** | ✅ validated **88/100** ([`VALIDATION.md`](cstar_skmel133/VALIDATION.md)); 3a ~13 % median err |
 | [`cstar_skmel133_bpsl`](cstar_skmel133_bpsl/) | DPD / Waddington-landscape bistable switch, IRS+AKT synergy (4 params) | **BPSL** constraints, **native-only** | paper's qualitative landscape claims | ✅ tier-1 + **`check` 8/8 satisfied** |
+| [`cstar_skmel133_bmra`](cstar_skmel133_bmra/) | **the paper's ACTUAL SKMEL-133 fit**: full connection-coefficient set (23 params) fit to single-drug fold changes UNDER the BMRA-inferred CIs | quantitative **+ BPSL** (data fusion), **native-only**, `chi_sq` | authors' pyBNF `.exp` + **BMRA posteriors** (`BMRA/results_SKMEL_133/*_withMyc.csv`) | ✅ validated **90/100** ([`VALIDATION.md`](cstar_skmel133_bmra/VALIDATION.md)); `check` **23/23**, 3a ~11 %, constrained fit keeps all 23 signs |
+| [`cstar_trkab_bmra`](cstar_trkab_bmra/) | **the paper's ACTUAL joint TrkA+TrkB fit**: full connection-coefficient set of both receptors (38 params) fit jointly to NGF/BDNF time courses UNDER the BMRA-inferred CIs | quantitative **+ BPSL** (2 models, data fusion), **native-only**, `sos` | authors' RPPA time courses + **BMRA posteriors** (`BMRA/results/Trk{A,B}_*_10_*.csv`) | ✅ validated **88/100** ([`VALIDATION.md`](cstar_trkab_bmra/VALIDATION.md)); `check` **11/11**, network 82/405 + 114/645, constrained fit 26.1<35.1 keeps all 11 signs |
 
 `cstar_trka` and `cstar_trkb` are ligand time-course twins (neuroblastoma, pre-equilibrate →
 ligand, 45 min); `cstar_skmel133` is a different flavor — a steady-state inhibitor
@@ -55,12 +57,30 @@ figures **at the published parameters** (Gate 3a), but a from-scratch run of the
 non-identifiable (each slug's `VALIDATION.md` Gate 3b).
 
 The paper's *actual* fit (Methods pp.22, 24) freed the **full** parameter set under **BMRA-derived
-connection-coefficient confidence intervals imposed as inequality constraints**, across the **full
-joint dataset**, with scatter search + simplex. Reconstructing that — a **real-world constrained
-fit** — is planned as **additional slugs** (the BMRA posteriors ship in the authors' repo under
-`BMRA/results/` and `BMRA/results_SKMEL_133/`, so the constraints are recoverable; PyBNF expresses
-them as BPSL `.prop` constraints, cf. the existing `cstar_skmel133_bpsl` slug). The demo fits are
-kept as-is (clearly labelled) — they remain useful small, runnable examples.
+connection-coefficient confidence intervals imposed as inequality constraints**, with scatter
+search + simplex. Reconstructing that — a **real-world constrained fit** — is delivered as
+**additional `*_bmra` slugs** built beside the demos (which are kept as-is, clearly labelled):
+
+- **[`cstar_skmel133_bmra`](cstar_skmel133_bmra/) — BUILT (90/100).** The full 23-parameter
+  connection-coefficient set fit to the six single-drug fold-change arms under the BMRA-inferred
+  CIs (from `BMRA/results_SKMEL_133/SKMEL133_{rm,rs}_log_200_5K_withMyc.csv`) as BPSL sign
+  constraints, grounded in the paper's Eqs. 14/24/25. `job_type = check` → **Satisfied 23/23** at
+  the published parameters; a constrained fit **keeps** every BMRA sign where the unconstrained
+  demo flips `g_IRSERK`.
+- **[`cstar_trkab_bmra`](cstar_trkab_bmra/) — BUILT (88/100).** The joint TrkA+TrkB fit: both
+  models (82/405 and 114/645 reactions) fit together, the full connection-coefficient set of each
+  receptor (38 params, shared core bound by name) under its own 10-min BMRA CIs
+  (`BMRA/results/Trk{A,B}_{rm,rs}_10_*.csv`) as BPSL sign constraints, applying the paper's own
+  statistical-significance filter (11 constrained; low-confidence connections left free).
+  `job_type = check` → **Satisfied 11/11**; a joint constrained fit reaches 26.1 < 35.1 keeping
+  every sign. (Trains on the ligand time courses like the demos; the inhibitor-panel arms — ED
+  Figs. 6–8 — would enlarge the training set without changing the methodology.)
+
+The BMRA→model map (the crux): the model's `g_<edge>` connection strengths *are* the paper's
+hyperbolic-multiplier γ (Eq. 24: γ>1 activation, γ<1 inhibition), and the BMRA confidence
+intervals pin each connection's **sign**; PyBNF expresses these as BPSL `.prop` constraints on
+carrier observables (cf. the qualitative `cstar_skmel133_bpsl` slug). See
+`cstar_skmel133_bmra/VALIDATION.md` for the full derivation and its two honest limitations.
 
 ## Source materials
 
