@@ -1,4 +1,6 @@
 # JNK / p38 / ATF2 TAD phosphoswitch -- deterministic ODE, network-generating (~50 species).
+# FIT TARGET: the pp-ATF2(T69/T71) PHOSPHORYLATION time course (absolute uM) -> the model
+# observable `pT69pT71` (doubly-phosphorylated ATF2). See README for the provenance audit.
 #
 # Real-world PyBNF fitting example derived from:
 #   Kirsch K, Zeke A, Toke O, Sok P, Sethi A, Sebo A, Kumar GS, Egri P, Poti AL,
@@ -13,6 +15,12 @@
 # blocks p38's F-site (FRS) binding -- the "phosphoswitch". MAPK activation (MKK6/MKK7)
 # and phosphatases close the loop.
 #
+# pT69pT71 (the doubly-phosphorylated ATF2) rises MONOTONICALLY to a plateau after
+# stimulation (constant kstim -> no adaptation). This job fits the Fig. 7b pp-ATF2(pT69/pT71)
+# panel (absolute uM), which the authors plot in two conditions: CTR (control) and JNK-IN-8
+# (JNK inhibitor: k1 = k2 = 0). The p38-ATF2 BINDING signal (peak-decay) is a DIFFERENT
+# quantity -- see the sibling slug p38atf2_binding.
+#
 # Fitting adaptations from the published .bngl (differences noted inline):
 #   - No `begin actions` block -- the equilibrate->stimulate protocol is synthesized from
 #     the .conf (preequilibrate: basal -> condition: stim).
@@ -26,10 +34,16 @@
 #     bind to these ids BY NAME (ADR-0034, no __FREE alias).
 #
 # Parameter provenance (Supplementary Table 2): kon1,koff1,kon2,koff2,k1,k2,k3,k4 were
-# determined in vitro (Fig. S7 enzyme kinetics); kon3,koff3 are assumptions; keq6,keq7,
-# kstim6,kstim7,dp1,dp2,dp3,dp4 were fitted to the cell-based Fig. 7b / Fig. 4a time
-# courses (WB + p38-ATF2 NanoBit) -- these are the free parameters here. totp38 was
-# estimated from Fig. 4a WB; totJNK,totATF2 assumed = 1 uM.
+# determined in vitro (Fig. S7 enzyme kinetics); kon3,koff3 are assumptions; totp38 was
+# estimated from Fig. 4a WB; totJNK,totATF2 assumed = 1 uM. The eight cell-fitted rate
+# constants (keq6,keq7,kstim6,kstim7,dp1,dp2,dp3,dp4) were determined by DECOMPOSING the
+# anisomycin time courses across datasets, NOT jointly to one curve (Table 2 "data" column):
+#   pp-JNK WB          -> keq7, kstim7, dp1
+#   p38-ATF2 NanoBit   -> keq6, kstim6, dp2, dp4   <- fit in the sibling slug p38atf2_binding
+#   pp-ATF2(T69/71) WB -> dp3                        <- the free param for THIS slug
+# This slug fits the pp-ATF2(T69/T71) phosphorylation curve, so its free set is {dp3} (the
+# ATF2 T69/T71 phosphatase) and every other constant is held at its published value.
+# The JNK-IN-8 condition (2nd experiment) sets k1 = k2 = 0 (JNK catalytically dead).
 
 begin model
 begin parameters

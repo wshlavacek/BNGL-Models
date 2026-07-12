@@ -16,7 +16,7 @@ adaptations from the published model, verification results, and a ready-to-paste
 
 ## The shared model
 
-Both jobs reconstruct the **same rule-based model**, which the authors provide as
+All three jobs reconstruct the **same rule-based model**, which the authors provide as
 **Supplementary Software 1** (`Bionetgen_JNK-p38-ATF2_model.bngl`; its actions block
 generates the paper's Fig. 7b). JNK and p38 dock the ATF2 transactivation domain at
 distinct sites — JNK at the D-site, p38 bipartitely at the D-site **and** the F-site
@@ -30,19 +30,31 @@ reactions**. The edition-2 reconstruction reproduces the authors' trajectories *
 
 | slug | fits | flavor | data source | status |
 |---|---|---|---|---|
-| [`fig7b_timecourse`](fig7b_timecourse/) | WT pp-ATF2(T69/T71) anisomycin time course (8 cell params) | quantitative, **native-only** (`normalization=init`) | Source Data, Fig. 4a (with SD → `chi_sq`) | ✅ tier-1 + fit **chi_sq ≈ 64.9** (8.4 % median rel-err) |
-| [`phosphoswitch_bpsl`](phosphoswitch_bpsl/) | S90 phosphoswitch → p38 recruitment orderings (4 cell params) | **BPSL** constraints, **native-only** | Suppl. Table 2 mutants; Figs. 3c/4b binding | ✅ tier-1 + **`check` 6/6 satisfied** |
+| [`p38atf2_binding`](p38atf2_binding/) | WT p38-ATF2 NanoBit **binding** (`p38ATF2all`; free `keq6,kstim6,dp2,dp4`) | quantitative, **native-only** (`normalization=init`, `chi_sq`) | Source Data `Figure_4` (with SD) | ✅ **validated 91/100** — Gate 3a 5.8 %, Gate 3b ≤1.3× |
+| [`ppatf2_phospho`](ppatf2_phospho/) | WT pp-ATF2(T69/T71) **phosphorylation** (`pT69pT71`; free `dp3`; CTR + JNK-IN-8) | quantitative, absolute µM (`sos`) | **digitized** Fig. 7b pp-ATF2 panel | ✅ **validated** — Gate 3a 6.1 %, Gate 3b `dp3` 1.06× |
+| [`phosphoswitch_bpsl`](phosphoswitch_bpsl/) | S90 phosphoswitch → p38 recruitment orderings (4 cell params) | **BPSL** constraints, **native-only** | Suppl. Table 2 mutants; Figs. 3c/4b binding | ✅ tier-1 + **`check` 6/6 satisfied** (build-verified; not yet primary-source-audited) |
 
-`fig7b_timecourse` is the quantitative reconstruction of the authors' headline fit;
-`phosphoswitch_bpsl` is its constraint-bearing sibling, expressing the paper's central
-*qualitative* claim (JNK's S90 phosphorylation diminishes p38 binding: **S90N > JNK
-inhibitor > WT > MUT4** for p38:ATF2 recruitment) as PyBNF BPSL `.prop` constraints.
+`p38atf2_binding` and `ppatf2_phospho` are the two quantitative pieces of the authors'
+Fig. 7b parameter determination (the paper fit its 8 cell params by **decomposing** across
+datasets — see below). `phosphoswitch_bpsl` is their constraint-bearing sibling, expressing
+the paper's central *qualitative* claim (JNK's S90 phosphorylation diminishes p38 binding:
+**S90N > JNK inhibitor > WT > MUT4** for p38:ATF2 recruitment) as PyBNF BPSL `.prop`
+constraints.
 
-Both jobs are **native-only** (not PEtab-v2-exportable): `fig7b_timecourse` because the
-data are treated/untreated fold changes (`normalization`), `phosphoswitch_bpsl` because
-BPSL constraints have no PEtab representation. Each is verified accordingly (bounded fit +
-figure reproduction; and `job_type = check` satisfaction for the BPSL job) rather than with
-a PEtab round-trip.
+> **Validation note (`validate-pybnf-job`, 2026-07-12).** The two quantitative slugs
+> replace an earlier single `fig7b_timecourse` slug, which fit the p38-ATF2 **binding**
+> data to the ATF2-**phosphorylation** observable `pT69pT71` by mistake. The audit
+> (`p38atf2_binding/VALIDATION.md`) re-scoped it: `p38atf2_binding` fits the binding curve
+> to `p38ATF2all` (the correct observable), and `ppatf2_phospho` fits the real
+> pp-ATF2(T69/T71) curve. The shared model is **byte-identical** to the authors' BNGL
+> (48/48 species, 152/152 reactions).
+
+Per Supplementary Table 2, the 8 cell params come from different data: pp-JNK WB →
+`keq7,kstim7,dp1`; p38-ATF2 NanoBit → `keq6,kstim6,dp2,dp4` (`p38atf2_binding`); pp-ATF2 WB
+→ `dp3` (`ppatf2_phospho`). `p38atf2_binding` is **native-only** (treated/untreated fold
+changes → `normalization`); `phosphoswitch_bpsl` is native-only (BPSL); `ppatf2_phospho` is
+absolute-µM `sos`. Verified accordingly (bounded fit + figure reproduction; `job_type =
+check` for BPSL) rather than with a PEtab round-trip.
 
 ## Source materials
 
@@ -53,7 +65,7 @@ deposition exists.
 |---|---|
 | [Supplementary Software 1](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-19582-3/MediaObjects/41467_2020_19582_MOESM4_ESM.zip) | the authors' BioNetGen `.bngl` (WT parameters) |
 | [Supplementary Information PDF](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-19582-3/MediaObjects/41467_2020_19582_MOESM1_ESM.pdf) | **Supplementary Table 2** (all fitted parameters + data provenance); Fig. S7 in-vitro kinetics |
-| [Source Data workbook](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-19582-3/MediaObjects/41467_2020_19582_MOESM6_ESM.xlsx) | sheet `Figure_4` = the pp-ATF2(T69/T71) time courses (5 conditions, with SD) |
+| [Source Data workbook](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-19582-3/MediaObjects/41467_2020_19582_MOESM6_ESM.xlsx) | sheet `Figure_4` = the Fig. 4a **p38-ATF2 NanoBit binding** time courses (treated/untreated, 5 conditions, with SD). The pp-ATF2(T69/T71) *phosphorylation* curve is **not** here — it is published only in the Fig. 7b panel (digitized for `ppatf2_phospho`). |
 
 ## Run
 
