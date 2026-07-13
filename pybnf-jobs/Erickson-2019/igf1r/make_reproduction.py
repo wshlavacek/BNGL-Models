@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Reproduction figure for the igf1r job -- Erickson 2019 Fig 3 at the paper's Table-1 params.
 
-Runs the authors' own multi-phase protocol (the actions block in igf1r.bngl) through BNG2.pl with
+Runs the authors' own multi-phase protocol (the actions block in igf1r_legacy.bngl) through BNG2.pl with
 the seven free rate constants set to Erickson 2019 Table 1 ("This Study"), then overlays the model
 on the three fit datasets (Kiselyov 2009 Fig 5B/5D):
 
@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BNG = os.path.join(os.environ["BNGPATH"], "BNG2.pl")
-MODEL = os.path.join(HERE, "igf1r.bngl")
+MODEL = os.path.join(HERE, "igf1r_legacy.bngl")
 
 # Erickson 2019 Table 1 ("This Study") best-fit rate constants -> the model's __FREE tokens.
 #   a1prime = kcr ; a2prime is derived in-model by detailed balance (Table 1 reports a2prime=52).
