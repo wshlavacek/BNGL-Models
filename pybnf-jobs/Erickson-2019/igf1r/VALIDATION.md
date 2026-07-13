@@ -3,6 +3,14 @@
 Primary-source validation of the PyBNF job `pybnf-jobs/Erickson-2019/igf1r/`, per the
 `validate-pybnf-job` skill. Confidence is **earned from the gate evidence below**.
 
+> **Reorganized for edition-2 (issue lanl/PyBNF#474).** The job is now PRIMARY edition-2
+> (`igf1r.conf` / `igf1r.bngl` — no in-model actions block; the preincubate→wash→dose-scan protocol
+> is synthesized from the conf). The SI-verbatim edition-1 files this scorecard validates are kept,
+> renamed `igf1r_legacy.conf` / `igf1r_legacy.bngl` (provenance + BNG2.pl reproduction oracle). The
+> gates below (byte-identity, Fig-3 reproduction) refer to those `_legacy` files; the edition-2 job
+> reproduces the paper to the same tolerance through the bngsim backend (F5B 1.0 %, F5D_20min 5.3 %,
+> F5D_60min 7.0 % at Table-1 params — see README "Gate 2b").
+
 > **Confidence: 93 / 100** — Gate 0–2 PASS with the **authors' own model+conf+data** in hand
 > (the model is byte-identical to the SI file that produced Table 1); Gate 3a reproduces Erickson
 > **Fig 3A/3B** at the paper's own Table-1 parameters (F5B median 1.1 % rel err); Gate 3b recovers
@@ -60,7 +68,7 @@ authors' own digitizations — the correct provenance for validating *Erickson's
 
 Reference compared against: the authors' SI `IGF1R_fit.bngl` (the file that produced Table 1).
 
-| aspect | paper / author file | our `igf1r.bngl` | verdict |
+| aspect | paper / author file | our `igf1r_legacy.bngl` | verdict |
 |---|---|---|---|
 | molecule types / seed species | `IGF1(ds,hs,label~hot~cold)`, `IGF1R(S1,S2,C)`, pre-formed dimer | same | match |
 | reaction rules + rate laws | 4 reversible rules (site-1/site-2 binding + two crosslink rules) | same | match |
@@ -102,7 +110,7 @@ the F5D model curves sit just above the leftmost data (≈0.98 vs ≈0.91).
 
 ## Gate 3b — Recover the paper's parameters by fitting
 
-- Run: `pybnf -c igf1r.conf` (legacy mode, scatter search, pop 20, `chi_sq`, `normalization=init`;
+- Run: `pybnf -c igf1r_legacy.conf` (edition-1, scatter search, pop 20, `chi_sq`, `normalization=init`;
   each evaluation = 4 BNG2.pl runs, ~2.4 min/iteration). Convergence reference = the PyBNF-style
   objective at Table 1 (all ÷row0) = **7.65**. The scatter-search phase converged to and stabilized
   (over 5 iterations) at **Obj = 6.74** (≤ Table 1) — i.e. it fits the data at least as well as the
