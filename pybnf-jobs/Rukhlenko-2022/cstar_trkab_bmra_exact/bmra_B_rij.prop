@@ -1,0 +1,49 @@
+# PAPER-EXACT BMRA-CI constraints on the TrkB connection coefficients (Table S5, 10-min
+# posterior). Each edge: the model's Eq.14 r_ij (function r_<tgt>_<src>) is pinned TWO-SIDED
+# inside [mean-std, mean+std] (k=1). Evaluated at the no-ligand (basal) steady state (the
+# constraint experiment runs `at 100000`). weight = 1/std. Names are bare (BPSL forbids `()`).
+
+# ERK<-RTK: BMRA r=+0.325+/-0.640  ->  r in [-0.316,+0.965]
+r_ERK_RTK > -0.3157 at 100000 weight 1.562
+r_ERK_RTK < 0.9649 at 100000 weight 1.562
+# ERK<-TRK: BMRA r=+0.019+/-0.596  ->  r in [-0.577,+0.615]
+r_ERK_TRK > -0.5767 at 100000 weight 1.678
+r_ERK_TRK < 0.6150 at 100000 weight 1.678
+# ERK<-JNK: BMRA r=+0.343+/-0.592  ->  r in [-0.249,+0.935]
+r_ERK_JNK > -0.2490 at 100000 weight 1.689
+r_ERK_JNK < 0.9350 at 100000 weight 1.689
+# ERK<-RSK: BMRA r=-0.075+/-0.607  ->  r in [-0.682,+0.533]
+r_ERK_RSK > -0.6818 at 100000 weight 1.647
+r_ERK_RSK < 0.5328 at 100000 weight 1.647
+# AKT<-RTK: BMRA r=+0.532+/-0.525  ->  r in [+0.007,+1.057]
+r_AKT_RTK > 0.0074 at 100000 weight 1.906
+r_AKT_RTK < 1.0569 at 100000 weight 1.906
+# AKT<-TRK: BMRA r=+0.244+/-0.531  ->  r in [-0.287,+0.774]
+r_AKT_TRK > -0.2873 at 100000 weight 1.884
+r_AKT_TRK < 0.7745 at 100000 weight 1.884
+# AKT<-S6K: BMRA r=-0.180+/-0.529  ->  r in [-0.708,+0.349]
+r_AKT_S6K > -0.7084 at 100000 weight 1.892
+r_AKT_S6K < 0.3490 at 100000 weight 1.892
+# AKT<-ERK: BMRA r=+0.552+/-0.518  ->  r in [+0.034,+1.070]
+r_AKT_ERK > 0.0335 at 100000 weight 1.93
+r_AKT_ERK < 1.0700 at 100000 weight 1.93
+# AKT<-RSK: BMRA r=-0.054+/-0.530  ->  r in [-0.584,+0.476]
+r_AKT_RSK > -0.5839 at 100000 weight 1.887
+r_AKT_RSK < 0.4762 at 100000 weight 1.887
+# AKT<-JNK: BMRA r=-0.069+/-0.528  ->  r in [-0.597,+0.459]
+r_AKT_JNK > -0.5973 at 100000 weight 1.894
+r_AKT_JNK < 0.4589 at 100000 weight 1.894
+# JNK<-ERK: BMRA r=+0.869+/-0.284  ->  r in [+0.585,+1.153]
+r_JNK_ERK > 0.5854 at 100000 weight 3.521
+r_JNK_ERK < 1.1534 at 100000 weight 3.521
+# S6K<-AKT: BMRA r=+0.490+/-0.033  ->  r in [+0.457,+0.523]
+r_S6K_AKT > 0.4568 at 100000 weight 30.391
+r_S6K_AKT < 0.5226 at 100000 weight 30.391
+# RSK<-ERK: BMRA r=+0.753+/-0.019  ->  r in [+0.734,+0.772]
+r_RSK_ERK > 0.7340 at 100000 weight 52.317
+r_RSK_ERK < 0.7722 at 100000 weight 52.317
+
+# DOCUMENTED, NOT CONSTRAINED (the RTK/AdRTK receptor-dimerization node has no clean
+# closed-form Eq.14 self-normalization; verified numerically in VALIDATION.md):
+#   RTK<-ERK: BMRA r=+0.616+/-0.536 (receptor-dimerization node; no closed-form Eq.14 C_i -> reported numerically, NOT constrained; see VALIDATION.md)
+#   RTK<-RSK: BMRA r=+0.788+/-0.542 (receptor-dimerization node; no closed-form Eq.14 C_i -> reported numerically, NOT constrained; see VALIDATION.md)

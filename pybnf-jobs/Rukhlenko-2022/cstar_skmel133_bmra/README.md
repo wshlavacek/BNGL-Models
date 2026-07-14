@@ -1,4 +1,13 @@
-# cstar_skmel133_bmra — the paper's ACTUAL SKMEL-133 fit (BMRA-CI-constrained, full parameter set)
+# cstar_skmel133_bmra — the paper's SKMEL-133 fit (BMRA-CI-constrained, **sign** approximation)
+
+> ## ⚠️ DEPRECATED — superseded by [`../cstar_skmel133_bmra_exact`](../cstar_skmel133_bmra_exact)
+> This slug constrains only the **sign** of each BMRA connection (a robust approximation). The
+> sibling **`_exact`** slug constrains the paper's real object — the model's exact **Eq. 14**
+> connection coefficients `r_ij` inside the BMRA confidence intervals — and is the closer
+> reconstruction of the paper's described fit. Prefer `_exact`; this slug is retained for reference
+> and as a robust sign-only fallback. **Note:** the authors' repo does not publish the pyBioNetFit
+> fit configuration or the constraint encoding, so *both* slugs are best-reconstructions, not a
+> byte-exact reproduction — see the "Reproducibility caveat" in the [study README](../README.md).
 
 The real-world reconstruction of the fit the paper actually performed for SKMEL-133: the
 **full connection-coefficient set** fit with pyBioNetFit to the single-drug fold-change

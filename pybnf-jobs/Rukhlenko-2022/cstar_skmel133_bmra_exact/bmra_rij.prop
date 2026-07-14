@@ -1,0 +1,89 @@
+# PAPER-EXACT BMRA-CI constraints on the SKMEL-133 connection coefficients (Table S10,
+# with_MYC). Each signaling edge: the model's Eq.14 r_ij (function r_<tgt>_<src>) is pinned
+# TWO-SIDED inside [mean-std, mean+std] (k=1; the table +/- are the BMRA posterior stds).
+# Evaluated at the settled no-drug steady state (the constraint experiment runs `at 500000`).
+# weight = 1/std (tighter CI -> stronger). Names are bare (BPSL grammar forbids parentheses).
+
+# ERK<-IRS: BMRA r=+0.490+/-0.560  ->  r in [-0.070,+1.050]
+r_ERK_IRS > -0.0700 at 500000 weight 1.786
+r_ERK_IRS < 1.0500 at 500000 weight 1.786
+# ERK<-mTOR: BMRA r=+0.380+/-0.560  ->  r in [-0.180,+0.940]
+r_ERK_mTOR > -0.1800 at 500000 weight 1.786
+r_ERK_mTOR < 0.9400 at 500000 weight 1.786
+# ERK<-SRC: BMRA r=+0.380+/-0.560  ->  r in [-0.180,+0.940]
+r_ERK_SRC > -0.1800 at 500000 weight 1.786
+r_ERK_SRC < 0.9400 at 500000 weight 1.786
+# ERK<-CDK: BMRA r=-0.130+/-0.370  ->  r in [-0.500,+0.240]
+r_ERK_CDK > -0.5000 at 500000 weight 2.703
+r_ERK_CDK < 0.2400 at 500000 weight 2.703
+# AKT<-ERK: BMRA r=-0.750+/-0.460  ->  r in [-1.210,-0.290]
+r_AKT_ERK > -1.2100 at 500000 weight 2.174
+r_AKT_ERK < -0.2900 at 500000 weight 2.174
+# AKT<-PKC: BMRA r=+0.970+/-0.450  ->  r in [+0.520,+1.420]
+r_AKT_PKC > 0.5200 at 500000 weight 2.222
+r_AKT_PKC < 1.4200 at 500000 weight 2.222
+# AKT<-CDK: BMRA r=+0.410+/-0.460  ->  r in [-0.050,+0.870]
+r_AKT_CDK > -0.0500 at 500000 weight 2.174
+r_AKT_CDK < 0.8700 at 500000 weight 2.174
+# AKT<-IRS: BMRA r=+1.340+/-0.460  ->  r in [+0.880,+1.800]
+r_AKT_IRS > 0.8800 at 500000 weight 2.174
+r_AKT_IRS < 1.8000 at 500000 weight 2.174
+# AKT<-MYC: BMRA r=+0.570+/-0.460  ->  r in [+0.110,+1.030]
+r_AKT_MYC > 0.1100 at 500000 weight 2.174
+r_AKT_MYC < 1.0300 at 500000 weight 2.174
+# mTOR<-AKT: BMRA r=+0.310+/-0.510  ->  r in [-0.200,+0.820]
+r_mTOR_AKT > -0.2000 at 500000 weight 1.961
+r_mTOR_AKT < 0.8200 at 500000 weight 1.961
+# mTOR<-SRC: BMRA r=+0.180+/-0.470  ->  r in [-0.290,+0.650]
+r_mTOR_SRC > -0.2900 at 500000 weight 2.128
+r_mTOR_SRC < 0.6500 at 500000 weight 2.128
+# mTOR<-PKC: BMRA r=+0.340+/-0.510  ->  r in [-0.170,+0.850]
+r_mTOR_PKC > -0.1700 at 500000 weight 1.961
+r_mTOR_PKC < 0.8500 at 500000 weight 1.961
+# mTOR<-CDK: BMRA r=+0.990+/-0.510  ->  r in [+0.480,+1.500]
+r_mTOR_CDK > 0.4800 at 500000 weight 1.961
+r_mTOR_CDK < 1.5000 at 500000 weight 1.961
+# SRC<-ERK: BMRA r=+0.330+/-0.720  ->  r in [-0.390,+1.050]
+r_SRC_ERK > -0.3900 at 500000 weight 1.389
+r_SRC_ERK < 1.0500 at 500000 weight 1.389
+# SRC<-PKC: BMRA r=+0.400+/-0.730  ->  r in [-0.330,+1.130]
+r_SRC_PKC > -0.3300 at 500000 weight 1.37
+r_SRC_PKC < 1.1300 at 500000 weight 1.37
+# SRC<-MYC: BMRA r=-0.560+/-0.700  ->  r in [-1.260,+0.140]
+r_SRC_MYC > -1.2600 at 500000 weight 1.429
+r_SRC_MYC < 0.1400 at 500000 weight 1.429
+# CDK<-ERK: BMRA r=+0.290+/-0.580  ->  r in [-0.290,+0.870]
+r_CDK_ERK > -0.2900 at 500000 weight 1.724
+r_CDK_ERK < 0.8700 at 500000 weight 1.724
+# CDK<-mTOR: BMRA r=+0.180+/-0.580  ->  r in [-0.400,+0.760]
+r_CDK_mTOR > -0.4000 at 500000 weight 1.724
+r_CDK_mTOR < 0.7600 at 500000 weight 1.724
+# CDK<-MYC: BMRA r=+0.670+/-0.580  ->  r in [+0.090,+1.250]
+r_CDK_MYC > 0.0900 at 500000 weight 1.724
+r_CDK_MYC < 1.2500 at 500000 weight 1.724
+# MYC<-CDK: BMRA r=+0.410+/-0.110  ->  r in [+0.300,+0.520]
+r_MYC_CDK > 0.3000 at 500000 weight 9.091
+r_MYC_CDK < 0.5200 at 500000 weight 9.091
+
+# DPD driving-force coefficients beta_j (Eq. 25): the model's PHYSICAL S/x units are not
+# commensurate with BMRA's standardized space (r_Sj_model ~ 1e-3 vs BMRA ~ O(1); see
+# VALIDATION.md), so the DPD row is constrained by SIGN only. force = +beta_mTOR*pmTOR
+# +beta_PKC*pPKC -beta_SRC*pSRC; cc_S<x>()=beta_x*totERK (totERK==1 conserved carrier).
+# DPD<-mTOR: BMRA r=+1.620+/-0.460 (force coeff +beta_mTOR)
+cc_SmTOR > 0 at 500000 weight 3.522
+# DPD<-PKC: BMRA r=+0.640+/-0.460 (force coeff +beta_PKC)
+cc_SPKC > 0 at 500000 weight 1.391
+# DPD<-SRC: BMRA r=-0.270+/-0.470 (force coeff -beta_SRC)
+cc_SSRC > 0 at 500000 weight 0.574
+
+# PROLIFERATIVE-STATE ANCHOR. The BMRA connection coefficients were inferred in the
+# PROLIFERATIVE state (SKMEL-133 is a proliferative BRAF-V600E melanoma line; the cSTAR
+# DPD places proliferation at S > 0). The exact Eq.14 r_ij are the steady-state response
+# ratios AT that attractor, so the constraint experiment must stay in the proliferative
+# basin. Without this anchor a free (g,K) fit can drift the drug-free attractor into the
+# DIFFERENTIATED basin (S < 0), satisfying the numeric r_ij bands but in the wrong
+# physiological regime (observed: an unanchored bounded fit reached S = -13, pmTOR = 0.055
+# vs the published proliferative S = +9.95, pmTOR = 0.409). Sval > 0 keeps the fit on the
+# proliferative side of the separatrix; weight 1.0 so, scaled, it dominates any incentive
+# to differentiate (the published params satisfy it with wide margin).
+Sval > 0 at 500000 weight 1.0

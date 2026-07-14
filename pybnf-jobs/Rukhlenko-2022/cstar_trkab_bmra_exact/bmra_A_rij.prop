@@ -1,0 +1,39 @@
+# PAPER-EXACT BMRA-CI constraints on the TrkA connection coefficients (Table S5, 10-min
+# posterior). Each edge: the model's Eq.14 r_ij (function r_<tgt>_<src>) is pinned TWO-SIDED
+# inside [mean-std, mean+std] (k=1). Evaluated at the no-ligand (basal) steady state (the
+# constraint experiment runs `at 100000`). weight = 1/std. Names are bare (BPSL forbids `()`).
+
+# ERK<-RTK: BMRA r=+0.418+/-0.549  ->  r in [-0.131,+0.967]
+r_ERK_RTK > -0.1310 at 100000 weight 1.821
+r_ERK_RTK < 0.9673 at 100000 weight 1.821
+# ERK<-TRK: BMRA r=+1.244+/-0.538  ->  r in [+0.706,+1.781]
+r_ERK_TRK > 0.7060 at 100000 weight 1.86
+r_ERK_TRK < 1.7810 at 100000 weight 1.86
+# ERK<-S6K: BMRA r=-0.462+/-0.540  ->  r in [-1.002,+0.079]
+r_ERK_S6K > -1.0019 at 100000 weight 1.851
+r_ERK_S6K < 0.0788 at 100000 weight 1.851
+# ERK<-AKT: BMRA r=-0.510+/-0.539  ->  r in [-1.049,+0.029]
+r_ERK_AKT > -1.0492 at 100000 weight 1.855
+r_ERK_AKT < 0.0293 at 100000 weight 1.855
+# ERK<-JNK: BMRA r=+0.938+/-0.543  ->  r in [+0.395,+1.481]
+r_ERK_JNK > 0.3947 at 100000 weight 1.842
+r_ERK_JNK < 1.4806 at 100000 weight 1.842
+# AKT<-TRK: BMRA r=-0.511+/-0.706  ->  r in [-1.217,+0.195]
+r_AKT_TRK > -1.2167 at 100000 weight 1.417
+r_AKT_TRK < 0.1946 at 100000 weight 1.417
+# AKT<-S6K: BMRA r=-0.238+/-0.719  ->  r in [-0.957,+0.480]
+r_AKT_S6K > -0.9572 at 100000 weight 1.391
+r_AKT_S6K < 0.4804 at 100000 weight 1.391
+# AKT<-ERK: BMRA r=+1.022+/-0.699  ->  r in [+0.323,+1.721]
+r_AKT_ERK > 0.3233 at 100000 weight 1.431
+r_AKT_ERK < 1.7212 at 100000 weight 1.431
+# AKT<-RSK: BMRA r=+0.595+/-0.714  ->  r in [-0.120,+1.309]
+r_AKT_RSK > -0.1195 at 100000 weight 1.4
+r_AKT_RSK < 1.3091 at 100000 weight 1.4
+# S6K<-AKT: BMRA r=+0.531+/-0.034  ->  r in [+0.497,+0.565]
+r_S6K_AKT > 0.4972 at 100000 weight 29.348
+r_S6K_AKT < 0.5653 at 100000 weight 29.348
+
+# DOCUMENTED, NOT CONSTRAINED (the RTK/AdRTK receptor-dimerization node has no clean
+# closed-form Eq.14 self-normalization; verified numerically in VALIDATION.md):
+#   RTK<-S6K: BMRA r=+0.279+/-0.165 (receptor-dimerization node; no closed-form Eq.14 C_i -> reported numerically, NOT constrained; see VALIDATION.md)

@@ -1,4 +1,13 @@
-# cstar_trkab_bmra — the paper's ACTUAL joint TrkA + TrkB fit (BMRA-CI-constrained)
+# cstar_trkab_bmra — the joint TrkA + TrkB fit (BMRA-CI-constrained, **sign** approximation)
+
+> ## ⚠️ DEPRECATED — superseded by [`../cstar_trkab_bmra_exact`](../cstar_trkab_bmra_exact)
+> This slug constrains only the **sign** of each BMRA connection (a robust approximation). The
+> sibling **`_exact`** slug constrains the paper's real object — each model's exact **Eq. 14**
+> connection coefficients `r_ij` inside the 10-min BMRA confidence intervals — and is the closer
+> reconstruction of the paper's described fit. Prefer `_exact`; this slug is retained for reference
+> and as a robust sign-only fallback. **Note:** the authors' repo does not publish the pyBioNetFit
+> fit configuration or the constraint encoding, so *both* slugs are best-reconstructions, not a
+> byte-exact reproduction — see the "Reproducibility caveat" in the [study README](../README.md).
 
 The real-world reconstruction of the fit the paper actually performed for the Trk models:
 the **TrkA and TrkB models fit jointly** with pyBioNetFit to the ligand-stimulation phospho
