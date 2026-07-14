@@ -4,22 +4,25 @@
 # network-free models need no generate_network; the time course and dose-response are
 # synthesized from egfr_nf.conf (ADR-0028/0046). This is the network-free sibling of ../egfr_ode.
 #
-# The NETWORK-FREE model is from (primary):
-#   Kozer N, Barua D, Henderson C, Nice EC, Burgess AW, Hlavacek WS, Clayton AHA.
-#   "Recruitment of the Adaptor Protein Grb2 to EGFR Tetramers." Biochemistry 2014; 53(16):2594-2604.
-#   PMCID: PMC4010257   DOI: 10.1021/bi500182x   (SI BioNetGen file bi500182x_si_001.txt)
-# fit to the average-normalized datasets of the 2013 companion study:
+# The NETWORK-FREE model is the PyBioNetFit / BioNetFit-1 "example 2" model
+#   (example2_starting_point.bngl) -- an UNBOUNDED network-free reformulation of the EGFR
+#   higher-order-clustering model of Kozer et al. (2013), simulated with NFsim. It is fit to the
+#   average-normalized cluster-density + phospho-EGFR datasets of Kozer et al. (2013):
 #   Kozer N, ..., Clayton AHA. "Exploring higher-order EGFR oligomerisation and phosphorylation --
 #   a combined experimental and theoretical approach." Mol BioSyst 2013; 9(7):1849-1863.
 #   PMCID: PMC3698845   DOI: 10.1039/c3mb70073a   PMID: 23629589
 #
-# Provenance (unchanged model network): derived from the Kozer et al. (2014) SI BioNetGen
-#   file. Edits by Brandon R. Thomas and William S. Hlavacek for BioNetFit 1; further edits
-#   by Eshan D. Mitra for PyBioNetFit; upgraded to the edition-2 surface for the
-#   curate-pybnf-job corpus. Fitted rate constants bind to model ids BY NAME (ADR-0034, no
-#   __FREE); kaf/chi_r were embedded in (NA*Vo) unit conversions in the classic model, so
-#   here the fitted value is a standalone id and the conversion moves to a derived per-cell
-#   rate (kaf_pc/chi_r_pc) used by the rules.
+# PROVENANCE NOTE (corrected 2026-07): this is NOT the Kozer 2014 published SI. The 2014 companion
+#   (Kozer et al., Biochemistry 2014; 53:2594-2604, PMC4010257; SI bi500182x_si_001.txt) is a
+#   TETRAMER-CAPPED ODE model that ADDS Grb2 -- a different formulation, not reproduced here. The
+#   unbounded network-free model here originates in the 2019 PyBioNetFit "example 2", not the 2014
+#   SI file. See VALIDATION.md Gate 2.
+# Provenance (unchanged model network): the example-2 model edited by Brandon R. Thomas and
+#   William S. Hlavacek for BioNetFit 1; further edits by Eshan D. Mitra for PyBioNetFit; upgraded
+#   to the edition-2 surface for the curate-pybnf-job corpus. Fitted rate constants bind to model
+#   ids BY NAME (ADR-0034, no __FREE); kaf/chi_r were embedded in (NA*Vo) unit conversions in the
+#   classic model, so here the fitted value is a standalone id and the conversion moves to a
+#   derived per-cell rate (kaf_pc/chi_r_pc) used by the rules.
 # Date of last modification of the source model: 18 June 2015
 
 begin model
