@@ -1,18 +1,28 @@
 # egfr_nf — EGFR higher-order clustering, network-free NFsim (PyBNF edition-2 job)
 
-A PyBNF edition-2, parameter-fitting job setup. The **network-free model** is from:
+A PyBNF edition-2, parameter-fitting job setup. The **network-free NFsim model** is the
+PyBioNetFit / BioNetFit-1 **"example 2"** model (`example2_starting_point.bngl`, edited by
+B. R. Thomas, W. S. Hlavacek, and E. D. Mitra) — an **unbounded** network-free reformulation of
+the EGFR higher-order-clustering model of Kozer et al. **2013**:
 
-> Kozer N, Barua D, Henderson C, Nice EC, Burgess AW, Hlavacek WS, Clayton AHA.
-> **"Recruitment of the Adaptor Protein Grb2 to EGFR Tetramers."**
-> *Biochemistry* 2014; **53**(16):2594–2604.
-> PMCID: [PMC4010257](https://pmc.ncbi.nlm.nih.gov/articles/PMC4010257/) ·
-> DOI: [10.1021/bi500182x](https://doi.org/10.1021/bi500182x) (SI `bi500182x_si_001.txt`)
+> Kozer N, Barua D, Orchard S, Nice EC, Burgess AW, Hlavacek WS, Clayton AHA.
+> **"Exploring higher-order EGFR oligomerisation and phosphorylation — a combined experimental
+> and theoretical approach."** *Mol BioSyst* 2013; **9**(7):1849–1863.
+> PMCID: [PMC3698845](https://pmc.ncbi.nlm.nih.gov/articles/PMC3698845/) ·
+> DOI: [10.1039/c3mb70073a](https://doi.org/10.1039/c3mb70073a)
 
-fit to the average-normalized datasets of the **2013 companion study** (Kozer et al.,
-*Mol BioSyst* 2013; 9(7):1849–1863, [PMC3698845](https://pmc.ncbi.nlm.nih.gov/articles/PMC3698845/),
-Figs. 2B/2D/3B/3D). This is the **network-free NFsim** member of the `Kozer-2013-2014` pair;
-the ODE sibling is [`../egfr_ode`](../egfr_ode/). Part of the PyBNF 2019 paper corpus
-(Mitra et al., *iScience* 2019; BioNetFit 1 problem 2), on the edition-2 surface.
+It is fit to the same average-normalized 2013 cluster-density + phospho-EGFR data as the ODE
+sibling [`../egfr_ode`](../egfr_ode/) (Figs. 2B/2D/3B/3D). This slug is the **NFsim (network-free)
+formulation** of the 2013 clustering problem — the ODE↔NFsim demonstration twin of `egfr_ode` —
+attributed to the PyBNF 2019 paper corpus (Mitra et al., *iScience* 2019; 19:1012–1036;
+BioNetFit 1 problem 2), on the edition-2 surface.
+
+> **Provenance note (corrected).** This model is *not* the Kozer **2014** published SI. The 2014
+> companion (Kozer et al., *Biochemistry* 2014; 53(16):2594–2604,
+> [PMC4010257](https://pmc.ncbi.nlm.nih.gov/articles/PMC4010257/); SI `bi500182x_si_001.txt`) is a
+> **tetramer-capped ODE model that adds Grb2** — a *different* formulation, not reproduced here. The
+> unbounded network-free model here originates in the 2019 PyBioNetFit "example 2", not the 2014 SI
+> file. See [`VALIDATION.md`](VALIDATION.md) Gate 2.
 
 ## The model
 
@@ -20,7 +30,9 @@ Same physics as [`../egfr_ode`](../egfr_ode/) — EGF binding, EGFR ectodomain c
 tail conformational activation and *trans*-phosphorylation — but with **no cap on oligomer
 size**: EGFR forms unbounded higher-order oligomers (tracked up to 20-mers), so the reaction
 network is not finite and the model is simulated **network-free with NFsim** (`method: nf`).
-Molecules-per-cell units (Kozer 2014). Stochastic.
+Molecules-per-cell units (the Faeder et al. 2009 / molecule-count convention). Stochastic.
+The unbounded oligomers are expected to reproduce the capped-ODE (`../egfr_ode`) behaviour because
+higher-order (>tetramer) oligomers are rare — quantified in [`VALIDATION.md`](VALIDATION.md).
 
 ## What is fit
 
@@ -103,7 +115,7 @@ import). NFsim steps event-by-event over ~10³–10⁴ molecules (up to ~10⁶ l
 
 ```bash
 export BNGPATH="$HOME/Simulations/BioNetGen-2.9.3"   # folder with BNG2.pl
-cd pybnf-jobs/Kozer-2013-2014/egfr_nf
+cd pybnf-jobs/Kozer-2013/egfr_nf
 pybnf -c egfr_nf.conf                 # NFsim is cluster-scale: run large fits on a cluster
 ```
 
@@ -113,9 +125,9 @@ pybnf -c egfr_nf.conf                 # NFsim is cluster-scale: run large fits o
 RealWorldExample(
     folder='egfr_nf', conf='egfr_nf.conf', simulator='nf', stochastic=True, heavy=True,
     observables=('pre1_dose', 'pre2_time', 'pre3_dose', 'pre4_time'),
-    system='EGFR activation & higher-order clustering, network-free (Kozer 2014 model, '
-           'PMC4010257; Kozer 2013 data); NFsim, time course + dose-response, chi_sq; '
-           'PEtab-exportable'),
+    system='EGFR activation & higher-order clustering, network-free NFsim reformulation '
+           '(Mitra 2019 PyBioNetFit example 2) of the Kozer 2013 model (PMC3698845); '
+           'NFsim, time course + dose-response, chi_sq; PEtab-exportable'),
     recover={'alpha2_pre': 2.7509e-05, 'alpha4_pre': 3.2791e-05}, tol=0.5),
     # PyBNF best-fit: RuleHub Published/Mitra2019/04-egfrnf/fit_ade (chi_sq 13.41). Kinetics are
     # sloppy/non-identifiable; the alpha*_pre scale factors are the well-determined recover targets.

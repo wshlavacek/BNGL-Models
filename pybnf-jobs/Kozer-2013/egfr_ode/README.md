@@ -9,7 +9,7 @@ A PyBNF edition-2, parameter-fitting job setup derived from:
 > DOI: [10.1039/c3mb70073a](https://doi.org/10.1039/c3mb70073a) · PMID: 23629589
 
 Built with the `curate-pybnf-job` skill. This is the **deterministic ODE** (network-generating)
-member of the `Kozer-2013-2014` pair; the network-free NFsim sibling (Kozer 2014) is
+member of the `Kozer-2013` pair; the network-free NFsim sibling (Mitra 2019 reformulation) is
 [`../egfr_nf`](../egfr_nf/). Part of the PyBNF 2019 paper corpus (Mitra et al., *iScience* 2019;
 BioNetFit 1 problem 2), on the edition-2 surface.
 
@@ -110,7 +110,7 @@ kinetics-independent).
 
 ```bash
 export BNGPATH="$HOME/Simulations/BioNetGen-2.9.3"   # folder with BNG2.pl
-cd pybnf-jobs/Kozer-2013-2014/egfr_ode
+cd pybnf-jobs/Kozer-2013/egfr_ode
 pybnf -c egfr_ode.conf                # cluster-scale: raise population/iterations on a cluster
 ```
 
