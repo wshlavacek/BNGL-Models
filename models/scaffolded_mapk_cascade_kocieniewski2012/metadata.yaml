@@ -1,0 +1,73 @@
+# metadata.yaml — scaffolded_mapk_cascade_kocieniewski2012
+id: scaffolded_mapk_cascade_kocieniewski2012
+created: 2026-07-15
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, bug_fix, ai_assisted]
+  description: >
+    Curated from Kocieniewski P, Faeder JR, Lipniacki T (2012), J Theor Biol
+    295:116-124. The primary file is the Scaff-22 model (a MAPK cascade
+    assembled on a tripartite scaffold, with MAP2K and MAPK requiring double
+    phosphorylation that occurs exclusively on the scaffold; Appendix B), and
+    the variant is the Scaff-11 mono-phosphorylation counterpart (Appendix A).
+    Adapted from a source BNGL file (rulehub Published/Kocieniewski2012) by
+    adding house-style annotation, observables for the response R (active
+    unbound MAPK), and simulation protocols in an actions block, which the
+    source file lacked. The Scaff-11 variant corrects an evident typo in
+    Appendix A rule 7 (an unphosphorylated left-hand side that abolishes the
+    prozone effect); the corrected rule reproduces the paper's own Fig. 2.
+
+files:
+  - name: scaffolded_mapk_cascade_kocieniewski2012.bngl
+    role: primary
+    description: >
+      Scaff-22 model. MAP2K and MAPK each carry two phospho-residues (R1, R2)
+      and require double phosphorylation for activation. 85 species, 487
+      reactions (BioNetGen 2.9.3).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: scaffolded_mapk_cascade_kocieniewski2012_scaff11.bngl
+    role: variant
+    description: >
+      Scaff-11 mono-phosphorylation model. MAP2K and MAPK carry a single
+      phospho-residue (R1). 33 species, 127 reactions (BioNetGen 2.9.3).
+      Corrects the Appendix A rule-7 typo.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_kocieniewski2012.ipynb
+    role: verification
+    description: >
+      Independently integrates the BNG-generated networks in SciPy, checks
+      conservation and the analytic active-MAP3K steady state, and reproduces
+      the Fig. 2 prozone curves against digitized data for both models.
+  - name: verify_kocieniewski2012.png
+    role: figure
+  # Reference simulation data (reference/ subdirectory)
+  - name: reference/scaffolded_mapk_cascade_kocieniewski2012.net
+    role: reference
+  - name: reference/scaffolded_mapk_cascade_kocieniewski2012_ode.gdat
+    role: reference
+  - name: reference/scaffolded_mapk_cascade_kocieniewski2012_scan.scan
+    role: reference
+  - name: reference/scaffolded_mapk_cascade_kocieniewski2012_scaff11.net
+    role: reference
+  - name: reference/scaffolded_mapk_cascade_kocieniewski2012_scaff11_ode.gdat
+    role: reference
+  - name: reference/scaffolded_mapk_cascade_kocieniewski2012_scaff11_scan.scan
+    role: reference
+  - name: reference/kocieniewski2012_fig2_scaff22_digitized.csv
+    role: reference
+    description: >
+      Digitized Scaff-22 curve from Fig. 2 (response R vs scaffold amount),
+      used for reported-data verification.
+  - name: reference/kocieniewski2012_fig2_scaff11_digitized.csv
+    role: reference
+    description: Digitized Scaff-11 curve from Fig. 2.
