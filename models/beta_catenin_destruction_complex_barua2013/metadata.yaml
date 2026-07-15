@@ -1,0 +1,76 @@
+# metadata.yaml - beta_catenin_destruction_complex_barua2013
+id: beta_catenin_destruction_complex_barua2013
+created: 2026-07-15
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, ai_assisted]
+  description: >
+    House-style curation of the rule-based beta-catenin destruction complex
+    model of Barua D, Hlavacek WS (2013), PLoS Comput Biol 9(9):e1003217. The
+    primary file is the base model (normal cell, full-length APC; Text S2 of
+    the paper) and the variant is the SW480 cell with truncated APC1338 (Text
+    S3). Both are transcribed from the paper's plain-text BioNetGen input files
+    with house-style formatting, annotations, units comments, and figure-linked
+    parameter-scan protocols. The source model uses population units (molecule
+    counts, 1 nM = 315.4 molecules/cell) and deterministic ODE simulation.
+
+files:
+  - name: beta_catenin_destruction_complex_barua2013.bngl
+    role: primary
+    description: >
+      Base model: normal cell with full-length APC. Site-specific interactions
+      of APC, Axin, beta-catenin, GSK-3beta, and CK1alpha, with intracomplex
+      (cyclic) binding. Relaxes to ~35 nM beta-catenin; the active
+      parameter_scan reproduces Fig. 5A (beta-catenin vs full-length APC).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: beta_catenin_destruction_complex_barua2013_apc1338.bngl
+    role: variant
+    description: >
+      SW480 colorectal-cancer-cell variant with truncated APC1338 (no SAMP
+      repeats, first 20-aa repeat operative). Relaxes to elevated ~132 nM
+      beta-catenin (~3.7x normal); the active parameter_scan reproduces Fig. 6A
+      (beta-catenin vs APC1338), the diversion-sink effect of APC truncation.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_barua2013.ipynb
+    role: verification
+    description: >
+      Runs BioNetGen for both models, confirms committed reference output,
+      independently integrates the generated mass-action ODE networks (409 and
+      145 species) with SciPy, reproduces the Fig. 5A and Fig. 6A dose-response
+      curves, and compares against digitized paper data. Regenerates the PNG.
+  - name: verify_barua2013.png
+    role: figure
+  # Reference simulation data (reference/ subdirectory)
+  - name: reference/beta_catenin_destruction_complex_barua2013.net
+    role: reference
+  - name: reference/beta_catenin_destruction_complex_barua2013_ode.gdat
+    role: reference
+  - name: reference/beta_catenin_destruction_complex_barua2013_scan.scan
+    role: reference
+  - name: reference/beta_catenin_destruction_complex_barua2013_apc1338.net
+    role: reference
+  - name: reference/beta_catenin_destruction_complex_barua2013_apc1338_ode.gdat
+    role: reference
+  - name: reference/beta_catenin_destruction_complex_barua2013_apc1338_scan.scan
+    role: reference
+  # Digitized reported data used for figure verification
+  - name: reference/barua2013_fig5A_fulllength_apc_digitized.csv
+    role: reference
+    description: >
+      Beta-catenin vs full-length APC, digitized from Fig. 5A of Barua and
+      Hlavacek (2013); used to verify the base-model parameter_scan.
+  - name: reference/barua2013_fig6A_apc1338_digitized.csv
+    role: reference
+    description: >
+      Beta-catenin vs APC1338, digitized from Fig. 6A of Barua and Hlavacek
+      (2013); used to verify the variant-model parameter_scan.

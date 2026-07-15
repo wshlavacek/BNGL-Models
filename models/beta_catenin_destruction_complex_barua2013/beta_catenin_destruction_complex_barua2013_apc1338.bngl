@@ -1,0 +1,274 @@
+begin model
+
+#@title: Destruction complex with truncated APC1338 (Barua and Hlavacek, 2013)
+
+#@description: |
+#  SW480 colorectal-cancer-cell variant of the beta-catenin destruction
+#  complex model of Barua and Hlavacek (2013). Full-length APC is replaced by
+#  APC1338, the truncated form expressed in SW480 cells, which retains the
+#  15-aa repeats and the first 20-aa repeat but lacks the SAMP repeats and the
+#  high-affinity third 20-aa repeat. Two consequences follow. First, APC1338
+#  cannot bind Axin (Arrow 4 is deleted), so APC-bound beta-catenin can reach
+#  Axin only indirectly, when beta-catenin bridges the two. Second, the
+#  operative APC-beta-catenin contact is the phosphorylated first 20-aa
+#  repeat, a lower-affinity site (KD3 = 85 nM) than the third repeat of
+#  full-length APC (KD2 = 1.5 nM). All other proteins, sites, rate constants,
+#  and the intracomplex enhancement factor chi are identical to the base model
+#  beta_catenin_destruction_complex_barua2013.bngl.
+#
+#  Rule expansion yields a 145-species mass-action network integrated as ODEs
+#  (146 in the paper's variant, counting an inert placeholder; see the note in
+#  the molecule types block). Because truncated APC1338 sequesters beta-catenin
+#  away from Axin and its
+#  recruited kinases (a diversion sink) yet cannot restore the indirect
+#  APC-Axin link, the model settles at an elevated steady-state beta-catenin
+#  level of about 132 nM, roughly 3.7-fold the nominal level of a normal cell.
+#  Raising APC1338 further increases beta-catenin about 2-fold (Fig. 6A),
+#  reproducing the oncogenic effect of APC truncation.
+
+#@keyword: |
+#  Wnt signaling, beta-catenin, destruction complex, APC truncation, APC1338,
+#  Axin, colorectal cancer, SW480, tumor suppressor, diversion sink,
+#  competitive binding, sequestration, rule-based model, mass action,
+#  monostable, Homo sapiens
+
+#@reference: |
+#  Barua D, Hlavacek WS (2013). Modeling the effect of APC truncation on
+#  destruction complex function in colorectal cancer cells. PLoS Comput Biol
+#  9(9):e1003217. doi:10.1371/journal.pcbi.1003217
+
+begin parameters
+  # Avogadro constant; included for population-conversion readiness.
+  NA  6.02214076e23  # /mol
+
+  #@note: |
+  #  Population-based units (molecule counts per cell), following Table 1 of
+  #  Barua and Hlavacek (2013): 1 nM = 315.4 molecules/cell (AXINtot = 3154
+  #  molecules = 10 nM), corresponding to V_ref below (~5.24e-13 L/cell).
+
+  # Reference cytoplasmic volume per cell; 1 nM <-> NA*V_ref*1e-9 = 315.4
+  # molecules, matching the copy numbers in Table 1 of Barua et al. (2013).
+  V_ref  5.24e-13  # L/cell
+
+  # Total protein copy numbers per cell; APC1338 replaces full-length APC at
+  # the same endogenous 100 nM level in an SW480 cell (Table 1).
+  BCATtot      11000   # molecules
+  APC1338tot   31540   # molecules
+  AXINtot      3154    # molecules
+  GSKtot       31540   # molecules
+  CK1atot      31540   # molecules
+
+  # Single-site binding rate constants; kf = 1e-3 /nM/s = 3.17e-6 /molecule/s.
+
+  # Arrow 1: beta-catenin ARM 5-9 <-> APC1338 15-aa repeats; KD1 = 273 nM.
+  kf1_bap  3.17e-6  # /(molecule*s)
+  kr1_bap  0.273    # /s
+
+  # Arrow 2: beta-catenin ARM 3-4 <-> phosphorylated APC1338 first 20-aa
+  # repeat; KD3 = 85 nM (kr3,bap in Table 1), the operative site for APC1338.
+  kf2_bap  3.17e-6  # /(molecule*s)
+  kr3_bap  0.085    # /s
+
+  # Arrow 3: beta-catenin ARM 3-4 <-> Axin; KD = 227 nM.
+  kf_ba  3.17e-6  # /(molecule*s)
+  kr_ba  0.227    # /s
+
+  # Arrow 4 (APC SAMP <-> Axin) is absent: APC1338 lacks the SAMP repeats.
+
+  # Arrow 5: GSK-3beta <-> Axin GID domain; KD = 65 nM.
+  kf_ga  3.17e-6  # /(molecule*s)
+  kr_ga  0.065    # /s
+
+  # Arrow 6: CK1alpha <-> Axin; KD = 100 nM (assumed).
+  kf_ca  3.17e-6  # /(molecule*s)
+  kr_ca  0.1      # /s
+
+  # beta-catenin phosphorylation (S45 and S33/S37) and dephosphorylation.
+  kpb   0.05    # /s
+  kmpb  0.0012  # /s
+
+  # APC1338 20-aa repeat phosphorylation and dephosphorylation.
+  kp   0.05  # /s
+  kmp  0.05  # /s
+
+  # beta-catenin degradation (slow/fast) and constant-rate synthesis.
+  kdb1  0.0000428  # /s
+  kdb2  0.00428    # /s
+  ksb   4.0        # molecules/s
+
+  # Intracomplex enhancement factor (local concentration in molecules,
+  # x = 1e4 nM * 315.4 molecules/nM); multiplies kf in intracomplex rules.
+  chi  3154000  # molecules
+end parameters
+
+begin molecule types
+  # Axin scaffold: rgs binds APC SAMP (unused by APC1338), gid binds
+  # GSK-3beta, b binds beta-catenin ARM 3-4, e binds CK1alpha.
+  AXIN(rgs,gid,b,e)
+  # GSK-3beta kinase; a binds the Axin GID domain.
+  GSK3b(a)
+  # Truncated APC1338: a15 = 15-aa repeats, a20 = phosphorylatable first
+  # 20-aa repeat. No SAMP site, so APC1338 cannot bind Axin directly.
+  APC1338(a15,a20~U~P)
+  # beta-catenin: s33s37 and s45 phosphosites; ARM34 binds APC-p20a or Axin,
+  # ARM59 binds APC 15-aa; ss tracks live (l) vs degraded (d) copies.
+  bCat(s33s37~U~P,s45~U~P,ARM34,ARM59,ss~l~d)
+  # CK1alpha kinase; e binds Axin.
+  CK1a(e)
+  # Dummy source species held at one copy to drive constant-rate synthesis.
+  I()
+
+  #@note: |
+  #  As in the base model, the source BNGL declares an inert placeholder
+  #  molecule (dead) that is omitted here; its removal drops the network from
+  #  the 146 species of the source variant to 145 and changes no dynamics.
+end molecule types
+
+begin seed species
+  bCat(s33s37~U,s45~U,ARM34,ARM59,ss~l)  BCATtot     # molecules
+  APC1338(a15,a20~U)                     APC1338tot  # molecules
+  AXIN(rgs,gid,b,e)                      AXINtot     # molecules
+  GSK3b(a)                               GSKtot      # molecules
+  CK1a(e)                                CK1atot     # molecules
+  I()                                    1           # molecules
+end seed species
+
+begin observables
+  # Total intact (undegraded) beta-catenin; the primary readout.
+  Molecules  Obs_Tot_bCat        bCat(ss~l)
+  # beta-catenin phosphorylated at S45 (CK1alpha site).
+  Molecules  Obs_bCat_pS45       bCat(s45~P,ss~l)
+  # beta-catenin phosphorylated at S33/S37 (GSK-3beta site; degradation tag).
+  Molecules  Obs_bCat_pS33S37    bCat(s33s37~P,ss~l)
+  # APC1338 molecules with a phosphorylated 20-aa repeat (bound or unbound).
+  Molecules  Obs_APC1338_p20aP   APC1338(a20~P!?)
+  # beta-catenin directly bound to Axin via ARM 3-4.
+  Species    Obs_bCat_Axin       bCat(ARM34!1,ss~l).AXIN(b!1)
+end observables
+
+begin reaction rules
+  # Arrow 1: beta-catenin ARM 5-9 bind APC1338 15-aa repeats. Intermolecular
+  # binding, plus an intracomplex (chi-enhanced) variant via the 20-aa link.
+  R1_bind_bCat15_free: \
+    bCat(ARM59,ss~l) + APC1338(a15) <-> bCat(ARM59!1,ss~l).APC1338(a15!1)  kf1_bap, kr1_bap
+  R1_bind_bCat15_via_a20: \
+    bCat(ARM59,ARM34!1).APC1338(a15,a20~P!1) <-> \
+    bCat(ARM59!2,ARM34!1).APC1338(a15!2,a20~P!1)  chi*kf1_bap, kr1_bap
+
+  # Arrow 2: beta-catenin ARM 3-4 bind a phosphorylated APC1338 20-aa repeat.
+  # Intermolecular binding, plus an intracomplex variant via the 15-aa link.
+  R2_bind_bCat20_free: \
+    bCat(ARM34,ss~l) + APC1338(a20~P) <-> bCat(ARM34!1,ss~l).APC1338(a20~P!1)  kf2_bap, kr3_bap
+  R2_bind_bCat20_via_a15: \
+    bCat(ARM59!1,ARM34).APC1338(a15!1,a20~P) <-> \
+    bCat(ARM59!1,ARM34!2).APC1338(a15!1,a20~P!2)  chi*kf2_bap, kr3_bap
+
+  # Arrow 3: beta-catenin ARM 3-4 bind Axin.
+  R3_bind_bCatAxin_free: \
+    bCat(ARM34,ss~l) + AXIN(b) <-> bCat(ARM34!1,ss~l).AXIN(b!1)  kf_ba, kr_ba
+
+  # Arrow 5: GSK-3beta binds the Axin GID domain.
+  R5_bind_GSK3b_Axin: \
+    GSK3b(a) + AXIN(gid) <-> GSK3b(a!1).AXIN(gid!1)  kf_ga, kr_ga
+
+  # Arrow 6: CK1alpha binds Axin.
+  R6_bind_CK1a_Axin: \
+    AXIN(e) + CK1a(e) <-> AXIN(e!1).CK1a(e!1)  kf_ca, kr_ca
+
+  # Arrow 7: Axin-recruited CK1alpha phosphorylates beta-catenin S45.
+  R7_phos_bCat_S45: \
+    bCat(s45~U,ss~l).CK1a -> bCat(s45~P,ss~l).CK1a  kpb
+
+  # Arrow 8: Axin-recruited GSK-3beta phosphorylates beta-catenin S33/S37
+  # (requires prior S45 phosphorylation; processive).
+  R8_phos_bCat_S33S37: \
+    bCat(s33s37~U,s45~P,ss~l).GSK3b -> bCat(s33s37~P,s45~P,ss~l).GSK3b  kpb
+
+  # Arrows 9-10: Axin-recruited GSK-3beta (with implicit CK1epsilon)
+  # phosphorylates the APC1338 20-aa repeat (co-located via bridging).
+  R9_phos_APC_a20: \
+    APC1338(a20~U).GSK3b -> APC1338(a20~P).GSK3b  kp
+
+  # Dephosphorylation of beta-catenin S45 and S33/S37 (implicit phosphatase).
+  R10_dephos_bCat_S45: bCat(s45~P,ss~l) -> bCat(s45~U,ss~l)  kmpb
+  R11_dephos_bCat_S33S37: bCat(s33s37~P,ss~l) -> bCat(s33s37~U,ss~l)  kmpb
+
+  # Dephosphorylation of the APC1338 20-aa repeat, allowed only when APC1338
+  # is co-located with Axin (bridged by beta-catenin; Axin recruits PP2A).
+  R12_dephos_APC_a20: APC1338(a20~P).AXIN -> APC1338(a20~U).AXIN  kmp
+
+  # Constant-rate synthesis of new unmodified beta-catenin from source I.
+  R13_synth_bCat: \
+    I -> I + bCat(s33s37~U,s45~U,ARM59,ARM34,ss~l)  ksb
+
+  # Slow degradation of beta-catenin not phosphorylated at S33/S37.
+  R14_degrade_bCat_slow: bCat(s33s37~U,ss~l) -> bCat(s33s37~U,ss~d)  kdb1
+
+  # Fast degradation of beta-catenin phosphorylated at S33/S37.
+  R15_degrade_bCat_fast: bCat(s33s37~P,ss~l) -> bCat(s33s37~P,ss~d)  kdb2
+
+  # Ancillary rules: a degraded (ss~d) beta-catenin rapidly releases any
+  # bound APC1338 and Axin partners, so degradation removes only beta-catenin.
+  R16_release_APC15_diss: \
+    bCat(ARM59!1,ss~d).APC1338(a15!1) -> bCat(ARM59,ss~d) + APC1338(a15)  1000
+  R17_release_APC15_intra: \
+    bCat(ARM59!1,ss~d).APC1338(a15!1) -> bCat(ARM59,ss~d).APC1338(a15)  1000
+  R18_release_APC20_diss: \
+    bCat(ARM34!1,ss~d).APC1338(a20~P!1) -> bCat(ARM34,ss~d) + APC1338(a20~P)  1000
+  R19_release_Axin_diss: \
+    bCat(ARM34!1,ss~d).AXIN(b!1) -> bCat(ARM34,ss~d) + AXIN(b)  1000
+  R20_release_Axin_intra: \
+    bCat(ARM34!1,ss~d).AXIN(b!1) -> bCat(ARM34,ss~d).AXIN(b)  1000
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1,\
+    max_stoich=>{APC1338=>1,AXIN=>1,bCat=>1}})  # 145 species, 715 reactions
+
+  #@note: |
+  #  ODE is the preferred protocol, matching the published methodology. The
+  #  network is bounded by max_stoich (one copy each of APC1338, Axin, and
+  #  beta-catenin per complex). SSA is left as a commented benchmark stub;
+  #  PSA and NFsim are omitted. The parameter_scan expands the rules once and
+  #  then integrates one ODE per APC1338tot value, so the full protocol takes
+  #  a few minutes; the notebook verify_barua2013.ipynb does the fine-grained
+  #  comparison to Fig. 6A.
+
+  saveConcentrations()
+
+  # Relaxation to the SW480 steady state.
+
+  #@protocol: |
+  #  Integrate from the seed state to steady state (~2.5e5 s). Reproduces the
+  #  elevated SW480 beta-catenin level of about 132 nM (~41500 molecules),
+  #  roughly 3.7-fold the nominal 35 nM of a normal cell (base model), the
+  #  hallmark of APC truncation.
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>250000,\
+    n_steps=>1000,atol=>1e-8,rtol=>1e-8,sparse=>1})
+
+  # Concentration-dependent effect of truncated APC1338 on beta-catenin.
+
+  #@protocol: |
+  #  Scan total APC1338 (APC1338tot) from ~1.01x to ~101x the endogenous 100
+  #  nM (relative transfected APC1338 from 1e-2 to 1e2), integrating each
+  #  point to steady state. Adding APC1338 raises steady-state beta-catenin
+  #  from ~3.7x to ~7.6x the normal-cell nominal, the diversion-sink effect.
+  #  Divide each steady-state Obs_Tot_bCat by the normal-cell nominal (~11000
+  #  molecules from the base model) to reproduce the relative beta-catenin
+  #  level plotted in Fig. 6A.
+
+  #@figure: Fig. 6A in Barua and Hlavacek (2013)
+
+  resetConcentrations()
+  parameter_scan({method=>"ode",parameter=>"APC1338tot",par_min=>31855,\
+    par_max=>3185540,n_scan_pts=>11,log_scale=>1,t_start=>0,\
+    t_end=>250000,n_steps=>10,atol=>1e-6,rtol=>1e-8,sparse=>1,suffix=>"scan"})
+
+#  resetConcentrations()
+#  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>250000,\
+#    n_steps=>1000})
+end actions
