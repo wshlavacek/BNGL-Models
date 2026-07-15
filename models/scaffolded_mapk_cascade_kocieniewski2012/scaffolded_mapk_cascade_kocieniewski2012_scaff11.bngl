@@ -1,0 +1,210 @@
+begin model
+
+#@title: Scaffolded MAPK cascade, mono-phosphorylation variant (Kocieniewski et al., 2012)
+
+#@description: |
+#  Mono-phosphorylation counterpart of the scaffolded MAPK cascade, the
+#  "Scaff-11" model of Kocieniewski et al. (2012). It is identical in
+#  structure and parameters to the primary Scaff-22 model
+#  (scaffolded_mapk_cascade_kocieniewski2012.bngl) except that MAP2K and
+#  MAPK each carry a SINGLE phospho-residue (R1) and require only
+#  mono-phosphorylation for activation. As in Scaff-22, a signal S
+#  activates MAP3K, the three kinase tiers bind a tripartite scaffold, and
+#  phosphorylation occurs exclusively on the scaffold (bound MAP3K
+#  phosphorylates bound MAP2K, bound MAP2K phosphorylates bound MAPK).
+#  Inactive MAP3K and active (phosphorylated) MAPK dissociate quickly
+#  (rate d2).
+#
+#  Rule expansion yields 33 species and (in BioNetGen 2.9.3) 127
+#  unidirectional reactions. The response R (active, unbound MAPK, Obs_R)
+#  is again a biphasic ("prozone") function of the scaffold amount Stot,
+#  but because a single phosphorylation suffices it peaks about two-fold
+#  higher than Scaff-22 -- near Stot ~ 2.0e5 with R ~ 1.0e5 at S = 1 /s.
+#  Comparing this curve with the Scaff-22 curve reproduces Fig. 2 of
+#  Kocieniewski et al. (2012) and illustrates the paper's central point:
+#  scaffolds amplify signaling more strongly when only mono-phosphorylation
+#  is required, whereas the double-phosphorylation requirement tightens the
+#  scaffold's control of the response.
+#
+#  Note: Appendix A (rule 7) of Kocieniewski et al. (2012) prints the fast
+#  release of active MAPK as MAPK(s!1,R1~Y).Scaff(mapk!1) ->
+#  MAPK(s,R1~Yp) + Scaff(mapk); the unphosphorylated (R1~Y) left-hand side
+#  is a typo. Using it literally lets MAPK activate on release independently
+#  of MAP2K, abolishing the prozone effect and giving a monotonic,
+#  ~4.5x-too-large response. The corrected rule below (R1~Yp on both sides,
+#  mirroring Scaff-22) reproduces the paper's own Fig. 2 Scaff-11 curve.
+
+#@keyword: |
+#  cell signaling, MAPK cascade, MAP3K, MAP2K, MAPK, ERK, scaffold protein,
+#  KSR, mono-phosphorylation, single-site phosphorylation, prozone effect,
+#  high-dose inhibition, biphasic response, signal amplification,
+#  rule-based model, mass action, monostable, mammalian
+
+#@reference: |
+#  Kocieniewski P, Faeder JR, Lipniacki T (2012). The interplay of double
+#  phosphorylation and scaffolding in MAPK pathways. J Theor Biol
+#  295:116-124. doi:10.1016/j.jtbi.2011.11.014
+
+begin parameters
+
+  # Avogadro constant and reference volume, for optional conversion of
+  # molecule counts to concentrations (mammalian-cell volume 2000 um^3).
+  # The model is defined natively in molecule counts and uses neither in
+  # any rule.
+  NA 6.02214076e23  # molecules/mol
+  V_ref 2e-12       # L/cell
+
+  # Total molecule numbers per cell (Table 1 in Kocieniewski et al. (2012))
+  Atot 1e5   # molecules
+  Btot 1e5   # molecules
+  Ctot 5e5   # molecules
+  Stot 1e5   # molecules
+
+  # Signal: first-order activation rate of MAP3K
+  S 1        # /s
+
+  # Scaffold association (bimolecular) and dissociation (first-order)
+  a 1e-6     # /molecule/s
+  d1 0.1     # /s
+  d2 100     # /s
+
+  # On-scaffold phosphorylation (first-order transfer within a bound trimer)
+  pscaff 100 # /s
+
+  # First-order dephosphorylation and MAP3K inactivation
+  u 0.1      # /s
+
+end parameters
+
+begin molecule types
+
+  # MAP3K (e.g. RAF): inactive (I) or active (A); s binds the scaffold
+  MAP3K(s,S~I~A)
+  # MAP2K (e.g. MEK): single phospho-residue R1 (Y unphos / Yp phos)
+  MAP2K(s,R1~Y~Yp)
+  # MAPK (e.g. ERK): single phospho-residue R1 (Y unphos / Yp phos)
+  MAPK(s,R1~Y~Yp)
+  # Tripartite scaffold (e.g. KSR): one site per cascade tier
+  Scaff(map3k,map2k,mapk)
+
+end molecule types
+
+begin seed species
+
+  MAP3K(s,S~I) Atot                # molecules
+  MAP2K(s,R1~Y) Btot               # molecules
+  MAPK(s,R1~Y) Ctot                # molecules
+  Scaff(map3k,map2k,mapk) Stot     # molecules
+
+end seed species
+
+begin observables
+
+  # Response R: active (phosphorylated), unbound MAPK
+  Molecules Obs_R MAPK(s,R1~Yp)
+
+  # Total active kinase at each tier (bound or free)
+  Molecules Obs_MAPK_p MAPK(R1~Yp)
+  Molecules Obs_MAP2K_p MAP2K(R1~Yp)
+  Molecules Obs_MAP3K_A MAP3K(S~A)
+
+  # Conservation checks (must stay at Atot, Btot, Ctot, Stot)
+  Molecules Obs_MAP3K_tot MAP3K()
+  Molecules Obs_MAP2K_tot MAP2K()
+  Molecules Obs_MAPK_tot MAPK()
+  Molecules Obs_Scaff_tot Scaff()
+
+end observables
+
+begin reaction rules
+
+  # Signal-driven activation of MAP3K
+  R_activate_MAP3K: MAP3K(s,S~I) -> MAP3K(s,S~A) S
+
+  # Scaffold binding of active MAP3K; fast release if inactivated while bound
+  R_bind_MAP3K: MAP3K(s,S~A) + Scaff(map3k) <-> \
+    MAP3K(s!1,S~A).Scaff(map3k!1) a, d1
+  R_release_MAP3K_I: MAP3K(s!1,S~I).Scaff(map3k!1) -> \
+    MAP3K(s,S~I) + Scaff(map3k) d2
+
+  # Scaffold binding of MAP2K in either phospho-state
+  R_bind_MAP2K_Y: MAP2K(s,R1~Y) + Scaff(map2k) <-> \
+    MAP2K(s!1,R1~Y).Scaff(map2k!1) a, d1
+  R_bind_MAP2K_Yp: MAP2K(s,R1~Yp) + Scaff(map2k) <-> \
+    MAP2K(s!1,R1~Yp).Scaff(map2k!1) a, d1
+
+  # Scaffold binding of unphosphorylated MAPK; active (Yp) MAPK dissociates
+  # almost immediately (rate d2). NB: R1~Yp on both sides -- see the typo
+  # note in the header.
+  R_bind_MAPK_Y: MAPK(s,R1~Y) + Scaff(mapk) <-> \
+    MAPK(s!1,R1~Y).Scaff(mapk!1) a, d1
+  R_release_MAPK_p: MAPK(s!1,R1~Yp).Scaff(mapk!1) -> \
+    MAPK(s,R1~Yp) + Scaff(mapk) d2
+
+  # On-scaffold phosphorylation of MAP2K by scaffold-bound active MAP3K
+  R_phos_MAP2K_R1: MAP3K(s!1,S~A).Scaff(map3k!1,map2k!2).MAP2K(s!2,R1~Y) -> \
+    MAP3K(s!1,S~A).Scaff(map3k!1,map2k!2).MAP2K(s!2,R1~Yp) pscaff
+
+  # On-scaffold phosphorylation of MAPK by scaffold-bound phospho-MAP2K
+  R_phos_MAPK_R1: MAPK(s!1,R1~Y).Scaff(mapk!1,map2k!2).MAP2K(s!2,R1~Yp) -> \
+    MAPK(s!1,R1~Yp).Scaff(mapk!1,map2k!2).MAP2K(s!2,R1~Yp) pscaff
+
+  # First-order inactivation of MAP3K and dephosphorylation of MAP2K/MAPK
+  R_inactivate_MAP3K: MAP3K(S~A) -> MAP3K(S~I) u
+  R_dephos_MAP2K_R1: MAP2K(R1~Yp) -> MAP2K(R1~Y) u
+  R_dephos_MAPK_R1: MAPK(R1~Yp) -> MAPK(R1~Y) u
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1})  # 33 species, 127 reactions
+
+  #@note: |
+  #  Kocieniewski et al. (2012) report 33 species and 145 reactions for
+  #  Scaff-11; BioNetGen 2.9.3 generates the same 33 species but 127
+  #  unidirectional reactions. The species set is identical and mass is
+  #  conserved, so the reaction-count difference reflects reaction
+  #  deduplication/counting changes across BioNetGen versions. ODE is the
+  #  preferred protocol; SSA and PSA are feasible and left as commented
+  #  benchmark stubs; NFsim (nfr) is omitted (it aborts for the companion
+  #  Scaff-22 model under the bundled backend).
+
+  saveConcentrations()
+
+  # Relaxation to the unique stable steady state at the default Stot = 1e5.
+
+  #@protocol: |
+  #  Integrate from the seed state to steady state. At S = 1 /s and
+  #  Stot = 1e5 the response settles to Obs_R ~ 8.5e4 active unbound MAPK;
+  #  active MAP3K settles to S*Atot/(S+u) = 9.09e4.
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>500,\
+    n_steps=>500,atol=>1e-6,rtol=>1e-8})
+
+#  resetConcentrations()
+#  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>500,n_steps=>500})
+
+#  resetConcentrations()
+#  simulate({method=>"ssa",poplevel=>100,suffix=>"psa",t_start=>0,\
+#    t_end=>500,n_steps=>500})
+
+  # Scaffold prozone scan: steady-state response vs scaffold amount.
+
+  #@protocol: |
+  #  Scan the total scaffold amount Stot over 1e1..1e6 molecules (log
+  #  spacing) at S = 1 /s, integrating each point to steady state. Obs_R is
+  #  biphasic, peaking near Stot ~ 2.0e5 (Obs_R ~ 1.0e5) -- roughly twice
+  #  the Scaff-22 peak. Plot Obs_R vs Stot to reproduce the Scaff-11 curve.
+
+  #@figure: Fig. 2 (Scaff-11 curve) in Kocieniewski et al. (2012)
+
+  resetConcentrations()
+  parameter_scan({method=>"ode",parameter=>"Stot",par_min=>1e1,\
+    par_max=>1e6,n_scan_pts=>61,log_scale=>1,t_start=>0,t_end=>2000,\
+    n_steps=>1,atol=>1e-6,rtol=>1e-8,suffix=>"scan"})
+
+end actions

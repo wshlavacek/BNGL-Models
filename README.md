@@ -22,6 +22,7 @@ A collection curated models (in `models/`) drawn from the literature. Models are
 | `blbr_dembo1978/`<br>`blbr_dembo1978.bngl`<br>`blbr_dembo1978_monovalent_inhibitor.bngl`<br>`blbr_dembo1978_with_rings.bngl` | A model for bivalent ligand-bivalent cell-surface receptor interaction | Dembo & Goldstein, 1978; Perelson & DeLisi, 1980 |
 | `tlbr_yang2008/`<br>`tlbr_yang2008.bngl` | A model for trivalent ligand-bivalent cell-surface receptor interaction | Goldstein & Perelson, 1984; Yang et al., 2008 |
 | `tlbr_solution_macken1982/`<br>`tlbr_solution_macken1982.bngl` | A model for trivalent ligand-bivalent receptor interaction in solution | Macken & Perelson, 1982 |
+| `scaffolded_mapk_cascade_kocieniewski2012/`<br>`scaffolded_mapk_cascade_kocieniewski2012.bngl`<br>`scaffolded_mapk_cascade_kocieniewski2012_scaff11.bngl` | A rule-based model of a three-tier MAPK cascade (MAP3K, MAP2K, MAPK) assembled on a tripartite scaffold, in which MAP2K and MAPK require double phosphorylation occurring exclusively on the scaffold (the "Scaff-22" model); the response (active unbound MAPK) is a biphasic ("prozone") function of scaffold level. The `_scaff11` variant is the mono-phosphorylation counterpart, which amplifies signaling about two-fold more (reproducing both curves of Fig. 2) | Kocieniewski et al., 2012 |
 
 ## Setup
 
