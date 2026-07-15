@@ -1,0 +1,906 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA                 6.02214076e23  # Constant
+    2 V_ref              5.24e-13  # Constant
+    3 BCATtot            11000  # Constant
+    4 APC1338tot         1268183.13121163  # Constant
+    5 AXINtot            3154  # Constant
+    6 GSKtot             31540  # Constant
+    7 CK1atot            31540  # Constant
+    8 kf1_bap            3.17e-6  # Constant
+    9 kr1_bap            0.273  # Constant
+   10 kf2_bap            3.17e-6  # Constant
+   11 kr3_bap            0.085  # Constant
+   12 kf_ba              3.17e-6  # Constant
+   13 kr_ba              0.227  # Constant
+   14 kf_ga              3.17e-6  # Constant
+   15 kr_ga              0.065  # Constant
+   16 kf_ca              3.17e-6  # Constant
+   17 kr_ca              0.1  # Constant
+   18 kpb                0.05  # Constant
+   19 kmpb               0.0012  # Constant
+   20 kp                 0.05  # Constant
+   21 kmp                0.05  # Constant
+   22 kdb1               0.0000428  # Constant
+   23 kdb2               0.00428  # Constant
+   24 ksb                4.0  # Constant
+   25 chi                3154000  # Constant
+   26 _rateLaw1          chi*kf1_bap  # ConstantExpression
+   27 _rateLaw2          chi*kf2_bap  # ConstantExpression
+   28 _rateLaw3          1000  # Constant
+   29 _rateLaw4          1000  # Constant
+   30 _rateLaw5          1000  # Constant
+   31 _rateLaw6          1000  # Constant
+   32 _rateLaw7          1000  # Constant
+end parameters
+begin species
+    1 bCat(ARM34,ARM59,s33s37~U,s45~U,ss~l) BCATtot
+    2 APC1338(a15,a20~U) APC1338tot
+    3 AXIN(b,e,gid,rgs) AXINtot
+    4 GSK3b(a) GSKtot
+    5 CK1a(e) CK1atot
+    6 I() 1
+    7 APC1338(a15!1,a20~U).bCat(ARM34,ARM59!1,s33s37~U,s45~U,ss~l) 0
+    8 AXIN(b!1,e,gid,rgs).bCat(ARM34!1,ARM59,s33s37~U,s45~U,ss~l) 0
+    9 AXIN(b,e,gid!1,rgs).GSK3b(a!1) 0
+   10 AXIN(b,e!1,gid,rgs).CK1a(e!1) 0
+   11 bCat(ARM34,ARM59,s33s37~U,s45~U,ss~d) 0
+   12 APC1338(a15!1,a20~U).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~l) 0
+   13 AXIN(b!1,e,gid!2,rgs).GSK3b(a!2).bCat(ARM34!1,ARM59,s33s37~U,s45~U,ss~l) 0
+   14 AXIN(b!1,e!2,gid,rgs).CK1a(e!2).bCat(ARM34!1,ARM59,s33s37~U,s45~U,ss~l) 0
+   15 APC1338(a15!1,a20~U).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~l) 0
+   16 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~l) 0
+   17 AXIN(b,e!1,gid!2,rgs).CK1a(e!1).GSK3b(a!2) 0
+   18 APC1338(a15!1,a20~U).bCat(ARM34,ARM59!1,s33s37~U,s45~U,ss~d) 0
+   19 AXIN(b!1,e,gid,rgs).bCat(ARM34!1,ARM59,s33s37~U,s45~U,ss~d) 0
+   20 AXIN(b!1,e!2,gid!3,rgs).CK1a(e!2).GSK3b(a!3).bCat(ARM34!1,ARM59,s33s37~U,s45~U,ss~l) 0
+   21 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~l) 0
+   22 AXIN(b!1,e,gid!2,rgs).GSK3b(a!2).bCat(ARM34!1,ARM59,s33s37~U,s45~U,ss~d) 0
+   23 AXIN(b!1,e!2,gid,rgs).CK1a(e!2).bCat(ARM34!1,ARM59,s33s37~U,s45~U,ss~d) 0
+   24 AXIN(b!1,e!2,gid,rgs).CK1a(e!2).bCat(ARM34!1,ARM59,s33s37~U,s45~P,ss~l) 0
+   25 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~l) 0
+   26 APC1338(a15!1,a20~P).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~l) 0
+   27 APC1338(a15!1,a20~U).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~d) 0
+   28 APC1338(a15!1,a20~U).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~d) 0
+   29 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~d) 0
+   30 APC1338(a15,a20~P) 0
+   31 bCat(ARM34,ARM59,s33s37~U,s45~P,ss~l) 0
+   32 APC1338(a15!1,a20~U).bCat(ARM34,ARM59!1,s33s37~U,s45~P,ss~l) 0
+   33 APC1338(a15!1,a20~P).bCat(ARM34,ARM59!1,s33s37~U,s45~U,ss~l) 0
+   34 AXIN(b!1,e!2,gid!3,rgs).CK1a(e!2).GSK3b(a!3).bCat(ARM34!1,ARM59,s33s37~U,s45~U,ss~d) 0
+   35 AXIN(b!1,e!2,gid!3,rgs).CK1a(e!2).GSK3b(a!3).bCat(ARM34!1,ARM59,s33s37~U,s45~P,ss~l) 0
+   36 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~l) 0
+   37 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~d) 0
+   38 APC1338(a15!1,a20~P).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~l) 0
+   39 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~l) 0
+   40 AXIN(b!1,e,gid,rgs).bCat(ARM34!1,ARM59,s33s37~U,s45~P,ss~l) 0
+   41 APC1338(a15!1,a20~U).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~l) 0
+   42 APC1338(a15!1,a20~P).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~d) 0
+   43 AXIN(b!1,e!2,gid,rgs).CK1a(e!2).bCat(ARM34!1,ARM59,s33s37~U,s45~P,ss~d) 0
+   44 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~d) 0
+   45 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~l) 0
+   46 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~l) 0
+   47 APC1338(a15!1,a20~P).bCat(ARM34,ARM59!1,s33s37~U,s45~P,ss~l) 0
+   48 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~l) 0
+   49 APC1338(a15!1,a20~P).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~l) 0
+   50 APC1338(a15,a20~P!1).bCat(ARM34!1,ARM59,s33s37~U,s45~U,ss~l) 0
+   51 APC1338(a15,a20~P!1).bCat(ARM34!1,ARM59,s33s37~U,s45~P,ss~l) 0
+   52 APC1338(a15!1,a20~P!2).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~l) 0
+   53 AXIN(b!1,e,gid!2,rgs).GSK3b(a!2).bCat(ARM34!1,ARM59,s33s37~U,s45~P,ss~l) 0
+   54 APC1338(a15!1,a20~U).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~l) 0
+   55 AXIN(b!1,e!2,gid!3,rgs).CK1a(e!2).GSK3b(a!3).bCat(ARM34!1,ARM59,s33s37~U,s45~P,ss~d) 0
+   56 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~d) 0
+   57 APC1338(a15!1,a20~P).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~d) 0
+   58 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~d) 0
+   59 AXIN(b!1,e,gid,rgs).bCat(ARM34!1,ARM59,s33s37~U,s45~P,ss~d) 0
+   60 APC1338(a15!1,a20~U).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~d) 0
+   61 AXIN(b!1,e!2,gid!3,rgs).CK1a(e!2).GSK3b(a!3).bCat(ARM34!1,ARM59,s33s37~P,s45~P,ss~l) 0
+   62 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~l) 0
+   63 bCat(ARM34,ARM59,s33s37~U,s45~P,ss~d) 0
+   64 APC1338(a15!1,a20~U).bCat(ARM34,ARM59!1,s33s37~U,s45~P,ss~d) 0
+   65 APC1338(a15!1,a20~P).bCat(ARM34,ARM59!1,s33s37~U,s45~U,ss~d) 0
+   66 APC1338(a15!1,a20~P).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~l) 0
+   67 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~l) 0
+   68 APC1338(a15!1,a20~P!2).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~l) 0
+   69 APC1338(a15!1,a20~P!2).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~d) 0
+   70 bCat(ARM34,ARM59,s33s37~P,s45~P,ss~l) 0
+   71 APC1338(a15!1,a20~U).bCat(ARM34,ARM59!1,s33s37~P,s45~P,ss~l) 0
+   72 AXIN(b!1,e,gid!2,rgs).GSK3b(a!2).bCat(ARM34!1,ARM59,s33s37~U,s45~P,ss~d) 0
+   73 APC1338(a15!1,a20~U).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~d) 0
+   74 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~U,ss~d) 0
+   75 AXIN(b!1,e!2,gid,rgs).CK1a(e!2).bCat(ARM34!1,ARM59,s33s37~P,s45~P,ss~l) 0
+   76 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~l) 0
+   77 AXIN(b!1,e,gid!2,rgs).GSK3b(a!2).bCat(ARM34!1,ARM59,s33s37~P,s45~P,ss~l) 0
+   78 APC1338(a15!1,a20~U).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~l) 0
+   79 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~d) 0
+   80 AXIN(b!1,e!2,gid!3,rgs).CK1a(e!2).GSK3b(a!3).bCat(ARM34!1,ARM59,s33s37~P,s45~U,ss~l) 0
+   81 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~l) 0
+   82 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~d) 0
+   83 APC1338(a15!1,a20~P).bCat(ARM34,ARM59!1,s33s37~U,s45~P,ss~d) 0
+   84 APC1338(a15!1,a20~P).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~d) 0
+   85 APC1338(a15,a20~P!1).bCat(ARM34!1,ARM59,s33s37~U,s45~U,ss~d) 0
+   86 APC1338(a15,a20~P!1).bCat(ARM34!1,ARM59,s33s37~U,s45~P,ss~d) 0
+   87 AXIN(b!1,e!2,gid!3,rgs).CK1a(e!2).GSK3b(a!3).bCat(ARM34!1,ARM59,s33s37~P,s45~P,ss~d) 0
+   88 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~d) 0
+   89 APC1338(a15!1,a20~P).bCat(ARM34,ARM59!1,s33s37~P,s45~P,ss~l) 0
+   90 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~l) 0
+   91 APC1338(a15!1,a20~P).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~l) 0
+   92 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~l) 0
+   93 APC1338(a15!1,a20~P!2).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~d) 0
+   94 APC1338(a15,a20~P!1).bCat(ARM34!1,ARM59,s33s37~P,s45~P,ss~l) 0
+   95 AXIN(b!1,e,gid,rgs).bCat(ARM34!1,ARM59,s33s37~P,s45~P,ss~l) 0
+   96 APC1338(a15!1,a20~U).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~l) 0
+   97 bCat(ARM34,ARM59,s33s37~P,s45~U,ss~l) 0
+   98 APC1338(a15!1,a20~U).bCat(ARM34,ARM59!1,s33s37~P,s45~U,ss~l) 0
+   99 APC1338(a15!1,a20~P).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~U,s45~P,ss~d) 0
+  100 AXIN(b!1,e!2,gid,rgs).CK1a(e!2).bCat(ARM34!1,ARM59,s33s37~P,s45~U,ss~l) 0
+  101 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~l) 0
+  102 AXIN(b!1,e!2,gid,rgs).CK1a(e!2).bCat(ARM34!1,ARM59,s33s37~P,s45~P,ss~d) 0
+  103 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~d) 0
+  104 AXIN(b!1,e,gid!2,rgs).GSK3b(a!2).bCat(ARM34!1,ARM59,s33s37~P,s45~U,ss~l) 0
+  105 APC1338(a15!1,a20~U).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~l) 0
+  106 AXIN(b!1,e,gid!2,rgs).GSK3b(a!2).bCat(ARM34!1,ARM59,s33s37~P,s45~P,ss~d) 0
+  107 APC1338(a15!1,a20~U).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~d) 0
+  108 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~d) 0
+  109 bCat(ARM34,ARM59,s33s37~P,s45~P,ss~d) 0
+  110 APC1338(a15!1,a20~U).bCat(ARM34,ARM59!1,s33s37~P,s45~P,ss~d) 0
+  111 AXIN(b!1,e!2,gid!3,rgs).CK1a(e!2).GSK3b(a!3).bCat(ARM34!1,ARM59,s33s37~P,s45~U,ss~d) 0
+  112 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~d) 0
+  113 APC1338(a15!1,a20~P).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~l) 0
+  114 APC1338(a15!1,a20~P).bCat(ARM34,ARM59!1,s33s37~P,s45~U,ss~l) 0
+  115 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~l) 0
+  116 APC1338(a15!1,a20~P).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~l) 0
+  117 APC1338(a15!1,a20~P!2).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~l) 0
+  118 APC1338(a15,a20~P!1).bCat(ARM34!1,ARM59,s33s37~P,s45~U,ss~l) 0
+  119 AXIN(b!1,e,gid,rgs).bCat(ARM34!1,ARM59,s33s37~P,s45~U,ss~l) 0
+  120 APC1338(a15!1,a20~U).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~l) 0
+  121 AXIN(b!1,e,gid,rgs).bCat(ARM34!1,ARM59,s33s37~P,s45~P,ss~d) 0
+  122 APC1338(a15!1,a20~U).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~d) 0
+  123 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~d) 0
+  124 AXIN(b!1,e!2,gid,rgs).CK1a(e!2).bCat(ARM34!1,ARM59,s33s37~P,s45~U,ss~d) 0
+  125 APC1338(a15!1,a20~U).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~d) 0
+  126 APC1338(a15!1,a20~P).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~d) 0
+  127 AXIN(b!1,e,gid!2,rgs).GSK3b(a!2).bCat(ARM34!1,ARM59,s33s37~P,s45~U,ss~d) 0
+  128 APC1338(a15!1,a20~U).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~d) 0
+  129 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid!4,rgs).CK1a(e!3).GSK3b(a!4).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~d) 0
+  130 APC1338(a15!1,a20~P).bCat(ARM34,ARM59!1,s33s37~P,s45~P,ss~d) 0
+  131 APC1338(a15,a20~P!1).bCat(ARM34!1,ARM59,s33s37~P,s45~P,ss~d) 0
+  132 bCat(ARM34,ARM59,s33s37~P,s45~U,ss~d) 0
+  133 APC1338(a15!1,a20~U).bCat(ARM34,ARM59!1,s33s37~P,s45~U,ss~d) 0
+  134 APC1338(a15!1,a20~P).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~l) 0
+  135 APC1338(a15!1,a20~P!2).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~l) 0
+  136 APC1338(a15!1,a20~P!2).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~d) 0
+  137 APC1338(a15!1,a20~P).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~P,s45~P,ss~d) 0
+  138 AXIN(b!1,e,gid,rgs).bCat(ARM34!1,ARM59,s33s37~P,s45~U,ss~d) 0
+  139 APC1338(a15!1,a20~U).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~d) 0
+  140 APC1338(a15!1,a20~P).AXIN(b!2,e!3,gid,rgs).CK1a(e!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~d) 0
+  141 APC1338(a15!1,a20~P).AXIN(b!2,e,gid!3,rgs).GSK3b(a!3).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~d) 0
+  142 APC1338(a15!1,a20~P).bCat(ARM34,ARM59!1,s33s37~P,s45~U,ss~d) 0
+  143 APC1338(a15,a20~P!1).bCat(ARM34!1,ARM59,s33s37~P,s45~U,ss~d) 0
+  144 APC1338(a15!1,a20~P!2).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~d) 0
+  145 APC1338(a15!1,a20~P).AXIN(b!2,e,gid,rgs).bCat(ARM34!2,ARM59!1,s33s37~P,s45~U,ss~d) 0
+end species
+begin reactions
+    1 1,2 7 kf1_bap #R1_bind_bCat15_free
+    2 1,3 8 kf_ba #R3_bind_bCatAxin_free
+    3 3,4 9 kf_ga #R5_bind_GSK3b_Axin
+    4 3,5 10 kf_ca #R6_bind_CK1a_Axin
+    5 6 1,6 ksb #R13_synth_bCat
+    6 1 11 kdb1 #R14_degrade_bCat_slow
+    7 2,8 12 kf1_bap #R1_bind_bCat15_free
+    8 7 1,2 kr1_bap #_reverse_R1_bind_bCat15_free
+    9 1,9 13 kf_ba #R3_bind_bCatAxin_free
+   10 1,10 14 kf_ba #R3_bind_bCatAxin_free
+   11 3,7 12 kf_ba #R3_bind_bCatAxin_free
+   12 7,9 15 kf_ba #R3_bind_bCatAxin_free
+   13 7,10 16 kf_ba #R3_bind_bCatAxin_free
+   14 8 1,3 kr_ba #_reverse_R3_bind_bCatAxin_free
+   15 4,8 13 kf_ga #R5_bind_GSK3b_Axin
+   16 4,10 17 kf_ga #R5_bind_GSK3b_Axin
+   17 9 3,4 kr_ga #_reverse_R5_bind_GSK3b_Axin
+   18 5,8 14 kf_ca #R6_bind_CK1a_Axin
+   19 5,9 17 kf_ca #R6_bind_CK1a_Axin
+   20 10 3,5 kr_ca #_reverse_R6_bind_CK1a_Axin
+   21 7 18 kdb1 #R14_degrade_bCat_slow
+   22 8 19 kdb1 #R14_degrade_bCat_slow
+   23 2,13 15 kf1_bap #R1_bind_bCat15_free
+   24 2,14 16 kf1_bap #R1_bind_bCat15_free
+   25 12 2,8 kr1_bap #_reverse_R1_bind_bCat15_free
+   26 15 2,13 kr1_bap #_reverse_R1_bind_bCat15_free
+   27 16 2,14 kr1_bap #_reverse_R1_bind_bCat15_free
+   28 1,17 20 kf_ba #R3_bind_bCatAxin_free
+   29 7,17 21 kf_ba #R3_bind_bCatAxin_free
+   30 12 3,7 kr_ba #_reverse_R3_bind_bCatAxin_free
+   31 13 1,9 kr_ba #_reverse_R3_bind_bCatAxin_free
+   32 14 1,10 kr_ba #_reverse_R3_bind_bCatAxin_free
+   33 15 7,9 kr_ba #_reverse_R3_bind_bCatAxin_free
+   34 16 7,10 kr_ba #_reverse_R3_bind_bCatAxin_free
+   35 4,12 15 kf_ga #R5_bind_GSK3b_Axin
+   36 4,14 20 kf_ga #R5_bind_GSK3b_Axin
+   37 4,16 21 kf_ga #R5_bind_GSK3b_Axin
+   38 4,19 22 kf_ga #R5_bind_GSK3b_Axin
+   39 13 4,8 kr_ga #_reverse_R5_bind_GSK3b_Axin
+   40 15 4,12 kr_ga #_reverse_R5_bind_GSK3b_Axin
+   41 17 4,10 kr_ga #_reverse_R5_bind_GSK3b_Axin
+   42 5,12 16 kf_ca #R6_bind_CK1a_Axin
+   43 5,13 20 kf_ca #R6_bind_CK1a_Axin
+   44 5,15 21 kf_ca #R6_bind_CK1a_Axin
+   45 5,19 23 kf_ca #R6_bind_CK1a_Axin
+   46 14 5,8 kr_ca #_reverse_R6_bind_CK1a_Axin
+   47 16 5,12 kr_ca #_reverse_R6_bind_CK1a_Axin
+   48 17 5,9 kr_ca #_reverse_R6_bind_CK1a_Axin
+   49 14 24 kpb #R7_phos_bCat_S45
+   50 16 25 kpb #R7_phos_bCat_S45
+   51 15 26 kp #R9_phos_APC_a20
+   52 12 27 kdb1 #R14_degrade_bCat_slow
+   53 13 22 kdb1 #R14_degrade_bCat_slow
+   54 14 23 kdb1 #R14_degrade_bCat_slow
+   55 15 28 kdb1 #R14_degrade_bCat_slow
+   56 16 29 kdb1 #R14_degrade_bCat_slow
+   57 18 2,11 _rateLaw3 #R16_release_APC15_diss
+   58 19 3,11 _rateLaw6 #R19_release_Axin_diss
+   59 2,20 21 kf1_bap #R1_bind_bCat15_free
+   60 2,24 25 kf1_bap #R1_bind_bCat15_free
+   61 21 2,20 kr1_bap #_reverse_R1_bind_bCat15_free
+   62 25 2,24 kr1_bap #_reverse_R1_bind_bCat15_free
+   63 26 13,30 kr1_bap #_reverse_R1_bind_bCat15_free
+   64 20 1,17 kr_ba #_reverse_R3_bind_bCatAxin_free
+   65 21 7,17 kr_ba #_reverse_R3_bind_bCatAxin_free
+   66 24 10,31 kr_ba #_reverse_R3_bind_bCatAxin_free
+   67 25 10,32 kr_ba #_reverse_R3_bind_bCatAxin_free
+   68 26 9,33 kr_ba #_reverse_R3_bind_bCatAxin_free
+   69 4,23 34 kf_ga #R5_bind_GSK3b_Axin
+   70 4,24 35 kf_ga #R5_bind_GSK3b_Axin
+   71 4,25 36 kf_ga #R5_bind_GSK3b_Axin
+   72 4,27 28 kf_ga #R5_bind_GSK3b_Axin
+   73 4,29 37 kf_ga #R5_bind_GSK3b_Axin
+   74 20 4,14 kr_ga #_reverse_R5_bind_GSK3b_Axin
+   75 21 4,16 kr_ga #_reverse_R5_bind_GSK3b_Axin
+   76 22 4,19 kr_ga #_reverse_R5_bind_GSK3b_Axin
+   77 26 4,38 kr_ga #_reverse_R5_bind_GSK3b_Axin
+   78 28 4,27 kr_ga #_reverse_R5_bind_GSK3b_Axin
+   79 5,22 34 kf_ca #R6_bind_CK1a_Axin
+   80 5,26 39 kf_ca #R6_bind_CK1a_Axin
+   81 5,27 29 kf_ca #R6_bind_CK1a_Axin
+   82 5,28 37 kf_ca #R6_bind_CK1a_Axin
+   83 20 5,13 kr_ca #_reverse_R6_bind_CK1a_Axin
+   84 21 5,15 kr_ca #_reverse_R6_bind_CK1a_Axin
+   85 23 5,19 kr_ca #_reverse_R6_bind_CK1a_Axin
+   86 24 5,40 kr_ca #_reverse_R6_bind_CK1a_Axin
+   87 25 5,41 kr_ca #_reverse_R6_bind_CK1a_Axin
+   88 29 5,27 kr_ca #_reverse_R6_bind_CK1a_Axin
+   89 20 35 kpb #R7_phos_bCat_S45
+   90 21 36 kpb #R7_phos_bCat_S45
+   91 21 39 kp #R9_phos_APC_a20
+   92 28 42 kp #R9_phos_APC_a20
+   93 24 14 kmpb #R10_dephos_bCat_S45
+   94 25 16 kmpb #R10_dephos_bCat_S45
+   95 26 15 kmp #R12_dephos_APC_a20
+   96 20 34 kdb1 #R14_degrade_bCat_slow
+   97 21 37 kdb1 #R14_degrade_bCat_slow
+   98 24 43 kdb1 #R14_degrade_bCat_slow
+   99 25 44 kdb1 #R14_degrade_bCat_slow
+  100 26 42 kdb1 #R14_degrade_bCat_slow
+  101 27 2,19 _rateLaw3 #R16_release_APC15_diss
+  102 28 2,22 _rateLaw3 #R16_release_APC15_diss
+  103 29 2,23 _rateLaw3 #R16_release_APC15_diss
+  104 22 9,11 _rateLaw6 #R19_release_Axin_diss
+  105 23 10,11 _rateLaw6 #R19_release_Axin_diss
+  106 27 3,18 _rateLaw6 #R19_release_Axin_diss
+  107 28 9,18 _rateLaw6 #R19_release_Axin_diss
+  108 29 10,18 _rateLaw6 #R19_release_Axin_diss
+  109 1,30 33 kf1_bap #R1_bind_bCat15_free
+  110 8,30 38 kf1_bap #R1_bind_bCat15_free
+  111 13,30 26 kf1_bap #R1_bind_bCat15_free
+  112 14,30 45 kf1_bap #R1_bind_bCat15_free
+  113 20,30 39 kf1_bap #R1_bind_bCat15_free
+  114 24,30 46 kf1_bap #R1_bind_bCat15_free
+  115 2,31 32 kf1_bap #R1_bind_bCat15_free
+  116 30,31 47 kf1_bap #R1_bind_bCat15_free
+  117 2,35 36 kf1_bap #R1_bind_bCat15_free
+  118 30,35 48 kf1_bap #R1_bind_bCat15_free
+  119 2,40 41 kf1_bap #R1_bind_bCat15_free
+  120 30,40 49 kf1_bap #R1_bind_bCat15_free
+  121 32 2,31 kr1_bap #_reverse_R1_bind_bCat15_free
+  122 33 1,30 kr1_bap #_reverse_R1_bind_bCat15_free
+  123 36 2,35 kr1_bap #_reverse_R1_bind_bCat15_free
+  124 38 8,30 kr1_bap #_reverse_R1_bind_bCat15_free
+  125 39 20,30 kr1_bap #_reverse_R1_bind_bCat15_free
+  126 41 2,40 kr1_bap #_reverse_R1_bind_bCat15_free
+  127 1,30 50 kf2_bap #R2_bind_bCat20_free
+  128 30,31 51 kf2_bap #R2_bind_bCat20_free
+  129 33 52 _rateLaw2 #R2_bind_bCat20_via_a15
+  130 3,31 40 kf_ba #R3_bind_bCatAxin_free
+  131 9,31 53 kf_ba #R3_bind_bCatAxin_free
+  132 10,31 24 kf_ba #R3_bind_bCatAxin_free
+  133 17,31 35 kf_ba #R3_bind_bCatAxin_free
+  134 3,32 41 kf_ba #R3_bind_bCatAxin_free
+  135 9,32 54 kf_ba #R3_bind_bCatAxin_free
+  136 10,32 25 kf_ba #R3_bind_bCatAxin_free
+  137 17,32 36 kf_ba #R3_bind_bCatAxin_free
+  138 3,33 38 kf_ba #R3_bind_bCatAxin_free
+  139 9,33 26 kf_ba #R3_bind_bCatAxin_free
+  140 10,33 45 kf_ba #R3_bind_bCatAxin_free
+  141 17,33 39 kf_ba #R3_bind_bCatAxin_free
+  142 35 17,31 kr_ba #_reverse_R3_bind_bCatAxin_free
+  143 36 17,32 kr_ba #_reverse_R3_bind_bCatAxin_free
+  144 38 3,33 kr_ba #_reverse_R3_bind_bCatAxin_free
+  145 39 17,33 kr_ba #_reverse_R3_bind_bCatAxin_free
+  146 40 3,31 kr_ba #_reverse_R3_bind_bCatAxin_free
+  147 41 3,32 kr_ba #_reverse_R3_bind_bCatAxin_free
+  148 4,38 26 kf_ga #R5_bind_GSK3b_Axin
+  149 4,40 53 kf_ga #R5_bind_GSK3b_Axin
+  150 4,41 54 kf_ga #R5_bind_GSK3b_Axin
+  151 4,43 55 kf_ga #R5_bind_GSK3b_Axin
+  152 4,44 56 kf_ga #R5_bind_GSK3b_Axin
+  153 34 4,23 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  154 35 4,24 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  155 36 4,25 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  156 37 4,29 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  157 39 4,45 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  158 42 4,57 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  159 5,38 45 kf_ca #R6_bind_CK1a_Axin
+  160 5,40 24 kf_ca #R6_bind_CK1a_Axin
+  161 5,41 25 kf_ca #R6_bind_CK1a_Axin
+  162 5,42 58 kf_ca #R6_bind_CK1a_Axin
+  163 34 5,22 kr_ca #_reverse_R6_bind_CK1a_Axin
+  164 35 5,53 kr_ca #_reverse_R6_bind_CK1a_Axin
+  165 36 5,54 kr_ca #_reverse_R6_bind_CK1a_Axin
+  166 37 5,28 kr_ca #_reverse_R6_bind_CK1a_Axin
+  167 39 5,26 kr_ca #_reverse_R6_bind_CK1a_Axin
+  168 43 5,59 kr_ca #_reverse_R6_bind_CK1a_Axin
+  169 44 5,60 kr_ca #_reverse_R6_bind_CK1a_Axin
+  170 39 48 kpb #R7_phos_bCat_S45
+  171 35 61 kpb #R8_phos_bCat_S33S37
+  172 36 62 kpb #R8_phos_bCat_S33S37
+  173 36 48 kp #R9_phos_APC_a20
+  174 37 58 kp #R9_phos_APC_a20
+  175 31 1 kmpb #R10_dephos_bCat_S45
+  176 32 7 kmpb #R10_dephos_bCat_S45
+  177 35 20 kmpb #R10_dephos_bCat_S45
+  178 36 21 kmpb #R10_dephos_bCat_S45
+  179 40 8 kmpb #R10_dephos_bCat_S45
+  180 41 12 kmpb #R10_dephos_bCat_S45
+  181 38 12 kmp #R12_dephos_APC_a20
+  182 39 21 kmp #R12_dephos_APC_a20
+  183 42 28 kmp #R12_dephos_APC_a20
+  184 31 63 kdb1 #R14_degrade_bCat_slow
+  185 32 64 kdb1 #R14_degrade_bCat_slow
+  186 33 65 kdb1 #R14_degrade_bCat_slow
+  187 35 55 kdb1 #R14_degrade_bCat_slow
+  188 36 56 kdb1 #R14_degrade_bCat_slow
+  189 38 57 kdb1 #R14_degrade_bCat_slow
+  190 39 58 kdb1 #R14_degrade_bCat_slow
+  191 40 59 kdb1 #R14_degrade_bCat_slow
+  192 41 60 kdb1 #R14_degrade_bCat_slow
+  193 37 2,34 _rateLaw3 #R16_release_APC15_diss
+  194 42 22,30 _rateLaw3 #R16_release_APC15_diss
+  195 44 2,43 _rateLaw3 #R16_release_APC15_diss
+  196 34 11,17 _rateLaw6 #R19_release_Axin_diss
+  197 37 17,18 _rateLaw6 #R19_release_Axin_diss
+  198 42 9,65 _rateLaw6 #R19_release_Axin_diss
+  199 43 10,63 _rateLaw6 #R19_release_Axin_diss
+  200 44 10,64 _rateLaw6 #R19_release_Axin_diss
+  201 2,53 54 kf1_bap #R1_bind_bCat15_free
+  202 30,53 66 kf1_bap #R1_bind_bCat15_free
+  203 2,61 62 kf1_bap #R1_bind_bCat15_free
+  204 30,61 67 kf1_bap #R1_bind_bCat15_free
+  205 45 14,30 kr1_bap #_reverse_R1_bind_bCat15_free
+  206 46 24,30 kr1_bap #_reverse_R1_bind_bCat15_free
+  207 47 30,31 kr1_bap #_reverse_R1_bind_bCat15_free
+  208 48 30,35 kr1_bap #_reverse_R1_bind_bCat15_free
+  209 49 30,40 kr1_bap #_reverse_R1_bind_bCat15_free
+  210 54 2,53 kr1_bap #_reverse_R1_bind_bCat15_free
+  211 62 2,61 kr1_bap #_reverse_R1_bind_bCat15_free
+  212 50 52 _rateLaw1 #R1_bind_bCat15_via_a20
+  213 51 68 _rateLaw1 #R1_bind_bCat15_via_a20
+  214 52 50 kr1_bap #_reverse_R1_bind_bCat15_via_a20
+  215 50 1,30 kr3_bap #_reverse_R2_bind_bCat20_free
+  216 51 30,31 kr3_bap #_reverse_R2_bind_bCat20_free
+  217 47 68 _rateLaw2 #R2_bind_bCat20_via_a15
+  218 65 69 _rateLaw2 #R2_bind_bCat20_via_a15
+  219 52 33 kr3_bap #_reverse_R2_bind_bCat20_via_a15
+  220 3,47 49 kf_ba #R3_bind_bCatAxin_free
+  221 9,47 66 kf_ba #R3_bind_bCatAxin_free
+  222 10,47 46 kf_ba #R3_bind_bCatAxin_free
+  223 17,47 48 kf_ba #R3_bind_bCatAxin_free
+  224 45 10,33 kr_ba #_reverse_R3_bind_bCatAxin_free
+  225 46 10,47 kr_ba #_reverse_R3_bind_bCatAxin_free
+  226 48 17,47 kr_ba #_reverse_R3_bind_bCatAxin_free
+  227 49 3,47 kr_ba #_reverse_R3_bind_bCatAxin_free
+  228 53 9,31 kr_ba #_reverse_R3_bind_bCatAxin_free
+  229 54 9,32 kr_ba #_reverse_R3_bind_bCatAxin_free
+  230 61 17,70 kr_ba #_reverse_R3_bind_bCatAxin_free
+  231 62 17,71 kr_ba #_reverse_R3_bind_bCatAxin_free
+  232 4,45 39 kf_ga #R5_bind_GSK3b_Axin
+  233 4,46 48 kf_ga #R5_bind_GSK3b_Axin
+  234 4,49 66 kf_ga #R5_bind_GSK3b_Axin
+  235 4,57 42 kf_ga #R5_bind_GSK3b_Axin
+  236 4,59 72 kf_ga #R5_bind_GSK3b_Axin
+  237 4,60 73 kf_ga #R5_bind_GSK3b_Axin
+  238 48 4,46 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  239 53 4,40 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  240 54 4,41 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  241 55 4,43 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  242 56 4,44 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  243 58 4,74 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  244 61 4,75 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  245 62 4,76 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  246 5,49 46 kf_ca #R6_bind_CK1a_Axin
+  247 5,53 35 kf_ca #R6_bind_CK1a_Axin
+  248 5,54 36 kf_ca #R6_bind_CK1a_Axin
+  249 5,57 74 kf_ca #R6_bind_CK1a_Axin
+  250 5,59 43 kf_ca #R6_bind_CK1a_Axin
+  251 5,60 44 kf_ca #R6_bind_CK1a_Axin
+  252 45 5,38 kr_ca #_reverse_R6_bind_CK1a_Axin
+  253 46 5,49 kr_ca #_reverse_R6_bind_CK1a_Axin
+  254 48 5,66 kr_ca #_reverse_R6_bind_CK1a_Axin
+  255 55 5,72 kr_ca #_reverse_R6_bind_CK1a_Axin
+  256 56 5,73 kr_ca #_reverse_R6_bind_CK1a_Axin
+  257 58 5,42 kr_ca #_reverse_R6_bind_CK1a_Axin
+  258 61 5,77 kr_ca #_reverse_R6_bind_CK1a_Axin
+  259 62 5,78 kr_ca #_reverse_R6_bind_CK1a_Axin
+  260 45 46 kpb #R7_phos_bCat_S45
+  261 48 67 kpb #R8_phos_bCat_S33S37
+  262 53 77 kpb #R8_phos_bCat_S33S37
+  263 54 78 kpb #R8_phos_bCat_S33S37
+  264 54 66 kp #R9_phos_APC_a20
+  265 56 79 kp #R9_phos_APC_a20
+  266 62 67 kp #R9_phos_APC_a20
+  267 46 45 kmpb #R10_dephos_bCat_S45
+  268 47 33 kmpb #R10_dephos_bCat_S45
+  269 48 39 kmpb #R10_dephos_bCat_S45
+  270 49 38 kmpb #R10_dephos_bCat_S45
+  271 51 50 kmpb #R10_dephos_bCat_S45
+  272 53 13 kmpb #R10_dephos_bCat_S45
+  273 54 15 kmpb #R10_dephos_bCat_S45
+  274 61 80 kmpb #R10_dephos_bCat_S45
+  275 62 81 kmpb #R10_dephos_bCat_S45
+  276 61 35 kmpb #R11_dephos_bCat_S33S37
+  277 62 36 kmpb #R11_dephos_bCat_S33S37
+  278 45 16 kmp #R12_dephos_APC_a20
+  279 46 25 kmp #R12_dephos_APC_a20
+  280 48 36 kmp #R12_dephos_APC_a20
+  281 49 41 kmp #R12_dephos_APC_a20
+  282 57 27 kmp #R12_dephos_APC_a20
+  283 58 37 kmp #R12_dephos_APC_a20
+  284 45 74 kdb1 #R14_degrade_bCat_slow
+  285 46 82 kdb1 #R14_degrade_bCat_slow
+  286 47 83 kdb1 #R14_degrade_bCat_slow
+  287 48 79 kdb1 #R14_degrade_bCat_slow
+  288 49 84 kdb1 #R14_degrade_bCat_slow
+  289 50 85 kdb1 #R14_degrade_bCat_slow
+  290 51 86 kdb1 #R14_degrade_bCat_slow
+  291 52 69 kdb1 #R14_degrade_bCat_slow
+  292 53 72 kdb1 #R14_degrade_bCat_slow
+  293 54 73 kdb1 #R14_degrade_bCat_slow
+  294 61 87 kdb2 #R15_degrade_bCat_fast
+  295 62 88 kdb2 #R15_degrade_bCat_fast
+  296 56 2,55 _rateLaw3 #R16_release_APC15_diss
+  297 57 19,30 _rateLaw3 #R16_release_APC15_diss
+  298 58 30,34 _rateLaw3 #R16_release_APC15_diss
+  299 60 2,59 _rateLaw3 #R16_release_APC15_diss
+  300 64 2,63 _rateLaw3 #R16_release_APC15_diss
+  301 65 11,30 _rateLaw3 #R16_release_APC15_diss
+  302 55 17,63 _rateLaw6 #R19_release_Axin_diss
+  303 56 17,64 _rateLaw6 #R19_release_Axin_diss
+  304 57 3,65 _rateLaw6 #R19_release_Axin_diss
+  305 58 17,65 _rateLaw6 #R19_release_Axin_diss
+  306 59 3,63 _rateLaw6 #R19_release_Axin_diss
+  307 60 3,64 _rateLaw6 #R19_release_Axin_diss
+  308 2,70 71 kf1_bap #R1_bind_bCat15_free
+  309 30,70 89 kf1_bap #R1_bind_bCat15_free
+  310 2,75 76 kf1_bap #R1_bind_bCat15_free
+  311 30,75 90 kf1_bap #R1_bind_bCat15_free
+  312 2,77 78 kf1_bap #R1_bind_bCat15_free
+  313 30,77 91 kf1_bap #R1_bind_bCat15_free
+  314 2,80 81 kf1_bap #R1_bind_bCat15_free
+  315 30,80 92 kf1_bap #R1_bind_bCat15_free
+  316 66 30,53 kr1_bap #_reverse_R1_bind_bCat15_free
+  317 67 30,61 kr1_bap #_reverse_R1_bind_bCat15_free
+  318 71 2,70 kr1_bap #_reverse_R1_bind_bCat15_free
+  319 76 2,75 kr1_bap #_reverse_R1_bind_bCat15_free
+  320 78 2,77 kr1_bap #_reverse_R1_bind_bCat15_free
+  321 81 2,80 kr1_bap #_reverse_R1_bind_bCat15_free
+  322 85 69 _rateLaw1 #R1_bind_bCat15_via_a20
+  323 86 93 _rateLaw1 #R1_bind_bCat15_via_a20
+  324 68 51 kr1_bap #_reverse_R1_bind_bCat15_via_a20
+  325 69 85 kr1_bap #_reverse_R1_bind_bCat15_via_a20
+  326 30,70 94 kf2_bap #R2_bind_bCat20_free
+  327 83 93 _rateLaw2 #R2_bind_bCat20_via_a15
+  328 68 47 kr3_bap #_reverse_R2_bind_bCat20_via_a15
+  329 69 65 kr3_bap #_reverse_R2_bind_bCat20_via_a15
+  330 3,70 95 kf_ba #R3_bind_bCatAxin_free
+  331 9,70 77 kf_ba #R3_bind_bCatAxin_free
+  332 10,70 75 kf_ba #R3_bind_bCatAxin_free
+  333 17,70 61 kf_ba #R3_bind_bCatAxin_free
+  334 3,71 96 kf_ba #R3_bind_bCatAxin_free
+  335 9,71 78 kf_ba #R3_bind_bCatAxin_free
+  336 10,71 76 kf_ba #R3_bind_bCatAxin_free
+  337 17,71 62 kf_ba #R3_bind_bCatAxin_free
+  338 66 9,47 kr_ba #_reverse_R3_bind_bCatAxin_free
+  339 67 17,89 kr_ba #_reverse_R3_bind_bCatAxin_free
+  340 75 10,70 kr_ba #_reverse_R3_bind_bCatAxin_free
+  341 76 10,71 kr_ba #_reverse_R3_bind_bCatAxin_free
+  342 77 9,70 kr_ba #_reverse_R3_bind_bCatAxin_free
+  343 78 9,71 kr_ba #_reverse_R3_bind_bCatAxin_free
+  344 80 17,97 kr_ba #_reverse_R3_bind_bCatAxin_free
+  345 81 17,98 kr_ba #_reverse_R3_bind_bCatAxin_free
+  346 4,74 58 kf_ga #R5_bind_GSK3b_Axin
+  347 4,75 61 kf_ga #R5_bind_GSK3b_Axin
+  348 4,76 62 kf_ga #R5_bind_GSK3b_Axin
+  349 4,82 79 kf_ga #R5_bind_GSK3b_Axin
+  350 4,84 99 kf_ga #R5_bind_GSK3b_Axin
+  351 66 4,49 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  352 67 4,90 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  353 72 4,59 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  354 73 4,60 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  355 77 4,95 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  356 78 4,96 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  357 79 4,82 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  358 80 4,100 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  359 81 4,101 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  360 87 4,102 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  361 88 4,103 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  362 5,66 48 kf_ca #R6_bind_CK1a_Axin
+  363 5,72 55 kf_ca #R6_bind_CK1a_Axin
+  364 5,73 56 kf_ca #R6_bind_CK1a_Axin
+  365 5,77 61 kf_ca #R6_bind_CK1a_Axin
+  366 5,78 62 kf_ca #R6_bind_CK1a_Axin
+  367 5,84 82 kf_ca #R6_bind_CK1a_Axin
+  368 67 5,91 kr_ca #_reverse_R6_bind_CK1a_Axin
+  369 74 5,57 kr_ca #_reverse_R6_bind_CK1a_Axin
+  370 75 5,95 kr_ca #_reverse_R6_bind_CK1a_Axin
+  371 76 5,96 kr_ca #_reverse_R6_bind_CK1a_Axin
+  372 79 5,99 kr_ca #_reverse_R6_bind_CK1a_Axin
+  373 80 5,104 kr_ca #_reverse_R6_bind_CK1a_Axin
+  374 81 5,105 kr_ca #_reverse_R6_bind_CK1a_Axin
+  375 82 5,84 kr_ca #_reverse_R6_bind_CK1a_Axin
+  376 87 5,106 kr_ca #_reverse_R6_bind_CK1a_Axin
+  377 88 5,107 kr_ca #_reverse_R6_bind_CK1a_Axin
+  378 80 61 kpb #R7_phos_bCat_S45
+  379 81 62 kpb #R7_phos_bCat_S45
+  380 66 91 kpb #R8_phos_bCat_S33S37
+  381 73 99 kp #R9_phos_APC_a20
+  382 78 91 kp #R9_phos_APC_a20
+  383 81 92 kp #R9_phos_APC_a20
+  384 88 108 kp #R9_phos_APC_a20
+  385 66 26 kmpb #R10_dephos_bCat_S45
+  386 67 92 kmpb #R10_dephos_bCat_S45
+  387 68 52 kmpb #R10_dephos_bCat_S45
+  388 70 97 kmpb #R10_dephos_bCat_S45
+  389 71 98 kmpb #R10_dephos_bCat_S45
+  390 75 100 kmpb #R10_dephos_bCat_S45
+  391 76 101 kmpb #R10_dephos_bCat_S45
+  392 77 104 kmpb #R10_dephos_bCat_S45
+  393 78 105 kmpb #R10_dephos_bCat_S45
+  394 67 48 kmpb #R11_dephos_bCat_S33S37
+  395 70 31 kmpb #R11_dephos_bCat_S33S37
+  396 71 32 kmpb #R11_dephos_bCat_S33S37
+  397 75 24 kmpb #R11_dephos_bCat_S33S37
+  398 76 25 kmpb #R11_dephos_bCat_S33S37
+  399 77 53 kmpb #R11_dephos_bCat_S33S37
+  400 78 54 kmpb #R11_dephos_bCat_S33S37
+  401 80 20 kmpb #R11_dephos_bCat_S33S37
+  402 81 21 kmpb #R11_dephos_bCat_S33S37
+  403 66 54 kmp #R12_dephos_APC_a20
+  404 67 62 kmp #R12_dephos_APC_a20
+  405 74 29 kmp #R12_dephos_APC_a20
+  406 79 56 kmp #R12_dephos_APC_a20
+  407 82 44 kmp #R12_dephos_APC_a20
+  408 84 60 kmp #R12_dephos_APC_a20
+  409 66 99 kdb1 #R14_degrade_bCat_slow
+  410 68 93 kdb1 #R14_degrade_bCat_slow
+  411 67 108 kdb2 #R15_degrade_bCat_fast
+  412 70 109 kdb2 #R15_degrade_bCat_fast
+  413 71 110 kdb2 #R15_degrade_bCat_fast
+  414 75 102 kdb2 #R15_degrade_bCat_fast
+  415 76 103 kdb2 #R15_degrade_bCat_fast
+  416 77 106 kdb2 #R15_degrade_bCat_fast
+  417 78 107 kdb2 #R15_degrade_bCat_fast
+  418 80 111 kdb2 #R15_degrade_bCat_fast
+  419 81 112 kdb2 #R15_degrade_bCat_fast
+  420 73 2,72 _rateLaw3 #R16_release_APC15_diss
+  421 74 23,30 _rateLaw3 #R16_release_APC15_diss
+  422 79 30,55 _rateLaw3 #R16_release_APC15_diss
+  423 82 30,43 _rateLaw3 #R16_release_APC15_diss
+  424 83 30,63 _rateLaw3 #R16_release_APC15_diss
+  425 84 30,59 _rateLaw3 #R16_release_APC15_diss
+  426 88 2,87 _rateLaw3 #R16_release_APC15_diss
+  427 69 85 _rateLaw4 #R17_release_APC15_intra
+  428 85 11,30 _rateLaw5 #R18_release_APC20_diss
+  429 86 30,63 _rateLaw5 #R18_release_APC20_diss
+  430 72 9,63 _rateLaw6 #R19_release_Axin_diss
+  431 73 9,64 _rateLaw6 #R19_release_Axin_diss
+  432 74 10,65 _rateLaw6 #R19_release_Axin_diss
+  433 79 17,83 _rateLaw6 #R19_release_Axin_diss
+  434 82 10,83 _rateLaw6 #R19_release_Axin_diss
+  435 84 3,83 _rateLaw6 #R19_release_Axin_diss
+  436 87 17,109 _rateLaw6 #R19_release_Axin_diss
+  437 88 17,110 _rateLaw6 #R19_release_Axin_diss
+  438 2,95 96 kf1_bap #R1_bind_bCat15_free
+  439 30,95 113 kf1_bap #R1_bind_bCat15_free
+  440 2,97 98 kf1_bap #R1_bind_bCat15_free
+  441 30,97 114 kf1_bap #R1_bind_bCat15_free
+  442 2,100 101 kf1_bap #R1_bind_bCat15_free
+  443 30,100 115 kf1_bap #R1_bind_bCat15_free
+  444 2,104 105 kf1_bap #R1_bind_bCat15_free
+  445 30,104 116 kf1_bap #R1_bind_bCat15_free
+  446 89 30,70 kr1_bap #_reverse_R1_bind_bCat15_free
+  447 90 30,75 kr1_bap #_reverse_R1_bind_bCat15_free
+  448 91 30,77 kr1_bap #_reverse_R1_bind_bCat15_free
+  449 92 30,80 kr1_bap #_reverse_R1_bind_bCat15_free
+  450 96 2,95 kr1_bap #_reverse_R1_bind_bCat15_free
+  451 98 2,97 kr1_bap #_reverse_R1_bind_bCat15_free
+  452 101 2,100 kr1_bap #_reverse_R1_bind_bCat15_free
+  453 105 2,104 kr1_bap #_reverse_R1_bind_bCat15_free
+  454 94 117 _rateLaw1 #R1_bind_bCat15_via_a20
+  455 93 86 kr1_bap #_reverse_R1_bind_bCat15_via_a20
+  456 30,97 118 kf2_bap #R2_bind_bCat20_free
+  457 94 30,70 kr3_bap #_reverse_R2_bind_bCat20_free
+  458 89 117 _rateLaw2 #R2_bind_bCat20_via_a15
+  459 93 83 kr3_bap #_reverse_R2_bind_bCat20_via_a15
+  460 3,89 113 kf_ba #R3_bind_bCatAxin_free
+  461 9,89 91 kf_ba #R3_bind_bCatAxin_free
+  462 10,89 90 kf_ba #R3_bind_bCatAxin_free
+  463 17,89 67 kf_ba #R3_bind_bCatAxin_free
+  464 3,97 119 kf_ba #R3_bind_bCatAxin_free
+  465 9,97 104 kf_ba #R3_bind_bCatAxin_free
+  466 10,97 100 kf_ba #R3_bind_bCatAxin_free
+  467 17,97 80 kf_ba #R3_bind_bCatAxin_free
+  468 3,98 120 kf_ba #R3_bind_bCatAxin_free
+  469 9,98 105 kf_ba #R3_bind_bCatAxin_free
+  470 10,98 101 kf_ba #R3_bind_bCatAxin_free
+  471 17,98 81 kf_ba #R3_bind_bCatAxin_free
+  472 90 10,89 kr_ba #_reverse_R3_bind_bCatAxin_free
+  473 91 9,89 kr_ba #_reverse_R3_bind_bCatAxin_free
+  474 92 17,114 kr_ba #_reverse_R3_bind_bCatAxin_free
+  475 95 3,70 kr_ba #_reverse_R3_bind_bCatAxin_free
+  476 96 3,71 kr_ba #_reverse_R3_bind_bCatAxin_free
+  477 100 10,97 kr_ba #_reverse_R3_bind_bCatAxin_free
+  478 101 10,98 kr_ba #_reverse_R3_bind_bCatAxin_free
+  479 104 9,97 kr_ba #_reverse_R3_bind_bCatAxin_free
+  480 105 9,98 kr_ba #_reverse_R3_bind_bCatAxin_free
+  481 4,90 67 kf_ga #R5_bind_GSK3b_Axin
+  482 4,95 77 kf_ga #R5_bind_GSK3b_Axin
+  483 4,96 78 kf_ga #R5_bind_GSK3b_Axin
+  484 4,100 80 kf_ga #R5_bind_GSK3b_Axin
+  485 4,101 81 kf_ga #R5_bind_GSK3b_Axin
+  486 4,102 87 kf_ga #R5_bind_GSK3b_Axin
+  487 4,103 88 kf_ga #R5_bind_GSK3b_Axin
+  488 91 4,113 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  489 92 4,115 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  490 99 4,84 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  491 104 4,119 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  492 105 4,120 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  493 106 4,121 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  494 107 4,122 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  495 108 4,123 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  496 111 4,124 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  497 112 4,125 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  498 5,91 67 kf_ca #R6_bind_CK1a_Axin
+  499 5,95 75 kf_ca #R6_bind_CK1a_Axin
+  500 5,96 76 kf_ca #R6_bind_CK1a_Axin
+  501 5,99 79 kf_ca #R6_bind_CK1a_Axin
+  502 5,104 80 kf_ca #R6_bind_CK1a_Axin
+  503 5,105 81 kf_ca #R6_bind_CK1a_Axin
+  504 5,106 87 kf_ca #R6_bind_CK1a_Axin
+  505 5,107 88 kf_ca #R6_bind_CK1a_Axin
+  506 90 5,113 kr_ca #_reverse_R6_bind_CK1a_Axin
+  507 92 5,116 kr_ca #_reverse_R6_bind_CK1a_Axin
+  508 100 5,119 kr_ca #_reverse_R6_bind_CK1a_Axin
+  509 101 5,120 kr_ca #_reverse_R6_bind_CK1a_Axin
+  510 102 5,121 kr_ca #_reverse_R6_bind_CK1a_Axin
+  511 103 5,122 kr_ca #_reverse_R6_bind_CK1a_Axin
+  512 108 5,126 kr_ca #_reverse_R6_bind_CK1a_Axin
+  513 111 5,127 kr_ca #_reverse_R6_bind_CK1a_Axin
+  514 112 5,128 kr_ca #_reverse_R6_bind_CK1a_Axin
+  515 92 67 kpb #R7_phos_bCat_S45
+  516 100 75 kpb #R7_phos_bCat_S45
+  517 101 76 kpb #R7_phos_bCat_S45
+  518 105 116 kp #R9_phos_APC_a20
+  519 107 126 kp #R9_phos_APC_a20
+  520 112 129 kp #R9_phos_APC_a20
+  521 89 114 kmpb #R10_dephos_bCat_S45
+  522 90 115 kmpb #R10_dephos_bCat_S45
+  523 91 116 kmpb #R10_dephos_bCat_S45
+  524 94 118 kmpb #R10_dephos_bCat_S45
+  525 95 119 kmpb #R10_dephos_bCat_S45
+  526 96 120 kmpb #R10_dephos_bCat_S45
+  527 89 47 kmpb #R11_dephos_bCat_S33S37
+  528 90 46 kmpb #R11_dephos_bCat_S33S37
+  529 91 66 kmpb #R11_dephos_bCat_S33S37
+  530 92 39 kmpb #R11_dephos_bCat_S33S37
+  531 94 51 kmpb #R11_dephos_bCat_S33S37
+  532 95 40 kmpb #R11_dephos_bCat_S33S37
+  533 96 41 kmpb #R11_dephos_bCat_S33S37
+  534 97 1 kmpb #R11_dephos_bCat_S33S37
+  535 98 7 kmpb #R11_dephos_bCat_S33S37
+  536 100 14 kmpb #R11_dephos_bCat_S33S37
+  537 101 16 kmpb #R11_dephos_bCat_S33S37
+  538 104 13 kmpb #R11_dephos_bCat_S33S37
+  539 105 15 kmpb #R11_dephos_bCat_S33S37
+  540 90 76 kmp #R12_dephos_APC_a20
+  541 91 78 kmp #R12_dephos_APC_a20
+  542 92 81 kmp #R12_dephos_APC_a20
+  543 99 73 kmp #R12_dephos_APC_a20
+  544 108 88 kmp #R12_dephos_APC_a20
+  545 89 130 kdb2 #R15_degrade_bCat_fast
+  546 90 123 kdb2 #R15_degrade_bCat_fast
+  547 91 126 kdb2 #R15_degrade_bCat_fast
+  548 92 129 kdb2 #R15_degrade_bCat_fast
+  549 94 131 kdb2 #R15_degrade_bCat_fast
+  550 95 121 kdb2 #R15_degrade_bCat_fast
+  551 96 122 kdb2 #R15_degrade_bCat_fast
+  552 97 132 kdb2 #R15_degrade_bCat_fast
+  553 98 133 kdb2 #R15_degrade_bCat_fast
+  554 100 124 kdb2 #R15_degrade_bCat_fast
+  555 101 125 kdb2 #R15_degrade_bCat_fast
+  556 104 127 kdb2 #R15_degrade_bCat_fast
+  557 105 128 kdb2 #R15_degrade_bCat_fast
+  558 99 30,72 _rateLaw3 #R16_release_APC15_diss
+  559 103 2,102 _rateLaw3 #R16_release_APC15_diss
+  560 107 2,106 _rateLaw3 #R16_release_APC15_diss
+  561 108 30,87 _rateLaw3 #R16_release_APC15_diss
+  562 110 2,109 _rateLaw3 #R16_release_APC15_diss
+  563 112 2,111 _rateLaw3 #R16_release_APC15_diss
+  564 93 86 _rateLaw4 #R17_release_APC15_intra
+  565 99 9,83 _rateLaw6 #R19_release_Axin_diss
+  566 102 10,109 _rateLaw6 #R19_release_Axin_diss
+  567 103 10,110 _rateLaw6 #R19_release_Axin_diss
+  568 106 9,109 _rateLaw6 #R19_release_Axin_diss
+  569 107 9,110 _rateLaw6 #R19_release_Axin_diss
+  570 108 17,130 _rateLaw6 #R19_release_Axin_diss
+  571 111 17,132 _rateLaw6 #R19_release_Axin_diss
+  572 112 17,133 _rateLaw6 #R19_release_Axin_diss
+  573 2,119 120 kf1_bap #R1_bind_bCat15_free
+  574 30,119 134 kf1_bap #R1_bind_bCat15_free
+  575 113 30,95 kr1_bap #_reverse_R1_bind_bCat15_free
+  576 114 30,97 kr1_bap #_reverse_R1_bind_bCat15_free
+  577 115 30,100 kr1_bap #_reverse_R1_bind_bCat15_free
+  578 116 30,104 kr1_bap #_reverse_R1_bind_bCat15_free
+  579 120 2,119 kr1_bap #_reverse_R1_bind_bCat15_free
+  580 118 135 _rateLaw1 #R1_bind_bCat15_via_a20
+  581 131 136 _rateLaw1 #R1_bind_bCat15_via_a20
+  582 117 94 kr1_bap #_reverse_R1_bind_bCat15_via_a20
+  583 118 30,97 kr3_bap #_reverse_R2_bind_bCat20_free
+  584 114 135 _rateLaw2 #R2_bind_bCat20_via_a15
+  585 130 136 _rateLaw2 #R2_bind_bCat20_via_a15
+  586 117 89 kr3_bap #_reverse_R2_bind_bCat20_via_a15
+  587 3,114 134 kf_ba #R3_bind_bCatAxin_free
+  588 9,114 116 kf_ba #R3_bind_bCatAxin_free
+  589 10,114 115 kf_ba #R3_bind_bCatAxin_free
+  590 17,114 92 kf_ba #R3_bind_bCatAxin_free
+  591 113 3,89 kr_ba #_reverse_R3_bind_bCatAxin_free
+  592 115 10,114 kr_ba #_reverse_R3_bind_bCatAxin_free
+  593 116 9,114 kr_ba #_reverse_R3_bind_bCatAxin_free
+  594 119 3,97 kr_ba #_reverse_R3_bind_bCatAxin_free
+  595 120 3,98 kr_ba #_reverse_R3_bind_bCatAxin_free
+  596 4,113 91 kf_ga #R5_bind_GSK3b_Axin
+  597 4,115 92 kf_ga #R5_bind_GSK3b_Axin
+  598 4,119 104 kf_ga #R5_bind_GSK3b_Axin
+  599 4,120 105 kf_ga #R5_bind_GSK3b_Axin
+  600 4,121 106 kf_ga #R5_bind_GSK3b_Axin
+  601 4,122 107 kf_ga #R5_bind_GSK3b_Axin
+  602 4,123 108 kf_ga #R5_bind_GSK3b_Axin
+  603 4,124 111 kf_ga #R5_bind_GSK3b_Axin
+  604 4,125 112 kf_ga #R5_bind_GSK3b_Axin
+  605 116 4,134 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  606 126 4,137 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  607 127 4,138 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  608 128 4,139 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  609 129 4,140 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  610 5,113 90 kf_ca #R6_bind_CK1a_Axin
+  611 5,116 92 kf_ca #R6_bind_CK1a_Axin
+  612 5,119 100 kf_ca #R6_bind_CK1a_Axin
+  613 5,120 101 kf_ca #R6_bind_CK1a_Axin
+  614 5,121 102 kf_ca #R6_bind_CK1a_Axin
+  615 5,122 103 kf_ca #R6_bind_CK1a_Axin
+  616 5,126 108 kf_ca #R6_bind_CK1a_Axin
+  617 5,127 111 kf_ca #R6_bind_CK1a_Axin
+  618 5,128 112 kf_ca #R6_bind_CK1a_Axin
+  619 115 5,134 kr_ca #_reverse_R6_bind_CK1a_Axin
+  620 123 5,137 kr_ca #_reverse_R6_bind_CK1a_Axin
+  621 124 5,138 kr_ca #_reverse_R6_bind_CK1a_Axin
+  622 125 5,139 kr_ca #_reverse_R6_bind_CK1a_Axin
+  623 129 5,141 kr_ca #_reverse_R6_bind_CK1a_Axin
+  624 115 90 kpb #R7_phos_bCat_S45
+  625 128 141 kp #R9_phos_APC_a20
+  626 113 134 kmpb #R10_dephos_bCat_S45
+  627 117 135 kmpb #R10_dephos_bCat_S45
+  628 113 49 kmpb #R11_dephos_bCat_S33S37
+  629 114 33 kmpb #R11_dephos_bCat_S33S37
+  630 115 45 kmpb #R11_dephos_bCat_S33S37
+  631 116 26 kmpb #R11_dephos_bCat_S33S37
+  632 117 68 kmpb #R11_dephos_bCat_S33S37
+  633 118 50 kmpb #R11_dephos_bCat_S33S37
+  634 119 8 kmpb #R11_dephos_bCat_S33S37
+  635 120 12 kmpb #R11_dephos_bCat_S33S37
+  636 113 96 kmp #R12_dephos_APC_a20
+  637 115 101 kmp #R12_dephos_APC_a20
+  638 116 105 kmp #R12_dephos_APC_a20
+  639 123 103 kmp #R12_dephos_APC_a20
+  640 126 107 kmp #R12_dephos_APC_a20
+  641 129 112 kmp #R12_dephos_APC_a20
+  642 113 137 kdb2 #R15_degrade_bCat_fast
+  643 114 142 kdb2 #R15_degrade_bCat_fast
+  644 115 140 kdb2 #R15_degrade_bCat_fast
+  645 116 141 kdb2 #R15_degrade_bCat_fast
+  646 117 136 kdb2 #R15_degrade_bCat_fast
+  647 118 143 kdb2 #R15_degrade_bCat_fast
+  648 119 138 kdb2 #R15_degrade_bCat_fast
+  649 120 139 kdb2 #R15_degrade_bCat_fast
+  650 122 2,121 _rateLaw3 #R16_release_APC15_diss
+  651 123 30,102 _rateLaw3 #R16_release_APC15_diss
+  652 125 2,124 _rateLaw3 #R16_release_APC15_diss
+  653 126 30,106 _rateLaw3 #R16_release_APC15_diss
+  654 128 2,127 _rateLaw3 #R16_release_APC15_diss
+  655 129 30,111 _rateLaw3 #R16_release_APC15_diss
+  656 130 30,109 _rateLaw3 #R16_release_APC15_diss
+  657 133 2,132 _rateLaw3 #R16_release_APC15_diss
+  658 131 30,109 _rateLaw5 #R18_release_APC20_diss
+  659 121 3,109 _rateLaw6 #R19_release_Axin_diss
+  660 122 3,110 _rateLaw6 #R19_release_Axin_diss
+  661 123 10,130 _rateLaw6 #R19_release_Axin_diss
+  662 124 10,132 _rateLaw6 #R19_release_Axin_diss
+  663 125 10,133 _rateLaw6 #R19_release_Axin_diss
+  664 126 9,130 _rateLaw6 #R19_release_Axin_diss
+  665 127 9,132 _rateLaw6 #R19_release_Axin_diss
+  666 128 9,133 _rateLaw6 #R19_release_Axin_diss
+  667 129 17,142 _rateLaw6 #R19_release_Axin_diss
+  668 134 30,119 kr1_bap #_reverse_R1_bind_bCat15_free
+  669 143 144 _rateLaw1 #R1_bind_bCat15_via_a20
+  670 135 118 kr1_bap #_reverse_R1_bind_bCat15_via_a20
+  671 136 131 kr1_bap #_reverse_R1_bind_bCat15_via_a20
+  672 142 144 _rateLaw2 #R2_bind_bCat20_via_a15
+  673 135 114 kr3_bap #_reverse_R2_bind_bCat20_via_a15
+  674 136 130 kr3_bap #_reverse_R2_bind_bCat20_via_a15
+  675 134 3,114 kr_ba #_reverse_R3_bind_bCatAxin_free
+  676 4,134 116 kf_ga #R5_bind_GSK3b_Axin
+  677 4,137 126 kf_ga #R5_bind_GSK3b_Axin
+  678 4,138 127 kf_ga #R5_bind_GSK3b_Axin
+  679 4,139 128 kf_ga #R5_bind_GSK3b_Axin
+  680 4,140 129 kf_ga #R5_bind_GSK3b_Axin
+  681 141 4,145 kr_ga #_reverse_R5_bind_GSK3b_Axin
+  682 5,134 115 kf_ca #R6_bind_CK1a_Axin
+  683 5,137 123 kf_ca #R6_bind_CK1a_Axin
+  684 5,138 124 kf_ca #R6_bind_CK1a_Axin
+  685 5,139 125 kf_ca #R6_bind_CK1a_Axin
+  686 5,141 129 kf_ca #R6_bind_CK1a_Axin
+  687 140 5,145 kr_ca #_reverse_R6_bind_CK1a_Axin
+  688 134 38 kmpb #R11_dephos_bCat_S33S37
+  689 135 52 kmpb #R11_dephos_bCat_S33S37
+  690 134 120 kmp #R12_dephos_APC_a20
+  691 137 122 kmp #R12_dephos_APC_a20
+  692 140 125 kmp #R12_dephos_APC_a20
+  693 141 128 kmp #R12_dephos_APC_a20
+  694 134 145 kdb2 #R15_degrade_bCat_fast
+  695 135 144 kdb2 #R15_degrade_bCat_fast
+  696 137 30,121 _rateLaw3 #R16_release_APC15_diss
+  697 139 2,138 _rateLaw3 #R16_release_APC15_diss
+  698 140 30,124 _rateLaw3 #R16_release_APC15_diss
+  699 141 30,127 _rateLaw3 #R16_release_APC15_diss
+  700 142 30,132 _rateLaw3 #R16_release_APC15_diss
+  701 136 131 _rateLaw4 #R17_release_APC15_intra
+  702 143 30,132 _rateLaw5 #R18_release_APC20_diss
+  703 137 3,130 _rateLaw6 #R19_release_Axin_diss
+  704 138 3,132 _rateLaw6 #R19_release_Axin_diss
+  705 139 3,133 _rateLaw6 #R19_release_Axin_diss
+  706 140 10,142 _rateLaw6 #R19_release_Axin_diss
+  707 141 9,142 _rateLaw6 #R19_release_Axin_diss
+  708 144 143 kr1_bap #_reverse_R1_bind_bCat15_via_a20
+  709 144 142 kr3_bap #_reverse_R2_bind_bCat20_via_a15
+  710 4,145 141 kf_ga #R5_bind_GSK3b_Axin
+  711 5,145 140 kf_ca #R6_bind_CK1a_Axin
+  712 145 139 kmp #R12_dephos_APC_a20
+  713 145 30,138 _rateLaw3 #R16_release_APC15_diss
+  714 144 143 _rateLaw4 #R17_release_APC15_intra
+  715 145 3,142 _rateLaw6 #R19_release_Axin_diss
+end reactions
+begin groups
+    1 Obs_Tot_bCat         1,7,8,12,13,14,15,16,20,21,24,25,26,31,32,33,35,36,38,39,40,41,45,46,47,48,49,50,51,52,53,54,61,62,66,67,68,70,71,75,76,77,78,80,81,89,90,91,92,94,95,96,97,98,100,101,104,105,113,114,115,116,117,118,119,120,134,135
+    2 Obs_bCat_pS45        24,25,31,32,35,36,40,41,46,47,48,49,51,53,54,61,62,66,67,68,70,71,75,76,77,78,89,90,91,94,95,96,113,117
+    3 Obs_bCat_pS33S37     61,62,67,70,71,75,76,77,78,80,81,89,90,91,92,94,95,96,97,98,100,101,104,105,113,114,115,116,117,118,119,120,134,135
+    4 Obs_APC1338_p20aP    26,30,33,38,39,42,45,46,47,48,49,50,51,52,57,58,65,66,67,68,69,74,79,82,83,84,85,86,89,90,91,92,93,94,99,108,113,114,115,116,117,118,123,126,129,130,131,134,135,136,137,140,141,142,143,144,145
+    5 Obs_bCat_Axin        8,12,13,14,15,16,20,21,24,25,26,35,36,38,39,40,41,45,46,48,49,53,54,61,62,66,67,75,76,77,78,80,81,90,91,92,95,96,100,101,104,105,113,115,116,119,120,134
+end groups
