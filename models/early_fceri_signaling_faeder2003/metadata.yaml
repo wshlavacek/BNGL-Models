@@ -15,7 +15,11 @@ source:
     based on Faeder et al. (2003), Journal of Immunology 170:3769-3781.
     The source model encodes the early FceRI signaling network described
     in the paper and uses scaled molecule counts with deterministic ODE
-    simulation.
+    simulation. The _fyn variant adapts the fceri_fyn.bngl demonstration
+    model distributed with BioNetGen, adding the Src-family kinase Fyn and
+    Src activation-loop transphosphorylation; this extension is beyond the
+    published paper. It corrects a rule ("Fyn phosphorylation by SH2-bound
+    Lyn") that is unreachable-as-distributed and generates zero reactions.
 
 files:
   - name: early_fceri_signaling_faeder2003.bngl
@@ -27,13 +31,28 @@ files:
     documentation_target: standard
     rating:
     min_bionetgen_version: "2.9.3"
+  - name: early_fceri_signaling_faeder2003_fyn.bngl
+    role: variant
+    description: >
+      Adds the Src-family kinase Fyn (competing with SH2-recruited Lyn for
+      phosphorylated receptor beta) and activation-loop transphosphorylation
+      of receptor-associated Lyn and Fyn. Adapted from the BioNetGen
+      fceri_fyn.bngl demonstration model; beyond the published paper. The
+      "Fyn phosphorylation by SH2-bound Lyn" rule is corrected relative to
+      the distributed model (1281 species, 15328 reactions).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
   - name: verify_faeder2003.ipynb
     role: verification
     description: >
       Runs BioNetGen, confirms committed reference output, independently
-      integrates the generated 354-species mass-action ODE network with
-      SciPy, and overlays BioNetGen and SciPy observables.
+      integrates the generated mass-action ODE network with SciPy, and
+      overlays BioNetGen and SciPy observables. Covers both the primary
+      354-species model and the 1281-species _fyn variant.
   - name: verify_faeder2003.png
+    role: figure
+  - name: verify_faeder2003_fyn.png
     role: figure
   - name: reference/early_fceri_signaling_faeder2003.net
     role: reference
@@ -42,4 +61,12 @@ files:
   - name: reference/early_fceri_signaling_faeder2003_ode.gdat
     role: reference
   - name: reference/early_fceri_signaling_faeder2003_ode.cdat
+    role: reference
+  - name: reference/early_fceri_signaling_faeder2003_fyn.net
+    role: reference
+  - name: reference/early_fceri_signaling_faeder2003_fyn_ode.net
+    role: reference
+  - name: reference/early_fceri_signaling_faeder2003_fyn_ode.gdat
+    role: reference
+  - name: reference/early_fceri_signaling_faeder2003_fyn_ode.cdat
     role: reference
