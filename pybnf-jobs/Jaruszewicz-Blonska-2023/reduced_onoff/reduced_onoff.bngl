@@ -1,0 +1,118 @@
+# Reduced 6-variable NF-kB model (Jaruszewicz-Blonska et al. 2023) -- ON-OFF protocol.
+# Non-dimensional model, 13 parameters, fit to reproduce the original 15-variable
+# Lipniacki et al. 2004 model. Edition-2 PyBNF fitting job.
+#
+# Source paper:
+#   Jaruszewicz-Blonska J, Kosiuk I, Prus W, Lipniacki T. "A plausible identifiable model
+#   of the canonical NF-kB signaling pathway." PLoS ONE 2023; 18(6): e0286416.
+#   DOI 10.1371/journal.pone.0286416.  (Reduced 2023 model; Eqs 1-6, Table 1.)
+#
+# This is the authors' OWN reduced model (S1 Code, "fitted_reduced_model_on_off_protocol.bngl"),
+# ported from their legacy edition-1 setParameter/simulate_ode action-block protocol to an
+# edition-2 conf-driven time course. Two functional-equivalence refactors, both documented in
+# VALIDATION.md:
+#   (1) The TNF stimulus TR (0/1) is delivered as a time-dependent function TRfunc() gated on a
+#       simulation clock, replacing the authors' setParameter("TR",..) phase toggling. An inert
+#       Clock() molecule (rule 0->Clock() 1, seed 0) integrates time into the observable `simtime`
+#       (= simulation time in s); TRfunc() reads it. This is the Lin-2021/nyc_multiphase idiom.
+#   (2) No `begin actions` block: reduced_onoff.conf's experiment: lines synthesize the time course
+#       over the .exp grid. The reduced model's resting state IS the seed species
+#       (IKKn,IKKa,NFkBn,A20,IkBa,IkBat) = (1,0,0,0,0,0), an EXACT steady state at TR=0 (verified),
+#       so NO pre-equilibration is needed -- protocol t=0 = simulation t=0 = TNF onset.
+#
+# On-off protocol (Table 2): TNF ON 0-120 min (0-7200 s), TNF OFF 120-720 min. Measured variables:
+#   IKKa, nuclear NF-kB (NFkB_n), A20, total IkBa protein IkBa* (= IkBa + 1 - NFkB_n), IkBa mRNA.
+# A20KO cells: c_deg = 0 (no A20 synthesis; A20 already seeds at 0) -- set via the conf `a20ko`
+#   condition, so A20 stays 0 and the A20->IKKa inactivation feedback is removed.
+#
+# Nominal parameter values below = Table 1 FITTED values (the paper's result). The conf brackets
+# each of the 13 with a *_var line for the recovery fit (Gate 3b).
+
+begin model
+begin parameters
+# --- 13 fitted parameters (Table 1, "Fitted value" column) ---
+k_deg   0.000107    # synthesis & degradation of IKKn (= degradation of IKKa share)   s-1
+k_1     0.00195     # activation of IKKn caused by TNF                                 s-1
+k_3     0.00145     # spontaneous inactivation of IKKa                                 s-1
+k_2     0.0357      # inactivation of IKKa induced by A20                              s-1
+a_3     0.0946      # IKK-(IkBa|NF-kB) association leading to IkBa degradation         s-1
+delta   0.1083      # Michaelis-type constant (NF-kB import / IkBa-NFkB binding)       -
+epsilon 0.0428      # Michaelis-type constant (IkBa export / IkBa-NFkB binding)        -
+c_deg   0.000106    # synthesis & degradation of A20                                   s-1
+c_4a    0.00313     # IkBa translation                                                s-1
+a_2     0.0763      # IkBa degradation induced by IKKa                                 s-1
+c_5a    0.0000578   # IkBa degradation                                                s-1
+i_1a    0.000595    # IkBa nuclear import leading to NF-kB removal from nucleus        s-1
+c_3a    0.000372    # IkBa synthesis & degradation of IkBa mRNA                        s-1
+
+# --- TNF schedule (on-off protocol): TNF ON on [0, t_tnf_off) s, OFF afterward ---
+t_tnf_off 7200      # end of the 2 h TNF stimulation (120 min) in s
+end parameters
+
+begin molecule types
+IKK(st~n~a)      # neutral / active form of IKK kinase
+IkBa()           # cytoplasmic IkBa protein
+IkBa_mRNA()      # IkBa transcript
+A20()            # cytoplasmic A20
+NFkB()           # free nuclear NF-kB
+Clock()          # inert simulation clock (integrates time -> observable `simtime`)
+end molecule types
+
+begin seed species
+IKK(st~n)   1    # resting state: all IKK neutral
+IKK(st~a)   0
+IkBa()      0
+IkBa_mRNA() 0
+A20()       0
+NFkB()      0
+Clock()     0    # clock starts at 0 -> simtime = simulation time (s)
+end seed species
+
+begin observables
+Species   IKK_a   IKK(st~a)
+Species   NFkB_n  NFkB()
+Species   A20     A20()
+Species   IkBa    IkBa()
+Species   tIkBa   IkBa_mRNA()
+Species   IKK_n   IKK(st~n)
+Molecules simtime Clock()
+end observables
+
+begin functions
+# TNF stimulus: 1 while TNF is ON, 0 otherwise (single 2 h window for the on-off protocol)
+TRfunc()          = if(simtime<t_tnf_off,1,0)
+# reduced-model rate functions (Eqs 3, 5)
+k_NFkBimport()    = a_3*delta*(1-NFkB_n)/(IkBa+delta)
+k_NFkBexport()    = i_1a/(NFkB_n+epsilon)
+k_IkBatransport() = a_2+(a_3*(1-NFkB_n))/(IkBa+delta)
+# total IkBa protein (measured variable IkBa*, Table 2): free IkBa + NFkB-bound IkBa.
+# Emitted as an output column (a function, NOT a conf `formula` observable) so that PyBNF's
+# normalization = peak can peak-normalize it -- a per-point formula observable is not a
+# materialized column and cannot be normalized (it silently yields inf under norm_sos).
+IkBa_star()       = IkBa + 1 - NFkB_n
+end functions
+
+begin reaction rules
+# IKK activation / turnover (Eqs 1-2); TNF enters via TRfunc()
+IKK(st~n) -> IKK(st~a)              k_1*TRfunc()
+0 -> IKK(st~n)                      k_deg
+IKK(st~a) -> 0                      k_deg+k_3
+IKK(st~n) -> 0                      k_deg
+# A20 synthesis/degradation, IkBa transcription/translation/degradation (Eqs 4-6)
+NFkB() -> NFkB() + A20()            c_deg
+A20() -> 0                         c_deg
+NFkB() -> NFkB() + IkBa_mRNA()      c_3a
+IkBa_mRNA() -> 0                    c_3a
+IkBa_mRNA() -> IkBa_mRNA() + IkBa() c_4a
+IkBa() -> 0                        c_5a
+# protein interactions (Eqs 2-3, 5); A20 inactivation of IKKa gated by TNF
+A20() + IKK(st~a) -> A20()          k_2*TRfunc()
+IKK(st~a) -> IKK(st~a) + NFkB()     k_NFkBimport()
+NFkB() + IkBa() -> 0                k_NFkBexport()
+IKK(st~a) + IkBa() -> IKK(st~a)     k_IkBatransport()
+# simulation clock: integrates time at unit rate -> observable simtime = t (s)
+0 -> Clock()                        1
+end reaction rules
+end model
+# No begin actions block: the conf's experiment: lines synthesize the time course over the
+# reduced_onoff_wt.exp / reduced_onoff_a20ko.exp time grids (protocol time in s, TNF onset = 0).
