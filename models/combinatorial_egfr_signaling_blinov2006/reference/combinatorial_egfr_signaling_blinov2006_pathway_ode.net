@@ -1,0 +1,120 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA                6.02214076e23  # Constant
+    2 V_ref             2.989e-12  # Constant
+    3 EGF_tot           1.2e6  # Constant
+    4 Rec_tot           1.8e5  # Constant
+    5 Grb2_tot          1.0e5  # Constant
+    6 Shc_tot           2.7e5  # Constant
+    7 Sos_tot           1.3e4  # Constant
+    8 Grb2_Sos_tot      4.9e4  # Constant
+    9 kp1               1.667e-06  # Constant
+   10 km1               0.06  # Constant
+   11 kp2               5.556e-06  # Constant
+   12 km2               0.1  # Constant
+   13 kp3               1  # Constant
+   14 km3               9  # Constant
+   15 kp14              6  # Constant
+   16 km14              0.06  # Constant
+   17 km16              0.005  # Constant
+   18 kp9               1.666e-6  # Constant
+   19 km9               0.05  # Constant
+   20 kp10              5.556e-06  # Constant
+   21 km10              0.06  # Constant
+   22 kp11              2.5e-06  # Constant
+   23 km11              0.03  # Constant
+   24 kp13              5e-05  # Constant
+   25 km13              0.6  # Constant
+   26 kp15              5e-07  # Constant
+   27 km15              0.3  # Constant
+   28 kp17              1.667e-06  # Constant
+   29 km17              0.1  # Constant
+   30 kp18              5e-07  # Constant
+   31 km18              0.3  # Constant
+   32 kp19              5.556e-06  # Constant
+   33 km19              0.0214  # Constant
+   34 kp20              1.333e-07  # Constant
+   35 km20              0.12  # Constant
+   36 kp24              5e-06  # Constant
+   37 km24              0.0429  # Constant
+   38 kp21              1.667e-06  # Constant
+   39 km21              0.1  # Constant
+   40 kp23              1.167e-05  # Constant
+   41 km23              0.1  # Constant
+   42 kp12              5.556e-08  # Constant
+   43 km12              0.0015  # Constant
+   44 kp22              1.667e-05  # Constant
+   45 km22              0.064  # Constant
+   46 loop1             ((kp9/km9)*(kp10/km10))/((kp11/km11)*(kp12/km12))  # ConstantExpression
+   47 loop2             ((kp15/km15)*(kp17/km17))/((kp21/km21)*(kp18/km18))  # ConstantExpression
+   48 loop3             ((kp18/km18)*(kp19/km19))/((kp22/km22)*(kp20/km20))  # ConstantExpression
+   49 loop4             ((kp12/km12)*(kp23/km23))/((kp22/km22)*(kp21/km21))  # ConstantExpression
+   50 loop5             ((kp15/km15)*(kp24/km24))/((kp20/km20)*(kp23/km23))  # ConstantExpression
+end parameters
+begin species
+    1 EGF() EGF_tot
+    2 Grb2() Grb2_tot
+    3 Grb2_Sos() Grb2_Sos_tot
+    4 Shc() Shc_tot
+    5 Sos() Sos_tot
+    6 R() Rec_tot
+    7 ShcP() 0
+    8 ShcP_Grb2() 0
+    9 ShcP_Grb2_Sos() 0
+   10 RA() 0
+   11 R2() 0
+   12 RP() 0
+   13 R_Sh() 0
+   14 R_ShP() 0
+   15 R_Sh_G() 0
+   16 R_Sh_G_S() 0
+   17 R_G() 0
+   18 R_G_S() 0
+end species
+begin reactions
+    1 1,6 10 kp1 #R1_bind_egf
+    2 10 1,6 km1 #_reverse_R1_bind_egf
+    3 10,10 11 0.5*kp2 #R2_dimerize
+    4 11 10,10 km2 #_reverse_R2_dimerize
+    5 11 12 kp3 #R3_phos_dimer
+    6 12 11 km3 #_reverse_R3_phos_dimer
+    7 2,12 17 kp9 #R9_bind_Grb2
+    8 17 2,12 km9 #_reverse_R9_bind_Grb2
+    9 5,17 18 kp10 #R10_bind_Sos
+   10 18 5,17 km10 #_reverse_R10_bind_Sos
+   11 3,12 18 kp11 #R11_bind_Grb2Sos
+   12 18 3,12 km11 #_reverse_R11_bind_Grb2Sos
+   13 4,12 13 kp13 #R13_bind_Shc
+   14 13 4,12 km13 #_reverse_R13_bind_Shc
+   15 13 14 kp14 #R14_phos_Shc
+   16 14 13 km14 #_reverse_R14_phos_Shc
+   17 7,12 14 kp15 #R15_bind_ShcP
+   18 14 7,12 km15 #_reverse_R15_bind_ShcP
+   19 2,14 15 kp17 #R17_bind_Grb2_Shc
+   20 15 2,14 km17 #_reverse_R17_bind_Grb2_Shc
+   21 8,12 15 kp18 #R18_bind_ShcPGrb2
+   22 15 8,12 km18 #_reverse_R18_bind_ShcPGrb2
+   23 5,15 16 kp19 #R19_bind_Sos_ShcGrb2
+   24 16 5,15 km19 #_reverse_R19_bind_Sos_ShcGrb2
+   25 9,12 16 kp20 #R20_bind_ShcPGrb2Sos
+   26 16 9,12 km20 #_reverse_R20_bind_ShcPGrb2Sos
+   27 3,14 16 kp24 #R24_bind_Grb2Sos_Shc
+   28 16 3,14 km24 #_reverse_R24_bind_Grb2Sos_Shc
+   29 2,7 8 kp21 #R21_bind_Grb2_ShcP_cyt
+   30 8 2,7 km21 #_reverse_R21_bind_Grb2_ShcP_cyt
+   31 3,7 9 kp23 #R23_bind_Grb2Sos_ShcP_cyt
+   32 9 3,7 km23 #_reverse_R23_bind_Grb2Sos_ShcP_cyt
+   33 7 4 km16 #R16_dephos_ShcP_cyt
+   34 2,5 3 kp12 #R12_bind_Grb2_Sos_cyt
+   35 3 2,5 km12 #_reverse_R12_bind_Grb2_Sos_cyt
+   36 5,8 9 kp22 #R22_bind_Sos_ShcPGrb2_cyt
+   37 9 5,8 km22 #_reverse_R22_bind_Sos_ShcPGrb2_cyt
+end reactions
+begin groups
+    1 Obs_Grb2_EGFR        15,16,17,18
+    2 Obs_ShcP_Grb2        8,9,15,16
+    3 Obs_ShcP_total       7,8,9,14,15,16
+    4 Obs_Rec_pDimer       12,13,14,15,16,17,18
+    5 Obs_Sos_membrane     16,18
+    6 Obs_Rec_dimer        11,12,13,14,15,16,17,18
+end groups
