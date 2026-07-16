@@ -1,0 +1,127 @@
+# reduced_combination -- protocol 'pulse5_200', A20KO (A20-synthesis rule removed; A20 stays 0,
+# no A20->IKKa feedback = the authors' c_deg=0 knockout). Windows (s): (0, 300, 12000, 12300, 24000, 24300). See VALIDATION.md.
+# Reduced 6-variable NF-kB model (Jaruszewicz-Blonska et al. 2023) -- COMBINATION experiment.
+# Non-dimensional model, 13 parameters, fit to reproduce the original 15-variable Lipniacki-2004
+# model across 6 TNF protocols (tonic + 5 pulsatile). Edition-2 PyBNF fitting job.
+#
+# Source paper:
+#   Jaruszewicz-Blonska J, Kosiuk I, Prus W, Lipniacki T. "A plausible identifiable model
+#   of the canonical NF-kB signaling pathway." PLoS ONE 2023; 18(6): e0286416.
+#   DOI 10.1371/journal.pone.0286416.  (Reduced 2023 model; Eqs 1-6, Table 1, Fig 2, S1 Table.)
+#
+# This is the authors' OWN reduced model (S1 Code, "fitted_reduced_model_combination_protocol.bngl"),
+# ported from their legacy edition-1 setParameter/simulate_ode action-block protocol to an edition-2
+# conf-driven time course. The combination experiment (S1 Table) is 6 TNF protocols x {WT, A20KO}:
+#   continuous (TNF ON 0-240 min) and 5 pulsatile (3 pulses each):
+#     pulse5_60  : ON 0-5,   60-65,   120-125 min
+#     pulse5_100 : ON 0-5,   100-105, 200-205 min
+#     pulse5_200 : ON 0-5,   200-205, 400-405 min
+#     pulse22_5  : ON 0-22.5, 45-67.5, 90-112.5 min
+#     pulse45    : ON 0-45,  90-135,  180-225 min
+#
+# This file is the CANONICAL TEMPLATE. The fit uses 12 per-protocol/genotype model files generated
+# from it by dev/papers/.../validation/gen_combination_models.py (reduced_combination_<protocol>_
+# {wt,a20ko}.bngl), joined in ONE multi-model fit that shares the 13 free parameters. Per-file
+# (not per-condition) protocol delivery is required because the bngsim backend can perturb only
+# FREE parameters via a `condition:` -- and the TNF window parameters are not fit (see VALIDATION.md).
+#
+# Functional-equivalence refactors (documented in VALIDATION.md), same as the reduced_onoff slug:
+#   (1) TNF (TR, 0/1) is a time-dependent function TRfunc() gated on a simulation clock (Clock()
+#       molecule, rule 0->Clock() 1, observable simtime), replacing the authors' setParameter phase
+#       toggling. TRfunc() is a sum of up to 3 rectangular ON windows [t_on_k, t_off_k); each
+#       generated model file bakes in one protocol's windows. A20KO files drop the A20-synthesis rule
+#       (A20 stays 0 -> no A20->IKKa feedback = the authors' c_deg=0 knockout). Lin-2021 idiom.
+#   (2) No `begin actions` block: the conf's experiment: lines synthesize each time course over the
+#       protocol .exp grid. Resting state = seed species (1,0,0,0,0,0), an EXACT TR=0 steady state,
+#       so NO pre-equilibration -- protocol t=0 = simulation t=0 = first TNF onset.
+#
+# Nominal parameters = Table 1 FITTED values; window nominals here = the continuous protocol. The
+# conf brackets each of the 13 with a *_var line (Gate 3b recovery of Table 1).
+
+begin model
+begin parameters
+# --- 13 fitted parameters (Table 1, "Fitted value" column) ---
+k_deg   0.000107
+k_1     0.00195
+k_3     0.00145
+k_2     0.0357
+a_3     0.0946
+delta   0.1083
+epsilon 0.0428
+c_deg   0.000106
+c_4a    0.00313
+a_2     0.0763
+c_5a    0.0000578
+i_1a    0.000595
+c_3a    0.000372
+
+# --- TNF schedule: up to 3 rectangular ON windows [t_on_k, t_off_k) in s.
+# Nominal = continuous (ON 0-240 min = 0-14400 s); windows 2,3 empty (t_on==t_off -> never ON).
+# gen_combination_models.py bakes each protocol's windows into a per-protocol model file.
+t_on1  0
+t_off1 300
+t_on2  12000
+t_off2 12300
+t_on3  24000
+t_off3 24300
+end parameters
+
+begin molecule types
+IKK(st~n~a)
+IkBa()
+IkBa_mRNA()
+A20()
+NFkB()
+Clock()
+end molecule types
+
+begin seed species
+IKK(st~n)   1
+IKK(st~a)   0
+IkBa()      0
+IkBa_mRNA() 0
+A20()       0
+NFkB()      0
+Clock()     0
+end seed species
+
+begin observables
+Species   IKK_a   IKK(st~a)
+Species   NFkB_n  NFkB()
+Species   A20     A20()
+Species   IkBa    IkBa()
+Species   tIkBa   IkBa_mRNA()
+Species   IKK_n   IKK(st~n)
+Molecules simtime Clock()
+end observables
+
+begin functions
+# TNF stimulus: 1 while inside any ON window, else 0 (windows non-overlapping -> sum in {0,1})
+TRfunc()          = if(simtime>=t_on1 && simtime<t_off1,1,0) \
+                  + if(simtime>=t_on2 && simtime<t_off2,1,0) \
+                  + if(simtime>=t_on3 && simtime<t_off3,1,0)
+k_NFkBimport()    = a_3*delta*(1-NFkB_n)/(IkBa+delta)
+k_NFkBexport()    = i_1a/(NFkB_n+epsilon)
+k_IkBatransport() = a_2+(a_3*(1-NFkB_n))/(IkBa+delta)
+# total IkBa protein IkBa* (Table 2 / S1 Table measured variable); output column so PyBNF's
+# normalization=peak can peak-normalize it (a conf formula observable cannot be normalized).
+IkBa_star()       = IkBa + 1 - NFkB_n
+end functions
+
+begin reaction rules
+IKK(st~n) -> IKK(st~a)              k_1*TRfunc()
+0 -> IKK(st~n)                      k_deg
+IKK(st~a) -> 0                      k_deg+k_3
+IKK(st~n) -> 0                      k_deg
+A20() -> 0                         c_deg
+NFkB() -> NFkB() + IkBa_mRNA()      c_3a
+IkBa_mRNA() -> 0                    c_3a
+IkBa_mRNA() -> IkBa_mRNA() + IkBa() c_4a
+IkBa() -> 0                        c_5a
+A20() + IKK(st~a) -> A20()          k_2*TRfunc()
+IKK(st~a) -> IKK(st~a) + NFkB()     k_NFkBimport()
+NFkB() + IkBa() -> 0                k_NFkBexport()
+IKK(st~a) + IkBa() -> IKK(st~a)     k_IkBatransport()
+0 -> Clock()                        1
+end reaction rules
+end model
