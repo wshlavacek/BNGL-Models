@@ -1,0 +1,83 @@
+# Lang-2024 — RPE-1 cell-cycle model, parameter fitting (PyBNF jobs)
+
+PyBNF edition-2 parameter-fitting jobs derived from the full fused, rule-based human cell-cycle
+model that reproduces single-cell trajectory dynamics in RPE-1 cells:
+
+> **Lang PF, Penas DR, Banga JR, Weindl D, Novak B.** **"Reusable rule-based cell cycle model
+> explains compartment-resolved dynamics of 16 observables in RPE-1 cells."**
+> *PLoS Comput Biol* 2024; **20**(1):e1011151.
+> DOI: [10.1371/journal.pcbi.1011151](https://doi.org/10.1371/journal.pcbi.1011151).
+
+These jobs capture the paper's **headline parameter-estimation problem** — fitting the full fused
+model to single-cell observables — as a native PyBNF job. This is **Phase 2** of the Lang-2024
+curation; **Phase 1** (`models/cell_cycle_oscillator_lang2024/`) captured the four **Fig-1
+transition submodels** (restriction point, G1/S, G2/M, and the G2/M+M/A oscillator) as standalone
+ODE reference models. Those submodels are the *building blocks*; the model fit here is the *fully
+assembled, parameter-estimated* network (paper versions v1.0.0+), a **different and larger model**.
+
+Built with the `curate-pybnf-job` skill by transcribing the authors' **PEtab problems**
+(`paulflang/cell_cycle_petab`) into self-contained edition-2 jobs — each slug its own model, conf,
+data, reproduction figure, and README with the exact adaptations, verification results, and a
+ready-to-paste `_manifest.py` snippet.
+
+## The model
+
+The full fused RPE-1 cell-cycle regulatory network: Rb/E2F restriction point, cyclin E/A/B–CDK
+activity, the APC/C–FZR1(Cdh1)/CDC20 and FBXO5(Emi1) degradation switches, the
+Greatwall–ENSA–PP2A(B55) mitotic-phosphatase loop, Wee1/Cdc25, FOXM1 transcription, and the
+p21(CDKN1A)/p27(CDKN1B)/Skp2 CDK-inhibitor module. It has a `cell` compartment → **ODE only
+(NFsim out)**, and a **finite, small network** (73 species / 332 reactions in v3.2.0), so the model
+is cheap to simulate — what makes the fit **heavy** is the parameter-space dimension (177 free
+parameters over a single condition), which the paper optimized with cooperative scatter search
+(saCeSS) on a cluster.
+
+The fit target is a set of **nuclear single-cell observables** (Stallaert et al., *Cell Systems*
+2021, RPE-1 medians), each modeled as `offset + scale·(sum of species)` with the offsets and
+scales fitted, duplicated to **two cell cycles** to enforce sustained oscillation (paper Text F).
+Noise is a fixed unit Gaussian, so the objective is plain **sum of squares** — inside the
+**PEtab-exportable subset** (these jobs round-trip through PEtab v2).
+
+## The jobs
+
+| slug | model | fits | flavor | status |
+|---|---|---|---|---|
+| [`v3_2_0`](v3_2_0/) | full fused **v3.2.0** (incl. p21/p27/Skp2), 205 params | 8 nuclear observables (cycA, cycB1, cycE, E2F1, pRB, Skp2, p21, p27), 1 wt condition, 2 cycles | ODE, **PEtab-exportable**, `sos`, `de` fit | 🔶 tier-1 + PEtab round-trip + short fit (SOS ~3e4) + reproduction (period/phase matched, amplitudes uncalibrated) · **82/100** ([VALIDATION](v3_2_0/VALIDATION.md)) |
+
+The 🔶 status marks a **heavy** (cluster-scale) job: it builds and runs through bngsim and
+round-trips through PEtab v2, but a *converged* 177-parameter fit needs a cluster, so it stays in
+the backend-free test tier rather than the executable-recovery tier.
+
+> ⚠️ **Setup transcription, not a converged-fit reproduction.** The PEtab problems ship
+> `nominalValue`s that are a **reference point, not the saCeSS optimum** (the converged best-fit
+> parameter set is not part of the supplement). At nominals the model reproduces the **2-cycle
+> oscillation's period and phase** for the core observables (cyclin A/B1/E, E2F1, Skp2) but not
+> calibrated amplitudes — see [`v3_2_0/VALIDATION.md`](v3_2_0/VALIDATION.md). These jobs *set up*
+> the fit faithfully; running it to convergence is the cluster-scale next step.
+
+## Source materials
+
+- **Paper (model, method, fits):** Lang et al. 2024 *PLoS Comput Biol* 20(1):e1011151
+  (`dev/papers/Lang-2024/journal.pcbi.1011151.pdf` + S1; not redistributed).
+- **`v3_2_0` setup:** `paulflang/cell_cycle_petab` @ `versions/v3.2.0` (commit `d562d3d`), staged
+  at `dev/papers/Lang-2024/petab_v3.2.0/` — `cell_cycle_v3.2.0.bngl` (manual BNGL translation of
+  the authors' SBML), `parameters/observables/experimentalCondition_v3.2.0.tsv`, `v3.2.0.yaml`,
+  and `Stallaert_CellSystems2021_Data_2rounds.tsv`.
+- **Model source:** `paulflang/cell_cycle_model` (the SBML/XPPAUT model the Phase-1 submodels and
+  this fused model derive from).
+- **Data:** Stallaert W, et al. *Cell Systems* 2021 — RPE-1 single-cell 4i/immunofluorescence
+  nuclear intensities, aggregated to per-cell-cycle-phase medians.
+
+Not built (optional future slug): **`v3_0_1`** — the earlier v3.0.1 fit (paper Fig K, real data,
+**no CDKN1B/p27 module**), from `paulflang/cell_cycle_petab` `versions/v3.0.1`. It would sit beside
+`v3_2_0/` here, sharing the same landing page and fitting the same Stallaert observables with the
+earlier (smaller) model. Fetch the v3.0.1 PEtab files from the GitHub repo to add it.
+
+## Run
+
+```bash
+export BNGPATH="$HOME/Simulations/BioNetGen-2.9.3"   # folder with BNG2.pl
+
+cd pybnf-jobs/Lang-2024/v3_2_0
+pybnf -c v3_2_0.conf              # CLUSTER-SCALE (177 params); parallelize with islands
+python make_reproduction.py       # reproduction figure (model at PEtab nominals vs data)
+```
