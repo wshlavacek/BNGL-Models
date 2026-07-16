@@ -1,0 +1,78 @@
+# metadata.yaml — shp2_regulation_and_function_barua2007
+id: shp2_regulation_and_function_barua2007
+created: 2026-07-16
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_bngl, ai_assisted]
+  description: >
+    Transcribed from Barua D, Faeder JR, Haugh JM (2007), Biophys J
+    92(7):2290-2300, and its supplementary BioNetGen input files
+    Shp2_base.bngl (base model) and Shp2_extended.bngl (extended model with
+    Shp2 C-terminal phosphorylation). Reformatted to house style; molecule S
+    renamed Shp2; component Y declared U~P (required by BioNetGen 2.9.3+).
+    Both models reproduce the paper's reported network sizes exactly (149
+    species / 1032 reactions and 1325 / 15284).
+
+files:
+  - name: shp2_regulation_and_function_barua2007.bngl
+    role: primary
+    description: >
+      Base model: Shp2 (three receptor-binding modules N-SH2 / C-SH2 / PTP)
+      acting on a dimerized receptor; 149 species, 1032 reactions. Reproduces
+      Fig. 3.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: shp2_regulation_and_function_barua2007_shp2phos.bngl
+    role: variant
+    description: >
+      Extended model adding a Shp2 C-terminal phosphotyrosine that engages
+      N-SH2 intramolecularly; 1325 species, 15284 reactions. Faithful
+      transcription of the published supplementary rules; does not reproduce
+      the Fig. 5 bracketing (documented discrepancy — see the header note and
+      the verification notebook).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_barua2007.ipynb
+    role: verification
+    description: >
+      Confirms network sizes, reproducibility, an independent SciPy
+      integration of each generated network (model specification), the
+      digitized Fig. 3 reproduction (base), and the Fig. 5 analysis.
+  - name: verify_barua2007.png
+    role: figure
+
+  # Reference simulation data (reference/ subdirectory)
+  - name: reference/shp2_regulation_and_function_barua2007.net
+    role: reference
+  - name: reference/shp2_regulation_and_function_barua2007_ode.gdat
+    role: reference
+  - name: reference/shp2_regulation_and_function_barua2007_scan.scan
+    role: reference
+  - name: reference/shp2_regulation_and_function_barua2007_shp2phos.net
+    role: reference
+  - name: reference/shp2_regulation_and_function_barua2007_shp2phos_ode.gdat
+    role: reference
+  - name: reference/shp2_regulation_and_function_barua2007_shp2phos_scan.scan
+    role: reference
+
+  # Digitized reported data used for figure verification (Fig. 3)
+  - name: reference/barua2007_fig3_Stot0p05_digitized.csv
+    role: reference
+    description: Digitized Fig. 3 markers for Stot = 0.05 uM (bD, pYR/Rtot).
+  - name: reference/barua2007_fig3_Stot0p10_digitized.csv
+    role: reference
+    description: Digitized Fig. 3 markers for Stot = 0.10 uM (bD, pYR/Rtot).
+  - name: reference/barua2007_fig3_Stot0p15_digitized.csv
+    role: reference
+    description: Digitized Fig. 3 markers for Stot = 0.15 uM (bD, pYR/Rtot).
+  - name: reference/barua2007_fig3_Stot0p20_digitized.csv
+    role: reference
+    description: Digitized Fig. 3 markers for Stot = 0.20 uM (bD, pYR/Rtot).
