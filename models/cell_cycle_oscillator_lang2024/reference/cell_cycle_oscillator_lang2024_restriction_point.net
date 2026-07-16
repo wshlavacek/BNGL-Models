@@ -1,0 +1,59 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 Cd         0  # Constant
+    2 kDpRb      1  # Constant
+    3 kPhRb      10  # Constant
+    4 kSyCe1     0.01  # Constant
+    5 kSyCe2     0.1  # Constant
+    6 kDeCe      0.11  # Constant
+    7 kDiE2fRb   0.1  # Constant
+    8 kAsE2fRb   100  # Constant
+    9 kSyE2f1    0.01  # Constant
+   10 kSyE2f2    0.1  # Constant
+   11 kDeE2f     0.11  # Constant
+   12 tRb        1  # Constant
+   13 tDna       1  # Constant
+   14 kAsEPx     50  # Constant
+   15 kDiEPx     5  # Constant
+end parameters
+begin functions
+    1 pRb() tRb-Obs_Rb
+    2 E2fRb() Obs_tE2f-Obs_E2f
+    3 fRb() Obs_Rb-(Obs_tE2f-Obs_E2f)
+    4 syn_Rb() (kDpRb*(tRb-Obs_Rb))+(kDeE2f*(Obs_tE2f-Obs_E2f))
+    5 deg_Rb() kPhRb*(Cd+Obs_CycE)
+    6 syn_CycE() kSyCe1+(kSyCe2*Obs_E2fPx)
+    7 deg_CycE() kDeCe
+    8 syn_E2f() (kSyE2f1+(kSyE2f2*Obs_E2fPx))+(kDiE2fRb*(Obs_tE2f-Obs_E2f))
+    9 deg_E2f() kDeE2f+(kAsE2fRb*(Obs_Rb-(Obs_tE2f-Obs_E2f)))
+   10 syn_tE2f() kSyE2f1+(kSyE2f2*Obs_E2fPx)
+   11 deg_tE2f() kDeE2f
+   12 syn_E2fPx() (kAsEPx*Obs_E2f)*tDna
+   13 deg_E2fPx() (kAsEPx*Obs_E2f)+kDiEPx
+end functions
+begin species
+    1 Rb() 1
+    2 CycE() 0
+    3 E2f() 0
+    4 tE2f() 0
+    5 E2fPx() 0
+end species
+begin reactions
+    1 0 1 syn_Rb #R_syn_Rb
+    2 1 0 deg_Rb #R_deg_Rb
+    3 0 2 syn_CycE #R_syn_CycE
+    4 2 0 deg_CycE #R_deg_CycE
+    5 0 3 syn_E2f #R_syn_E2f
+    6 3 0 deg_E2f #R_deg_E2f
+    7 0 4 syn_tE2f #R_syn_tE2f
+    8 4 0 deg_tE2f #R_deg_tE2f
+    9 0 5 syn_E2fPx #R_syn_E2fPx
+   10 5 0 deg_E2fPx #R_deg_E2fPx
+end reactions
+begin groups
+    1 Obs_CycE             2
+    2 Obs_Rb               1
+    3 Obs_E2f              3
+    4 Obs_tE2f             4
+    5 Obs_E2fPx            5
+end groups

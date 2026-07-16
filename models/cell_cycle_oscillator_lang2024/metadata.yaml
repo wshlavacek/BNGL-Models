@@ -1,0 +1,139 @@
+# metadata.yaml — cell_cycle_oscillator_lang2024
+id: cell_cycle_oscillator_lang2024
+created: 2026-07-16
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+
+source:
+  tags: [literature, adapted_from_ode, ai_assisted]
+  description: >
+    Curated from Lang PF, Penas DR, Banga JR, Weindl D, Novak B (2024), PLoS
+    Comput Biol 20(1):e1011151. The collection is the four cell-cycle-transition
+    submodels of Fig 1: the restriction-point switch (Fig 1B, Eqs A), the G1/S
+    switch (Fig 1D, Eqs B), the Vinod-Novak G2/M switch (Fig 1F, Eqs C), and the
+    G2/M + metaphase/anaphase oscillator (Fig 1H, Eqs C+D), which is the primary
+    file. Each BNGL file is an ODE-level reconstruction of the corresponding
+    mass-action model: equations are from S1 Appendix and parameters/initial
+    conditions from the XPPAUT .ode files in the versions/v0.0.1 directory of
+    the paulflang/cell_cycle_model GitHub repository
+    (commit b0a820288bc98d62333acf8434174b6446df0574). The models use arbitrary
+    units and are ODE-only. This collection does not reproduce the paper's full
+    fused, parameter-fitted cell cycle model (versions v1.0.0+).
+
+files:
+  - name: cell_cycle_oscillator_lang2024.bngl
+    role: primary
+    description: >
+      G2/M + M/A mitotic oscillator (Fig 1H / Fig D-b; Eqs 16-26). Couples the
+      Vinod-Novak G2/M bistable switch to the M/A negative-feedback loop; at
+      kSyCb = 0.05 /min it produces a stable limit cycle (period ~137 min).
+      7 species, 14 reactions.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: cell_cycle_oscillator_lang2024_restriction_point.bngl
+    role: related
+    description: >
+      Rb/E2f restriction-point bistable switch (Fig 1B; Eqs 1-5, RP_aa variant
+      with E2f autoactivation). Irreversible toggle in CycD; upper saddle-node
+      at Cd ~ 0.32 AU. 5 species, 10 reactions.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: cell_cycle_oscillator_lang2024_g1s.bngl
+    role: related
+    description: >
+      CycA/Apc:Cdh1 G1/S bistable switch (Fig 1D; Eqs 9-15). Hysteresis in E2f
+      (bistable ~0.42-0.59 AU). 6 species, 12 reactions.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: cell_cycle_oscillator_lang2024_g2m.bngl
+    role: related
+    description: >
+      Vinod-Novak CycB:Cdk1/PP2A:B55 G2/M bistable switch (Fig 1F; Eqs 16-22).
+      Saddle-nodes at CycB:Cdk1 = 0.110/0.068 and pEnsa:B55 = 0.112/0.248.
+      4 species, 8 reactions.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_lang2024.ipynb
+    role: verification
+    description: >
+      Runs all four models in BioNetGen, integrates the published Eqs A-D
+      independently in SciPy (model-spec agreement <= 2e-6), reproduces the
+      reported G2/M saddle-node values and oscillation onset (kSyCb = 0.03335),
+      and overlays the bifurcation diagrams on the digitized Fig 1 panels.
+  - name: verify_lang2024.png
+    role: figure
+
+  # Reference simulation data (BioNetGen outputs)
+  - name: reference/cell_cycle_oscillator_lang2024.net
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_ode.gdat
+    role: reference
+    description: Oscillator limit-cycle time course (primary figure protocol).
+  - name: reference/cell_cycle_oscillator_lang2024_restriction_point.net
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_restriction_point_bif_bifurcation_Obs_CycE.scan
+    role: reference
+    description: >
+      Restriction-point bifurcate output (CycE forward/backward branches vs
+      CycD). Companion Obs_Rb/Obs_E2f/Obs_tE2f/Obs_E2fPx .scan files are the
+      remaining observables of the same bifurcate protocol.
+  - name: reference/cell_cycle_oscillator_lang2024_restriction_point_bif_bifurcation_Obs_Rb.scan
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_restriction_point_bif_bifurcation_Obs_E2f.scan
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_restriction_point_bif_bifurcation_Obs_tE2f.scan
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_restriction_point_bif_bifurcation_Obs_E2fPx.scan
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_g1s.net
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_g1s_bif_bifurcation_Obs_CycA.scan
+    role: reference
+    description: G1/S bifurcate output (CycA branches vs E2f) plus companion observables.
+  - name: reference/cell_cycle_oscillator_lang2024_g1s_bif_bifurcation_Obs_tEmi1.scan
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_g1s_bif_bifurcation_Obs_ACE.scan
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_g1s_bif_bifurcation_Obs_pCdh1.scan
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_g1s_bif_bifurcation_Obs_CycE.scan
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_g1s_bif_bifurcation_Obs_E2fPx.scan
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_g2m.net
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_g2m_bif_bifurcation_Obs_Cb.scan
+    role: reference
+    description: G2/M bifurcate output (CycB:Cdk1 branches vs tCycB) plus companion observables.
+  - name: reference/cell_cycle_oscillator_lang2024_g2m_bif_bifurcation_Obs_pEB55.scan
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_g2m_bif_bifurcation_Obs_pEnsa.scan
+    role: reference
+  - name: reference/cell_cycle_oscillator_lang2024_g2m_bif_bifurcation_Obs_pGw.scan
+    role: reference
+
+  # Digitized reported data (curves extracted from Fig 1 of Lang et al., 2024)
+  - name: reference/lang2024_fig1b_rp_cyce_vs_cycd_digitized.csv
+    role: reference
+    description: Digitized Fig 1B — restriction-point CycE steady states vs CycD.
+  - name: reference/lang2024_fig1d_g1s_cyca_vs_e2f_digitized.csv
+    role: reference
+    description: Digitized Fig 1D — G1/S CycA steady states vs E2f.
+  - name: reference/lang2024_fig1f_g2m_cycbcdk1_vs_tcycb_digitized.csv
+    role: reference
+    description: Digitized Fig 1F — G2/M CycB:Cdk1 steady states vs tCycB.
+  - name: reference/lang2024_fig1f_g2m_pensab55_vs_tcycb_digitized.csv
+    role: reference
+    description: Digitized Fig 1F — G2/M pEnsa:B55 steady states vs tCycB.
+  - name: reference/lang2024_fig1h_osc_stabless_cycbcdk1_vs_ksycb_digitized.csv
+    role: reference
+    description: Digitized Fig 1H — oscillator CycB:Cdk1 steady states vs cyclin B synthesis rate.
+  - name: reference/lang2024_fig1h_osc_orbitamp_cycbcdk1_vs_ksycb_digitized.csv
+    role: reference
+    description: Digitized Fig 1H — oscillator limit-cycle amplitude vs cyclin B synthesis rate.

@@ -1,0 +1,283 @@
+begin model
+
+#@title: Cell cycle oscillator (Lang et al., 2024)
+
+#@description: |
+#  Mass-action ODE model of the mitotic (G2/M + metaphase/anaphase)
+#  oscillator that forms the dynamical core of the Lang et al. (2024) cell
+#  cycle model. It couples the Vinod-Novak G2/M bistable switch -- in which
+#  active cyclin B:Cdk1 (Cb) and the phosphatase PP2A:B55 mutually inhibit
+#  each other through the Greatwall (Gw)/ENSA and Wee1/Cdc25 pathways -- to a
+#  metaphase/anaphase (M/A) negative-feedback loop: Cb phosphorylates APC/C
+#  (pApc), phospho-APC/C binds Cdc20 (pApcCdc), and pApc:Cdc20 drives
+#  degradation of total cyclin B (tCb). The switch converts graded tCb into a
+#  sharp Cb rise; the delayed negative feedback then degrades tCb, and the
+#  low B55 activity in the Cb-high state lets tCb fall far before B55
+#  reactivates. The result is a stable relaxation-type limit cycle in which
+#  Cb, tCb, pApc:Cdc20 and B55 oscillate (the trajectory periodically over-
+#  and undershoots the switch's two bifurcation points). At the default
+#  cyclin B synthesis rate kSyCb = 0.05 /min the system oscillates; the paper
+#  reports that oscillations vanish below kSyCb ~ 0.03335 /min (a SNIC-type
+#  boundary), a feature later exploited to keep cyclin B low in G1.
+#
+#  Equations correspond to Equations C (Eqs 16-22) and D (Eqs 23-26) of
+#  S1 Appendix in Lang et al. (2024); parameters and initial conditions are
+#  from versions/v0.0.1/G2M-MA.ode of the cell_cycle_model repository. The
+#  three bistable switch modules that this oscillator is assembled from are
+#  provided as related files: the restriction-point switch
+#  (cell_cycle_oscillator_lang2024_restriction_point.bngl, Fig 1B), the G1/S
+#  switch (cell_cycle_oscillator_lang2024_g1s.bngl, Fig 1D), and the isolated
+#  G2/M switch (cell_cycle_oscillator_lang2024_g2m.bngl, Fig 1F).
+
+#@keyword: |
+#  cell cycle, mitosis, G2/M transition, metaphase-anaphase transition,
+#  cyclin B, CDK1, Greatwall, MASTL, ENSA, ARPP19, PP2A-B55, Cdc25, Wee1,
+#  APC/C, Cdc20, limit cycle, relaxation oscillator, bistable switch,
+#  negative feedback, mutual inhibition, mass action, arbitrary units, ODE,
+#  Homo sapiens
+
+#@reference: |
+#  Lang PF, Penas DR, Banga JR, Weindl D, Novak B (2024). Reusable rule-based
+#  cell cycle model explains compartment-resolved dynamics of 16 observables
+#  in RPE-1 cells. PLoS Comput Biol 20(1):e1011151.
+#  doi:10.1371/journal.pcbi.1011151
+#
+#  Vinod PK, Novak B (2015). Model scenarios for switch-like mitotic
+#  transitions. FEBS Lett 589(6):667-671. doi:10.1016/j.febslet.2015.02.007
+
+#@note: |
+#  Units are arbitrary (AU): the source model expresses each species as a
+#  concentration in an arbitrary unit with an O(1) characteristic scale (the
+#  conserved totals tEnsa, tB55, tGw, tApc, tCdc20 are all order 1) and time
+#  in minutes. There is no molecule-count or molar basis, so the model is
+#  incompatible with stochastic simulation and is ODE-only; the house-style
+#  population-conversion parameters (NA, V_ref, h_mem) do not apply and are
+#  omitted (see BNGL house style, de-dimensionalized/ODE-only policy).
+#
+#  Encoding: each ODE state variable is a structureless molecule. The
+#  published ODEs (Eqs 16-26) are reproduced by pairing, for every variable
+#  X, a synthesis reaction 0 -> X (rate = syn_X()) with a degradation
+#  reaction X -> 0 (rate = deg_X(), a per-capita rate that BNG multiplies by
+#  [X]). syn_X() collects every RHS term not written as -(rate)*X; deg_X()
+#  collects the per-capita coefficients of the -(rate)*X loss terms. The
+#  algebraic quantities B55 (= tB55 - pEnsa:B55) and the Hill-like Wee1/Cdc25
+#  activities rWee, rCdc25 are helper functions. Because some syn_X() terms
+#  can be transiently negative (they are cross-species sink terms, not true
+#  creation), this encoding is valid only for ODE integration -- another
+#  reason the model is ODE-only. BNG generates 7 species and 14 reactions.
+
+begin parameters
+
+  # --- Cyclin B synthesis (M/A feedback input) ---
+  # kSyCb = 0.05 /min gives sustained oscillations (Fig 1H, Fig D-b in Lang
+  # et al. (2024)). The v0.0.1 G2M-MA.ode default is 0.02 /min, which lies
+  # below the oscillation threshold kSyCb ~ 0.03335 /min and yields a stable
+  # steady state; it is set to the oscillatory value here.
+  kSyCb 0.05     # AU/min
+
+  # --- Greatwall (Gw)/ENSA arm ---
+  # kPhEnsa: Gw-mediated ENSA phosphorylation efficiency; kDpEnsa: pEnsa:B55
+  # dephosphorylation; tEnsa: total ENSA.
+  kPhEnsa 0.1    # /AU/min
+  kDpEnsa 0.05   # /min
+  tEnsa 1        # AU
+
+  # tB55: total PP2A:B55 (in excess-limited amount, sets switch nonlinearity)
+  tB55 0.25      # AU
+
+  # Greatwall phosphorylation (by Cb) and dephosphorylation (baseline + B55)
+  kPhGw 1        # /AU/min
+  kDpGw1 0.25    # /min
+  kDpGw2 10      # /AU/min
+  tGw 1          # AU
+
+  # --- Wee1/Cdc25 arm (Cb (in)activation), Hill-like via rWee/rCdc25 ---
+  # kWee1/kWee2: inactive/active Wee1 Cb-phosphorylation efficiencies.
+  kWee1 0.01     # /min
+  kWee2 1        # /min
+  kPhWee 1       # /AU/min
+  kDpWee 10      # /AU/min
+  # kCdc25_1/kCdc25_2: inactive/active Cdc25 Cb-dephosphorylation efficiencies
+  kCdc25_1 0.1   # /min
+  kCdc25_2 1     # /min
+  kPhCdc25 1     # /AU/min
+  kDpCdc25 10    # /AU/min
+
+  # pEnsa:B55 (de)association
+  kDipEB55 0.0068  # /min
+  kAspEB55 57      # /AU/min
+
+  # --- Metaphase/anaphase (M/A) negative-feedback arm ---
+  # tCdc20: total Cdc20; Cb-dependent degradation of tCb via pApc:Cdc20.
+  tCdc20 1       # AU
+  kDeCb1 0.01    # /min
+  kDeCb2 6       # /AU/min
+
+  # pApc:Cdc20 (de)association
+  kDipACdc 0.4   # /min
+  kAspACdc 1.2   # /AU/min
+
+  # APC/C phosphorylation (by Cb) and B55-mediated dephosphorylation; tApc:
+  # total APC/C.
+  kPhApc 0.01    # /AU/min
+  kDpApc 5       # /AU/min
+  tApc 5         # AU
+
+end parameters
+
+begin molecule types
+
+  # Active cyclin B:Cdk1 complex (CCNB with unphosphorylated/active CDK1)
+  Cb()
+  # Total cyclin B:(p)Cdk1 (active + Wee1-inhibited); M/A feedback variable
+  tCb()
+  # Total phosphorylated ENSA/ARPP19 (free + bound to B55)
+  pEnsa()
+  # Phosphorylated ENSA:B55 complex
+  pEB55()
+  # Phosphorylated (active) Greatwall kinase (MASTL)
+  pGw()
+  # Free phosphorylated APC/C (Cdc20-competent)
+  pApc()
+  # Phosphorylated APC/C bound to Cdc20 (active anaphase form)
+  pApcCdc()
+
+end molecule types
+
+begin seed species
+
+  Cb() 0.01       # AU
+  tCb() 0         # AU
+  pEnsa() 0.01    # AU
+  pEB55() 0       # AU
+  pGw() 0         # AU
+  pApc() 0        # AU
+  pApcCdc() 0     # AU
+
+end seed species
+
+begin observables
+
+  # Active cyclin B:Cdk1 -- switch output, sharp mitotic rise
+  Molecules Obs_Cb Cb()
+  # Total cyclin B -- M/A feedback variable (rises then is degraded)
+  Molecules Obs_tCb tCb()
+  # Active anaphase-promoting complex pApc:Cdc20 -- feedback effector
+  Molecules Obs_pApcCdc pApcCdc()
+  # Phospho-ENSA (total) and the pEnsa:B55 sink complex
+  Molecules Obs_pEnsa pEnsa()
+  Molecules Obs_pEB55 pEB55()
+  # Phospho-Greatwall and free phospho-APC/C
+  Molecules Obs_pGw pGw()
+  Molecules Obs_pApc pApc()
+
+end observables
+
+begin functions
+
+  # --- Algebraic quantities (conservation and Hill-like activities) ---
+
+  # Free (active) PP2A:B55 = total B55 minus the pEnsa:B55 sink
+  B55() = tB55 - Obs_pEB55
+
+  # Effective Wee1 and Cdc25 activities on Cb (Eqs 21-22 in Lang et al.
+  # (2024)); the B55/Cb ratio sets the balance
+  rWee() = kWee1 + (kWee2 - kWee1)*kDpWee*B55()/(kDpWee*B55() + kPhWee*Obs_Cb)
+  rCdc25() = kCdc25_1 + (kCdc25_2 - kCdc25_1)*kPhCdc25*Obs_Cb/\
+    (kPhCdc25*Obs_Cb + kDpCdc25*B55())
+
+  # --- Synthesis (0 -> X) and per-capita degradation (X -> 0) rate laws ---
+  # Each pair reproduces one ODE; see the #@note above the parameters block.
+
+  # pEnsa (Eq 16): Gw phosphorylates ENSA; pEnsa:B55 dephosphorylation is a
+  # sink (appears in syn as a negative source)
+  syn_pEnsa() = kPhEnsa*Obs_pGw*tEnsa - kDpEnsa*Obs_pEB55
+  deg_pEnsa() = kPhEnsa*Obs_pGw
+
+  # Cb (Eq 26): synthesis + Cdc25 activation; degradation + Wee1 inactivation
+  syn_Cb() = kSyCb + rCdc25()*Obs_tCb
+  deg_Cb() = kDeCb1 + kDeCb2*Obs_pApcCdc + rCdc25() + rWee()
+
+  # pGw (Eq 18): Cb-driven phosphorylation; baseline + B55 dephosphorylation
+  syn_pGw() = kPhGw*Obs_Cb*tGw
+  deg_pGw() = kPhGw*Obs_Cb + kDpGw1 + kDpGw2*B55()
+
+  # pEnsa:B55 (Eq 19): association of free B55 with free pEnsa; dissociation +
+  # dephosphorylation
+  syn_pEB55() = kAspEB55*B55()*Obs_pEnsa
+  deg_pEB55() = kAspEB55*B55() + kDipEB55 + kDpEnsa
+
+  # tCb (Eq 25): synthesis; baseline + pApc:Cdc20-mediated degradation
+  syn_tCb() = kSyCb
+  deg_tCb() = kDeCb1 + kDeCb2*Obs_pApcCdc
+
+  # pApc:Cdc20 (Eq 24): Cdc20 binding to phospho-APC/C; dissociation + B55
+  # dephosphorylation of APC/C
+  syn_pApcCdc() = kAspACdc*(tCdc20 - Obs_pApcCdc)*(Obs_pApc - Obs_pApcCdc)
+  deg_pApcCdc() = kDipACdc + kDpApc*B55()
+
+  # pApc (Eq 23): Cb-driven APC/C phosphorylation; B55 dephosphorylation
+  syn_pApc() = kPhApc*(tApc - Obs_pApc)*Obs_Cb
+  deg_pApc() = kDpApc*B55()
+
+end functions
+
+begin reaction rules
+
+  # Phospho-ENSA (total)
+  R_syn_pEnsa: 0 -> pEnsa() syn_pEnsa()
+  R_deg_pEnsa: pEnsa() -> 0 deg_pEnsa()
+
+  # Active cyclin B:Cdk1
+  R_syn_Cb: 0 -> Cb() syn_Cb()
+  R_deg_Cb: Cb() -> 0 deg_Cb()
+
+  # Phospho-Greatwall
+  R_syn_pGw: 0 -> pGw() syn_pGw()
+  R_deg_pGw: pGw() -> 0 deg_pGw()
+
+  # Phospho-ENSA:B55 complex
+  R_syn_pEB55: 0 -> pEB55() syn_pEB55()
+  R_deg_pEB55: pEB55() -> 0 deg_pEB55()
+
+  # Total cyclin B
+  R_syn_tCb: 0 -> tCb() syn_tCb()
+  R_deg_tCb: tCb() -> 0 deg_tCb()
+
+  # Phospho-APC/C bound to Cdc20
+  R_syn_pApcCdc: 0 -> pApcCdc() syn_pApcCdc()
+  R_deg_pApcCdc: pApcCdc() -> 0 deg_pApcCdc()
+
+  # Free phospho-APC/C
+  R_syn_pApc: 0 -> pApc() syn_pApc()
+  R_deg_pApc: pApc() -> 0 deg_pApc()
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1})  # 7 species, 14 reactions
+
+  #@note: |
+  #  ODE-only: the model is defined in arbitrary units and admits negative
+  #  transient synthesis terms, so SSA/PSA/NFsim are not applicable.
+
+  # Mitotic limit-cycle oscillation
+
+  #@protocol: |
+  #  Integrate from the seed state (Cb, pEnsa = 0.01 AU; all else 0) for 1000
+  #  min at kSyCb = 0.05 /min. After an initial transient the system settles
+  #  onto a stable relaxation limit cycle (period ~ 60 min): Cb spikes sharply
+  #  when tCb crosses the upper bifurcation point, pApc:Cdc20 then rises and
+  #  degrades tCb, B55 stays low until tCb falls far below the lower
+  #  bifurcation point, and the cycle repeats. Plot Obs_Cb, Obs_tCb,
+  #  Obs_pApcCdc (and B55 = tB55 - Obs_pEB55) to reproduce Fig 1H / Fig D-b.
+
+  #@figure: Fig. 1H and Fig. D-b in Lang et al. (2024)
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>1000,\
+    n_steps=>2000,atol=>1e-8,rtol=>1e-10})
+
+end actions

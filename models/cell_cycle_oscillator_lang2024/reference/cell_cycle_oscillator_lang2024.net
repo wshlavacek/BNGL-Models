@@ -1,0 +1,83 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 kSyCb        0.05  # Constant
+    2 kPhEnsa      0.1  # Constant
+    3 kDpEnsa      0.05  # Constant
+    4 tEnsa        1  # Constant
+    5 tB55         0.25  # Constant
+    6 kPhGw        1  # Constant
+    7 kDpGw1       0.25  # Constant
+    8 kDpGw2       10  # Constant
+    9 tGw          1  # Constant
+   10 kWee1        0.01  # Constant
+   11 kWee2        1  # Constant
+   12 kPhWee       1  # Constant
+   13 kDpWee       10  # Constant
+   14 kCdc25_1     0.1  # Constant
+   15 kCdc25_2     1  # Constant
+   16 kPhCdc25     1  # Constant
+   17 kDpCdc25     10  # Constant
+   18 kDipEB55     0.0068  # Constant
+   19 kAspEB55     57  # Constant
+   20 tCdc20       1  # Constant
+   21 kDeCb1       0.01  # Constant
+   22 kDeCb2       6  # Constant
+   23 kDipACdc     0.4  # Constant
+   24 kAspACdc     1.2  # Constant
+   25 kPhApc       0.01  # Constant
+   26 kDpApc       5  # Constant
+   27 tApc         5  # Constant
+end parameters
+begin functions
+    1 B55() tB55-Obs_pEB55
+    2 rWee() kWee1+((((kWee2-kWee1)*kDpWee)*B55())/((kDpWee*B55())+(kPhWee*Obs_Cb)))
+    3 rCdc25() kCdc25_1+((((kCdc25_2-kCdc25_1)*kPhCdc25)*Obs_Cb)/((kPhCdc25*Obs_Cb)+(kDpCdc25*B55())))
+    4 syn_pEnsa() ((kPhEnsa*Obs_pGw)*tEnsa)-(kDpEnsa*Obs_pEB55)
+    5 deg_pEnsa() kPhEnsa*Obs_pGw
+    6 syn_Cb() kSyCb+(rCdc25()*Obs_tCb)
+    7 deg_Cb() ((kDeCb1+(kDeCb2*Obs_pApcCdc))+rCdc25())+rWee()
+    8 syn_pGw() (kPhGw*Obs_Cb)*tGw
+    9 deg_pGw() ((kPhGw*Obs_Cb)+kDpGw1)+(kDpGw2*B55())
+   10 syn_pEB55() (kAspEB55*B55())*Obs_pEnsa
+   11 deg_pEB55() ((kAspEB55*B55())+kDipEB55)+kDpEnsa
+   12 syn_tCb() kSyCb
+   13 deg_tCb() kDeCb1+(kDeCb2*Obs_pApcCdc)
+   14 syn_pApcCdc() (kAspACdc*(tCdc20-Obs_pApcCdc))*(Obs_pApc-Obs_pApcCdc)
+   15 deg_pApcCdc() kDipACdc+(kDpApc*B55())
+   16 syn_pApc() (kPhApc*(tApc-Obs_pApc))*Obs_Cb
+   17 deg_pApc() kDpApc*B55()
+end functions
+begin species
+    1 Cb() 0.01
+    2 tCb() 0
+    3 pEnsa() 0.01
+    4 pEB55() 0
+    5 pGw() 0
+    6 pApc() 0
+    7 pApcCdc() 0
+end species
+begin reactions
+    1 0 3 syn_pEnsa #R_syn_pEnsa
+    2 3 0 deg_pEnsa #R_deg_pEnsa
+    3 0 1 syn_Cb #R_syn_Cb
+    4 1 0 deg_Cb #R_deg_Cb
+    5 0 5 syn_pGw #R_syn_pGw
+    6 5 0 deg_pGw #R_deg_pGw
+    7 0 4 syn_pEB55 #R_syn_pEB55
+    8 4 0 deg_pEB55 #R_deg_pEB55
+    9 0 2 syn_tCb #R_syn_tCb
+   10 2 0 deg_tCb #R_deg_tCb
+   11 0 7 syn_pApcCdc #R_syn_pApcCdc
+   12 7 0 deg_pApcCdc #R_deg_pApcCdc
+   13 0 6 syn_pApc #R_syn_pApc
+   14 6 0 deg_pApc #R_deg_pApc
+end reactions
+begin groups
+    1 Obs_Cb               1
+    2 Obs_tCb              2
+    3 Obs_pApcCdc          7
+    4 Obs_pEnsa            3
+    5 Obs_pEB55            4
+    6 Obs_pGw              5
+    7 Obs_pApc             6
+end groups

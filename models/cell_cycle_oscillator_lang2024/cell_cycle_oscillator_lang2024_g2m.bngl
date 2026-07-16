@@ -1,0 +1,209 @@
+begin model
+
+#@title: G2/M transition switch (Lang et al., 2024)
+
+#@description: |
+#  Mass-action ODE model of the isolated G2/M-transition bistable switch, one
+#  of the four cell-cycle-transition building blocks of Lang et al. (2024) and
+#  a related module of the cell cycle oscillator (primary file
+#  cell_cycle_oscillator_lang2024.bngl). It is the Vinod-Novak (2015) mitotic
+#  switch: active cyclin B:Cdk1 (Cb) and the phosphatase PP2A:B55 mutually
+#  inhibit each other. Cb activates Greatwall (Gw), which phosphorylates ENSA;
+#  phospho-ENSA stoichiometrically binds and inhibits B55 (pEnsa:B55), and B55
+#  dephosphorylates Gw -- one mutual-inhibition loop. In parallel Cb activates
+#  Cdc25 and inhibits Wee1 (the Hill-like activities rCdc25, rWee), while B55
+#  opposes both. The stoichiometric ENSA:B55 sequestration supplies the
+#  inhibitor ultrasensitivity that makes the switch bistable in total cyclin B
+#  (tCb), the bifurcation parameter.
+#
+#  Raising tCb past the upper saddle-node flips the switch from the low-Cb
+#  (B55-active, interphase) state to the high-Cb (mitotic) state, giving the
+#  sharp Cb activation that drives mitotic entry. The active protocol scans
+#  tCb to trace the lower stable branch of the Cb bifurcation diagram up to the
+#  switch point (Fig 1F). Equations correspond to Equations C (Eqs 16-22) of
+#  S1 Appendix; parameters and initial conditions are from
+#  versions/v0.0.1/G2M.ode of the cell_cycle_model repository. Adding an M/A
+#  negative-feedback loop that makes tCb dynamic converts this switch into the
+#  primary-file oscillator.
+
+#@keyword: |
+#  cell cycle, G2/M transition, mitosis, cyclin B, CCNB, CDK1, Greatwall,
+#  MASTL, ENSA, ARPP19, PP2A-B55, Cdc25, Wee1, bistable switch,
+#  mutual inhibition, stoichiometric inhibitor, inhibitor ultrasensitivity,
+#  hysteresis, mass action, arbitrary units, ODE, Homo sapiens
+
+#@reference: |
+#  Lang PF, Penas DR, Banga JR, Weindl D, Novak B (2024). Reusable rule-based
+#  cell cycle model explains compartment-resolved dynamics of 16 observables
+#  in RPE-1 cells. PLoS Comput Biol 20(1):e1011151.
+#  doi:10.1371/journal.pcbi.1011151
+#
+#  Vinod PK, Novak B (2015). Model scenarios for switch-like mitotic
+#  transitions. FEBS Lett 589(6):667-671. doi:10.1016/j.febslet.2015.02.007
+
+#@note: |
+#  Units are arbitrary (AU): species are concentrations in arbitrary units
+#  with O(1) scales (tEnsa = tGw = 1, tB55 = 0.25) and time in minutes; no
+#  molecule-count basis, so the model is ODE-only and NA/V_ref/h_mem are
+#  omitted (BNGL house style, de-dimensionalized/ODE-only policy). Each ODE
+#  state variable is a structureless molecule; the published ODEs (Eqs 16-22)
+#  are reproduced by pairing 0 -> X (rate syn_X()) with X -> 0 (per-capita rate
+#  deg_X()). Free B55 = tB55 - pEnsa:B55 and the Hill-like Wee1/Cdc25
+#  activities rWee, rCdc25 are helper functions. tCb is a fixed parameter (the
+#  bifurcation variable), not a species. BNG generates 4 species and 8
+#  reactions.
+
+begin parameters
+
+  # Total cyclin B:(p)Cdk1, the bifurcation parameter
+  tCb 0          # AU
+
+  # Greatwall (Gw)/ENSA arm: Gw-mediated ENSA phosphorylation, pEnsa:B55
+  # dephosphorylation, total ENSA
+  kPhEnsa 0.1    # /AU/min
+  kDpEnsa 0.05   # /min
+  tEnsa 1        # AU
+
+  # Total PP2A:B55 (limited amount; sets switch nonlinearity)
+  tB55 0.25      # AU
+
+  # Greatwall phosphorylation (by Cb) and dephosphorylation (baseline + B55)
+  kPhGw 1        # /AU/min
+  kDpGw1 0.25    # /min
+  kDpGw2 10      # /AU/min
+  tGw 1          # AU
+
+  # Wee1/Cdc25 arm (Cb (in)activation via Hill-like rWee/rCdc25)
+  kWee1 0.01     # /min
+  kWee2 1        # /min
+  kPhWee 1       # /AU/min
+  kDpWee 10      # /AU/min
+  kCdc25_1 0.1   # /min
+  kCdc25_2 1     # /min
+  kPhCdc25 1     # /AU/min
+  kDpCdc25 10    # /AU/min
+
+  # pEnsa:B55 (de)association
+  kDipEB55 0.0068  # /min
+  kAspEB55 57      # /AU/min
+
+end parameters
+
+begin molecule types
+
+  # Active cyclin B:Cdk1 complex (CCNB with unphosphorylated/active CDK1)
+  Cb()
+  # Total phosphorylated ENSA/ARPP19 (free + bound to B55)
+  pEnsa()
+  # Phosphorylated ENSA:B55 complex (inhibited phosphatase)
+  pEB55()
+  # Phosphorylated (active) Greatwall kinase (MASTL)
+  pGw()
+
+end molecule types
+
+begin seed species
+
+  Cb() 0.01      # AU
+  pEnsa() 0.01   # AU
+  pEB55() 0      # AU
+  pGw() 0        # AU
+
+end seed species
+
+begin observables
+
+  # Active cyclin B:Cdk1 -- switch output (low interphase, high mitosis)
+  Molecules Obs_Cb Cb()
+  # Phospho-ENSA:B55 complex -- inhibited phosphatase (switch antagonist)
+  Molecules Obs_pEB55 pEB55()
+  # Total phospho-ENSA and phospho-Greatwall
+  Molecules Obs_pEnsa pEnsa()
+  Molecules Obs_pGw pGw()
+
+end observables
+
+begin functions
+
+  # --- Algebraic quantities (conservation and Hill-like activities) ---
+
+  # Free (active) PP2A:B55 = total B55 minus the pEnsa:B55 sink
+  B55() = tB55 - Obs_pEB55
+
+  # Effective Wee1 and Cdc25 activities on Cb (Eqs 21-22 in Lang et al. (2024))
+  rWee() = kWee1 + (kWee2 - kWee1)*kDpWee*B55()/(kDpWee*B55() + kPhWee*Obs_Cb)
+  rCdc25() = kCdc25_1 + (kCdc25_2 - kCdc25_1)*kPhCdc25*Obs_Cb/\
+    (kPhCdc25*Obs_Cb + kDpCdc25*B55())
+
+  # --- Synthesis (0 -> X) and per-capita degradation (X -> 0) rate laws ---
+
+  # pEnsa (Eq 16): Gw phosphorylates ENSA; pEnsa:B55 dephosphorylation is a sink
+  syn_pEnsa() = kPhEnsa*Obs_pGw*tEnsa - kDpEnsa*Obs_pEB55
+  deg_pEnsa() = kPhEnsa*Obs_pGw
+
+  # Cb (Eq 17): Cdc25-driven activation from the tCb pool; Wee1 inactivation.
+  # tCb is a fixed parameter here, so there is no Cb synthesis/degradation.
+  syn_Cb() = rCdc25()*tCb
+  deg_Cb() = rCdc25() + rWee()
+
+  # pGw (Eq 18): Cb-driven phosphorylation; baseline + B55 dephosphorylation
+  syn_pGw() = kPhGw*Obs_Cb*tGw
+  deg_pGw() = kPhGw*Obs_Cb + kDpGw1 + kDpGw2*B55()
+
+  # pEnsa:B55 (Eq 19): association of free B55 with free pEnsa; dissociation +
+  # dephosphorylation
+  syn_pEB55() = kAspEB55*B55()*Obs_pEnsa
+  deg_pEB55() = kAspEB55*B55() + kDipEB55 + kDpEnsa
+
+end functions
+
+begin reaction rules
+
+  R_syn_pEnsa: 0 -> pEnsa() syn_pEnsa()
+  R_deg_pEnsa: pEnsa() -> 0 deg_pEnsa()
+
+  R_syn_Cb: 0 -> Cb() syn_Cb()
+  R_deg_Cb: Cb() -> 0 deg_Cb()
+
+  R_syn_pGw: 0 -> pGw() syn_pGw()
+  R_deg_pGw: pGw() -> 0 deg_pGw()
+
+  R_syn_pEB55: 0 -> pEB55() syn_pEB55()
+  R_deg_pEB55: pEB55() -> 0 deg_pEB55()
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1})  # 4 species, 8 reactions
+
+  #@note: |
+  #  ODE-only (arbitrary units, transiently negative synthesis terms).
+
+  saveConcentrations()
+
+  # G2/M bifurcation diagram: Cb (and pEnsa:B55) steady state vs total cyclin B
+
+  #@protocol: |
+  #  Trace the Cb bifurcation diagram in the bifurcation parameter tCb with the
+  #  bifurcate action, which warm-starts each point from the previous steady
+  #  state (reset_conc=0). The forward branch (tCb 0 -> 1, suffix _bif_forward)
+  #  follows the low-Cb (B55-active) state until the upper saddle-node, where it
+  #  jumps to the high-Cb (mitotic) state; the backward branch (tCb 1 -> 0,
+  #  suffix _bif_backward) follows the high-Cb state down until the lower
+  #  saddle-node, where it drops back. The hysteresis between the two branches
+  #  is the bistable region of Fig 1F. Lang et al. (2024) report Cb = 0.110 /
+  #  0.068 and pEnsa:B55 = 0.112 / 0.248 at the upper / lower saddle-nodes;
+  #  verify_lang2024.ipynb locates both folds from these branches and checks
+  #  them against those values.
+
+  #@figure: Fig. 1F in Lang et al. (2024)
+
+  resetConcentrations()
+  bifurcate({method=>"ode",parameter=>"tCb",par_min=>0,par_max=>1,\
+    n_scan_pts=>201,t_start=>0,t_end=>3000,n_steps=>50,atol=>1e-10,rtol=>1e-8,\
+    suffix=>"bif"})
+
+end actions
