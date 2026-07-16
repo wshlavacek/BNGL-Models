@@ -1,0 +1,57 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 tCb        0  # Constant
+    2 kPhEnsa    0.1  # Constant
+    3 kDpEnsa    0.05  # Constant
+    4 tEnsa      1  # Constant
+    5 tB55       0.25  # Constant
+    6 kPhGw      1  # Constant
+    7 kDpGw1     0.25  # Constant
+    8 kDpGw2     10  # Constant
+    9 tGw        1  # Constant
+   10 kWee1      0.01  # Constant
+   11 kWee2      1  # Constant
+   12 kPhWee     1  # Constant
+   13 kDpWee     10  # Constant
+   14 kCdc25_1   0.1  # Constant
+   15 kCdc25_2   1  # Constant
+   16 kPhCdc25   1  # Constant
+   17 kDpCdc25   10  # Constant
+   18 kDipEB55   0.0068  # Constant
+   19 kAspEB55   57  # Constant
+end parameters
+begin functions
+    1 B55() tB55-Obs_pEB55
+    2 rWee() kWee1+((((kWee2-kWee1)*kDpWee)*B55())/((kDpWee*B55())+(kPhWee*Obs_Cb)))
+    3 rCdc25() kCdc25_1+((((kCdc25_2-kCdc25_1)*kPhCdc25)*Obs_Cb)/((kPhCdc25*Obs_Cb)+(kDpCdc25*B55())))
+    4 syn_pEnsa() ((kPhEnsa*Obs_pGw)*tEnsa)-(kDpEnsa*Obs_pEB55)
+    5 deg_pEnsa() kPhEnsa*Obs_pGw
+    6 syn_Cb() rCdc25()*tCb
+    7 deg_Cb() rCdc25()+rWee()
+    8 syn_pGw() (kPhGw*Obs_Cb)*tGw
+    9 deg_pGw() ((kPhGw*Obs_Cb)+kDpGw1)+(kDpGw2*B55())
+   10 syn_pEB55() (kAspEB55*B55())*Obs_pEnsa
+   11 deg_pEB55() ((kAspEB55*B55())+kDipEB55)+kDpEnsa
+end functions
+begin species
+    1 Cb() 0.01
+    2 pEnsa() 0.01
+    3 pEB55() 0
+    4 pGw() 0
+end species
+begin reactions
+    1 0 2 syn_pEnsa #R_syn_pEnsa
+    2 2 0 deg_pEnsa #R_deg_pEnsa
+    3 0 1 syn_Cb #R_syn_Cb
+    4 1 0 deg_Cb #R_deg_Cb
+    5 0 4 syn_pGw #R_syn_pGw
+    6 4 0 deg_pGw #R_deg_pGw
+    7 0 3 syn_pEB55 #R_syn_pEB55
+    8 3 0 deg_pEB55 #R_deg_pEB55
+end reactions
+begin groups
+    1 Obs_Cb               1
+    2 Obs_pEB55            3
+    3 Obs_pEnsa            2
+    4 Obs_pGw              4
+end groups

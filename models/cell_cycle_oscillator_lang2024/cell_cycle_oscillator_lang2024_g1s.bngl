@@ -1,0 +1,228 @@
+begin model
+
+#@title: G1/S transition switch (Lang et al., 2024)
+
+#@description: |
+#  Mass-action ODE model of the G1/S-transition bistable switch, one of the
+#  four cell-cycle-transition building blocks of Lang et al. (2024) and a
+#  related module of the cell cycle oscillator (primary file
+#  cell_cycle_oscillator_lang2024.bngl). The switch is the mutual inhibition
+#  between cyclin A:Cdk1/2 (CycA) and the ubiquitin ligase Apc:Cdh1. Apc:Cdh1
+#  polyubiquitinates CycA, while CycA and CycE phosphorylate Cdh1 (pCdh1),
+#  detaching it from Apc and inactivating the ligase. The pseudosubstrate
+#  Emi1 (total tEmi1) binds and stoichiometrically inhibits Apc:Cdh1 (forming
+#  Apc:Cdh1:Emi1, "ACE"), supplying the inhibitor ultrasensitivity that makes
+#  the loop bistable. E2f (the bifurcation parameter) drives synthesis of
+#  CycA, CycE and Emi1 through an E2f:promoter complex.
+#
+#  Raising E2f past the upper saddle-node flips the switch from the low-CycA
+#  (Apc:Cdh1-active, G1) state to the high-CycA (S-phase) state; the delay
+#  between CycE and CycA accumulation this creates is the switch's purpose.
+#  The active protocol scans E2f to trace the lower stable branch of the CycA
+#  bifurcation diagram up to the switch point (Fig 1D). Equations correspond
+#  to Equations B (Eqs 9-15) of S1 Appendix; parameters and initial conditions
+#  are from versions/v0.0.1/G1S_E2f.ode of the cell_cycle_model repository
+#  (the sister file G1S_CycE.ode uses CycE instead of E2f as the parameter).
+
+#@keyword: |
+#  cell cycle, G1/S transition, cyclin A, CCNA, CDK2, APC/C, Cdh1, FZR1,
+#  Emi1, FBXO5, cyclin E, E2F, bistable switch, mutual inhibition,
+#  stoichiometric inhibitor, inhibitor ultrasensitivity, hysteresis,
+#  mass action, arbitrary units, ODE, Homo sapiens
+
+#@reference: |
+#  Lang PF, Penas DR, Banga JR, Weindl D, Novak B (2024). Reusable rule-based
+#  cell cycle model explains compartment-resolved dynamics of 16 observables
+#  in RPE-1 cells. PLoS Comput Biol 20(1):e1011151.
+#  doi:10.1371/journal.pcbi.1011151
+
+#@note: |
+#  Units are arbitrary (AU): species are concentrations in arbitrary units
+#  with O(1) scales (tCdh = tDna = 1) and time in minutes; no molecule-count
+#  basis, so the model is ODE-only and NA/V_ref/h_mem are omitted (BNGL house
+#  style, de-dimensionalized/ODE-only policy). Each ODE state variable is a
+#  structureless molecule; the published ODEs (Eqs 9-15) are reproduced by
+#  pairing 0 -> X (rate syn_X()) with X -> 0 (per-capita rate deg_X()). The
+#  active Apc:Cdh1 pool is the conservation quantity ApcCdh = tCdh - pCdh1 -
+#  ACE (helper function). ACE denotes the Apc:Cdh1:Emi1 complex. Apc is
+#  assumed in excess with all Cdh1 Apc-bound, following Lang et al. (2024). E2f
+#  is a fixed parameter (the bifurcation variable), not a species. BNG
+#  generates 6 species and 12 reactions.
+
+begin parameters
+
+  # E2f, the bifurcation parameter (drives CycA/CycE/Emi1 synthesis)
+  E2f 0          # AU
+
+  # Emi1 synthesis (baseline + E2f-activated) and degradation (baseline +
+  # Apc:Cdh1:Emi1-coupled)
+  kSyEmi1 0.01   # AU/min
+  kSyEmi2 0.1    # AU/min
+  kDeEmi1 0.1    # /min
+  kDeEmi2 0.1    # /min
+
+  # CycA synthesis (baseline + E2f-activated) and degradation (baseline +
+  # Apc:Cdh1-mediated)
+  kSyCa1 0.005   # AU/min
+  kSyCa2 0.05    # AU/min
+  kDeCa1 0.005   # /min
+  kDeCa2 2.5     # /AU/min
+
+  # CycE synthesis (baseline + E2f-activated) and degradation
+  kSyCe1 0.01    # AU/min
+  kSyCe2 0.1     # AU/min
+  kDeCe 0.11     # /min
+
+  # Total Cdh1 (conserved); Cdh1 (de)phosphorylation by CycA (strong) and
+  # CycE (weak)
+  tCdh 1         # AU
+  kDpCdh 1.5     # /min
+  kPhCdhA 5      # /AU/min
+  kPhCdhE 0.4    # /AU/min
+
+  # Apc:Cdh1:Emi1 (dis)association
+  kDiACE 0.1     # /min
+  kAsACE 100     # /AU/min
+
+  # E2f:promoter binding: total promoter and (dis)association rates
+  tDna 1         # AU
+  kAsEPx 50      # /AU/min
+  kDiEPx 5       # /min
+
+end parameters
+
+begin molecule types
+
+  # Cyclin A:Cdk1/2 complex (CCNA:CDK) -- switch output
+  CycA()
+  # Total Emi1 (FBXO5), the Apc:Cdh1 pseudosubstrate inhibitor
+  tEmi1()
+  # Cyclin E:Cdk2 complex (CCNE:CDK2)
+  CycE()
+  # Apc:Cdh1:Emi1 inhibitory complex
+  ACE()
+  # Phosphorylated (Apc-detached, inactive) Cdh1 (FZR1)
+  pCdh1()
+  # E2f bound to the promoter of an E2f target gene (CycA, CycE, Emi1)
+  E2fPx()
+
+end molecule types
+
+begin seed species
+
+  CycA() 0       # AU
+  tEmi1() 0      # AU
+  CycE() 0       # AU
+  ACE() 0        # AU
+  pCdh1() 0      # AU
+  E2fPx() 0      # AU
+
+end seed species
+
+begin observables
+
+  # Cyclin A -- switch output (low in G1, high after G1/S)
+  Molecules Obs_CycA CycA()
+  # Total Emi1 and the Apc:Cdh1:Emi1 complex
+  Molecules Obs_tEmi1 tEmi1()
+  Molecules Obs_ACE ACE()
+  # Phospho-Cdh1 (inactive) and cyclin E
+  Molecules Obs_pCdh1 pCdh1()
+  Molecules Obs_CycE CycE()
+  # E2f:promoter occupancy
+  Molecules Obs_E2fPx E2fPx()
+
+end observables
+
+begin functions
+
+  # --- Algebraic conservation quantity ---
+  # Active Apc:Cdh1 = total Cdh1 minus phospho-Cdh1 minus Apc:Cdh1:Emi1
+  ApcCdh() = tCdh - Obs_pCdh1 - Obs_ACE
+
+  # --- Synthesis (0 -> X) and per-capita degradation (X -> 0) rate laws ---
+
+  # tEmi1 (Eq 9): synthesis; loss = baseline degradation (per-capita) plus
+  # Apc:Cdh1:Emi1-coupled degradation (a sink, in syn)
+  syn_tEmi1() = kSyEmi1 + kSyEmi2*Obs_E2fPx - kDeEmi2*Obs_ACE
+  deg_tEmi1() = kDeEmi1
+
+  # CycA (Eq 10): E2f-driven synthesis; baseline + Apc:Cdh1-mediated degradation
+  syn_CycA() = kSyCa1 + kSyCa2*Obs_E2fPx
+  deg_CycA() = kDeCa1 + kDeCa2*ApcCdh()
+
+  # CycE (Eq 11): E2f-driven synthesis; first-order degradation
+  syn_CycE() = kSyCe1 + kSyCe2*Obs_E2fPx
+  deg_CycE() = kDeCe
+
+  # ACE = Apc:Cdh1:Emi1 (Eq 12): Emi1 binding to active Apc:Cdh1; dissociation +
+  # Emi1 degradation + CycA/CycE-driven Cdh1 phosphorylation
+  syn_ACE() = kAsACE*ApcCdh()*(Obs_tEmi1 - Obs_ACE)
+  deg_ACE() = kDiACE + kDeEmi1 + kDeEmi2 + kPhCdhE*Obs_CycE + kPhCdhA*Obs_CycA
+
+  # pCdh1 (Eq 13): CycA/CycE-driven phosphorylation of active Cdh1;
+  # dephosphorylation
+  syn_pCdh1() = (kPhCdhA*Obs_CycA + kPhCdhE*Obs_CycE)*tCdh
+  deg_pCdh1() = kPhCdhA*Obs_CycA + kPhCdhE*Obs_CycE + kDpCdh
+
+  # E2f:promoter (Eq 14): E2f binding to free promoter; dissociation
+  syn_E2fPx() = kAsEPx*E2f*tDna
+  deg_E2fPx() = kAsEPx*E2f + kDiEPx
+
+end functions
+
+begin reaction rules
+
+  R_syn_tEmi1: 0 -> tEmi1() syn_tEmi1()
+  R_deg_tEmi1: tEmi1() -> 0 deg_tEmi1()
+
+  R_syn_CycA: 0 -> CycA() syn_CycA()
+  R_deg_CycA: CycA() -> 0 deg_CycA()
+
+  R_syn_CycE: 0 -> CycE() syn_CycE()
+  R_deg_CycE: CycE() -> 0 deg_CycE()
+
+  R_syn_ACE: 0 -> ACE() syn_ACE()
+  R_deg_ACE: ACE() -> 0 deg_ACE()
+
+  R_syn_pCdh1: 0 -> pCdh1() syn_pCdh1()
+  R_deg_pCdh1: pCdh1() -> 0 deg_pCdh1()
+
+  R_syn_E2fPx: 0 -> E2fPx() syn_E2fPx()
+  R_deg_E2fPx: E2fPx() -> 0 deg_E2fPx()
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1})  # 6 species, 12 reactions
+
+  #@note: |
+  #  ODE-only (arbitrary units, transiently negative synthesis terms).
+
+  saveConcentrations()
+
+  # G1/S bifurcation diagram: CycA steady state vs E2f
+
+  #@protocol: |
+  #  Trace the CycA bifurcation diagram in the bifurcation parameter E2f with
+  #  the bifurcate action, which warm-starts each point from the previous
+  #  steady state (reset_conc=0). The forward branch (E2f 0 -> 1, suffix
+  #  _bif_forward) follows the low-CycA (Apc:Cdh1-active, G1) state until the
+  #  upper saddle-node near E2f ~ 0.59 AU, where it jumps to the high-CycA
+  #  (S-phase) state; the backward branch (E2f 1 -> 0, suffix _bif_backward)
+  #  follows the high-CycA state down until the lower saddle-node near E2f ~
+  #  0.42 AU. The hysteresis between the two branches is the bistable region of
+  #  Fig 1D. verify_lang2024.ipynb locates both folds by continuation and
+  #  overlays the branches on the digitized Fig 1D.
+
+  #@figure: Fig. 1D in Lang et al. (2024)
+
+  resetConcentrations()
+  bifurcate({method=>"ode",parameter=>"E2f",par_min=>0,par_max=>1,\
+    n_scan_pts=>201,t_start=>0,t_end=>3000,n_steps=>50,atol=>1e-10,rtol=>1e-8,\
+    suffix=>"bif"})
+
+end actions

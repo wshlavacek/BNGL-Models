@@ -1,0 +1,69 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 E2f        0  # Constant
+    2 kSyEmi1    0.01  # Constant
+    3 kSyEmi2    0.1  # Constant
+    4 kDeEmi1    0.1  # Constant
+    5 kDeEmi2    0.1  # Constant
+    6 kSyCa1     0.005  # Constant
+    7 kSyCa2     0.05  # Constant
+    8 kDeCa1     0.005  # Constant
+    9 kDeCa2     2.5  # Constant
+   10 kSyCe1     0.01  # Constant
+   11 kSyCe2     0.1  # Constant
+   12 kDeCe      0.11  # Constant
+   13 tCdh       1  # Constant
+   14 kDpCdh     1.5  # Constant
+   15 kPhCdhA    5  # Constant
+   16 kPhCdhE    0.4  # Constant
+   17 kDiACE     0.1  # Constant
+   18 kAsACE     100  # Constant
+   19 tDna       1  # Constant
+   20 kAsEPx     50  # Constant
+   21 kDiEPx     5  # Constant
+end parameters
+begin functions
+    1 ApcCdh() (tCdh-Obs_pCdh1)-Obs_ACE
+    2 syn_tEmi1() (kSyEmi1+(kSyEmi2*Obs_E2fPx))-(kDeEmi2*Obs_ACE)
+    3 deg_tEmi1() kDeEmi1
+    4 syn_CycA() kSyCa1+(kSyCa2*Obs_E2fPx)
+    5 deg_CycA() kDeCa1+(kDeCa2*ApcCdh())
+    6 syn_CycE() kSyCe1+(kSyCe2*Obs_E2fPx)
+    7 deg_CycE() kDeCe
+    8 syn_ACE() (kAsACE*ApcCdh())*(Obs_tEmi1-Obs_ACE)
+    9 deg_ACE() (((kDiACE+kDeEmi1)+kDeEmi2)+(kPhCdhE*Obs_CycE))+(kPhCdhA*Obs_CycA)
+   10 syn_pCdh1() ((kPhCdhA*Obs_CycA)+(kPhCdhE*Obs_CycE))*tCdh
+   11 deg_pCdh1() ((kPhCdhA*Obs_CycA)+(kPhCdhE*Obs_CycE))+kDpCdh
+   12 syn_E2fPx() (kAsEPx*E2f)*tDna
+   13 deg_E2fPx() (kAsEPx*E2f)+kDiEPx
+end functions
+begin species
+    1 CycA() 0
+    2 tEmi1() 0
+    3 CycE() 0
+    4 ACE() 0
+    5 pCdh1() 0
+    6 E2fPx() 0
+end species
+begin reactions
+    1 0 2 syn_tEmi1 #R_syn_tEmi1
+    2 2 0 deg_tEmi1 #R_deg_tEmi1
+    3 0 1 syn_CycA #R_syn_CycA
+    4 1 0 deg_CycA #R_deg_CycA
+    5 0 3 syn_CycE #R_syn_CycE
+    6 3 0 deg_CycE #R_deg_CycE
+    7 0 4 syn_ACE #R_syn_ACE
+    8 4 0 deg_ACE #R_deg_ACE
+    9 0 5 syn_pCdh1 #R_syn_pCdh1
+   10 5 0 deg_pCdh1 #R_deg_pCdh1
+   11 0 6 syn_E2fPx #R_syn_E2fPx
+   12 6 0 deg_E2fPx #R_deg_E2fPx
+end reactions
+begin groups
+    1 Obs_CycA             1
+    2 Obs_tEmi1            2
+    3 Obs_ACE              4
+    4 Obs_pCdh1            5
+    5 Obs_CycE             3
+    6 Obs_E2fPx            6
+end groups

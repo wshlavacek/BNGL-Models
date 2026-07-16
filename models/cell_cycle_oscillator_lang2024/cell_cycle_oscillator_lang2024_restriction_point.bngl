@@ -1,0 +1,213 @@
+begin model
+
+#@title: Restriction-point switch (Lang et al., 2024)
+
+#@description: |
+#  Mass-action ODE model of the restriction-point (RP) bistable switch, one of
+#  the four cell-cycle-transition building blocks of Lang et al. (2024) and a
+#  related module of the cell cycle oscillator (primary file
+#  cell_cycle_oscillator_lang2024.bngl). The switch is the Rb/E2f pathway:
+#  the transcription factor E2f drives synthesis of cyclin E:Cdk2 (CycE) and,
+#  by transcriptional autoactivation, of itself; unphosphorylated
+#  retinoblastoma protein (Rb) sequesters E2f. CycE and cyclin D:Cdk4/6 (CycD,
+#  the parameter Cd, used as a proxy for mitogen signalling) phosphorylate Rb,
+#  releasing E2f. Mutual inhibition between CycE and Rb, sharpened by the
+#  stoichiometric (inhibitor-ultrasensitive) E2f:Rb sequestration and by E2f
+#  autoactivation, makes the pathway bistable in CycD.
+#
+#  As CycD is raised past the upper saddle-node at Cd ~ 0.32 AU, the system
+#  switches irreversibly from the low-CycE (Rb-dominant, pre-restriction) state
+#  to the high-CycE state: reverting would require negative CycD, so passage of
+#  the restriction point renders cell-cycle entry mitogen-independent. The
+#  active protocol scans CycD to trace the lower stable branch of the CycE
+#  bifurcation diagram up to the switch point (Fig 1B). Equations correspond to
+#  Equations A (Eqs 1-5) of S1 Appendix; parameters and initial conditions are
+#  from versions/v0.0.1/RP_aa.ode of the cell_cycle_model repository (RP_aa is
+#  the E2f-autoactivation variant used for Fig 1B; the plain RP.ode omits
+#  autoactivation).
+
+#@keyword: |
+#  cell cycle, restriction point, G1/S, Rb, RB1, E2F, cyclin E, CDK2,
+#  cyclin D, mitogen, bistable switch, toggle switch, mutual inhibition,
+#  transcriptional autoactivation, inhibitor ultrasensitivity, hysteresis,
+#  irreversible transition, mass action, arbitrary units, ODE, Homo sapiens
+
+#@reference: |
+#  Lang PF, Penas DR, Banga JR, Weindl D, Novak B (2024). Reusable rule-based
+#  cell cycle model explains compartment-resolved dynamics of 16 observables
+#  in RPE-1 cells. PLoS Comput Biol 20(1):e1011151.
+#  doi:10.1371/journal.pcbi.1011151
+
+#@note: |
+#  Units are arbitrary (AU): species are concentrations in arbitrary units
+#  with O(1) characteristic scales (tRb = tDna = 1) and time in minutes; there
+#  is no molecule-count basis, so the model is ODE-only and the population-
+#  conversion parameters (NA, V_ref, h_mem) are omitted (BNGL house style,
+#  de-dimensionalized/ODE-only policy). Each ODE state variable is a
+#  structureless molecule; the published ODEs (Eqs 1-5) are reproduced by
+#  pairing 0 -> X (rate syn_X()) with X -> 0 (per-capita rate deg_X()). The
+#  algebraic conservation quantities pRb = tRb - Rb, E2f:Rb = tE2f - E2f and
+#  free Rb fRb = Rb - E2f:Rb are helper functions. BNG generates 5 species and
+#  10 reactions. Note "E2f" is free E2f and "tE2f" is total E2f; they are
+#  distinct dynamical variables (Eqs 3 and 4) linked by E2f:Rb = tE2f - E2f.
+
+begin parameters
+
+  # CycD:Cdk4/6, the mitogen-signalling proxy and bifurcation parameter
+  Cd 0           # AU
+
+  # Rb (de)phosphorylation: CycD and CycE phosphorylate Rb at rate kPhRb
+  kDpRb 1        # /min
+  kPhRb 10       # /AU/min
+
+  # CycE synthesis (baseline + E2f:promoter-activated) and degradation
+  kSyCe1 0.01    # AU/min
+  kSyCe2 0.1     # AU/min
+  kDeCe 0.11     # /min
+
+  # E2f:Rb (dis)association (stoichiometric sequestration of E2f by Rb)
+  kDiE2fRb 0.1   # /min
+  kAsE2fRb 100   # /AU/min
+
+  # E2f synthesis (baseline + autoactivation via E2f:promoter) and degradation
+  kSyE2f1 0.01   # AU/min
+  kSyE2f2 0.1    # AU/min
+  kDeE2f 0.11    # /min
+
+  # Total Rb (conserved)
+  tRb 1          # AU
+
+  # E2f:promoter binding: total promoter tDna and (dis)association rates
+  tDna 1         # AU
+  kAsEPx 50      # /AU/min
+  kDiEPx 5       # /min
+
+end parameters
+
+begin molecule types
+
+  # Unphosphorylated retinoblastoma protein (RB1), including E2f-bound Rb
+  Rb()
+  # Cyclin E:Cdk2 complex (CCNE:CDK2)
+  CycE()
+  # Free E2f (not bound to Rb; includes promoter-bound E2f)
+  E2f()
+  # Total E2f (free + Rb-sequestered); own synthesis/degradation balance
+  tE2f()
+  # E2f bound to the promoter of an E2f target gene (CycE, E2f)
+  E2fPx()
+
+end molecule types
+
+begin seed species
+
+  Rb() 1         # AU
+  CycE() 0       # AU
+  E2f() 0        # AU
+  tE2f() 0       # AU
+  E2fPx() 0      # AU
+
+end seed species
+
+begin observables
+
+  # Cyclin E:Cdk2 -- switch output (low before, high after restriction point)
+  Molecules Obs_CycE CycE()
+  # Unphosphorylated Rb -- switch input state
+  Molecules Obs_Rb Rb()
+  # Free and total E2f
+  Molecules Obs_E2f E2f()
+  Molecules Obs_tE2f tE2f()
+  # E2f:promoter occupancy
+  Molecules Obs_E2fPx E2fPx()
+
+end observables
+
+begin functions
+
+  # --- Algebraic conservation quantities ---
+  # Phosphorylated Rb
+  pRb() = tRb - Obs_Rb
+  # E2f:Rb complex (sequestered E2f)
+  E2fRb() = Obs_tE2f - Obs_E2f
+  # Free unphosphorylated Rb
+  fRb() = Obs_Rb - (Obs_tE2f - Obs_E2f)
+
+  # --- Synthesis (0 -> X) and per-capita degradation (X -> 0) rate laws ---
+
+  # Rb (Eq 1): dephosphorylation of pRb + release from degrading E2f:Rb;
+  # loss = CycD/CycE-driven phosphorylation
+  syn_Rb() = kDpRb*(tRb - Obs_Rb) + kDeE2f*(Obs_tE2f - Obs_E2f)
+  deg_Rb() = kPhRb*(Cd + Obs_CycE)
+
+  # CycE (Eq 2): E2f-driven synthesis; first-order degradation
+  syn_CycE() = kSyCe1 + kSyCe2*Obs_E2fPx
+  deg_CycE() = kDeCe
+
+  # E2f (Eq 3): synthesis + autoactivation + release from E2f:Rb; loss =
+  # degradation + Rb sequestration
+  syn_E2f() = kSyE2f1 + kSyE2f2*Obs_E2fPx + kDiE2fRb*(Obs_tE2f - Obs_E2f)
+  deg_E2f() = kDeE2f + kAsE2fRb*(Obs_Rb - (Obs_tE2f - Obs_E2f))
+
+  # tE2f (Eq 4): total-E2f synthesis; first-order degradation
+  syn_tE2f() = kSyE2f1 + kSyE2f2*Obs_E2fPx
+  deg_tE2f() = kDeE2f
+
+  # E2f:promoter (Eq 5): E2f binding to free promoter; dissociation
+  syn_E2fPx() = kAsEPx*Obs_E2f*tDna
+  deg_E2fPx() = kAsEPx*Obs_E2f + kDiEPx
+
+end functions
+
+begin reaction rules
+
+  R_syn_Rb: 0 -> Rb() syn_Rb()
+  R_deg_Rb: Rb() -> 0 deg_Rb()
+
+  R_syn_CycE: 0 -> CycE() syn_CycE()
+  R_deg_CycE: CycE() -> 0 deg_CycE()
+
+  R_syn_E2f: 0 -> E2f() syn_E2f()
+  R_deg_E2f: E2f() -> 0 deg_E2f()
+
+  R_syn_tE2f: 0 -> tE2f() syn_tE2f()
+  R_deg_tE2f: tE2f() -> 0 deg_tE2f()
+
+  R_syn_E2fPx: 0 -> E2fPx() syn_E2fPx()
+  R_deg_E2fPx: E2fPx() -> 0 deg_E2fPx()
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1})  # 5 species, 10 reactions
+
+  #@note: |
+  #  ODE-only (arbitrary units, transiently negative synthesis terms).
+
+  saveConcentrations()
+
+  # Restriction-point bifurcation diagram: CycE steady state vs CycD
+
+  #@protocol: |
+  #  Trace the CycE bifurcation diagram in the bifurcation parameter Cd (CycD)
+  #  with the bifurcate action, which warm-starts each point from the previous
+  #  steady state (reset_conc=0). The forward branch (Cd -0.1 -> 1.2, suffix
+  #  _bif_forward) follows the low-CycE (Rb-dominant) state until the upper
+  #  saddle-node near Cd ~ 0.32 AU, where it switches to the high-CycE state;
+  #  the backward branch (Cd 1.2 -> -0.1, suffix _bif_backward) stays on the
+  #  high-CycE state across the whole range, since the lower saddle-node lies at
+  #  Cd < 0 -- the switch is irreversible (Fig 1B). verify_lang2024.ipynb
+  #  locates the upper fold by continuation and overlays both branches on the
+  #  digitized Fig 1B.
+
+  #@figure: Fig. 1B in Lang et al. (2024)
+
+  resetConcentrations()
+  bifurcate({method=>"ode",parameter=>"Cd",par_min=>-0.1,par_max=>1.2,\
+    n_scan_pts=>263,t_start=>0,t_end=>3000,n_steps=>50,atol=>1e-10,rtol=>1e-8,\
+    suffix=>"bif"})
+
+end actions
