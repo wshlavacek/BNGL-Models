@@ -1,0 +1,82 @@
+# metadata.yaml - combinatorial_egfr_signaling_blinov2006
+id: combinatorial_egfr_signaling_blinov2006
+created: 2026-07-16
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, bug_fix, ai_assisted]
+  description: >
+    House-style curation of the EGFR early-signaling models of Blinov et al.
+    (2006), BioSystems 83:136-151, based on the distributed BioNetGen 2.9.3
+    Models2/egfr_net.bngl (network) and Models2/egfr_path.bngl (pathway-like).
+    The primary file is the 356-species / 3749-reaction rule-based network model
+    of EGF-induced Sos recruitment. The _pathway variant is the 18-species
+    Kholodenko et al. (1999) reformulation with PLC-gamma omitted, used by the
+    paper as the comparison (broken-line) model of Fig. 2. Both files correct a
+    typo in the distributed BNGL: km21 is set to 0.1 s^-1 (Table 1 k_-21), not
+    0.01 s^-1; the correction restores detailed-balance loops loop2 and loop4 to
+    unity and reproduces the Fig. 2 steady states more closely (verified against
+    curves digitized from the published figure). The distributed reduced-state
+    model (egfr_net_red.bngl) was intentionally not curated: as distributed it
+    lacks the pre-formed cytosolic Grb2-Sos pool, so its Grb2/Sos totals differ
+    from the network model and its Grb2/Sos observables do not match.
+
+files:
+  - name: combinatorial_egfr_signaling_blinov2006.bngl
+    role: primary
+    description: >
+      356-species / 3749-reaction rule-based network model of early EGFR
+      signaling to Sos recruitment (EGF, EGFR, Grb2, Shc, Sos with independent
+      Y1068 and Y1148 docking sites). Reproduces Fig. 2 A/C/D/E (solid,
+      network-model curves).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: combinatorial_egfr_signaling_blinov2006_pathway.bngl
+    role: variant
+    description: >
+      18-species / 37-reaction Kholodenko-style pathway-like model (PLC-gamma
+      omitted) with lumped receptor tyrosines and lumped cytosolic-complex
+      species. Reproduces the Fig. 2 broken-line curves (panels A, C, D) and
+      supports an independent hand-coded 18-ODE verification.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_blinov2006.ipynb
+    role: verification
+    description: >
+      Runs BioNetGen on both models, confirms committed reference output,
+      integrates the generated 356-species network with SciPy (integrator-
+      independent), integrates the pathway model from a hand-coded 18-ODE
+      system, compares network vs pathway (paper Section 3.1), and compares the
+      network output against curves digitized from Fig. 2. Regenerates
+      verify_blinov2006.png.
+  - name: verify_blinov2006.png
+    role: figure
+  # Reference simulation data
+  - name: reference/combinatorial_egfr_signaling_blinov2006.net
+    role: reference
+  - name: reference/combinatorial_egfr_signaling_blinov2006_ode.net
+    role: reference
+  - name: reference/combinatorial_egfr_signaling_blinov2006_ode.gdat
+    role: reference
+  - name: reference/combinatorial_egfr_signaling_blinov2006_pathway.net
+    role: reference
+  - name: reference/combinatorial_egfr_signaling_blinov2006_pathway_ode.net
+    role: reference
+  - name: reference/combinatorial_egfr_signaling_blinov2006_pathway_ode.gdat
+    role: reference
+  # Reported simulation data digitized from Fig. 2 (network / solid curves)
+  - name: reference/blinov2006_fig2A_network_digitized.csv
+    role: reference
+  - name: reference/blinov2006_fig2C_network_digitized.csv
+    role: reference
+  - name: reference/blinov2006_fig2D_network_digitized.csv
+    role: reference
+  - name: reference/blinov2006_fig2E_network_digitized.csv
+    role: reference
