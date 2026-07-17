@@ -1,0 +1,4 @@
+parameterId	estimate	lowerBound	upperBound	priorDistribution	priorParameters
+alpha	true	0.5	1.5
+K1	true	0.00467	46.7	log-uniform	0.00467;46.7
+K2	true	0.8703	8703	log-uniform	0.8703;8703

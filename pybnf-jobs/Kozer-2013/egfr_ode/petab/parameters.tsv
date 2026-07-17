@@ -1,0 +1,10 @@
+parameterId	estimate	lowerBound	upperBound	priorDistribution	priorParameters
+alpha2_pre	true	0	60.428898
+alpha4_pre	true	0	57.459326
+alpha1_pre	true	0	52.4578514
+alpha3_pre	true	0	82.9043918
+k_o	true	0.06	600	log-uniform	0.06;600
+k_c	true	0.016	160	log-uniform	0.016;160
+kaf	true	0.154	1540	log-uniform	0.154;1540
+kar	true	0.0889	889	log-uniform	0.0889;889
+chi_r	true	437	4370000	log-uniform	437;4370000

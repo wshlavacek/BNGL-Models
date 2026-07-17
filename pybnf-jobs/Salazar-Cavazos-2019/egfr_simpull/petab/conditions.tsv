@@ -1,0 +1,4 @@
+conditionId	targetId	targetValue
+cond_dose_resp_0	EGFconc	5e-10
+cond_dose_resp_1	EGFconc	5e-09
+cond_dose_resp_2	EGFconc	5e-08

@@ -1,0 +1,9 @@
+conditionId	targetId	targetValue
+cond_basal	Stim	0
+cond_basal_jnki	Stim	0
+cond_basal_jnki	k1	0
+cond_basal_jnki	k2	0
+cond_stim	Stim	1
+cond_stim_jnki	Stim	1
+cond_stim_jnki	k1	0
+cond_stim_jnki	k2	0
