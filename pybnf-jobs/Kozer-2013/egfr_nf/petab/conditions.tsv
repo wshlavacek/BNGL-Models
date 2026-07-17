@@ -1,0 +1,7 @@
+conditionId	targetId	targetValue
+cond_doseresponse_0	LT_nM	0.001
+cond_doseresponse_1	LT_nM	0.01
+cond_doseresponse_2	LT_nM	0.1
+cond_doseresponse_3	LT_nM	1
+cond_doseresponse_4	LT_nM	10
+cond_doseresponse_5	LT_nM	100

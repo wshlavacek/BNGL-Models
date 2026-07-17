@@ -1,0 +1,5 @@
+experimentId	time	conditionId
+ctr	-inf	cond_basal
+ctr	0	cond_stim
+jnki	-inf	cond_basal_jnki
+jnki	0	cond_stim_jnki

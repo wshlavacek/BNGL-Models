@@ -1,0 +1,7 @@
+parameterId	estimate	lowerBound	upperBound	priorDistribution	priorParameters
+GRB2_total_0	true	10000	1000000	log-uniform	10000;1000000
+SHC1_total_0	true	10000	1000000	log-uniform	10000;1000000
+kdephosY1068_0	true	0.1	100	log-uniform	0.1;100
+ratio_kpkd_Y1068	true	0.01	100	log-uniform	0.01;100
+kdephosYN_0	true	0.001	100	log-uniform	0.001;100
+ratio_kpkd_YN	true	0.01	100	log-uniform	0.01;100

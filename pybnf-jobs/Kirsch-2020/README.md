@@ -31,7 +31,7 @@ reactions**. The edition-2 reconstruction reproduces the authors' trajectories *
 | slug | fits | flavor | data source | status |
 |---|---|---|---|---|
 | [`p38atf2_binding`](p38atf2_binding/) | WT p38-ATF2 NanoBit **binding** (`p38ATF2all`; free `keq6,kstim6,dp2,dp4`) | quantitative, **native-only** (`normalization=init`, `chi_sq`) | Source Data `Figure_4` (with SD) | ✅ **validated 91/100** — Gate 3a 5.8 %, Gate 3b ≤1.3× |
-| [`ppatf2_phospho`](ppatf2_phospho/) | WT pp-ATF2(T69/T71) **phosphorylation** (`pT69pT71`; free `dp3`; CTR + JNK-IN-8) | quantitative, absolute µM (`sos`) | **digitized** Fig. 7b pp-ATF2 panel | ✅ **validated** — Gate 3a 6.1 %, Gate 3b `dp3` 1.06× |
+| [`ppatf2_phospho`](ppatf2_phospho/) | WT pp-ATF2(T69/T71) **phosphorylation** (`pT69pT71`; free `dp3`; CTR + JNK-IN-8) | quantitative, absolute µM (`sos`), **PEtab-exportable** | **digitized** Fig. 7b pp-ATF2 panel | ✅ **validated** — Gate 3a 6.1 %, Gate 3b `dp3` 1.06×, PEtab round-trip |
 | [`phosphoswitch_bpsl`](phosphoswitch_bpsl/) | S90 phosphoswitch → p38 recruitment orderings (4 cell params) | **BPSL** constraints, **native-only** | Suppl. Table 2 mutants; Figs. 3c/4b binding | ✅ tier-1 + **`check` 6/6 satisfied** (build-verified; not yet primary-source-audited) |
 
 `p38atf2_binding` and `ppatf2_phospho` are the two quantitative pieces of the authors'
@@ -52,9 +52,12 @@ constraints.
 Per Supplementary Table 2, the 8 cell params come from different data: pp-JNK WB →
 `keq7,kstim7,dp1`; p38-ATF2 NanoBit → `keq6,kstim6,dp2,dp4` (`p38atf2_binding`); pp-ATF2 WB
 → `dp3` (`ppatf2_phospho`). `p38atf2_binding` is **native-only** (treated/untreated fold
-changes → `normalization`); `phosphoswitch_bpsl` is native-only (BPSL); `ppatf2_phospho` is
-absolute-µM `sos`. Verified accordingly (bounded fit + figure reproduction; `job_type =
-check` for BPSL) rather than with a PEtab round-trip.
+changes → `normalization`) and `phosphoswitch_bpsl` is native-only (BPSL), so both are verified
+by a bounded fit + figure reproduction (`job_type = check` for BPSL) rather than a PEtab
+round-trip. `ppatf2_phospho` is absolute-µM `sos` and **PEtab-v2-exportable**: it round-trips
+through PEtab v2 (the two-phase `preequilibrate → stimulate` protocol renders as multi-period
+experiments) and ships a committed [`petab/`](ppatf2_phospho/petab/) bundle, regenerated from the
+conf by `make_petab.py`.
 
 ## Source materials
 

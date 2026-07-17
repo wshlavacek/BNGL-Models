@@ -1,0 +1,9 @@
+observableId	experimentId	time	measurement	noiseParameters
+obs_pT69pT71	ctr	0	0.21
+obs_pT69pT71	ctr	600	0.55
+obs_pT69pT71	ctr	1200	0.72
+obs_pT69pT71	ctr	2400	0.8
+obs_pT69pT71	jnki	0	0.085
+obs_pT69pT71	jnki	600	0.24
+obs_pT69pT71	jnki	1200	0.42
+obs_pT69pT71	jnki	2400	0.42
