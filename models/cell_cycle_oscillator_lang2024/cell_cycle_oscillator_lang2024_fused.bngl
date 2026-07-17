@@ -6,8 +6,10 @@
 #
 # models/ collection copy of pybnf-jobs/Lang-2024/v3_2_0/v3_2_0.bngl (the edition-2 PyBNF fit
 # job, 177 of 205 parameters estimated).  The model body is verbatim; this copy adds a
-# standalone ODE reproduction protocol (begin actions, below) so the model runs directly
+# standalone ODE reproduction protocol (an actions block, below) so the model runs directly
 # under BNG2.pl without the .conf -- for the models/ collection and downstream vendoring.
+# (The reserved block keyword is deliberately not written out in these header comments so
+# a downstream action-stripping netgen pass can't mistake the prose for the real block.)
 #
 # Real-world PyBNF edition-2 fitting job derived from:
 #   Lang PF, Penas DR, Banga JR, Weindl D, Novak B. "Reusable rule-based cell cycle model
@@ -32,7 +34,7 @@
 #
 # Adaptations from the staged model (edition-2, fitting-ready):
 #   * simulation actions were stripped in the PyBNF fit job (synthesized from v3_2_0.conf);
-#     this models/ copy restores a standalone ODE protocol -- see begin actions below.
+#     this models/ copy restores a standalone ODE protocol -- see the actions block below.
 #   * kinetic rate constants declared as bare `id value` (exact SBML values), bound by
 #     name to the .conf free params (ADR-0034, no __FREE alias).
 #   * every seed species carries an ic_wt_cell__<flat> initial-concentration parameter --
