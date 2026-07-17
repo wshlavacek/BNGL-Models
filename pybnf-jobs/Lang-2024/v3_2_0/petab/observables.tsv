@@ -1,0 +1,9 @@
+observableId	observableFormula	noiseFormula	noiseDistribution	noisePlaceholders
+func_obs_cycA__nuc_median	obs_cycA__nuc_median	1	normal
+func_obs_cycB1__nuc_median	obs_cycB1__nuc_median	1	normal
+func_obs_cycE__nuc_median	obs_cycE__nuc_median	1	normal
+func_obs_E2F1__nuc_median	obs_E2F1__nuc_median	1	normal
+func_obs_pRB__nuc_median	obs_pRB__nuc_median	1	normal
+func_obs_Skp2__nuc_median	obs_Skp2__nuc_median	1	normal
+func_obs_p21__nuc_median	obs_p21__nuc_median	1	normal
+func_obs_p27__nuc_median	obs_p27__nuc_median	1	normal

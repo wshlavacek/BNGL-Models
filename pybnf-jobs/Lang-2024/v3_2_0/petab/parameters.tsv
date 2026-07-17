@@ -1,0 +1,178 @@
+parameterId	estimate	lowerBound	upperBound	priorDistribution	priorParameters
+kPhRbD	true	0.000554401	0.055440055	log-uniform	0.000554401;0.055440055
+kPhRbE	true	0.000693001	0.069300069	log-uniform	0.000693001;0.069300069
+kDpRb	true	0.0001386	0.013860014	log-uniform	0.0001386;0.013860014
+kPhRb	true	0.002079002	0.20790021	log-uniform	0.002079002;0.20790021
+kSyCe1	true	1.39e-06	0.0001386	log-uniform	1.39e-06;0.0001386
+kSyCe2	true	0.41580042	41.580042	log-uniform	0.41580042;41.580042
+kDeCe	true	1.39e-05	0.001386001	log-uniform	1.39e-05;0.001386001
+kDiE2fRb	true	3.47e-05	0.003465004	log-uniform	3.47e-05;0.003465004
+kAsE2fRb	true	0.034650035	3.4650035	log-uniform	0.034650035;3.4650035
+kSyE2f1	true	6.93e-07	6.93e-05	log-uniform	6.93e-07;6.93e-05
+kSyE2f2	true	0.069300069	6.9300069	log-uniform	0.069300069;6.9300069
+kDeE2f1	true	6.93e-06	0.000693001	log-uniform	6.93e-06;0.000693001
+kDeE2f2	true	0.0001386	0.013860014	log-uniform	0.0001386;0.013860014
+kPhE2f	true	0.0001386	0.013860014	log-uniform	0.0001386;0.013860014
+kDpE2f2	true	0.006930007	0.69300069	log-uniform	0.006930007;0.69300069
+kSyEmi1	true	3.47e-06	0.0003465	log-uniform	3.47e-06;0.0003465
+kSyEmi2	true	0.34650035	34.650035	log-uniform	0.34650035;34.650035
+kDeEmi1	true	3.47e-05	0.003465004	log-uniform	3.47e-05;0.003465004
+kDeEmi2	true	3.47e-05	0.003465004	log-uniform	3.47e-05;0.003465004
+kDeEmi3	true	0.0003465	0.034650035	log-uniform	0.0003465;0.034650035
+kPhEmiA	true	3.47e-06	0.0003465	log-uniform	3.47e-06;0.0003465
+kPhEmiB	true	1.73e-05	0.001732502	log-uniform	1.73e-05;0.001732502
+kDpEmi	true	3.47e-07	3.47e-05	log-uniform	3.47e-07;3.47e-05
+kSyCa1	true	6.93e-07	6.93e-05	log-uniform	6.93e-07;6.93e-05
+kSyCa2	true	0.051975052	5.1975052	log-uniform	0.051975052;5.1975052
+kDeCa1	true	6.93e-07	6.93e-05	log-uniform	6.93e-07;6.93e-05
+kDeCa2	true	0.0002772	0.027720028	log-uniform	0.0002772;0.027720028
+kDeCa3	true	6.93e-05	0.006930007	log-uniform	6.93e-05;0.006930007
+kDpCdh	true	0.0003465	0.034650035	log-uniform	0.0003465;0.034650035
+kPhCdhA	true	0.001732502	0.17325017	log-uniform	0.001732502;0.17325017
+kPhCdhE	true	6.93e-05	0.006930007	log-uniform	6.93e-05;0.006930007
+kPhCdhB	true	0.017325017	1.7325017	log-uniform	0.017325017;1.7325017
+kDiACE	true	3.47e-05	0.003465004	log-uniform	3.47e-05;0.003465004
+kAsACE	true	0.034650035	3.4650035	log-uniform	0.034650035;3.4650035
+kDiACdh	true	3.47e-05	0.003465004	log-uniform	3.47e-05;0.003465004
+kAsACdh	true	0.034650035	3.4650035	log-uniform	0.034650035;3.4650035
+kPhCeA	true	0.000693001	0.069300069	log-uniform	0.000693001;0.069300069
+kPhCeE	true	6.93e-06	0.000693001	log-uniform	6.93e-06;0.000693001
+kPhFoxE	true	6.93e-05	0.006930007	log-uniform	6.93e-05;0.006930007
+kPhFoxA	true	6.93e-05	0.006930007	log-uniform	6.93e-05;0.006930007
+kPhFoxB	true	0.0003465	0.034650035	log-uniform	0.0003465;0.034650035
+kDpFox	true	3.47e-06	0.0003465	log-uniform	3.47e-06;0.0003465
+kSyCb1	true	6.93e-07	6.93e-05	log-uniform	6.93e-07;6.93e-05
+kSyCb2	true	0.051975052	5.1975052	log-uniform	0.051975052;5.1975052
+kDeCb1	true	6.93e-07	6.93e-05	log-uniform	6.93e-07;6.93e-05
+kDeCb2	true	8.66e-05	0.008662509	log-uniform	8.66e-05;0.008662509
+kDeCb3	true	8.66e-05	0.008662509	log-uniform	8.66e-05;0.008662509
+kPhEnsa	true	6.93e-05	0.006930007	log-uniform	6.93e-05;0.006930007
+kDpEnsa	true	3.47e-05	0.003465004	log-uniform	3.47e-05;0.003465004
+kPhGw	true	0.000693001	0.069300069	log-uniform	0.000693001;0.069300069
+kDpGw1	true	0.00017325	0.017325017	log-uniform	0.00017325;0.017325017
+kDpGw2	true	0.006930007	0.69300069	log-uniform	0.006930007;0.69300069
+kWee1	true	6.93e-06	0.000693001	log-uniform	6.93e-06;0.000693001
+kWee2	true	0.000693001	0.069300069	log-uniform	0.000693001;0.069300069
+kPhWeeA	true	6.93e-05	0.006930007	log-uniform	6.93e-05;0.006930007
+kPhWeeB	true	0.000693001	0.069300069	log-uniform	0.000693001;0.069300069
+kDpWee	true	0.006930007	0.69300069	log-uniform	0.006930007;0.69300069
+kCdc25_1	true	6.93e-05	0.006930007	log-uniform	6.93e-05;0.006930007
+kCdc25_2	true	0.000693001	0.069300069	log-uniform	0.000693001;0.069300069
+kDpCdc25	true	0.006930007	0.69300069	log-uniform	0.006930007;0.69300069
+kDipEB55	true	4.71e-06	0.00047124	log-uniform	4.71e-06;0.00047124
+kAspEB55	true	0.03950104	3.950104	log-uniform	0.03950104;3.950104
+kSyCdc_1	true	6.93e-07	6.93e-05	log-uniform	6.93e-07;6.93e-05
+kSyCdc_2	true	0.069300069	6.9300069	log-uniform	0.069300069;6.9300069
+kDeCdc_1	true	2.77e-06	0.0002772	log-uniform	2.77e-06;0.0002772
+kDeCdc_2	true	2.77e-05	0.002772003	log-uniform	2.77e-05;0.002772003
+kDipACdc	true	8.66e-05	0.008662509	log-uniform	8.66e-05;0.008662509
+kAspACdc	true	0.000693001	0.069300069	log-uniform	0.000693001;0.069300069
+kPhApcA	true	6.93e-06	0.000693001	log-uniform	6.93e-06;0.000693001
+kDpApc_1	true	0	0.03
+kDpApc_2	true	0.003465004	0.34650035	log-uniform	0.003465004;0.34650035
+kSyFox1	true	6.93e-07	6.93e-05	log-uniform	6.93e-07;6.93e-05
+kSyFox2	true	0.051975052	5.1975052	log-uniform	0.051975052;5.1975052
+kDeFox1	true	6.93e-07	6.93e-05	log-uniform	6.93e-07;6.93e-05
+kDeFox2	true	0.0003465	0.034650035	log-uniform	0.0003465;0.034650035
+kAsEPx	true	0.034650035	3.4650035	log-uniform	0.034650035;3.4650035
+kDiEPx	true	0.003465004	0.34650035	log-uniform	0.003465004;0.34650035
+kAsFPcb	true	0.034650035	3.4650035	log-uniform	0.034650035;3.4650035
+kDiFPcb	true	0.006930007	0.69300069	log-uniform	0.006930007;0.69300069
+kAsFPcdc	true	0.034650035	3.4650035	log-uniform	0.034650035;3.4650035
+kDiFPcdc	true	0.017325017	1.7325017	log-uniform	0.017325017;1.7325017
+kPhC25B	true	0.000693001	0.069300069	log-uniform	0.000693001;0.069300069
+kPhCAEE	true	5.54e-05	0.005544006	log-uniform	5.54e-05;0.005544006
+kPhCAEA	true	0.001386001	0.13860014	log-uniform	0.001386001;0.13860014
+kPhCAEB	true	0.013860014	1.3860014	log-uniform	0.013860014;1.3860014
+kDpE2f1	true	0	0.01
+kPhC25A	true	0	0.01
+kSySkp2	true	1e-05	0.001	log-uniform	1e-05;0.001
+kDeSkp2_1	true	1e-05	0.001	log-uniform	1e-05;0.001
+kDeSkp2_2	true	0.0002	0.02	log-uniform	0.0002;0.02
+kAsTP53PCDKN1A	true	0.03	3	log-uniform	0.03;3
+kDiTP53PCDKN1A	true	0.015	1.5	log-uniform	0.015;1.5
+kSyCDKN1A_1	true	1e-06	0.0001	log-uniform	1e-06;0.0001
+kSyCDKN1A_2	true	0.4	40	log-uniform	0.4;40
+kDeCDKN1A_1	true	2e-06	0.0002	log-uniform	2e-06;0.0002
+kDeCDKN1A_2	true	2.5e-05	0.0025	log-uniform	2.5e-05;0.0025
+kAsCdkn1aC	true	0.0007	0.07	log-uniform	0.0007;0.07
+kDiCdkn1aC	true	3e-05	0.003	log-uniform	3e-05;0.003
+kPhCDKN1AByCe	true	0.0005	0.05	log-uniform	0.0005;0.05
+kPhCDKN1AByCa	true	2e-05	0.002	log-uniform	2e-05;0.002
+kPhCDKN1AByCb	true	0.0002	0.02	log-uniform	0.0002;0.02
+kDpCDKN1A	true	0.0002	0.02	log-uniform	0.0002;0.02
+kAsFOXOPCDKN1B	true	0.03	3	log-uniform	0.03;3
+kDiFOXOPCDKN1B	true	0.015	1.5	log-uniform	0.015;1.5
+kSyCDKN1B_1	true	1e-06	0.0001	log-uniform	1e-06;0.0001
+kSyCDKN1B_2	true	0.05	5	log-uniform	0.05;5
+kDeCDKN1B_1	true	2e-06	0.0002	log-uniform	2e-06;0.0002
+kDeCDKN1B_2	true	0.00025	0.025	log-uniform	0.00025;0.025
+kAsCdkn1bC	true	0.0007	0.07	log-uniform	0.0007;0.07
+kDiCdkn1bC	true	3e-05	0.003	log-uniform	3e-05;0.003
+kPhCDKN1BByCe	true	0.0005	0.05	log-uniform	0.0005;0.05
+kPhCDKN1BByCa	true	0.005	0.5	log-uniform	0.005;0.5
+kPhCDKN1BByCb	true	5e-05	0.005	log-uniform	5e-05;0.005
+kDpCDKN1B	true	0.0002	0.02	log-uniform	0.0002;0.02
+ic_wt_cell__CCND	true	0.1	10
+ic_wt_cell__CCNE_CDKN1A_B_	true	0.00569	0.569
+ic_wt_cell__E2F_DBD_RB1_Ser332u_	true	0.000992	0.0992
+ic_wt_cell__E2F_DBD_RB1_Ser332p_	true	0.000348	0.0348
+ic_wt_cell__CCNA_CDKN1A_B_	true	0.0127	1.27
+ic_wt_cell__CCNB_CDK1_Thr14_Tyr15u_CDKN1A_	true	0.0147	1.47
+ic_wt_cell__E2F_DBD_RB1_1_Ser332u__RB1_E2F_1_Ser807_Ser811u_	true	0.00209	0.209
+ic_wt_cell__E2F_DBD_RB1_1_Ser332p__RB1_E2F_1_Ser807_Ser811u_	true	0.000761	0.0761
+ic_wt_cell__RB1_E2F_Ser807_Ser811u_	true	0.00765	0.765
+ic_wt_cell__RB1_E2F_Ser807_Ser811p_	true	0.0895	8.95
+ic_wt_cell__PPP2R2B_ENSA_ARPP19_	true	5.62e-05	0.00562
+ic_wt_cell__APC_FBXO5_FZR1_CDC20_Ser355u_	true	0.37	37
+ic_wt_cell__CDC20_APC_	true	0.0216	2.16
+ic_wt_cell__APC_FBXO5_FZR1_CDC20_1_Ser355p__CDC20_APC_1_	true	0.0719	7.19
+ic_wt_cell__APC_FBXO5_FZR1_CDC20_Ser355p_	true	0.0455	4.55
+ic_wt_cell__APC_FBXO5_FZR1_CDC20_1_Ser355u__FZR1_APC_1_FBXO5_nTermu_	true	0.00266	0.266
+ic_wt_cell__FZR1_APC_FBXO5_nTermu_	true	0.000207	0.0207
+ic_wt_cell__FZR1_APC_FBXO5_nTermp_	true	0.0873	8.73
+ic_wt_cell__APC_FBXO5_1_FZR1_CDC20_2_Ser355u__FBXO5_APC_1_FZR1_3_Ser182u__FZR1_APC_2_FBXO5_3_nTermu_	true	0.00846	0.846
+ic_wt_cell__FBXO5_APC_FZR1_Ser182u_	true	0.0216	2.16
+ic_wt_cell__APC_FBXO5_1_FZR1_CDC20_2_Ser355p__FBXO5_APC_1_FZR1_3_Ser182u__FZR1_APC_2_FBXO5_3_nTermu_	true	0.00104	0.104
+ic_wt_cell__APC_FBXO5_FZR1_CDC20_1_Ser355p__FZR1_APC_1_FBXO5_nTermu_	true	0.000327	0.0327
+ic_wt_cell__FBXO5_APC_FZR1_Ser182p_	true	0.00029	0.029
+ic_wt_cell__FOXM1_DBD_Thr600u_	true	0.00394	0.394
+ic_wt_cell__FOXM1_DBD_Thr600p_	true	0.0629	6.29
+ic_wt_cell__WEE1_Ser123u_	true	0.00271	0.271
+ic_wt_cell__CCNB_CDK1_Thr14_Tyr15p_CDKN1A_	true	0.000517	0.0517
+ic_wt_cell__WEE1_Ser123p_	true	0.0973	9.73
+ic_wt_cell__CDC25_pSitesp_	true	0.0971	9.71
+ic_wt_cell__CDC25_pSitesu_	true	0.00291	0.291
+ic_wt_cell__MASTL_Thr198u_	true	0.0605	6.05
+ic_wt_cell__MASTL_Thr198p_	true	0.0395	3.95
+ic_wt_cell__ENSA_ARPP19_PPP2R2B_Ser62_Ser67u_	true	0.0309	3.09
+ic_wt_cell__ENSA_ARPP19_PPP2R2B_Ser62_Ser67p_	true	0.0442	4.42
+ic_wt_cell__ENSA_ARPP19_PPP2R2B_1_Ser62_Ser67p__PPP2R2B_ENSA_ARPP19_1_	true	0.0249	2.49
+ic_wt_cell__CDKN1A_CCNE_A_B_Ser130u_	true	0.001828352	0.182835231
+ic_wt_cell__CDKN1B_CCNE_A_Thr187u_	true	0.001435061	0.143506118
+ic_wt_cell__CCNA_CDKN1A_B_1__CDKN1A_CCNE_A_B_1_Ser130u_	true	0.000583775	0.058377486
+ic_wt_cell__CCNE_CDKN1A_B_1__CDKN1A_CCNE_A_B_1_Ser130u_	true	0.000491769	0.049176919
+ic_wt_cell__CCNB_CDK1_Thr14_Tyr15u_CDKN1A_1__CDKN1A_CCNE_A_B_1_Ser130u_	true	0.000710795	0.071079533
+ic_wt_cell__CCNB_CDK1_Thr14_Tyr15p_CDKN1A_1__CDKN1A_CCNE_A_B_1_Ser130u_	true	3.57e-05	0.003572815
+ic_wt_cell__CDKN1A_CCNE_A_B_Ser130p_	true	0.000998368	0.099836801
+ic_wt_cell__CCNA_CDKN1A_B_1__CDKN1B_CCNE_A_1_Thr187u_	true	0.000289141	0.028914127
+ic_wt_cell__CCNE_CDKN1A_B_1__CDKN1B_CCNE_A_1_Thr187u_	true	0.000272576	0.027257582
+ic_wt_cell__CDKN1B_CCNE_A_Thr187p_	true	0.001196648	0.11966477
+ic_wt_cell__CCNA_CDKN1A_B_1__CDKN1B_CCNE_A_1_Thr187p_	true	0.000357383	0.035738284
+ic_wt_cell__CCNE_CDKN1A_B_1__CDKN1B_CCNE_A_1_Thr187p_	true	0.000326196	0.032619595
+oCCNA	true	0	0.305627054
+oCCNB	true	0	0.534931031
+oCCNE	true	0	0.625025635
+oE2F	true	0	0.710586775
+oRB1_pSer807Ser811	true	0	0.092359914
+oSKP2	true	0	0.325469225
+oCDKN1A	true	0	0.569668525
+oCDKN1B	true	0	0.534762112
+sCCNA	true	0.1	10
+sCCNB	true	0.1	10
+sCCNE	true	0.1	10
+sE2F	true	0.1	10
+sRB1_pSer807Ser811	true	0.1	10
+sSKP2	true	0.1	10
+sCDKN1A	true	0.1	10
+sCDKN1B	true	0.1	10
