@@ -10,7 +10,7 @@ A20KO cells, **914 independent data points** (S1 Table). Derived from:
 > DOI: [10.1371/journal.pone.0286416](https://doi.org/10.1371/journal.pone.0286416).
 
 Built + validated from the paper's own **S1 Code**. See [`VALIDATION.md`](VALIDATION.md) for the full
-per-gate audit (confidence 90/100). See the sibling [`../reduced_onoff/`](../reduced_onoff/) for the
+per-gate audit (confidence 94/100). See the sibling [`../reduced_onoff/`](../reduced_onoff/) for the
 paper's proposed identifiability-optimal on-off protocol.
 
 ## What is fit
@@ -30,11 +30,13 @@ reduced model's fitted values); Gate 3b recovers Table 1.
   **generated per-protocol model file** — `reduced_combination_<protocol>_{wt,a20ko}.bngl`, windows
   baked in, A20KO = A20-synthesis rule removed — joined in **one multi-model fit sharing the 13 free
   parameters** (`gen_combination_models.py` regenerates them from `reduced_combination.bngl`).
-- **Target** — `reduced_combination_<protocol>_{wt,a20ko}.exp` (12 files): the original model's output
-  at the S1-Table times, peak-normalized with the paper's ρ=0.03·max floor. Regenerable with
-  `validation/gen_combination.py`.
-- **Objective** — `norm_sos` + `normalization = peak`, the edition-2-native analog of the paper's
-  Eq-7 geometric-mean-normalized log objective. Native-only.
+- **Target** — `reduced_combination_<protocol>_{wt,a20ko}.exp` (12 files): the original model's **raw**
+  output at the S1-Table times — un-normalized (the objective floors and geomean-normalizes at scoring
+  time). Regenerable with `validation/gen_combination.py`.
+- **Objective** — the paper's **exact Eq-7**: `noise_model = lognormal, sigma = fix_at 1` +
+  `normalization <obs> = floor 0.03, scale` (`lanl/PyBNF#479`) — a fixed-σ log-normal residual on
+  log₁₀ (the paper's squared-log objective) with the ρ=0.03 floor and per-series geometric-mean
+  scaling, applied symmetrically to sim and data. Edition-2-native (not PEtab-exportable).
 
 ## Result
 
@@ -42,10 +44,12 @@ reduced model's fitted values); Gate 3b recovers Table 1.
   with **AMD\*_WT = 1.286 and AMD\*_A20KO = 1.158 — matching the paper's reported 1.29 / 1.16 to 3–4
   significant figures** (`reduced_combination_reproduction.png`, `combination_gate3a.png`). The
   point count is **exactly 914 independent** (matches the paper).
-- **Gate 3b** — the 12-model joint `de` fit recovers **12/13 parameters within 3×**, most near-exact;
-  only **ε** (the paper's single least-identifiable parameter, Fig 5) stays loose. The richer
-  combination experiment identifies **δ and a_3** tightly — which the sparser on-off protocol could
-  not — exactly as the paper argues.
+- **Gate 3b** — the 12-model joint `de` fit under the paper's **exact Eq-7 objective** recovers
+  **all 13 parameters within 3×** (10/13 essentially exact, |log₁₀ ratio| ≤ 0.04), including the
+  paper's single least-identifiable **ε to ~1.5×** (was ~5.9× under the earlier analog). The objective
+  at the Table-1 params **coincides with the fit minimum** (ratio 0.996) — the exact objective's
+  optimum *is* the ground truth. The richer combination experiment identifies **δ and a_3** tightly —
+  which the sparser on-off protocol could not — exactly as the paper argues.
 
 ## Run
 

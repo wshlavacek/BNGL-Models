@@ -2,9 +2,11 @@
 """
 Gate 3a reproduction for reduced_onoff: the reduced model at its Table-1 fitted nominals
 (shipped in reduced_onoff.bngl) reproduces the fit target (reduced_onoff_{wt,a20ko}.exp, which
-is the original Lipniacki-2004 model's on-off output, peak-normalized). Self-contained -- uses
-only committed files (the .bngl + the two .exp). Overlays the peak-normalized reduced trajectory
-on the .exp target points and reports the per-observable median relative error.
+is the original Lipniacki-2004 model's RAW on-off output at the Table-2 times). Self-contained --
+uses only committed files (the .bngl + the two .exp). Peak-normalizes the reduced trajectory and
+the RAW target per observable, overlays them, and reports the per-observable median relative error.
+(Gate 3a is objective-independent -- the switch to the exact Eq-7 objective only changed the .exp
+from pre-normalized to raw, so this script now peak-normalizes the target itself for the overlay.)
 
 Run: BNGPATH=$HOME/Simulations/BioNetGen-2.9.3 ~/Code/PyBNF/.venv/bin/python make_reproduction.py
 """
@@ -47,18 +49,20 @@ def main():
     sims = {k: sim_reduced(c_deg0=v[1]) for k, v in exps.items()}
     OBS = ["IKK_a", "NFkB_n", "A20", "IkBa_star", "tIkBa"]
 
-    print("=== reduced_onoff Gate 3a: reduced@Table1 vs target (per-obs median |rel err|, t>0) ===")
+    print("=== reduced_onoff Gate 3a: reduced@Table1 vs RAW original target (per-obs median |rel err|, t>0) ===")
     for label, (expf, _) in exps.items():
         cols, a = read_exp(os.path.join(HERE, expf))
         sim = sims[label]
         tsec = a[:, 0]
         for obs in cols[1:]:
             j = cols.index(obs)
-            mask = ~np.isnan(a[:, j]) & (tsec > 0)
-            ynorm = peaknorm(sim, obs, tsec[mask])
-            e = a[mask, j]                       # exp includes rho=0.03 offset; strip it for the metric
-            e0 = e - 0.03                         # de-offset toward the underlying peak-normalized target
-            rel = np.median(np.abs(ynorm - e0) / np.clip(np.abs(e0), 0.03, None))
+            full = ~np.isnan(a[:, j])
+            # The .exp now ships RAW original-model output; peak-normalize target AND sim over the
+            # observable's measured points, then take the median relative error over t>0.
+            tgt = a[full, j] / np.max(a[full, j])
+            ys = peaknorm(sim, obs, tsec[full])
+            m = tsec[full] > 0
+            rel = np.median(np.abs(ys[m] - tgt[m]) / np.clip(np.abs(tgt[m]), 1e-2, None))
             print(f"  {label:6s} {obs:10s} {100*rel:6.1f}%")
 
     try:
@@ -73,7 +77,7 @@ def main():
                     ax.set_visible(False); continue
                 ax.plot(tgrid/60, peaknorm(sim, obs, tgrid), "r-", lw=1.5, label="reduced@Table1")
                 j = cols.index(obs); mask = ~np.isnan(a[:, j])
-                ax.plot(a[mask, 0]/60, a[mask, j]-0.03, "ko", ms=4, label="target (original)")
+                ax.plot(a[mask, 0]/60, a[mask, j]/np.max(a[mask, j]), "ko", ms=4, label="target (original)")
                 ax.set_title(f"{label}: {obs}"); ax.set_xlabel("min")
                 if r == 0 and c == 0: ax.legend(fontsize=8)
         fig.suptitle("reduced_onoff Gate 3a: reduced model at Table-1 params reproduces the original-model on-off target")

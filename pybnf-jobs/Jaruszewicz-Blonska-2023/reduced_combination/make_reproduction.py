@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 """
 Gate 3a reproduction for reduced_combination: the reduced model at its Table-1 fitted nominals
-reproduces the fit target (the original Lipniacki-2004 model's combination-experiment output,
-peak-normalized in reduced_combination_<protocol>_{wt,a20ko}.exp). Self-contained -- uses only
-committed files (the 12 per-protocol .bngl + the 12 .exp). Reproduces the paper's Fig 2 (WT nuclear
-NF-kB across the 6 protocols) and reports the peak-normalized median relative error per protocol.
+reproduces the fit target (the original Lipniacki-2004 model's RAW combination-experiment output at
+the S1-Table times, in reduced_combination_<protocol>_{wt,a20ko}.exp). Self-contained -- uses only
+committed files (the 12 per-protocol .bngl + the 12 .exp). Peak-normalizes the reduced trajectory and
+the RAW target per observable; reproduces the paper's Fig 2 (WT nuclear NF-kB across the 6 protocols)
+and reports the median relative error per protocol. (Gate 3a is objective-independent -- the switch
+to the exact Eq-7 objective only changed the .exp from pre-normalized to raw.)
 
 Run: BNGPATH=$HOME/Simulations/BioNetGen-2.9.3 ~/Code/PyBNF/.venv/bin/python make_reproduction.py
 """
@@ -55,9 +57,12 @@ def main():
             cols, a = read_exp(os.path.join(HERE, f"reduced_combination_{name}_{g}.exp"))
             s = sims[(name, g)]; errs = []
             for obs in cols[1:]:
-                j = cols.index(obs); mask = ~np.isnan(a[:, j]) & (a[:, 0] > 0)
-                yn = peaknorm(s, obs, a[mask, 0]); e0 = a[mask, j] - 0.03
-                errs.append(np.median(np.abs(yn - e0) / np.clip(np.abs(e0), 0.03, None)))
+                # The .exp now ships RAW original output; peak-normalize target AND sim per obs.
+                j = cols.index(obs); full = ~np.isnan(a[:, j])
+                tgt = a[full, j] / np.max(a[full, j])
+                yn = peaknorm(s, obs, a[full, 0])
+                m = a[full, 0] > 0
+                errs.append(np.median(np.abs(yn[m] - tgt[m]) / np.clip(np.abs(tgt[m]), 1e-2, None)))
             print(f"  {name:11s} {g:5s}  median |rel err| = {100*np.median(errs):5.1f}%")
 
     # Fig 2 reproduction: WT nuclear NF-kB across the 6 protocols
@@ -69,7 +74,7 @@ def main():
             ax.plot(tg / 60, peaknorm(s, "NFkB_n", tg), "r-", lw=1.5, label="reduced@Table1")
             cols, a = read_exp(os.path.join(HERE, f"reduced_combination_{name}_wt.exp"))
             j = cols.index("NFkB_n"); mask = ~np.isnan(a[:, j])
-            ax.plot(a[mask, 0] / 60, a[mask, j] - 0.03, "ko", ms=3, label="target (original)")
+            ax.plot(a[mask, 0] / 60, a[mask, j] / np.max(a[mask, j]), "ko", ms=3, label="target (original)")
             ax.set_title(f"WT NFkB_n: {name}"); ax.set_xlabel("min")
         axes.flat[0].legend(fontsize=8)
         fig.suptitle("reduced_combination Gate 3a (Fig 2): WT nuclear NF-kB, reduced@Table1 vs original-model target")
