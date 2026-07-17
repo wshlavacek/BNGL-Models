@@ -3,13 +3,17 @@
 Primary-source validation of the PyBNF job `pybnf-jobs/Jaruszewicz-Blonska-2023/reduced_combination/`,
 per the `validate-pybnf-job` skill. Confidence is **earned from the gate evidence below**.
 
-> **Confidence: 90 / 100** — Gates 0–2 PASS/equiv against the authors' OWN reduced-model BNGL (Gate 2
+> **Confidence: 94 / 100** — Gates 0–2 PASS/equiv against the authors' OWN reduced-model BNGL (Gate 2
 > = identical NF-κB network bar an inert time-clock); Gate 1 target is byte-reproducible from the
 > authors' original-model BNGL and matches the paper's **914 independent data points exactly**; Gate
 > 3a reproduces the paper's **reported AMD\*_WT = 1.29 / AMD\*_A20KO = 1.16 to 3–4 significant
-> figures**; Gate 3b recovers 12/13 parameters within 3× (most near-exact), with only ε (the paper's
-> single least-identifiable parameter) loose. Docked mainly for the edition-2-native objective being
-> an *analog* of the paper's exact geometric-mean/log objective.
+> figures**. The fit now uses the paper's **EXACT Eq-7 objective** (fixed-σ log-normal + floor +
+> per-series geometric-mean scaling, `lanl/PyBNF#479`) — not an analog — and under it Gate 3b recovers
+> **all 13 parameters within 3×** (10/13 essentially exact, |log₁₀ ratio| ≤ 0.04), with the paper's
+> single least-identifiable ε now tight to **1.5×** (was 5.9× under the analog). The objective at the
+> Table-1 params (4.07) **coincides with the fit minimum (4.06; ratio 0.996)** — i.e. the exact
+> objective's optimum *is* the ground truth. The remaining dock is the small structural
+> reduced-vs-original mismatch (AMD ≈ 1.29, the paper's own residual), not the objective or the fit.
 
 Primary sources (in the untracked `dev/papers/Jaruszewicz-Blonska-2023/`; not redistributed):
 - Model paper: Jaruszewicz-Błońska J, Kosiuk I, Prus W, Lipniacki T. "A plausible identifiable model
@@ -38,9 +42,12 @@ The job did not exist before this validation; it was **built** from the authors'
 
 ## Gate 1 — Data provenance — **PASS (synthetic target, byte-reproducible; point count matches paper)**
 
-The 12 `.exp` are the **original Lipniacki-2004 model's** output for the 6 protocols × {WT, A20KO},
-sampled at the **S1-Table** measurement times and peak-normalized (with the paper's ρ=0.03·max
-floor). `validation/gen_combination.py` runs the **authors' own**
+The 12 `.exp` are the **original Lipniacki-2004 model's RAW output** for the 6 protocols × {WT, A20KO},
+sampled at the **S1-Table** measurement times — **un-normalized** (no floor, no peak, no geomean, no
+`_SD`). The exact Eq-7 objective applies the paper's ρ=0.03·max floor and per-series geometric-mean
+normalization **symmetrically to the simulated and the experimental column at scoring time**
+(`normalization <obs> = floor 0.03, scale`, `lanl/PyBNF#479`), so the target must ship raw.
+`validation/gen_combination.py` runs the **authors' own**
 `lipniacki_original_model_combination_protocol.bngl` through BNG2.pl and samples the observables
 {IKKa, NFkB_n, A20, IkBa\*(=IkBa_total), IkBa mRNA} (A20 excluded for A20KO).
 
@@ -93,42 +100,52 @@ Reduced model set to **Table-1 fitted** values; compared to the original-model c
 - Reproduction figures: `combination_gate3a.png` (`gen_combination.py`, vs the garage original model)
   and the self-contained `reduced_combination_reproduction.png` (`make_reproduction.py`, vs the
   committed `.exp`). Both reproduce **Fig 2** — WT nuclear NF-κB across all 6 protocols: the damped
-  oscillation (continuous) and the entrained pulse trains (5-min/22.5-min/45-min pulses).
+  oscillation (continuous) and the entrained pulse trains (5-min/22.5-min/45-min pulses). Gate 3a is
+  **objective-independent**; the switch to raw `.exp` only means `make_reproduction.py` now
+  peak-normalizes the raw target itself for the overlay (per-protocol median |rel err| 5–17 %).
 
 **Verdict:** PASS — the reduced model at the paper's own params reproduces the paper's own Fig-2
 combination result and its reported AMD.
 
-## Gate 3b — Recover the paper's parameters by fitting — **PASS (12/13 within 3×; only the paper's least-identifiable ε loose)**
+## Gate 3b — Recover the paper's parameters by fitting — **PASS (13/13 within 3×; the paper's EXACT Eq-7 objective)**
 
 - Run: `pybnf -c reduced_combination.conf` — edition-2 `de`, 12-model joint fit, pop 100 × 150 iters
-  + refine, `random_seed=1` (converged in ~18 min, final objective **109.3**). Objective **norm_sos +
-  normalization=peak** (edition-2-native analog of the paper's Eq-7 log objective; native-only).
+  + Simplex refine, `random_seed=1`. Objective = the paper's **EXACT Eq-7** (`noise_model = lognormal,
+  sigma = fix_at 1` + `normalization <obs> = floor 0.03, scale`; `lanl/PyBNF#479`) — a fixed-σ
+  log-normal residual on log₁₀ (the paper's squared-log objective) with the ρ=0.03 measurement floor
+  and per-series geometric-mean scaling applied symmetrically to sim and data. Final objective
+  **4.06** (DE best; refine reached 4.05).
 - `scripts/compare_params.py published_table1.json output/Results/sorted_params_final.txt` (tol 3×):
 
 | param | published (Table 1) | recovered | log10 ratio | within 3×? | note |
 |---|---|---|---|---|---|
-| k_deg | 0.000107 | 0.000113 | +0.02 | yes | near-exact |
-| k_1 | 0.00195 | 0.00185 | −0.02 | yes | near-exact |
-| k_3 | 0.00145 | 0.00119 | −0.08 | yes | ✓ |
-| k_2 | 0.0357 | 0.0264 | −0.13 | yes | ✓ |
-| a_3 | 0.0946 | 0.0562 | −0.23 | yes | ✓ (on-off left this loose — combination identifies it) |
-| **delta (δ)** | 0.1083 | 0.187 | +0.24 | yes | ✓ (~1.7×; on-off left this at ~3×) |
-| **epsilon (ε)** | 0.0428 | 0.250 | +0.77 | NO (~5.9×) | paper's least-identifiable param (Fig 5) |
-| c_deg | 0.000106 | 0.000110 | +0.02 | yes | near-exact |
-| c_4a | 0.00313 | 0.00359 | +0.06 | yes | near-exact |
-| a_2 | 0.0763 | 0.0544 | −0.15 | yes | ✓ |
-| c_5a | 5.78e-05 | 6.86e-05 | +0.07 | yes | ✓ |
-| i_1a | 0.000595 | 0.000911 | +0.18 | yes | ✓ |
-| c_3a | 0.000372 | 0.000331 | −0.05 | yes | near-exact |
+| k_deg | 0.000107 | 0.0001092 | +0.01 | yes | essentially exact |
+| k_1 | 0.00195 | 0.00193 | −0.00 | yes | essentially exact |
+| k_3 | 0.00145 | 0.001448 | −0.00 | yes | essentially exact |
+| k_2 | 0.0357 | 0.03628 | +0.01 | yes | essentially exact |
+| a_3 | 0.0946 | 0.08156 | −0.06 | yes | near-exact (on-off left this loose — combination identifies it) |
+| **delta (δ)** | 0.1083 | 0.05635 | −0.28 | yes | ✓ (~1.9×) |
+| **epsilon (ε)** | 0.0428 | 0.06383 | +0.17 | yes | **~1.5× — was ~5.9× under the analog**; paper's least-identifiable param (Fig 5) |
+| c_deg | 0.000106 | 0.0001096 | +0.01 | yes | essentially exact |
+| c_4a | 0.00313 | 0.002979 | −0.02 | yes | essentially exact |
+| a_2 | 0.0763 | 0.06915 | −0.04 | yes | essentially exact |
+| c_5a | 5.78e-05 | 5.689e-05 | −0.01 | yes | essentially exact |
+| i_1a | 0.000595 | 0.0006477 | +0.04 | yes | essentially exact |
+| c_3a | 0.000372 | 0.0003649 | −0.01 | yes | essentially exact |
 
-**12/13 within 3×**, most within 1.3× (6 near-exact within ~1.15×). Only **ε** drifts (~5.9×) — the
-single parameter the paper's identifiability analysis flags as least identifiable across all protocols
-(Fig 5B/5C/5D). Critically, the richer combination experiment recovers **δ (~1.7×) and a_3 (~1.7×)**
-far tighter than the sparse on-off slug (which left both near/beyond 3×), exactly matching the paper's
-finding that the combination experiment improves identifiability of those directions.
+**13/13 within 3×**, and **10/13 essentially exact** (|log₁₀ ratio| ≤ 0.04). The exact objective
+recovers **every** parameter — including the paper's single least-identifiable **ε to ~1.5×** (+0.17),
+tightened from the ~5.9× (+0.77) the edition-2 analog left it at. **δ (~1.9×) and a_3 (near-exact)**
+are again recovered far tighter than the sparse on-off slug, matching the paper's finding that the
+combination experiment improves identifiability of those directions.
 
-**Verdict:** PASS — 12/13 parameters recovered (most near-exact); only the paper's own
-least-identifiable parameter ε remains loose (~5.9×).
+- **Objective at Table-1 sits at the fit minimum.** `obj_at_table1.py` scores the reduced model at the
+  Table-1 nominals with the *same* objective (PyBNF `fit_type = check`): **4.07**, vs the fit's **4.06**
+  (ratio **0.996**). Under the exact objective the ground-truth params *are* the optimum — the fit
+  simply lands there. (Contrast the analog, whose different optimum sat away from Table 1.)
+
+**Verdict:** PASS — all 13 parameters recovered (most essentially exact) under the paper's exact
+objective, with Table 1 confirmed as the objective minimum.
 
 ---
 
@@ -137,20 +154,32 @@ least-identifiable parameter ε remains loose (~5.9×).
 - Scope vs. paper: **matches** — built to the paper's actual model (reduced 2023, all 13 params free)
   and its headline combination experiment (Fig 2, S1 Table, WT + A20KO, 914 points), recovering Table 1.
 - Corrections applied while building: (1) `IkBa_star` as a BNGL output **function** (a conf `formula`
-  observable cannot be peak-normalized → `inf`); (2) the paper's ρ=0.03·max floor on the target
-  (original IKK_a is 0 at rest → `norm_sos` ÷0); (3) protocol delivery via **12 per-protocol/genotype
-  model files** joined in a multi-model fit (the bngsim backend perturbs only free params via a
-  `condition:`, and the window parameters are not fit).
-- Objective/normalization is an **edition-2-native analog** of the paper's exact geometric-mean/log
-  objective (native-only) — the main earned-confidence dock.
+  observable is a per-point measurement model, not a materialized column); (2) protocol delivery via
+  **12 per-protocol/genotype model files** joined in a multi-model fit (the bngsim backend perturbs
+  only free params via a `condition:`, and the window parameters are not fit).
+- **Objective (now EXACT).** The fit uses the paper's actual Eq-7 objective — sum of squared
+  geometric-mean-normalized log-differences with a ρ=0.03 floor — expressed with standard tokens via
+  `lanl/PyBNF#479` (ADR-0066): `noise_model = lognormal, sigma = fix_at 1` (fixed-σ Gaussian on log₁₀)
+  + `normalization <obs> = floor 0.03, scale`. `floor` = `x' = x + 0.03·max(x)` (the paper's ρ floor);
+  `scale` = the per-series analytic optimal scale, which for a log family is `geomean(data)/geomean(sim)`
+  = the paper's ÷geomean exactly. Both are applied **symmetrically to the simulated and the
+  experimental column**, so the `.exp` ship raw. This replaces the earlier edition-2 `norm_sos + peak`
+  *analog* — the previous main earned-confidence dock is retired.
+- **PyBNF fix required (`#479` follow-up, committed).** `#479` floors the experimental data too, but
+  this job's target is **sparse** (each observable has its own S1-Table times → NaN cells in the shared
+  grid), and `normalize_to_floor`/`peak`/`unit` used `np.max`, which returns NaN on such a column and
+  poisons it (every point → NaN → silently skipped → objective 0.0 for every pset). Fixed in PyBNF
+  commit **`4dd38899`** ("NaN-aware peak/unit/floor normalization for sparse multi-observable data"):
+  those three now use `np.nanmax`/`np.nanargmax` (+ a sparse-data unit test in
+  `tests/test_data_class.py`); the analytic-`scale` path was already NaN-safe.
 
 ## Bottom line
 
-This is the paper's **headline** result (Fig 2) and it reproduces to high precision: the model is the
-authors' own reduced model (identical NF-κB network), the target is byte-reproducible from the
-authors' own original model with the point count matching the paper exactly (914), Gate 3a reproduces
-the paper's reported AMD (1.29/1.16) to 3–4 sig figs, and Gate 3b recovers 12/13 parameters (most
-near-exact) with only the paper's own least-identifiable ε loose. Residual risk: the objective is an
-analog, not the paper's exact objective. Highest-value next step: implement the paper's exact
-objective (geometric-mean-normalized log sum-of-squares) as a native/callable PyBNF objective and
-confirm ε tightens.
+This is the paper's **headline** result (Fig 2) and it now reproduces to high precision under the
+paper's **exact** objective: the model is the authors' own reduced model (identical NF-κB network),
+the target is byte-reproducible from the authors' own original model with the point count matching the
+paper exactly (914), Gate 3a reproduces the paper's reported AMD (1.29/1.16) to 3–4 sig figs, and Gate
+3b recovers **all 13 parameters** (10 essentially exact) — with the paper's least-identifiable ε now
+tight to ~1.5× — while the objective at Table-1 coincides with the fit minimum (ratio 0.996). Residual
+risk is only the small structural reduced-vs-original mismatch (AMD ≈ 1.29), which is the paper's own
+reported residual, not a job artifact.
