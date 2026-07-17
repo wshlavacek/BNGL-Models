@@ -18,9 +18,10 @@ source:
     mass-action model: equations are from S1 Appendix and parameters/initial
     conditions from the XPPAUT .ode files in the versions/v0.0.1 directory of
     the paulflang/cell_cycle_model GitHub repository
-    (commit b0a820288bc98d62333acf8434174b6446df0574). The models use arbitrary
-    units and are ODE-only. This collection does not reproduce the paper's full
-    fused, parameter-fitted cell cycle model (versions v1.0.0+).
+    (commit b0a820288bc98d62333acf8434174b6446df0574). These four submodels use
+    arbitrary units and are ODE-only. The collection also includes the paper's
+    full fused, parameter-fitted cell cycle model (version v3.2.0) as
+    cell_cycle_oscillator_lang2024_fused.bngl.
 
 files:
   - name: cell_cycle_oscillator_lang2024.bngl
@@ -56,6 +57,20 @@ files:
       Vinod-Novak CycB:Cdk1/PP2A:B55 G2/M bistable switch (Fig 1F; Eqs 16-22).
       Saddle-nodes at CycB:Cdk1 = 0.110/0.068 and pEnsa:B55 = 0.112/0.248.
       4 species, 8 reactions.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: cell_cycle_oscillator_lang2024_fused.bngl
+    role: related
+    description: >
+      Full fused, parameter-fitted RPE-1 cell cycle model (Lang et al. 2024,
+      v3.2.0) — the paper's headline model into which the four transition
+      submodels above were merged and fitted (177 of 205 parameters estimated to
+      single-cell RPE-1 median trajectories, Stallaert et al. 2021). 73 species,
+      332 reactions, ODE-only (has begin compartments). Body verbatim from
+      pybnf-jobs/Lang-2024/v3_2_0/v3_2_0.bngl; this copy adds a standalone
+      two-cell-cycle ODE reproduction protocol (t_end = 136471.6126, n_steps =
+      1200) that emits the 8 nuclear observation functions obs_*__nuc_median().
     documentation_target: standard
     rating:
     min_bionetgen_version: "2.9.3"
