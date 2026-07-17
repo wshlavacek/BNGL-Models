@@ -513,7 +513,7 @@ begin reaction rules
 	SySkp2: 0 -> @cell:SKP2() kSySkp2
 	DeSkp2_1: @cell:SKP2() -> 0 kDeSkp2_1 DeleteMolecules
 	DeSkp2_2: @cell:SKP2() + @cell:APC(FZR1_CDC20!1,FBXO5).FZR1(APC!1,FBXO5) -> @cell:APC(FZR1_CDC20!1,FBXO5).FZR1(APC!1,FBXO5) kDeSkp2_2 DeleteMolecules
-	AsTP53PCDKN1A: @cell:TP53(DBD,Ser15~p) + @cell:CDKN1A_promoter(TP53) <-> @cell:TP53(DBD!1,Ser15~p).CDKN1A_promoter(TP53!1) kAsTP53PCDKN1A, kDiTP53PCDKN1A	
+	AsTP53PCDKN1A: @cell:TP53(DBD,Ser15~p) + @cell:CDKN1A_promoter(TP53) <-> @cell:TP53(DBD!1,Ser15~p).CDKN1A_promoter(TP53!1) kAsTP53PCDKN1A, kDiTP53PCDKN1A
 	SyCDKN1A_1: 0 -> @cell:CDKN1A(CCNE_A_B,Ser130~u) kSyCDKN1A_1
  	SyCDKN1A_2: @cell:TP53(DBD!1,Ser15~p).CDKN1A_promoter(TP53!1) -> @cell:TP53(DBD!1,Ser15~p).CDKN1A_promoter(TP53!1) + @cell:CDKN1A(CCNE_A_B,Ser130~u) kSyCDKN1A_2
 	DeCDKN1A_1: @cell:CDKN1A() -> 0 kDeCDKN1A_1 DeleteMolecules
