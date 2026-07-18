@@ -31,8 +31,8 @@ POST = {"d3":1.0e-3, "u3":0.4e-3,
         "scalepEGFR":5.27e-5, "scalepERK":3.89e-6, "scalepSos1":2.0e-4}
 # Per-cell-line condition perturbations (the edition-2 conf's `condition:` blocks, as parameter
 # overrides on the WT model). KO/T292D initial conditions are MEK1_0 / MEK1_0_T292p param changes.
-# T292D b5 is written absolute (b5 is FIXED at K&L's 4e-9 here, so b5/3 = 1.3333333e-9), matching
-# the conf's `b5 = 1.3333333e-9`.
+# T292D b5 is written absolute (b5 is FIXED at K&L's 4e-9 here, so b5/3 = 1.3333333333333335e-9),
+# matching the conf's `b5 = 1.3333333333333335e-9` (= 4e-9/3, the authors' T292D value).
 PERT = {
  "WT":    {},
  "KO":    {"MEK1_0": 0.0},

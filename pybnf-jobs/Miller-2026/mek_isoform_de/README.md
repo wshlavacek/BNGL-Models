@@ -79,8 +79,8 @@ Edition-2 now applies all of these as `condition:` parameter perturbations on th
   (Gate 2), so the edition-2 job reproduces the legacy oracle exactly (F_quant 22.72, 89/90 BPSL).
 
 `b2/b4/p4/u4` are set to `0`, and `b5 / 3` is a relative op on the free `b5`. (In the sibling aMCMC
-slug these parameters are *fixed*, so its T292D condition writes `b5` as the absolute `1.3333333e-9`
-— the BNGL-emit path refuses a relative op on a fixed parameter.)
+slug these parameters are *fixed*, so its T292D condition writes `b5` as the absolute
+`1.3333333333333335e-9` (= `4e-9/3`) — the BNGL-emit path refuses a relative op on a fixed parameter.)
 
 ## Corrections applied vs the authors' shipped setup (all documented in `VALIDATION.md`)
 

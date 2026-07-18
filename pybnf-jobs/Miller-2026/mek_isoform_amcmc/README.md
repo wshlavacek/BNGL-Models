@@ -52,9 +52,10 @@ conditions may now perturb a **fixed** model parameter, or an IC-seeding paramet
 `MEK1_0_T292p`), not only a free one — ADR-0027, realized in the bngsim mutant path (`lanl/PyBNF`
 `9ab15167`). Two edition-2 details this slug exercises:
 
-- **T292D's `b5 / 3` is written as the absolute value `1.3333333e-9`.** Because `b5` is fixed at
-  K&L's `4e-9` here (not fit), the division is a constant — and the BNGL-emit path refuses a *relative*
-  op on a fixed parameter, so the condition uses the pre-divided absolute value (`4e-9 / 3`).
+- **T292D's `b5 / 3` is written as the absolute value `1.3333333333333335e-9`.** Because `b5` is
+  fixed at K&L's `4e-9` here (not fit), the division is a constant — and the BNGL-emit path refuses a
+  *relative* op on a fixed parameter, so the condition uses the pre-divided absolute value, `4e-9 / 3`
+  to full double precision (bit-identical to the authors' `b5 4e-9/3`).
 - **`output_trajectory`** saves full observable trajectories for every sampled parameter set (→
   posterior-predictive bands). Under the one-model+conditions layout the base model runs every action
   suffix under every mutant; keying only the scored data-keys used to `KeyError` — fixed upstream by
