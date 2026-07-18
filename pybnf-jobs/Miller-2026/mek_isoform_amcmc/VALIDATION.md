@@ -50,8 +50,8 @@ a1=1.5e-7, p2a=1e-6, p4=1.2e-9, u4=2e-4, b5=4e-9, u5=20). This is the deliberate
 adjustable parameters" scope of paper §2.4 — a separate analysis from the MLE, hence a separate slug.
 
 **Fixed-parameter conditions.** Because `b2/b4/p4/u4/b5` are fixed (not fit), the T292D condition
-writes `b5 / 3` as the absolute `1.3333333e-9` (`4e-9 / 3`) — the BNGL-emit path refuses a relative
-op on a fixed parameter. The other perturbations (`b2/b4/p4/u4 = 0`, `MEK1_0 = 0`,
+writes `b5 / 3` as the absolute `1.3333333333333335e-9` (= `4e-9 / 3` to full double precision,
+bit-identical to the authors' `b5 4e-9/3`) — the BNGL-emit path refuses a relative op on a fixed parameter. The other perturbations (`b2/b4/p4/u4 = 0`, `MEK1_0 = 0`,
 `MEK1_0_T292p = 134000`) apply directly; bngsim re-derives the seed concentrations. All are enabled by
 ADR-0027 (`9ab15167`).
 
