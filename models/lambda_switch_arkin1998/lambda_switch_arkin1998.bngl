@@ -215,16 +215,16 @@ begin reaction rules
   # --- R3: protease P1 (HflB) ---
   # CII capture and catalytic degradation
   R_P1_bind_CII:   CII(p) + P1(s) <-> CII(p!1).P1(s!1)  k8, k9
-  R_P1_deg_CII:    CII(p!1).P1(s!1) -> P1(s)  k10
+  R_P1_deg_CII:    CII(p!1).P1(s!1) -> P1(s)  k10  DeleteMolecules
   # CIII capture (competitive protection) and slow degradation
   R_P1_bind_CIII:  CIII(p) + P1(s) <-> CIII(p!1).P1(s!1)  k11, k12
-  R_P1_deg_CIII:   CIII(p!1).P1(s!1) -> P1(s)  k13
+  R_P1_deg_CIII:   CIII(p!1).P1(s!1) -> P1(s)  k13  DeleteMolecules
 
   # --- R4: protease P2 (second Hfl-related protease) ---
   R_P2_bind_CII:   CII(p) + P2(s) <-> CII(p!1).P2(s!1)  k14, k15
-  R_P2_deg_CII:    CII(p!1).P2(s!1) -> P2(s)  k16
+  R_P2_deg_CII:    CII(p!1).P2(s!1) -> P2(s)  k16  DeleteMolecules
   R_P2_bind_CIII:  CIII(p) + P2(s) <-> CIII(p!1).P2(s!1)  k17, k18
-  R_P2_deg_CIII:   CIII(p!1).P2(s!1) -> P2(s)  k19
+  R_P2_deg_CIII:   CIII(p!1).P2(s!1) -> P2(s)  k19  DeleteMolecules
 end reaction rules
 
 end model
