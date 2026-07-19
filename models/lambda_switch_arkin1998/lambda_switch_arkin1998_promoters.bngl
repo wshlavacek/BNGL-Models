@@ -1,0 +1,258 @@
+begin model
+
+#@title: Lambda switch P_RE and P_L promoter activation (Arkin et al., 1998)
+
+#@description: |
+#  Statistical-thermodynamic (Shea-Ackers) activation of the phage
+#  lambda promoters P_RE and P_L, the two promoters whose full
+#  configuration parameters are tabulated in Arkin et al. (1998),
+#  Table 1. This is the companion promoter module for the protein
+#  reaction network in lambda_switch_arkin1998.bngl.
+#
+#  Method (Shea and Ackers, 1985): each promoter's operator can be in
+#  one of a set of microscopic configurations s, each with a statistical
+#  weight w_s = exp(-dG_s/RT) * prod_over_bound_species([species]^n),
+#  referenced to the empty operator (w = 1). Concentrations are molar;
+#  dG_s are the configuration free energies (kcal/mol) from Table 1. The
+#  promoter's transcript-initiation activity (open complexes/s) is the
+#  occupancy-weighted open-complex rate,
+#    A = sum_s P(s) * koc_s,   P(s) = w_s / Z,   Z = sum_s w_s,
+#  where koc_s is the closed-to-open isomerization rate of RNAP in
+#  configuration s. This A is exactly the transcript-initiation
+#  propensity that Arkin et al. feed into the Gillespie simulation.
+#
+#  P_RE (Table 1, 4 configurations): CII binds one operator and
+#  activates transcription by cooperatively recruiting RNAP
+#  (cooperativity dG = -21.5 - (-9.7) - (-9.9) = -1.9 kcal/mol). Basal
+#  activation (no CII) is ~6e-5 OC/s; CII drives activation up toward
+#  koc = 0.015 OC/s, passing the paper's lysogeny threshold (~one open
+#  complex per 2 min, 0.0083 OC/s) near 50 nM CII.
+#
+#  P_L (Table 1, 10 configurations): two operators OL1/OL2 each bound by
+#  Cro2 or CI2, mutually exclusive with an RNAP-bound active state
+#  (koc = 0.011 OC/s). Rising Cro2 or CI2 represses P_L from its ~0.010
+#  OC/s maximum toward zero, blocking leftward (xis/int) transcription.
+#
+#  Regulator concentrations are held fixed and scanned, reproducing the
+#  promoter-activation methodology of Fig. 2 in Arkin et al. (1998)
+#  (which plots the analogous P_R/P_RM panels; P_R/P_RM uses the
+#  Shea-Ackers OR operator parameters and is reproduced quantitatively
+#  in verify_arkin1998.ipynb). ODE is the natural mode: activation is an
+#  equilibrium promoter property evaluated at each regulator level.
+
+#@keyword: |
+#  bacteriophage lambda, gene regulation, promoter activation,
+#  Shea-Ackers, statistical thermodynamics, partition function,
+#  transcription initiation, CII, Cro, CI repressor, cooperativity,
+#  Escherichia coli, lysis-lysogeny decision
+
+#@reference: |
+#  Arkin A, Ross J, McAdams HH (1998). Stochastic kinetic analysis of
+#  developmental pathway bifurcation in phage lambda-infected
+#  Escherichia coli cells. Genetics 149:1633-1648. Table 1.
+#  doi:10.1093/genetics/149.4.1633
+#  Method and OR parameters: Shea MA, Ackers GK (1985). The OR control
+#  system of bacteriophage lambda: a physical-chemical model for gene
+#  regulation. J Mol Biol 181:211-230. doi:10.1016/0022-2836(85)90086-5
+
+begin parameters
+
+  #@note: |
+  #  Regulator amounts are carried as constant ($) species in molecule
+  #  counts and converted to molar in the weight functions. As in the
+  #  companion network, V_ref is chosen so 1 molecule ~ 1 nM (Arkin
+  #  et al., 1998), giving molec_to_M = 1/(NA*V_ref) = 1e-9 M/molecule,
+  #  matching the "number of molecules" annotations on the Fig. 2 axes.
+
+  # Avogadro constant (exact)
+  NA  6.02214076e23  # molecules/mol
+  # Reference cell volume so 1 molecule ~ 1 nM
+  V_ref  1.66054e-15  # L/cell
+  # Molecule count -> molar conversion (= 1e-9 M/molecule at V_ref)
+  molec_to_M  1/(NA*V_ref)  # M/molecule
+
+  # Gas constant and temperature (37 C); RT sets the Boltzmann scale
+  R_gas  1.9872e-3  # kcal/mol/K
+  T_kelvin  310.15  # K
+  RT  R_gas*T_kelvin  # kcal/mol
+
+  # Free RNA polymerase; Table 3 in Arkin et al. (1998)
+  RNAP_molec  30.0  # molecules
+
+  #@note: |
+  #  Regulator inputs. Defaults are 0 (empty promoter); each activation
+  #  scan below drives one regulator over its range while the others
+  #  stay at 0.
+
+  # CII (activator of P_RE)
+  CII_molec  0.0  # molecules
+  # Cro2 and CI2 dimers (repressors of P_L)
+  Cro2_molec  0.0  # molecules
+  CI2_molec  0.0  # molecules
+
+  #@note: |
+  #  P_RE configuration free energies and open-complex rates
+  #  (Table 1, promoter P_RE). Config 1 (empty) has dG = 0, koc = 0.
+  #  Configs: 2 = RNAP; 3 = CII; 4 = CII + RNAP (activated).
+
+  dG_RE_2  -9.9   # kcal/mol
+  dG_RE_3  -9.7   # kcal/mol
+  dG_RE_4  -21.5  # kcal/mol
+  koc_RE_2  0.00004  # /s
+  koc_RE_4  0.015    # /s
+
+  #@note: |
+  #  P_L configuration free energies and open-complex rate (Table 1,
+  #  promoter P_L). Sites OL1/OL2. Configs: 2 = Cro2 at OL1;
+  #  3 = Cro2 at OL2; 4 = CI2 at OL1; 5 = CI2 at OL2; 6 = RNAP (active);
+  #  7 = Cro2/Cro2; 8 = Cro2/CI2; 9 = CI2/Cro2; 10 = CI2/CI2.
+
+  dG_L_2  -10.9  # kcal/mol
+  dG_L_3  -12.1  # kcal/mol
+  dG_L_4  -11.7  # kcal/mol
+  dG_L_5  -10.1  # kcal/mol
+  dG_L_6  -12.5  # kcal/mol
+  dG_L_7  -22.9  # kcal/mol
+  dG_L_8  -20.9  # kcal/mol
+  dG_L_9  -22.8  # kcal/mol
+  dG_L_10  -23.7  # kcal/mol
+  koc_L_6  0.011  # /s
+
+end parameters
+
+begin molecule types
+  # CII activator (input to P_RE)
+  CII()
+  # Cro dimer (repressor input to P_L)
+  Cro2()
+  # CI dimer / lambda repressor dimer (repressor input to P_L)
+  CI2()
+  # Free RNA polymerase
+  RNAP()
+  # Cumulative open complexes (transcripts initiated) at each promoter
+  OC_PRE()
+  OC_PL()
+end molecule types
+
+begin seed species
+  # Regulators are held constant ($) at their (scannable) input levels
+  CII()   CII_molec   # molecules
+  Cro2()  Cro2_molec  # molecules
+  CI2()   CI2_molec   # molecules
+  RNAP()  RNAP_molec  # molecules
+  # Open-complex counters start empty
+  OC_PRE()  0  # molecules
+  OC_PL()   0  # molecules
+end seed species
+
+begin observables
+  # Regulator levels (drive the partition functions)
+  Molecules  Obs_CII   CII()
+  Molecules  Obs_Cro2  Cro2()
+  Molecules  Obs_CI2   CI2()
+  Molecules  Obs_RNAP  RNAP()
+  # Cumulative open complexes; at t = 1 s these equal the activation
+  # rates A_PRE and A_PL (open complexes/s)
+  Molecules  Obs_OC_PRE  OC_PRE()
+  Molecules  Obs_OC_PL   OC_PL()
+end observables
+
+begin functions
+  # --- P_RE partition function and activation (Shea-Ackers) ---
+  # Statistical weights w_s = exp(-dG_s/RT) * prod[species](M)
+  wRE_2() = exp(-dG_RE_2/RT) * (Obs_RNAP*molec_to_M)
+  wRE_3() = exp(-dG_RE_3/RT) * (Obs_CII*molec_to_M)
+  wRE_4() = exp(-dG_RE_4/RT) * (Obs_CII*molec_to_M) * (Obs_RNAP*molec_to_M)
+  ZRE() = 1 + wRE_2() + wRE_3() + wRE_4()
+  # Activation (open complexes/s): only RNAP-bound configs 2 and 4 fire
+  A_PRE() = (wRE_2()*koc_RE_2 + wRE_4()*koc_RE_4) / ZRE()
+
+  # --- P_L partition function and activation (Shea-Ackers) ---
+  wL_2() = exp(-dG_L_2/RT) * (Obs_Cro2*molec_to_M)
+  wL_3() = exp(-dG_L_3/RT) * (Obs_Cro2*molec_to_M)
+  wL_4() = exp(-dG_L_4/RT) * (Obs_CI2*molec_to_M)
+  wL_5() = exp(-dG_L_5/RT) * (Obs_CI2*molec_to_M)
+  wL_6() = exp(-dG_L_6/RT) * (Obs_RNAP*molec_to_M)
+  wL_7() = exp(-dG_L_7/RT) * (Obs_Cro2*molec_to_M)^2
+  wL_8() = exp(-dG_L_8/RT) * (Obs_Cro2*molec_to_M) * (Obs_CI2*molec_to_M)
+  wL_9() = exp(-dG_L_9/RT) * (Obs_CI2*molec_to_M) * (Obs_Cro2*molec_to_M)
+  wL_10() = exp(-dG_L_10/RT) * (Obs_CI2*molec_to_M)^2
+  ZL() = 1 + wL_2() + wL_3() + wL_4() + wL_5() + wL_6() \
+    + wL_7() + wL_8() + wL_9() + wL_10()
+  # Activation (open complexes/s): only the RNAP-bound config 6 fires
+  A_PL() = wL_6()*koc_L_6 / ZL()
+end functions
+
+begin reaction rules
+  # Transcript initiation as the Shea-Ackers activation propensity.
+  # OC_PRE/OC_PL accumulate open complexes at the promoter activity;
+  # at t = 1 s the counts equal A_PRE/A_PL (open complexes/s).
+  R_init_PRE:  0 -> OC_PRE()  A_PRE()
+  R_init_PL:   0 -> OC_PL()   A_PL()
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 6 species, 2 reactions
+
+  #@note: |
+  #  Three activation scans reproduce the Shea-Ackers promoter-activation
+  #  methodology of Fig. 2 in Arkin et al. (1998), applied to the P_RE
+  #  and P_L promoters parameterized in Table 1. Each scan runs to
+  #  t = 1 s, so the OC_PRE/OC_PL observable at the final point equals
+  #  the activation rate (open complexes/s) at that regulator level. All
+  #  three are active. The two regulators not being scanned are set to 0
+  #  with setParameter before each scan (parameter_scan re-initializes
+  #  the operator species from these seed parameters), so a regulator
+  #  held high in one scan does not carry into the next. Verified against
+  #  an analytic Shea-Ackers implementation in verify_arkin1998.ipynb,
+  #  which also reproduces the P_R and P_RM panels of Fig. 2 from the
+  #  Shea-Ackers OR parameters.
+
+  # P_RE activation by CII (Cro2 = CI2 = 0)
+
+  #@protocol: |
+  #  Scan CII from 0.1 to 1000 nM (log). A_PRE (Obs_OC_PRE) rises
+  #  sigmoidally from ~6e-5 OC/s toward ~0.013 OC/s, crossing the
+  #  lysogeny threshold (~0.0083 OC/s, one open complex per 2 min) near
+  #  50 nM CII.
+
+  #@figure: Fig. 2 in Arkin et al. (1998)
+
+  setParameter("Cro2_molec",0)
+  setParameter("CI2_molec",0)
+  parameter_scan({method=>"ode",parameter=>"CII_molec",\
+    par_min=>0.1,par_max=>1000,n_scan_pts=>60,log_scale=>1,\
+    t_start=>0,t_end=>1,n_steps=>1,suffix=>"scan_PRE_CII"})
+
+  # P_L repression by Cro2 (CII = CI2 = 0)
+
+  #@protocol: |
+  #  Scan Cro2 from 0.1 to 10000 nM (log). A_PL (Obs_OC_PL) falls from
+  #  its repressor-free maximum (~0.010 OC/s) toward zero as Cro2
+  #  occupies OL1/OL2.
+
+  #@figure: Fig. 2 in Arkin et al. (1998)
+
+  setParameter("CII_molec",0)
+  setParameter("CI2_molec",0)
+  parameter_scan({method=>"ode",parameter=>"Cro2_molec",\
+    par_min=>0.1,par_max=>10000,n_scan_pts=>60,log_scale=>1,\
+    t_start=>0,t_end=>1,n_steps=>1,suffix=>"scan_PL_Cro2"})
+
+  # P_L repression by CI2 (CII = Cro2 = 0)
+
+  #@protocol: |
+  #  Scan CI2 from 0.1 to 10000 nM (log). A_PL falls from ~0.010 OC/s
+  #  toward zero as CI2 occupies OL1/OL2 (with mild OL1-OL2
+  #  cooperativity, dG_L_10 = -23.7 kcal/mol).
+
+  #@figure: Fig. 2 in Arkin et al. (1998)
+
+  setParameter("CII_molec",0)
+  setParameter("Cro2_molec",0)
+  parameter_scan({method=>"ode",parameter=>"CI2_molec",\
+    par_min=>0.1,par_max=>10000,n_scan_pts=>60,log_scale=>1,\
+    t_start=>0,t_end=>1,n_steps=>1,suffix=>"scan_PL_CI2"})
+end actions

@@ -1,0 +1,84 @@
+# metadata.yaml — lambda_switch_arkin1998
+id: lambda_switch_arkin1998
+created: 2026-07-19
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, classic, ai_assisted]
+  description: >
+    Phage lambda lysis-lysogeny decision circuit of Arkin, Ross &
+    McAdams (1998), Genetics 149:1633-1648, curated as two
+    complementary, fully paper-specified modules. The primary file is
+    the non-genetic protein reaction network (Fig. 1a boxes R1-R5;
+    rate constants from Table 3): CI/Cro dimerization and degradation,
+    N degradation, and CII/CIII competitive proteolysis by two host
+    proteases with CIII protection. The related file is the
+    Shea-Ackers statistical-thermodynamic activation of promoters P_RE
+    and P_L (Table 1). The full operator switch (P_R/P_RM) and the
+    per-nucleotide transcription/translation machinery of the complete
+    circuit are not paper-specified and are not modeled here; P_R/P_RM
+    (Fig. 2) is reproduced in the verification notebook from the
+    Shea & Ackers (1985) OR parameters that the paper cites.
+
+files:
+  - name: lambda_switch_arkin1998.bngl
+    role: primary
+    description: >
+      Non-genetic reaction network R1-R5 (Table 3): CI/Cro
+      dimerization+degradation, N degradation, and CII/CIII
+      competitive proteolysis with CIII protection. Reproduces the
+      Table-3 protein-lifetime and CIII-protection targets.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: lambda_switch_arkin1998_promoters.bngl
+    role: related
+    description: >
+      Shea-Ackers activation of promoters P_RE (CII-activated) and P_L
+      (Cro2/CI2-repressed) from Table 1; reproduces the Fig. 2
+      promoter-activation methodology.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_arkin1998.ipynb
+    role: verification
+    description: >
+      Verifies (1) the R1-R5 network against an independent SciPy
+      mass-action integration plus the Table-3 lifetime/protection
+      targets, (2) the P_RE/P_L scans against the analytic Shea-Ackers
+      partition function, and (3) reproduces the Fig. 2 P_R/P_RM panels
+      from the full Shea-Ackers OR system (Table 1 + Table 2),
+      checked against the Fig. 2 caption anchors.
+  - name: verify_arkin1998.png
+    role: figure
+  # Reference simulation data
+  - name: reference/lambda_switch_arkin1998.net
+    role: reference
+  - name: reference/lambda_switch_arkin1998_ode.net
+    role: reference
+  - name: reference/lambda_switch_arkin1998_ode.gdat
+    role: reference
+  - name: reference/lambda_switch_arkin1998_ode.cdat
+    role: reference
+  - name: reference/lambda_switch_arkin1998_promoters.net
+    role: reference
+  - name: reference/lambda_switch_arkin1998_promoters_scan_PRE_CII.scan
+    role: reference
+  - name: reference/lambda_switch_arkin1998_promoters_scan_PL_Cro2.scan
+    role: reference
+  - name: reference/lambda_switch_arkin1998_promoters_scan_PL_CI2.scan
+    role: reference
+  - name: reference/lambda_switch_arkin1998_promoters_scan_PRE_CII/
+    role: reference
+    description: Per-point scan outputs (.gdat/.cdat/.net) for the P_RE-vs-CII scan.
+  - name: reference/lambda_switch_arkin1998_promoters_scan_PL_Cro2/
+    role: reference
+    description: Per-point scan outputs for the P_L-vs-Cro2 scan.
+  - name: reference/lambda_switch_arkin1998_promoters_scan_PL_CI2/
+    role: reference
+    description: Per-point scan outputs for the P_L-vs-CI2 scan.

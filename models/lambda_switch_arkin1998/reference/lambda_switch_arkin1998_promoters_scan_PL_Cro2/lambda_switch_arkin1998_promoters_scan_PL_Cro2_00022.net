@@ -1,0 +1,66 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA          6.02214076e23  # Constant
+    2 V_ref       1.66054e-15  # Constant
+    3 molec_to_M  1/(NA*V_ref)  # ConstantExpression
+    4 R_gas       1.9872e-3  # Constant
+    5 T_kelvin    310.15  # Constant
+    6 RT          R_gas*T_kelvin  # ConstantExpression
+    7 RNAP_molec  30.0  # Constant
+    8 CII_molec   0  # Constant
+    9 Cro2_molec  6.02089449333613  # Constant
+   10 CI2_molec   0  # Constant
+   11 dG_RE_2     -9.9  # Constant
+   12 dG_RE_3     -9.7  # Constant
+   13 dG_RE_4     -21.5  # Constant
+   14 koc_RE_2    0.00004  # Constant
+   15 koc_RE_4    0.015  # Constant
+   16 dG_L_2      -10.9  # Constant
+   17 dG_L_3      -12.1  # Constant
+   18 dG_L_4      -11.7  # Constant
+   19 dG_L_5      -10.1  # Constant
+   20 dG_L_6      -12.5  # Constant
+   21 dG_L_7      -22.9  # Constant
+   22 dG_L_8      -20.9  # Constant
+   23 dG_L_9      -22.8  # Constant
+   24 dG_L_10     -23.7  # Constant
+   25 koc_L_6     0.011  # Constant
+end parameters
+begin functions
+    1 wRE_2() exp(((-dG_RE_2)/RT))*(Obs_RNAP*molec_to_M)
+    2 wRE_3() exp(((-dG_RE_3)/RT))*(Obs_CII*molec_to_M)
+    3 wRE_4() (exp(((-dG_RE_4)/RT))*(Obs_CII*molec_to_M))*(Obs_RNAP*molec_to_M)
+    4 ZRE() ((1+wRE_2())+wRE_3())+wRE_4()
+    5 A_PRE() ((wRE_2()*koc_RE_2)+(wRE_4()*koc_RE_4))/ZRE()
+    6 wL_2() exp(((-dG_L_2)/RT))*(Obs_Cro2*molec_to_M)
+    7 wL_3() exp(((-dG_L_3)/RT))*(Obs_Cro2*molec_to_M)
+    8 wL_4() exp(((-dG_L_4)/RT))*(Obs_CI2*molec_to_M)
+    9 wL_5() exp(((-dG_L_5)/RT))*(Obs_CI2*molec_to_M)
+   10 wL_6() exp(((-dG_L_6)/RT))*(Obs_RNAP*molec_to_M)
+   11 wL_7() exp(((-dG_L_7)/RT))*((Obs_Cro2*molec_to_M)^2)
+   12 wL_8() (exp(((-dG_L_8)/RT))*(Obs_Cro2*molec_to_M))*(Obs_CI2*molec_to_M)
+   13 wL_9() (exp(((-dG_L_9)/RT))*(Obs_CI2*molec_to_M))*(Obs_Cro2*molec_to_M)
+   14 wL_10() exp(((-dG_L_10)/RT))*((Obs_CI2*molec_to_M)^2)
+   15 ZL() ((((((((1+wL_2())+wL_3())+wL_4())+wL_5())+wL_6())+wL_7())+wL_8())+wL_9())+wL_10()
+   16 A_PL() (wL_6()*koc_L_6)/ZL()
+end functions
+begin species
+    1 CII() CII_molec
+    2 Cro2() Cro2_molec
+    3 CI2() CI2_molec
+    4 RNAP() RNAP_molec
+    5 OC_PRE() 0
+    6 OC_PL() 0
+end species
+begin reactions
+    1 0 5 A_PRE #R_init_PRE
+    2 0 6 A_PL #R_init_PL
+end reactions
+begin groups
+    1 Obs_CII              1
+    2 Obs_Cro2             2
+    3 Obs_CI2              3
+    4 Obs_RNAP             4
+    5 Obs_OC_PRE           5
+    6 Obs_OC_PL            6
+end groups

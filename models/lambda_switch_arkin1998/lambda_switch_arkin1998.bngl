@@ -1,0 +1,270 @@
+begin model
+
+#@title: Lambda switch (Arkin et al., 1998)
+
+#@description: |
+#  Phage lambda lysis-lysogeny decision circuit, protein-interaction
+#  subsystem (the five non-genetic reaction boxes R1-R5 of Fig. 1a in
+#  Arkin et al., 1998). This file is the mass-action reaction network
+#  that Arkin et al. simulate stochastically alongside the operator and
+#  transcription/translation machinery. It contains:
+#    R1: CI monomer degradation and reversible CI dimerization.
+#    R2: Cro monomer degradation and reversible Cro dimerization.
+#    R5: first-order degradation of the antitermination protein N.
+#    R3/R4: competitive degradation of CII and CIII by two independent
+#           host proteases P1 (HflB) and P2 (a second Hfl-related
+#           protease). CIII competitively protects CII by sequestering
+#           the proteases.
+#
+#  Structure and dynamics: CI and Cro are degraded only as monomers
+#  (proteolysis of the monomeric form; the dimers are stable), so
+#  dimerization buffers the regulator pools. With single-site rate
+#  constants from Table 3, the dimerization Kd is 2*k3/k2 = 20 nM
+#  (matching Shea and Ackers, 1985); BioNetGen supplies the factor of 2
+#  for the symmetric 2A<->A2 rule automatically. CII and CIII are not
+#  degraded spontaneously; they are turned over only through the
+#  protease complexes. P1 is a tight, low-capacity, easily saturated
+#  protease (Km ~ 1.2 nM, kcat = k10 = 0.002/s); P2 is a low-affinity,
+#  high-capacity, non-saturating protease (Km ~ 2660 nM, kcat = k16 =
+#  0.6/s) that dominates CII turnover at physiological levels. Total
+#  protease is conserved (catalytic), so when CIII binds the proteases
+#  it lowers the proteolytic capacity available to CII, extending the
+#  CII half-life (the switch's lysogeny trigger). Simulated from a
+#  representative post-infection burst state, CII is degraded within a
+#  few minutes (unprotected half-life ~1-2 min over 50-100 nM; Table 3
+#  target ~2 min), CIII decays over ~20 min, N over ~5 min, and the
+#  CI/Cro pools relax over tens of minutes (CI/CI2 ~40 min, Cro/Cro2
+#  ~30 min; Reinitz and Vaisnys, 1990).
+#
+#  Scope: the operator/promoter switch (P_R, P_RM, P_RE, P_L) and the
+#  per-nucleotide transcription/translation reactions of the full
+#  circuit are NOT in this file. P_RE and P_L promoter activation is
+#  provided by the companion file lambda_switch_arkin1998_promoters.bngl;
+#  P_R/P_RM (Fig. 2) is reproduced in verify_arkin1998.ipynb.
+
+#@keyword: |
+#  bacteriophage lambda, lysis-lysogeny decision, gene regulation,
+#  proteolysis, competitive inhibition, protein dimerization,
+#  CII, CIII, CI repressor, Cro, HflB, stochastic gene expression,
+#  Escherichia coli, Gillespie
+
+#@reference: |
+#  Arkin A, Ross J, McAdams HH (1998). Stochastic kinetic analysis of
+#  developmental pathway bifurcation in phage lambda-infected
+#  Escherichia coli cells. Genetics 149:1633-1648.
+#  doi:10.1093/genetics/149.4.1633
+#  Rate constants: Table 3. Dimer Kd and dimerization rates also from
+#  Shea MA, Ackers GK (1985). J Mol Biol 181:211-230.
+
+begin parameters
+
+  #@note: |
+  #  Authoring units: molecule counts per cell. Rate constants are taken
+  #  directly from Table 3 in Arkin et al. (1998), where concentrations
+  #  are in nM. V_ref below is chosen so that 1 molecule ~ 1 nM in an
+  #  E. coli cell (Arkin et al., 1998, p. 1636), which makes the
+  #  bimolecular constants (nM^-1 s^-1) numerically equal to
+  #  molecule^-1 s^-1 and lets the Table-3 values be used verbatim in
+  #  both ODE and SSA. If V_ref is changed, the bimolecular constants
+  #  (k2, k5, k8, k11, k14, k17) must be rescaled by V_ref / V_ref_here.
+
+  # Avogadro constant (exact)
+  NA  6.02214076e23  # molecules/mol
+  # Reference cell volume so that 1 molecule ~ 1 nM: V_ref = 1/(NA*1nM)
+  V_ref  1.66054e-15  # L/cell
+
+  # Subvolume scaling factor (single cell)
+  f  1.0  # dimensionless
+
+  # --- R1: CI degradation and dimerization ---
+  # CI monomer degradation; yields CI/CI2 lifetime ~40 min over
+  # 20-100 nM (Reinitz and Vaisnys, 1990); Table 3 in Arkin et al. (1998)
+  k1  0.0007  # /s
+  # CI dimerization (2 CI <-> CI2); Kd = 2*k3/k2 = 20 nM (Shea and
+  # Ackers, 1985; Burz et al., 1994)
+  k2  0.05  # /nM/s
+  k3  0.5   # /s
+
+  # --- R2: Cro degradation and dimerization ---
+  # Cro monomer degradation; yields Cro/Cro2 lifetime ~30 min over
+  # 20-100 nM (Reinitz and Vaisnys, 1990)
+  k4  0.0025  # /s
+  # Cro dimerization (2 Cro <-> Cro2); Kd = 2*k6/k5 = 20 nM
+  k5  0.05  # /nM/s
+  k6  0.5   # /s
+
+  # --- R5: N degradation ---
+  # First-order degradation of antitermination protein N (~5 min
+  # half-life); Gottesman and Gottesman (1981)
+  k7  0.00231  # /s
+
+  # --- R3: protease P1 (HflB), tight and low-capacity ---
+  # Total P1; adjusted to match % lysogeny vs API (Kourilsky, 1973)
+  P1_tot  35.0  # molecules
+  # CII + P1 <-> P1.CII; selected to match CII half-life (Gottesman and
+  # Gottesman, 1981)
+  k8  0.01   # /nM/s
+  k9  0.01   # /s
+  # P1.CII -> P1 (CII degraded)
+  k10  0.002  # /s
+  # CIII + P1 <-> P1.CIII; selected to match CIII protection of CII and
+  # CIII half-life (Hoyt et al., 1982; Kornitzer et al., 1991)
+  k11  0.01   # /nM/s
+  k12  0.001  # /s
+  # P1.CIII -> P1 (CIII degraded)
+  k13  0.0001  # /s
+
+  # --- R4: protease P2 (second Hfl-related protease), high-capacity ---
+  # Total P2
+  P2_tot  140.0  # molecules
+  # CII + P2 <-> P2.CII
+  k14  0.00025  # /nM/s
+  k15  0.065    # /s
+  # P2.CII -> P2 (CII degraded); high kcat, non-saturating
+  k16  0.6  # /s
+  # CIII + P2 <-> P2.CIII
+  k17  0.01  # /nM/s
+  k18  0.01  # /s
+  # P2.CIII -> P2 (CIII degraded)
+  k19  0.001  # /s
+
+end parameters
+
+begin molecule types
+  # CI (lambda repressor); d = dimerization interface
+  CI(d)
+  # Cro; d = dimerization interface
+  Cro(d)
+  # CII (activates P_RE / P_anti-Q / P_I; lysogeny trigger); p = protease site
+  CII(p)
+  # CIII (protects CII from proteolysis); p = protease site
+  CIII(p)
+  # N (antitermination protein); degraded first-order
+  N()
+  # Protease P1 (HflB); s = substrate site
+  P1(s)
+  # Protease P2 (second Hfl-related protease); s = substrate site
+  P2(s)
+end molecule types
+
+begin seed species
+
+  #@note: |
+  #  Representative post-infection burst state (order-of-magnitude
+  #  consistent with the MOI-6 trajectories in Figs. 4-5). CI and Cro
+  #  start as monomers and dimerize; CII/CIII/N are turned over. P1 and
+  #  P2 are seeded at their conserved totals. The verification notebook
+  #  varies these to probe unprotected vs CIII-protected CII half-lives.
+
+  CI(d)    100  # molecules
+  Cro(d)   100  # molecules
+  CII(p)   100  # molecules
+  CIII(p)  100  # molecules
+  N()      100  # molecules
+  P1(s)    P1_tot  # molecules
+  P2(s)    P2_tot  # molecules
+end seed species
+
+begin observables
+  # CI dimer (the active repressor; "CI-CI" in Fig. 5a)
+  Species    Obs_CI2       CI(d!1).CI(d!1)
+  # Cro dimer (the active repressor; "Cro-Cro" in Fig. 5b)
+  Species    Obs_Cro2      Cro(d!1).Cro(d!1)
+  # Free CI and Cro monomers (the degradable species)
+  Molecules  Obs_CI_mono   CI(d)
+  Molecules  Obs_Cro_mono  Cro(d)
+  # Total CII and CIII protein (free + protease-bound); Figs. 4a, 4b
+  Molecules  Obs_CII       CII()
+  Molecules  Obs_CIII      CIII()
+  # Antitermination protein N
+  Molecules  Obs_N         N()
+  # Protease sequestered by CIII (reduces capacity available for CII)
+  Species    Obs_P1_CIII   P1(s!1).CIII(p!1)
+  Species    Obs_P2_CIII   P2(s!1).CIII(p!1)
+end observables
+
+begin functions
+  # Fraction of total proteolytic capacity available to degrade CII,
+  # cf. the "% proteolytic activity" of Fig. 4c in Arkin et al. (1998):
+  # kcat-weighted fraction of each protease not sequestered by CIII,
+  # normalized to its CIII-free maximum (k10 + k16). Drops toward 0 when
+  # CIII bursts sequester the proteases (protecting CII).
+  pct_proteolysis() = ( k10*(P1_tot - Obs_P1_CIII)/P1_tot \
+    + k16*(P2_tot - Obs_P2_CIII)/P2_tot ) / (k10 + k16)
+
+  # Dimensional conversion (uncomment for concentration output):
+  # at V_ref, molecule count ~ nM directly.
+# CI2_conc()  = Obs_CI2  / (NA * V_ref) * 1e9  # nM
+# Cro2_conc() = Obs_Cro2 / (NA * V_ref) * 1e9  # nM
+end functions
+
+begin reaction rules
+  # --- R1: CI degradation (monomer only) and dimerization ---
+  # Proteolysis of monomeric CI; dimers are stable
+  R_deg_CI:    CI(d) -> 0  k1
+  # Reversible CI dimerization; BNG applies the 2A<->A2 symmetry factor
+  R_dim_CI:    CI(d) + CI(d) <-> CI(d!1).CI(d!1)  k2, k3
+
+  # --- R2: Cro degradation (monomer only) and dimerization ---
+  R_deg_Cro:   Cro(d) -> 0  k4
+  R_dim_Cro:   Cro(d) + Cro(d) <-> Cro(d!1).Cro(d!1)  k5, k6
+
+  # --- R5: N degradation ---
+  R_deg_N:     N() -> 0  k7
+
+  # --- R3: protease P1 (HflB) ---
+  # CII capture and catalytic degradation
+  R_P1_bind_CII:   CII(p) + P1(s) <-> CII(p!1).P1(s!1)  k8, k9
+  R_P1_deg_CII:    CII(p!1).P1(s!1) -> P1(s)  k10
+  # CIII capture (competitive protection) and slow degradation
+  R_P1_bind_CIII:  CIII(p) + P1(s) <-> CIII(p!1).P1(s!1)  k11, k12
+  R_P1_deg_CIII:   CIII(p!1).P1(s!1) -> P1(s)  k13
+
+  # --- R4: protease P2 (second Hfl-related protease) ---
+  R_P2_bind_CII:   CII(p) + P2(s) <-> CII(p!1).P2(s!1)  k14, k15
+  R_P2_deg_CII:    CII(p!1).P2(s!1) -> P2(s)  k16
+  R_P2_bind_CIII:  CIII(p) + P2(s) <-> CIII(p!1).P2(s!1)  k17, k18
+  R_P2_deg_CIII:   CIII(p!1).P2(s!1) -> P2(s)  k19
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 13 species, 19 reactions
+  saveConcentrations()
+
+  #@note: |
+  #  Preferred method is ODE (uncommented). SSA, PSA, and NFsim
+  #  benchmarks are provided commented-out; the parent study used
+  #  Gillespie SSA, which is a feasible mode here (no compartments,
+  #  no zeroth-order creation, no inline tfun). Each protocol resets to
+  #  the saved initial state.
+
+  # Post-infection turnover time course
+
+  #@protocol: |
+  #  Integrate the R1-R5 network for 35 min (the cell cycle used by
+  #  Arkin et al.) from the post-burst seed state. Expected behavior:
+  #  CI and Cro dimerize within seconds then relax slowly; CII is
+  #  degraded within a few minutes; CIII decays over ~20 min while
+  #  transiently sequestering protease (pct_proteolysis dips); N decays
+  #  over ~5 min. Compared quantitatively against an independent SciPy
+  #  integration and the Table-3 lifetime targets in
+  #  verify_arkin1998.ipynb.
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>2100,\
+    n_steps=>420})
+
+#  resetConcentrations()
+#  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>2100,\
+#    n_steps=>420,seed=>2015})
+
+#  resetConcentrations()
+#  simulate({method=>"ssa",poplevel=>100,suffix=>"psa",t_start=>0,\
+#    t_end=>2100,n_steps=>420,seed=>2015})
+
+#  resetConcentrations()
+#  simulate({method=>"nf",suffix=>"nfr",t_start=>0,t_end=>2100,\
+#    n_steps=>420,gml=>2147483647})
+end actions
