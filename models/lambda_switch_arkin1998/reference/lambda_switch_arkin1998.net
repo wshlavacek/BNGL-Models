@@ -1,0 +1,77 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA               6.02214076e23  # Constant
+    2 V_ref            1.66054e-15  # Constant
+    3 f                1.0  # Constant
+    4 k1               0.0007  # Constant
+    5 k2               0.05  # Constant
+    6 k3               0.5  # Constant
+    7 k4               0.0025  # Constant
+    8 k5               0.05  # Constant
+    9 k6               0.5  # Constant
+   10 k7               0.00231  # Constant
+   11 P1_tot           35.0  # Constant
+   12 k8               0.01  # Constant
+   13 k9               0.01  # Constant
+   14 k10              0.002  # Constant
+   15 k11              0.01  # Constant
+   16 k12              0.001  # Constant
+   17 k13              0.0001  # Constant
+   18 P2_tot           140.0  # Constant
+   19 k14              0.00025  # Constant
+   20 k15              0.065  # Constant
+   21 k16              0.6  # Constant
+   22 k17              0.01  # Constant
+   23 k18              0.01  # Constant
+   24 k19              0.001  # Constant
+end parameters
+begin functions
+    1 pct_proteolysis() (((k10*(P1_tot-Obs_P1_CIII))/P1_tot)+((k16*(P2_tot-Obs_P2_CIII))/P2_tot))/(k10+k16)
+end functions
+begin species
+    1 CI(d) 100
+    2 Cro(d) 100
+    3 CII(p) 100
+    4 CIII(p) 100
+    5 N() 100
+    6 P1(s) P1_tot
+    7 P2(s) P2_tot
+    8 CI(d!1).CI(d!1) 0
+    9 Cro(d!1).Cro(d!1) 0
+   10 CII(p!1).P1(s!1) 0
+   11 CIII(p!1).P1(s!1) 0
+   12 CII(p!1).P2(s!1) 0
+   13 CIII(p!1).P2(s!1) 0
+end species
+begin reactions
+    1 1 0 k1 #R_deg_CI
+    2 1,1 8 0.5*k2 #R_dim_CI
+    3 2 0 k4 #R_deg_Cro
+    4 2,2 9 0.5*k5 #R_dim_Cro
+    5 5 0 k7 #R_deg_N
+    6 3,6 10 k8 #R_P1_bind_CII
+    7 4,6 11 k11 #R_P1_bind_CIII
+    8 3,7 12 k14 #R_P2_bind_CII
+    9 4,7 13 k17 #R_P2_bind_CIII
+   10 8 1,1 k3 #_reverse_R_dim_CI
+   11 9 2,2 k6 #_reverse_R_dim_Cro
+   12 10 3,6 k9 #_reverse_R_P1_bind_CII
+   13 10 6 k10 #R_P1_deg_CII
+   14 11 4,6 k12 #_reverse_R_P1_bind_CIII
+   15 11 6 k13 #R_P1_deg_CIII
+   16 12 3,7 k15 #_reverse_R_P2_bind_CII
+   17 12 7 k16 #R_P2_deg_CII
+   18 13 4,7 k18 #_reverse_R_P2_bind_CIII
+   19 13 7 k19 #R_P2_deg_CIII
+end reactions
+begin groups
+    1 Obs_CI2              8
+    2 Obs_Cro2             9
+    3 Obs_CI_mono          1
+    4 Obs_Cro_mono         2
+    5 Obs_CII              3,10,12
+    6 Obs_CIII             4,11,13
+    7 Obs_N                5
+    8 Obs_P1_CIII          11
+    9 Obs_P2_CIII          13
+end groups
