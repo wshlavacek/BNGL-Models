@@ -19,11 +19,21 @@ source:
     N degradation, and CII/CIII competitive proteolysis by two host
     proteases with CIII protection. The related file is the
     Shea-Ackers statistical-thermodynamic activation of promoters P_RE
-    and P_L (Table 1). The full operator switch (P_R/P_RM) and the
-    per-nucleotide transcription/translation machinery of the complete
-    circuit are not paper-specified and are not modeled here; P_R/P_RM
-    (Fig. 2) is reproduced in the verification notebook from the
-    Shea & Ackers (1985) OR parameters that the paper cites.
+    and P_L (Table 1). P_R/P_RM (Fig. 2) is reproduced in the
+    verification notebook from the Shea & Ackers (1985) OR parameters
+    that the paper cites. A third file,
+    lambda_switch_arkin1998_fullcircuit.bngl, assembles these pieces
+    into the complete closed-loop decision circuit as a NETWORK-FREE
+    model (run with NFsim or RuleMonkey): all four promoters
+    (P_R/P_RM/P_RE/P_L) driven by their live Shea-Ackers open-complex
+    rates, a state-increment (~PLUS) RNAP-elongation model with
+    N-antitermination at nutR/nutL and terminator competition at
+    tR1/tL1 (termination fractions match the paper; elongation kinetics
+    are coarse-grained), geometric-burst translation (mean 10
+    proteins/transcript, assumption 8), and the R1-R5 turnover network,
+    with multiplicity of infection (MOI) as a parameter. It reproduces
+    the Fig. 3 MOI-6 concentration trajectories and the Fig. 6
+    lysogeny-vs-MOI/API relationship.
 
 files:
   - name: lambda_switch_arkin1998.bngl
@@ -45,6 +55,32 @@ files:
     documentation_target: standard
     rating:
     min_bionetgen_version: "2.9.3"
+  - name: lambda_switch_arkin1998_fullcircuit.bngl
+    role: related
+    description: >
+      Complete closed-loop lysis/lysogeny decision circuit as a
+      NETWORK-FREE model (NFsim / RuleMonkey). Couples all four
+      Shea-Ackers promoters (P_R/P_RM/P_RE/P_L, read live from the
+      circuit's own CI2/Cro2/CII/N), a state-increment (~PLUS)
+      RNAP-elongation model with N-antitermination and tR1/tL1
+      terminator competition, geometric-burst translation (mean 10),
+      and the R1-R5 turnover network. MOI is a parameter (default 6).
+      Promoter rates are driven by Molecules-type dimer observables with
+      dimer_scale=0.5 (NFsim freezes functional rates that read
+      Species-type observables; RuleWorld/nfsim#86). writeXML only;
+      simulate the XML with run_fullcircuit.py.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: run_fullcircuit.py
+    role: verification
+    description: >
+      Self-contained driver for lambda_switch_arkin1998_fullcircuit.bngl:
+      overrides MOI, generates BNG-XML, simulates network-free via bngsim
+      (NFsim/RuleMonkey), and reproduces Arkin Fig 3 (MOI-6 average Cro2/CI2
+      with +/-1sigma band) and Fig 6 (f_lysogeny vs MOI, Poisson-weighted to
+      fraction-lysogens vs API). Lysogeny classifier is Arkin footnote 12
+      ([CI2]>[Cro2] at the end of the 35-min cell cycle).
   - name: verify_arkin1998.ipynb
     role: verification
     description: >
@@ -56,6 +92,17 @@ files:
       checked against the Fig. 2 caption anchors.
   - name: verify_arkin1998.png
     role: figure
+  - name: fullcircuit_verification.png
+    role: figure
+    description: >
+      Full-circuit verification: Fig 3a MOI-6 average Cro2/CI2 +/-1sigma band,
+      Fig 6a lysogeny probability vs MOI, Fig 6b Poisson-weighted lysogens vs API.
+  - name: reference/fullcircuit_fig3.npz
+    role: reference
+    description: Cached MOI-6 network-free ensemble (Cro2/CI2 mean + 16/84 pctile).
+  - name: reference/fullcircuit_fig6.npz
+    role: reference
+    description: Cached f_lysogeny(MOI) sweep + Poisson-weighted F(API).
   # Reference simulation data
   - name: reference/lambda_switch_arkin1998.net
     role: reference
