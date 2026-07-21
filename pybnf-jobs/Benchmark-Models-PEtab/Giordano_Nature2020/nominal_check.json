@@ -1,0 +1,12 @@
+{
+  "problem": "Giordano",
+  "slug": "Giordano_Nature2020",
+  "jstar": -3488.3414981097503,
+  "J_paper": 287.62776140983027,
+  "reduced_objective": 5.16767719307509e-07,
+  "n_scored": 313,
+  "k": 50,
+  "OG_nominal": 3775.9692595195806,
+  "optimizer": "gntr",
+  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+}

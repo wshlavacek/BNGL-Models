@@ -1,0 +1,52 @@
+# Elowitz_Nature2000
+
+PyBNF fitting job imported from the [Benchmark-Models-PEtab](https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab) collection, as used
+in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
+
+## Status
+
+**Setup only — not fitted.** This problem is strongly multimodal; reaching its global optimum needs a large multistart budget that was out of scope. The job runs and scores correctly.
+
+## Reference
+
+| quantity | value |
+|---|---|
+| reference `J*` (Grein et al., best over all optimizer runs) | `-65.63512012927485` |
+| paper-scale NLL at the PEtab nominal point | `-63.20275066664393` |
+| optimality gap at nominal | `2.4323694626309234` |
+| scored data points `n` | 58 |
+| free parameters `k` | 21 |
+
+`J*` is the minimum Eq. 6 Gaussian NLL over every optimizer run on Marvin
+(`best_fx_marvin.csv`). A fit is "solved" iff `OG = -log_likelihood - J* < 1.92`
+(chi-square, alpha = 0.05, 1 dof). `score.py` computes this.
+
+## Optimizer
+
+`job_type = cmaes` — CMA-ES with IPOP restarts (ADR-0070/0082) — a global search, chosen because this problem is multimodal or refuses the gradient path. The shipped recipe was
+verified to start and run on this problem.
+
+## Contents
+
+- `Elowitz_Nature2000.conf` — the PyBNF job
+- `model_Elowitz_Nature2000.xml` — SBML model (emitted by the importer, byte-reproducible)
+- `experiment1.exp` — experimental data
+- `jstar.txt` — the reference `J*`
+- `nominal_check.json` — the nominal-point evaluation recorded above
+- `score.py` — scores a run against `J*`
+
+## Provenance
+
+Imported with `pybnf.petab.petab1to2_preserve_scale` then `pybnf.petab.import_job`. The
+converter preserves both `parameterScale` (lanl/PyBNF#491) and `observableTransformation`
+(lanl/PyBNF#499), which plain `petab.v2.petab1to2` drops. The run recipe (`job_type`,
+`sbml_backend = bngsim`, `wall_time_sim`) is supplied, not recovered — PEtab specifies a
+problem, not a method. `wall_time_sim = 10` caps pathological parameter points; raise it
+if valid simulations on your machine are being marked as failures.
+
+## Running
+
+```bash
+pybnf -c Elowitz_Nature2000.conf -o
+python score.py output
+```

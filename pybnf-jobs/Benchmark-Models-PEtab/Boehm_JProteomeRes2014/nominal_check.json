@@ -1,0 +1,11 @@
+{
+  "problem": "Boehm",
+  "slug": "Boehm_JProteomeRes2014",
+  "jstar": 138.2219681969045,
+  "J_paper": 138.22199976510595,
+  "reduced_objective": 94.11295017128167,
+  "n_scored": 48,
+  "k": 9,
+  "OG_nominal": 3.156820145022721e-05,
+  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective against the paper's Eq. 6 NLL."
+}

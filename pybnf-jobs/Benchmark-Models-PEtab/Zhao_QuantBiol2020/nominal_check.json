@@ -1,0 +1,12 @@
+{
+  "problem": "Zhao",
+  "slug": "Zhao_QuantBiol2020",
+  "jstar": 501.22705376318333,
+  "J_paper": 777.3442620361733,
+  "reduced_objective": 701.9913023133902,
+  "n_scored": 82,
+  "k": 28,
+  "OG_nominal": 276.11720827298996,
+  "optimizer": "gntr",
+  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+}

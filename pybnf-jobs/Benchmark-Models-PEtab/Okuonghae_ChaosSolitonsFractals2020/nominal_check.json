@@ -1,0 +1,12 @@
+{
+  "problem": "Okuonghae",
+  "slug": "Okuonghae_ChaosSolitonsFractals2020",
+  "jstar": 373.5476580181036,
+  "J_paper": 470490.51145926415,
+  "reduced_objective": 470405.96911420935,
+  "n_scored": 92,
+  "k": 16,
+  "OG_nominal": 470116.963801246,
+  "optimizer": "cmaes",
+  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+}

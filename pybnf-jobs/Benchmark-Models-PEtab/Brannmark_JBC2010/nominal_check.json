@@ -1,0 +1,12 @@
+{
+  "problem": "Brannmark",
+  "slug": "Brannmark_JBC2010",
+  "jstar": 141.82485427243665,
+  "J_paper": 1673.2673220511585,
+  "reduced_objective": 1633.7529651233574,
+  "n_scored": 43,
+  "k": 22,
+  "OG_nominal": 1531.442467778722,
+  "optimizer": "gntr",
+  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+}

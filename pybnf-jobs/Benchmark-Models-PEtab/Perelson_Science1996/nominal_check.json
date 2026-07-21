@@ -1,0 +1,11 @@
+{
+  "problem": "Perelson",
+  "slug": "Perelson_Science1996",
+  "jstar": 222.28076886967355,
+  "J_paper": 432.03854981123874,
+  "reduced_objective": 184.20680743953773,
+  "n_scored": 16,
+  "k": 3,
+  "OG_nominal": 209.7577809415652,
+  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check therefore verifies only that the imported job simulates and scores."
+}

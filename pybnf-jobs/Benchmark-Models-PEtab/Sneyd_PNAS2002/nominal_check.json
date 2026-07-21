@@ -1,0 +1,11 @@
+{
+  "problem": "Sneyd",
+  "slug": "Sneyd_PNAS2002",
+  "jstar": -319.7923458412349,
+  "J_paper": -319.79176431550025,
+  "reduced_objective": -443.84846629813103,
+  "n_scored": 135,
+  "k": 15,
+  "OG_nominal": 0.00058152573467396,
+  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective against the paper's Eq. 6 NLL."
+}

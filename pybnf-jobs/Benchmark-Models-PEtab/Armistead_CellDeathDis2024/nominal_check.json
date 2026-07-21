@@ -1,0 +1,12 @@
+{
+  "problem": "Armistead",
+  "slug": "Armistead_CellDeathDis2024",
+  "jstar": -301.91618781460875,
+  "J_paper": -301.9161820167218,
+  "reduced_objective": -355.21461694259284,
+  "n_scored": 58,
+  "k": 14,
+  "OG_nominal": 5.797886956315779e-06,
+  "optimizer": "gntr",
+  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective against the paper's Eq. 6 NLL."
+}

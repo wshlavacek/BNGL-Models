@@ -1,0 +1,12 @@
+{
+  "problem": "Borghans",
+  "slug": "Borghans_BiophysChem1997",
+  "jstar": -132.00847649739424,
+  "J_paper": -83.32367776169257,
+  "reduced_objective": -198.1016990896733,
+  "n_scored": 111,
+  "k": 23,
+  "OG_nominal": 48.684798735701676,
+  "optimizer": "cmaes",
+  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+}
