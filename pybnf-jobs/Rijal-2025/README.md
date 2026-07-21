@@ -15,6 +15,8 @@ end-to-end stochastic fit using `experiment: ... method: ssa` through BNGsim.
 
 ## Jobs
 
+**Stochastic (exact SSA) — the primary jobs:**
+
 - [`lacud5_ssa`](lacud5_ssa/): Jones Fig. 3A `lacUV5`, called `lacUD5` by Rijal;
   fits `r_over_gamma` and `gamma`; exact SSA with 200 trajectories/evaluation;
   reproduction PASS and bounded-fit PARTIAL; confidence 82/100.
@@ -22,8 +24,42 @@ end-to-end stochastic fit using `experiment: ... method: ssa` through BNGsim.
   `gamma`; exact SSA with 200 trajectories/evaluation; reproduction and bounded-fit PARTIAL;
   confidence 70/100.
 
-Both are tiny finite networks: three species and four reactions. The two folders are independent,
-self-contained fits so each promoter's published parameter set can be used as the nominal point.
+**Deterministic twins (exact moment ODEs) — added as cross-checks, not replacements:**
+
+- [`lacud5_ode`](lacud5_ode/): same data, same two parameters, moments from the exact moment
+  equations; `gntr` gradient fit reaches the global optimum in 47 s; confidence 95/100.
+- [`five_dl1_ode`](five_dl1_ode/): the same for `5DL1`; 51 s; confidence 95/100.
+
+The SSA jobs are tiny finite networks: three species and four reactions. Each folder is an
+independent, self-contained fit so each promoter's published parameter set can be used as the
+nominal point.
+
+### Why a deterministic twin is possible here
+
+Every propensity of the two-state model is **linear** in the state and the promoter indicator is
+binary (`g² = g`), so the moment hierarchy **closes exactly** on `<g>`, `<m>`, `<gm>`, `<m²>` — no
+moment-closure approximation. That linear system has non-negative couplings, so it is itself a
+mass-action network, and the `*_ode` model files encode it directly: **their species are the
+moments.** Integrating them deterministically yields exactly the `E[m]` and `E[m²]` the SSA jobs
+estimate by path sampling, with no Monte Carlo error and a smooth, differentiable objective.
+
+This is a property of *this topology*, not a general substitute for SSA. A bimolecular repression
+step would break the closure. The twins exist to give the stochastic jobs a noise-free reference —
+and, in passing, the exact global optimum of Rijal Eq. 14 under this reduction:
+
+| promoter | Rijal Fig. 7 sos | twin's optimum sos | at |
+|---|---|---|---|
+| lacUD5 | 5.177577 | **4.393239** | `r/gamma` 13.6086, `gamma` 8.1503 |
+| 5DL1 | 4.216492 | **0.416911** | `r/gamma` 7.4024, `gamma` 5.9906 |
+
+Both were confirmed to be global by a dense closed-form grid scan over the same box. Note the
+objective convention: PyBNF's edition-2 `sos` desugars to `Gaussian(sigma = 1)`, whose kernel
+carries a factor ½, so **Rijal Eq. 14 = 2 × the objective PyBNF reports**.
+
+A structural consequence of the `kon_R` reduction below, visible once the moments are exact:
+`<m> = mean_target` **identically, for any `r_over_gamma` and `gamma`**, so the `Mean_mRNA` residual
+is always zero and the fit is driven entirely by the SD/Fano column. In the SSA jobs that same term
+contributes only Monte Carlo noise.
 
 ## Model and stochastic measurement
 
@@ -93,6 +129,13 @@ pybnf -c lacud5_ssa.conf
 
 cd ../five_dl1_ssa
 pybnf -c five_dl1_ssa.conf
+
+# deterministic twins (seconds, gradient-fitted)
+cd ../lacud5_ode
+pybnf -c lacud5_ode.conf
+
+cd ../five_dl1_ode
+pybnf -c five_dl1_ode.conf
 ```
 
 Each job's `make_data.py` regenerates its `.exp` file from the staged source table, and
