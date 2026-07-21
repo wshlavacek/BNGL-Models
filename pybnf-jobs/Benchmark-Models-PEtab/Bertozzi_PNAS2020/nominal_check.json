@@ -1,0 +1,12 @@
+{
+  "problem": "Bertozzi",
+  "slug": "Bertozzi_PNAS2020",
+  "jstar": 158.86426270904192,
+  "J_paper": 178639066015.4067,
+  "reduced_objective": 178639065995.19006,
+  "n_scored": 22,
+  "k": 8,
+  "OG_nominal": 178639065856.54245,
+  "optimizer": "cmaes",
+  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+}

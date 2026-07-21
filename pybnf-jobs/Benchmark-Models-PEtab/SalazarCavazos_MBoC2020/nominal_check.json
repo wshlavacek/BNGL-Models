@@ -1,0 +1,12 @@
+{
+  "problem": "SalazarCavazos",
+  "slug": "SalazarCavazos_MBoC2020",
+  "jstar": 366.86157299694054,
+  "J_paper": 367.18760380827933,
+  "reduced_objective": 359.70567043648,
+  "n_scored": 18,
+  "k": 6,
+  "OG_nominal": 0.3260308113387964,
+  "optimizer": "gntr",
+  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective against the paper's Eq. 6 NLL."
+}

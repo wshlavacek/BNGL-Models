@@ -1,0 +1,12 @@
+{
+  "problem": "Crauste",
+  "slug": "Crauste_CellSystems2017",
+  "jstar": 190.45706550043687,
+  "J_paper": 190.96591588401623,
+  "reduced_objective": 9.834903029137244,
+  "n_scored": 21,
+  "k": 12,
+  "OG_nominal": 0.5088503835793574,
+  "optimizer": "gntr",
+  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective against the paper's Eq. 6 NLL."
+}

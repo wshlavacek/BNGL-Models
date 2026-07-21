@@ -1,0 +1,12 @@
+{
+  "problem": "Weber",
+  "slug": "Weber_BMC2015",
+  "jstar": 296.2020024574204,
+  "J_paper": 14036.072640146245,
+  "reduced_objective": 13670.555165816097,
+  "n_scored": 135,
+  "k": 36,
+  "OG_nominal": 13739.870637688824,
+  "optimizer": "gntr",
+  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+}

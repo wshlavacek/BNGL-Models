@@ -1,0 +1,12 @@
+{
+  "problem": "Oliveira",
+  "slug": "Oliveira_NatCommun2021",
+  "jstar": 7904.93431737276,
+  "J_paper": 9623530.12841406,
+  "reduced_objective": 9623419.85579008,
+  "n_scored": 120,
+  "k": 12,
+  "OG_nominal": 9615625.194096688,
+  "optimizer": "gntr",
+  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+}

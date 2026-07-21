@@ -1,0 +1,12 @@
+{
+  "problem": "Raia",
+  "slug": "Raia_CancerResearch2011",
+  "jstar": 345.3097672874065,
+  "J_paper": 346.0897848482896,
+  "reduced_objective": 157.70738554133166,
+  "n_scored": 205,
+  "k": 39,
+  "OG_nominal": 0.7800175608830955,
+  "optimizer": "gntr",
+  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective against the paper's Eq. 6 NLL."
+}

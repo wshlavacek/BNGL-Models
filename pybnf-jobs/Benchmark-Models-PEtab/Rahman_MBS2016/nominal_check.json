@@ -1,0 +1,12 @@
+{
+  "problem": "Rahman",
+  "slug": "Rahman_MBS2016",
+  "jstar": 21.153486102003267,
+  "J_paper": 21.153490000479476,
+  "reduced_objective": 0.017903736772000148,
+  "n_scored": 23,
+  "k": 9,
+  "OG_nominal": 3.8984762085192415e-06,
+  "optimizer": "gntr",
+  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective against the paper's Eq. 6 NLL."
+}

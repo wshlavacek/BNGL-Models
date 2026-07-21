@@ -1,0 +1,9 @@
+# time	EarlyEffector	LateEffector	Memory	Naive	EarlyEffector_SD	LateEffector_SD	Memory_SD	Naive_SD
+4	386	nan	nan	459	266	nan	nan	290
+6	1172	888	nan	74	526	182	nan	64
+7	47470	4577	nan	nan	23855	1976	nan	nan
+8	175825	32860	289	nan	19722	4105	80	nan
+13	4911	46727	9564	nan	3048	23601	4206	nan
+15	7417	27586	15631	nan	2924	6841	5745	nan
+22	3359	13650	41744	nan	1540	7266	15987	nan
+28	nan	3936	32705	nan	nan	2705	7909	nan

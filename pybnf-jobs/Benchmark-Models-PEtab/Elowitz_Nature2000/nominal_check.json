@@ -1,0 +1,12 @@
+{
+  "problem": "Elowitz",
+  "slug": "Elowitz_Nature2000",
+  "jstar": -65.63512012927485,
+  "J_paper": -63.20275066664393,
+  "reduced_objective": -123.73098043913734,
+  "n_scored": 58,
+  "k": 21,
+  "OG_nominal": 2.4323694626309234,
+  "optimizer": "cmaes",
+  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+}

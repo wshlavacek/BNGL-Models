@@ -1,0 +1,12 @@
+{
+  "problem": "Bruno",
+  "slug": "Bruno_JExpBot2016",
+  "jstar": -46.688197918626756,
+  "J_paper": -46.688194686350265,
+  "reduced_objective": 32.55569979928378,
+  "n_scored": 77,
+  "k": 13,
+  "OG_nominal": 3.232276490905406e-06,
+  "optimizer": "cmaes",
+  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective against the paper's Eq. 6 NLL."
+}

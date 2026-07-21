@@ -1,0 +1,12 @@
+{
+  "problem": "Smith",
+  "slug": "Smith_BMCSystBiol2013",
+  "jstar": 20922.16424399946,
+  "J_paper": 6.851921116400144e+32,
+  "reduced_objective": 6.851921116400144e+32,
+  "n_scored": 62,
+  "k": 25,
+  "OG_nominal": 6.851921116400144e+32,
+  "optimizer": "cmaes",
+  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+}
