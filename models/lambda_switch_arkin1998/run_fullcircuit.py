@@ -24,10 +24,15 @@ resolution, so the Fig-6 sweep samples 36 points. Requiring (i) matters at low M
 where it removes cells that reach CI2>Cro2 without a productive P_RE burst -- it lowers
 the Fig-6a onset (e.g. MOI 3 ~0.2 -> ~0.08, matching the paper) while leaving MOI>=4
 essentially unchanged. A stricter "regime" cross-check also requires CI2 >= 50 nM.
-NOTE: at high MOI the model over-predicts lysogeny vs the paper (~0.97 vs ~0.82 in
-Fig 6a). The cause is unidentified; the code for the published model formulation could
-not be found (as of 2026-07-23), so the discrepancy is not diagnosable against the
-source. Documented on fullcircuit_exact_verification.png (issue #15).
+NOTE: at high MOI this model saturates to ~100% lysogeny -- higher than Arkin's Fig 6a
+"Full" plateau (~82%). The cause of Arkin's lower plateau is unidentified, and his code
+could not be found (as of 2026-07-23), so the difference is not diagnosable against the
+source. However, ~100% high-MOI saturation is NOT unreasonable: the modern CII-threshold
+model of Cortes, Trinh, Zeng & Balazsi (2017, Biophys J 113:2110-2120) has a lysogeny
+probability that likewise "saturates at 1," and reports agreement with experiment. So
+this saturation is a defensible behavior, and Arkin's plateau may be the outlier (its
+criteria were "ad hoc near the decision boundary"). Documented on
+fullcircuit_exact_verification.png (issue #15).
 """
 import os
 import re
