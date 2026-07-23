@@ -101,9 +101,11 @@ files:
       overrides MOI, generates BNG-XML, simulates network-free via bngsim
       (NFsim/RuleMonkey), and reproduces Arkin Fig 3 (MOI-6 average Cro2/CI2
       with +/-1sigma band) and Fig 6 (f_lysogeny vs MOI, Poisson-weighted to
-      fraction-lysogens vs API). Lysogeny classifier is Arkin footnote 12
-      ([CI2]>[Cro2] at the end of the 35-min cell cycle). Drives either full
-      circuit: set FULLCIRCUIT_MODEL=exact to run the paper-exact companion.
+      fraction-lysogens vs API). Lysogeny classifier is the full Arkin footnote
+      12: (i) P_RE activation (total open-complex rate A_PRE*MOI >= 1/2min over a
+      contiguous 4-min window) AND (ii) [CI2]>[Cro2] at the end of the 35-min
+      cell cycle. Drives either full circuit: set FULLCIRCUIT_MODEL=exact to run
+      the paper-exact companion.
   - name: generator/
     role: tooling
     description: >
