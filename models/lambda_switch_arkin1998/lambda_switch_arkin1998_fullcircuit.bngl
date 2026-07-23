@@ -53,8 +53,8 @@
 # then simulate the XML with NFsim (needs -cb) or RuleMonkey; run_fullcircuit.py does
 # this via bngsim and reproduces Arkin Figs 3 and 6.
 #
-# Generated from dev/lambda_arkin_fullmodel/ (plus_gen.py ~PLUS generator +
-# or_system.py / pre_pl.py Shea-Ackers rates + plus4d_moi.py assembly).
+# Generated from models/lambda_switch_arkin1998/generator/ (plus_gen.py ~PLUS generator +
+# or_system.py / pre_pl.py Shea-Ackers rates + build_fullcircuit.py assembly).
 
 begin model
 begin parameters
