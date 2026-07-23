@@ -31,7 +31,15 @@ import subprocess
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-MODEL = os.path.join(HERE, "lambda_switch_arkin1998_fullcircuit.bngl")
+# Which .bngl to drive. Default is the fast decision-level full circuit. Set env var
+# FULLCIRCUIT_MODEL=exact to drive the paper-exact companion (issue #6: cell-growth
+# dilution + Table-2 antitermination saturation); or pass an explicit .bngl path.
+_MODEL_ALIASES = {
+    "base": "lambda_switch_arkin1998_fullcircuit.bngl",
+    "exact": "lambda_switch_arkin1998_fullcircuit_exact.bngl",
+}
+_sel = os.environ.get("FULLCIRCUIT_MODEL", "base")
+MODEL = os.path.join(HERE, _MODEL_ALIASES.get(_sel, _sel))
 T_END = 2100.0                      # 35-min cell cycle
 
 # observables carried by the model (see the .bngl observables block)
