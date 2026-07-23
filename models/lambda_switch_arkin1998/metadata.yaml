@@ -72,6 +72,28 @@ files:
     documentation_target: standard
     rating:
     min_bionetgen_version: "2.9.3"
+  - name: lambda_switch_arkin1998_fullcircuit_exact.bngl
+    role: related
+    description: >
+      Paper-exact companion of the full circuit (issue #6). Identical to
+      _fullcircuit.bngl except it closes the two fidelity gaps that move the
+      Arkin (1998) numbers: (1) CELL GROWTH + DILUTION (Table 3): V(t)=(1+k0*t)*
+      1e-15 L, k0=4.76e-4/s, doubling over the 35-min cycle, carried by a
+      volume-proxy clock species Vol() (Src()->Src()+Vol() at k0*Vol0, so
+      Obs_Vol/Vol0 = V(t)/V_ref) with first-order dilution decay at mu(t)=
+      k0/g(t) on every phage species (host/buffered pools and the non-replicating
+      genome held at constant concentration) -- pulls the Fig-3a Cro2 plateau from
+      the constant-volume ~90 down to ~55-60 nM; (2) ANTITERMINATION SATURATION
+      (Table 2): nut sites become a slow step (k23=5 nt/s) with reversible N
+      loading (k24=0.145, k25=0.1) and antiterminated escape (k26=30), via paused
+      RNAP states at~n/at~m -- restores the Fig-6a 'Full' onset to MOI>3
+      (f_lyso = 0.29/0.54/0.71 at MOI 4/5/6, matching the paper's 0.30/0.55/0.70;
+      the base model sits at 0.10/0.36/0.48). NFsim/RuleMonkey parity retained.
+      Translation stays geometric-burst (deprioritized). Drive with
+      run_fullcircuit.py under FULLCIRCUIT_MODEL=exact.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
   - name: run_fullcircuit.py
     role: verification
     description: >
@@ -80,7 +102,8 @@ files:
       (NFsim/RuleMonkey), and reproduces Arkin Fig 3 (MOI-6 average Cro2/CI2
       with +/-1sigma band) and Fig 6 (f_lysogeny vs MOI, Poisson-weighted to
       fraction-lysogens vs API). Lysogeny classifier is Arkin footnote 12
-      ([CI2]>[Cro2] at the end of the 35-min cell cycle).
+      ([CI2]>[Cro2] at the end of the 35-min cell cycle). Drives either full
+      circuit: set FULLCIRCUIT_MODEL=exact to run the paper-exact companion.
   - name: verify_arkin1998.ipynb
     role: verification
     description: >
@@ -97,12 +120,24 @@ files:
     description: >
       Full-circuit verification: Fig 3a MOI-6 average Cro2/CI2 +/-1sigma band,
       Fig 6a lysogeny probability vs MOI, Fig 6b Poisson-weighted lysogens vs API.
+  - name: fullcircuit_exact_verification.png
+    role: figure
+    description: >
+      Paper-exact variant verification: Fig 3a Cro2 plateau restored to ~55-60 nM
+      by growth dilution; Fig 6a 'Full' onset restored to MOI>3 (overlaid on the
+      digitized Arkin Fig 6a points); Fig 6b Poisson-weighted lysogens vs API.
   - name: reference/fullcircuit_fig3.npz
     role: reference
     description: Cached MOI-6 network-free ensemble (Cro2/CI2 mean + 16/84 pctile).
   - name: reference/fullcircuit_fig6.npz
     role: reference
     description: Cached f_lysogeny(MOI) sweep + Poisson-weighted F(API).
+  - name: reference/fullcircuit_exact_fig3.npz
+    role: reference
+    description: Exact-variant MOI-6 ensemble (Cro2/CI2 mean + 16/84 pctile, 60 seeds).
+  - name: reference/fullcircuit_exact_fig6.npz
+    role: reference
+    description: Exact-variant f_lysogeny(MOI) sweep + Poisson-weighted F(API).
   # Reference simulation data
   - name: reference/lambda_switch_arkin1998.net
     role: reference
