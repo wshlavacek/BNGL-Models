@@ -104,6 +104,17 @@ files:
       fraction-lysogens vs API). Lysogeny classifier is Arkin footnote 12
       ([CI2]>[Cro2] at the end of the 35-min cell cycle). Drives either full
       circuit: set FULLCIRCUIT_MODEL=exact to run the paper-exact companion.
+  - name: generator/
+    role: tooling
+    description: >
+      Generator that emits the two network-free full-circuit models
+      (_fullcircuit.bngl and _fullcircuit_exact.bngl) from spec/code:
+      plus_gen.py (~PLUS RNAP molecule type loc 0..2283 + per-operon
+      elongation/landmark rules), or_system.py (40-config Shea-Ackers O_R +
+      A_PR/A_PRM), pre_pl.py (P_RE/P_L), _sections.py (verbatim static prose),
+      build_fullcircuit.py (assembler; base|exact|--check). Regenerates both
+      models byte-for-byte; guarded by tests/test_lambda_generator.py. Deferred
+      fidelity items (issue #15) are added here, not by hand-editing the model.
   - name: verify_arkin1998.ipynb
     role: verification
     description: >

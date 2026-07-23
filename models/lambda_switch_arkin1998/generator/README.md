@@ -1,19 +1,18 @@
-# lambda_arkin_fullmodel — generator for the network-free phage-λ full circuit
+# generator — network-free phage-λ full circuit
 
-Reconstructed generator for the two committed network-free models of the
-Arkin, Ross & McAdams (1998) phage-λ lysis/lysogeny decision circuit:
+Generator for the two network-free models in the parent folder
+(Arkin, Ross & McAdams (1998) phage-λ lysis/lysogeny decision circuit):
 
-- `models/lambda_switch_arkin1998/lambda_switch_arkin1998_fullcircuit.bngl` (`base`)
-- `models/lambda_switch_arkin1998/lambda_switch_arkin1998_fullcircuit_exact.bngl` (`exact`)
+- `../lambda_switch_arkin1998_fullcircuit.bngl` (`base`)
+- `../lambda_switch_arkin1998_fullcircuit_exact.bngl` (`exact`)
 
-The original generator was local-only and never committed (lost on a machine change).
-This is a faithful reconstruction: it regenerates **both** committed models
-**byte-for-byte** (guarded by `tests/test_lambda_generator.py`).
+It regenerates **both** models **byte-for-byte** (guarded by `tests/test_lambda_generator.py`).
 
-> The committed `.bngl` headers cite the original files `plus_gen.py`, `or_system.py`,
-> `pre_pl.py`, and `plus4d_moi.py` (the assembler). This reconstruction keeps the first
-> three names; the assembler is `build_fullcircuit.py` (the equivalent of the original
-> `plus4d_moi.py`).
+> History: the original generator lived in `dev/lambda_arkin_fullmodel/`, which was
+> gitignored and so was never committed — it was lost on a machine change (as were the
+> local-only papers under `dev/papers/`). This is a faithful reconstruction, now committed
+> alongside the model. The original assembler was named `plus4d_moi.py`; here it is
+> `build_fullcircuit.py`.
 
 ## Why a generator
 
@@ -25,13 +24,18 @@ future refinements are small edits, not surgery on thousands of enumerated state
 
 ## Usage
 
+Run from the repo root:
+
 ```bash
+G=models/lambda_switch_arkin1998/generator
+M=models/lambda_switch_arkin1998
+
 # regenerate a model (byte-identical to the committed file)
-python dev/lambda_arkin_fullmodel/build_fullcircuit.py base   > models/lambda_switch_arkin1998/lambda_switch_arkin1998_fullcircuit.bngl
-python dev/lambda_arkin_fullmodel/build_fullcircuit.py exact  > models/lambda_switch_arkin1998/lambda_switch_arkin1998_fullcircuit_exact.bngl
+python $G/build_fullcircuit.py base   > $M/lambda_switch_arkin1998_fullcircuit.bngl
+python $G/build_fullcircuit.py exact  > $M/lambda_switch_arkin1998_fullcircuit_exact.bngl
 
 # verify both variants still match the committed files
-python dev/lambda_arkin_fullmodel/build_fullcircuit.py --check
+python $G/build_fullcircuit.py --check
 pytest tests/test_lambda_generator.py
 ```
 
@@ -45,7 +49,7 @@ pytest tests/test_lambda_generator.py
 | `pre_pl.py`     | `P_RE` (CII-activated) and `P_L` (Cro2/CI2-repressed) functions (Table 1) |
 | `_sections.py`  | verbatim static prose (header, Table-3 parameters, R1–R5 turnover, growth/dilution) — model **data**, carried not generated |
 
-## Extending toward the full published model (issue follow-up)
+## Extending toward the full published model (issue #15)
 
 The deferred fidelity items live in the generated layer — add them here rather than by hand:
 

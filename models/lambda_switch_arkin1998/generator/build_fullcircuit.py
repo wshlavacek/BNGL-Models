@@ -27,7 +27,7 @@ import plus_gen  # noqa: E402
 import pre_pl  # noqa: E402
 from _sections import BASE, EXACT  # noqa: E402
 
-MODEL_DIR = os.path.normpath(os.path.join(HERE, "..", "..", "models", "lambda_switch_arkin1998"))
+MODEL_DIR = os.path.normpath(os.path.join(HERE, ".."))  # generator/ lives inside the model dir
 TARGETS = {
     "base": "lambda_switch_arkin1998_fullcircuit.bngl",
     "exact": "lambda_switch_arkin1998_fullcircuit_exact.bngl",

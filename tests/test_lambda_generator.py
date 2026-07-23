@@ -1,4 +1,4 @@
-"""The reconstructed generator in dev/lambda_arkin_fullmodel/ must regenerate the two
+"""The generator in models/lambda_switch_arkin1998/generator/ must regenerate the two
 committed network-free lambda full-circuit models byte-for-byte. This guards against
 drift between the generator and the committed .bngl files."""
 import sys
@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-GEN_DIR = Path("dev/lambda_arkin_fullmodel")
 MODEL_DIR = Path("models/lambda_switch_arkin1998")
+GEN_DIR = MODEL_DIR / "generator"
 TARGETS = {
     "base": "lambda_switch_arkin1998_fullcircuit.bngl",
     "exact": "lambda_switch_arkin1998_fullcircuit_exact.bngl",
