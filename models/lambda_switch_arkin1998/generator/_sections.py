@@ -3,6 +3,7 @@ carried by build_fullcircuit.py. These are model DATA (header, fixed Table-3
 parameters, R1-R5 turnover reactions, growth/dilution rules) -- the structured
 parts (RNAP molecule type, O_R/P_RE/P_L functions, elongation rules) are generated
 by plus_gen/or_system/pre_pl and spliced in by build_fullcircuit.py."""
+# ruff: noqa: E501  (verbatim model prose; some header/parameter lines exceed 100 cols)
 
 BASE = {'header': ['# lambda_switch_arkin1998_fullcircuit.bngl',
             '#',
@@ -65,8 +66,8 @@ BASE = {'header': ['# lambda_switch_arkin1998_fullcircuit.bngl',
             '# then simulate the XML with NFsim (needs -cb) or RuleMonkey; run_fullcircuit.py does',
             '# this via bngsim and reproduces Arkin Figs 3 and 6.',
             '#',
-            '# Generated from dev/lambda_arkin_fullmodel/ (plus_gen.py ~PLUS generator +',
-            '# or_system.py / pre_pl.py Shea-Ackers rates + plus4d_moi.py assembly).',
+            '# Generated from models/lambda_switch_arkin1998/generator/ (plus_gen.py ~PLUS generator +',
+            '# or_system.py / pre_pl.py Shea-Ackers rates + build_fullcircuit.py assembly).',
             ''],
  'params': ['begin parameters',
             '  k_step 30.0',
@@ -329,8 +330,8 @@ EXACT = {'header': ['# lambda_switch_arkin1998_fullcircuit_exact.bngl',
             '# then simulate the XML with NFsim (needs -cb) or RuleMonkey; run_fullcircuit.py does',
             '# this via bngsim and reproduces Arkin Figs 3 and 6.',
             '#',
-            '# Generated from dev/lambda_arkin_fullmodel/ (plus_gen.py ~PLUS generator +',
-            '# or_system.py / pre_pl.py Shea-Ackers rates + plus4d_moi.py assembly).',
+            '# Generated from models/lambda_switch_arkin1998/generator/ (plus_gen.py ~PLUS generator +',
+            '# or_system.py / pre_pl.py Shea-Ackers rates + build_fullcircuit.py assembly).',
             ''],
  'params': ['begin parameters',
             '  k_step 30.0',
