@@ -24,10 +24,11 @@ be in the lysogenic band (CI2 >= 50 nM).
 """
 import os
 import re
-import sys
-import time
-import tempfile
 import subprocess
+import sys
+import tempfile
+import time
+
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
