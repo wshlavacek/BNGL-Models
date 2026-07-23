@@ -8,6 +8,7 @@ __pycache__/
 *.py[cod]
 staging/
 my_models/reference/
-dev/
+dev/*
+!dev/lambda_arkin_fullmodel/
 bnf_*.log
 **/results_*/
