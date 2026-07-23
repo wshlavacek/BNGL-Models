@@ -24,9 +24,10 @@ resolution, so the Fig-6 sweep samples 36 points. Requiring (i) matters at low M
 where it removes cells that reach CI2>Cro2 without a productive P_RE burst -- it lowers
 the Fig-6a onset (e.g. MOI 3 ~0.2 -> ~0.08, matching the paper) while leaving MOI>=4
 essentially unchanged. A stricter "regime" cross-check also requires CI2 >= 50 nM.
-NOTE: at high MOI the model still over-commits vs the paper (~1.0 vs ~0.82) because the
-network-free A_X()*MOI initiation uses the mean-field Shea-Ackers rate and loses the
-per-genome promoter-state bursting that lets some high-MOI cells escape to lysis.
+NOTE: at high MOI the model over-predicts lysogeny vs the paper (~0.97 vs ~0.82 in
+Fig 6a). The cause is unidentified; the code for the published model formulation could
+not be found (as of 2026-07-23), so the discrepancy is not diagnosable against the
+source. Documented on fullcircuit_exact_verification.png (issue #15).
 """
 import os
 import re
