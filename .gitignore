@@ -10,3 +10,4 @@ staging/
 my_models/reference/
 dev/
 bnf_*.log
+**/results_*/
