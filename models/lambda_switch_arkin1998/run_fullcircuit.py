@@ -15,12 +15,18 @@ NFsim + RuleMonkey). Run with a Python that has bngsim + numpy, e.g.
 Units: V_ref=1.66054e-15 L makes 1 molecule ~ 1 nM, so dimer COUNTS are the nM
 concentrations on Arkin's axes.
 
-Lysogeny classifier (Arkin footnote 12, p.1639-1640): a cell commits to lysogeny when
-free-CII production activated P_RE and [CI2] > [Cro2] at the end of the 35-min cell
-cycle. Operationally per run: LYSOGENIC <=> CI2_dimer > Cro2_dimer at t=35 min (the
-footnote states this end-state test is itself the indication that P_RE activation
-locked in the CI feedback loop). A stricter "regime" cross-check also requires CI2 to
-be in the lysogenic band (CI2 >= 50 nM).
+Lysogeny classifier (Arkin footnote 12, p.1639-1640): a cell commits to lysogeny iff
+BOTH (i) free-CII production activated P_RE -- operationally, the total P_RE open-complex
+rate A_PRE()*MOI reached >= 1 open complex / 2 min over a contiguous 4-min window -- AND
+(ii) [CI2] > [Cro2] at the end of the 35-min cell cycle. Both conditions are evaluated
+per seed (see classify()); condition (i) needs the free-CII trajectory at ~1-min
+resolution, so the Fig-6 sweep samples 36 points. Requiring (i) matters at low MOI,
+where it removes cells that reach CI2>Cro2 without a productive P_RE burst -- it lowers
+the Fig-6a onset (e.g. MOI 3 ~0.2 -> ~0.08, matching the paper) while leaving MOI>=4
+essentially unchanged. A stricter "regime" cross-check also requires CI2 >= 50 nM.
+NOTE: at high MOI the model still over-commits vs the paper (~1.0 vs ~0.82) because the
+network-free A_X()*MOI initiation uses the mean-field Shea-Ackers rate and loses the
+per-genome promoter-state bursting that lets some high-MOI cells escape to lysis.
 """
 import os
 import re
@@ -46,6 +52,39 @@ T_END = 2100.0                      # 35-min cell cycle
 # observables carried by the model (see the .bngl observables block)
 TRAJ = ["CI2_dimer", "Cro2_dimer", "Obs_CII", "CII_total", "CIII_tot", "Obs_N",
         "CImon", "Crmon"]
+
+# --- Arkin footnote-12 lysogeny classifier ------------------------------------------
+# A cell is committed to lysogeny iff (i) free-CII production ACTIVATED P_RE -- defined
+# as the total P_RE open-complex rate A_PRE()*MOI reaching >= 1 open complex / 2 min over
+# a contiguous 4-min window -- AND (ii) [CI2] > [Cro2] at the end of the 35-min cycle.
+# A_PRE() is the Table-1 P_RE partition function (same expression as in the .bngl); the
+# total rate over the cell's MOI genome copies is A_PRE()*MOI.
+_RT = 1.9872e-3 * 310.15
+_M2M = 1e-9                              # 1 molecule ~ 1 nM at V_ref -> M/molecule
+_RNAP_M = 30 * _M2M                      # buffered free RNAP = 30 nM
+_PRE_RATE = 1.0 / 120.0                  # 1 open complex / 2 min, in 1/s
+_PRE_WIN_MIN = 4.0                       # contiguous activation window (min)
+
+
+def _A_PRE(cii):
+    """P_RE open-complex rate (1/s) vs free-CII (nM), Table-1 P_RE partition function."""
+    ci = np.asarray(cii) * _M2M
+    w2 = np.exp(9.9 / _RT) * _RNAP_M     # exp(-dG_RE_2/RT), dG_RE_2 = -9.9
+    w3 = np.exp(9.7 / _RT) * ci          # dG_RE_3 = -9.7
+    w4 = np.exp(21.5 / _RT) * ci * _RNAP_M  # dG_RE_4 = -21.5
+    return (w2 * 4e-5 + w4 * 0.015) / (1 + w2 + w3 + w4)
+
+
+def _pre_activated(cii_traj, tvec, moi):
+    """footnote-12 (i): does total P_RE activation A_PRE()*MOI stay >= 1 OC / 2 min over
+    some contiguous 4-min window of the trajectory?"""
+    apre = _A_PRE(cii_traj) * moi
+    dt = (tvec[1] - tvec[0]) / 60.0 if len(tvec) > 1 else _PRE_WIN_MIN
+    w = max(1, int(round(_PRE_WIN_MIN / dt)))
+    if len(apre) < w:
+        return apre.mean() >= _PRE_RATE
+    cs = np.concatenate([[0.0], np.cumsum(apre)])
+    return bool(((cs[w:] - cs[:-w]) / w >= _PRE_RATE).any())
 
 
 def build_xml(moi, tag=None):
@@ -85,12 +124,19 @@ def ensemble(xml, method, n_seeds, n_points=8, seed0=30000):
     return tvec, {o: np.vstack(v) for o, v in stacks.items()}
 
 
-def classify(stacks):
-    """Footnote-12 per-seed lysogeny classification from final-time (t=35min) counts."""
+def classify(stacks, tvec, moi):
+    """Arkin footnote-12 per-seed lysogeny classification: LYSOGENIC iff P_RE activated
+    (i) AND [CI2]>[Cro2] at t=35 min (ii). Needs the CII trajectory (for (i)) at fine
+    time resolution and the MOI (total P_RE rate = A_PRE()*MOI). Also returns the
+    end-state-only fraction (lyso_end) for reference."""
     ci2 = stacks["CI2_dimer"][:, -1]
     cro2 = stacks["Cro2_dimer"][:, -1]
-    lyso = ci2 > cro2
-    return {"lyso": lyso, "regime": lyso & (ci2 >= 50.0), "ci2": ci2, "cro2": cro2}
+    end_switch = ci2 > cro2
+    cii = stacks["Obs_CII"]
+    pre = np.array([_pre_activated(cii[i], tvec, moi) for i in range(cii.shape[0])])
+    lyso = end_switch & pre
+    return {"lyso": lyso, "lyso_end": end_switch, "regime": lyso & (ci2 >= 50.0),
+            "ci2": ci2, "cro2": cro2}
 
 
 # --------------------------------------------------------------------- Fig 3 (MOI 6)
@@ -105,9 +151,10 @@ def fig3(n_seeds=60, method="rm", moi=6):
         print(f"  {lab} avg :" + "".join(f"{v:7.1f}" for v in st[o].mean(0)))
         print(f"  {lab} 16pc:" + "".join(f"{v:7.1f}" for v in np.percentile(st[o], 16, 0)))
         print(f"  {lab} 84pc:" + "".join(f"{v:7.1f}" for v in np.percentile(st[o], 84, 0)))
-    c = classify(st)
-    print(f"  => lysogenic fraction (CI2>Cro2 @35min): {c['lyso'].mean():.2f}  "
-          f"(regime CI2>=50: {c['regime'].mean():.2f}) of {n_seeds}")
+    c = classify(st, tvec, moi)
+    print(f"  => lysogenic fraction (footnote-12): {c['lyso'].mean():.2f}  "
+          f"(CI2>Cro2 only: {c['lyso_end'].mean():.2f}; "
+          f"regime CI2>=50: {c['regime'].mean():.2f}) of {n_seeds}")
     print("  paper Fig 3a: Cro2 avg ~55-60 nM plateau, CI2 lower with a broad band.")
     return tvec, st
 
@@ -116,8 +163,9 @@ def fig3(n_seeds=60, method="rm", moi=6):
 def lyso_fraction(moi, n_seeds, method="rm"):
     xml = build_xml(moi)
     t0 = time.time()
-    _, st = ensemble(xml, method, n_seeds, n_points=2, seed0=20000)
-    c = classify(st)
+    # ~1-min sampling so the footnote-12 4-min activation window is resolved
+    tvec, st = ensemble(xml, method, n_seeds, n_points=36, seed0=20000)
+    c = classify(st, tvec, moi)
     return c["lyso"].mean(), c["regime"].mean(), c["ci2"].mean(), c["cro2"].mean(), time.time() - t0
 
 
