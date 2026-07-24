@@ -1,0 +1,37 @@
+# Digitized experimental %lysogeny vs MOI data points from Cortes et al. (2017),
+# Biophys J 113:2110-2120, Supporting Material Figure S3 (physical page 21 of mmc1.pdf).
+#
+# Figure S3 plots the detailed-model predictions (solid = decision criteria #1,
+# dashed = criteria #2) against the single-cell experimental lysogenization
+# frequencies (filled circles with error bars) of ref. (32), for three initial
+# cell-size classes. The three colors are: red = initially small cell (rescaled
+# initial volume v0 ~ 0.5), blue = average cell (v0 ~ 1.0), green = large cell
+# (v0 ~ 1.5). Lower initial volume -> higher per-cell viral concentration m/v ->
+# higher lysogeny, so red > blue > green at every MOI.
+#
+# Digitization method: pdftoppm -r 300 render of mmc1 physical page 21; linear
+# axis calibration from the detected plot frame and tick marks (x: 0..6 at px
+# 243..1751, 251.33 px/MOI; y: 0..100 at 934.7..~190 px, 7.433 px per %lysogeny).
+# Data-point centroids recovered by per-color masking + 4-iteration binary
+# erosion to sever the thin error bars/curves from the filled marker cores, then
+# component-centroid. Digitization uncertainty ~ +/-2-3 %lysogeny; the plotted
+# experimental error bars are larger (~ +/-4-7 %lysogeny) and set the tolerance
+# for model-vs-data comparison.
+#
+# columns: MOI, pct_lysogeny (data point y-value)
+cell_class,v0,MOI,pct_lysogeny
+small,0.5,1,43.2
+small,0.5,2,69.5
+small,0.5,3,77.3
+small,0.5,4,79.5
+small,0.5,5,86.3
+average,1.0,1,34.2
+average,1.0,2,55.9
+average,1.0,3,66.0
+average,1.0,4,65.8
+average,1.0,5,74.9
+large,1.5,1,24.7
+large,1.5,2,42.7
+large,1.5,3,52.0
+large,1.5,4,53.9
+large,1.5,5,68.4

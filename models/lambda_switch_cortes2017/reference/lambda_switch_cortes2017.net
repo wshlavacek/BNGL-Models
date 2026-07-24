@@ -1,0 +1,87 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA              6.02214076e23  # Constant
+    2 V_ref           1.5e-15  # Constant
+    3 MOI             1  # Constant
+    4 v0              1.0  # Constant
+    5 Vscale          1000  # Constant
+    6 VolCap          2*Vscale  # ConstantExpression
+    7 t_double        100  # Constant
+    8 g               0.0069314718  # Constant
+    9 k_R             1.1699  # Constant
+   10 k_RM            0.2848  # Constant
+   11 k_RE            0.4938  # Constant
+   12 k_a             0.4386  # Constant
+   13 sigma           0.6371  # Constant
+   14 d_r             0.2476  # Constant
+   15 alpha_r         0.1544  # Constant
+   16 d_CI            0.0849  # Constant
+   17 d_Cro           0.002  # Constant
+   18 d_Q             0.00258  # Constant
+   19 alpha_yf        2.9464  # Constant
+   20 kappa_FtsH      1/5.0396  # Constant
+   21 omega           0.4045  # Constant
+   22 omega_Cro       0.021  # Constant
+   23 kappa_CI        (1/5.84)^2  # Constant
+   24 kappa_Cro       (1/30.37)^2  # Constant
+   25 kappa_pRE       (1/72.54)^2  # Constant
+   26 kappa_paQ       (1/20.78)^2  # Constant
+   27 Q_T             134.897  # Constant
+   28 CI_T            61.0073  # Constant
+   29 CII_T           22.0  # Constant
+   30 _InitialConc1   v0*Vscale  # ConstantExpression
+end parameters
+begin functions
+    1 rate_pR() k_R/((1+(kappa_CI*(((Obs_CI*Vscale)/Obs_Vol)^2)))+(kappa_Cro*(((Obs_Cro*Vscale)/Obs_Vol)^2)))
+    2 rate_pRM() ((k_RM*kappa_CI)*(((Obs_CI*Vscale)/Obs_Vol)^2))/((1+(kappa_CI*(((Obs_CI*Vscale)/Obs_Vol)^2)))+(kappa_Cro*(((Obs_Cro*Vscale)/Obs_Vol)^2)))
+    3 rate_pRE() ((k_RE*kappa_pRE)*(((Obs_CII*Vscale)/Obs_Vol)^2))/(1+(kappa_pRE*(((Obs_CII*Vscale)/Obs_Vol)^2)))
+    4 rate_paQ() ((k_a*kappa_paQ)*(((Obs_CII*Vscale)/Obs_Vol)^2))/(1+(kappa_paQ*(((Obs_CII*Vscale)/Obs_Vol)^2)))
+    5 rate_antiQ() (alpha_r*Vscale)/Obs_Vol
+    6 deg_CII() alpha_yf/(1+(((kappa_FtsH*Obs_CII)*Vscale)/Obs_Vol))
+    7 rate_repl() (omega+((omega_Cro*kappa_Cro)*(((Obs_Cro*Vscale)/Obs_Vol)^2)))/((1+(kappa_CI*(((Obs_CI*Vscale)/Obs_Vol)^2)))+(kappa_Cro*(((Obs_Cro*Vscale)/Obs_Vol)^2)))
+    8 grow() g*(Obs_Vol<VolCap)
+end functions
+begin species
+    1 DNA() MOI
+    2 CI() 0
+    3 Cro() 0
+    4 CII() 0
+    5 Q() 0
+    6 mRNA_CI() 0
+    7 mRNA_Cro() 0
+    8 mRNA_CII() 0
+    9 mRNA_Q() 0
+   10 mRNA_antiQ() 0
+   11 Vol() _InitialConc1
+end species
+begin reactions
+    1 1 1,7,8,9 rate_pR #R_txn_pR
+    2 1 1,6 rate_pRE #R_txn_pRE
+    3 1 1,6 rate_pRM #R_txn_pRM
+    4 1 1,10 rate_paQ #R_txn_paQ
+    5 6 2,6 sigma #R_tl_CI
+    6 7 3,7 sigma #R_tl_Cro
+    7 8 4,8 sigma #R_tl_CII
+    8 9 5,9 sigma #R_tl_Q
+    9 9,10 0 rate_antiQ #R_antiQ
+   10 2 0 d_CI #R_deg_CI
+   11 3 0 d_Cro #R_deg_Cro
+   12 4 0 deg_CII #R_deg_CII
+   13 5 0 d_Q #R_deg_Q
+   14 6 0 d_r #R_deg_mRNA_CI
+   15 7 0 d_r #R_deg_mRNA_Cro
+   16 8 0 d_r #R_deg_mRNA_CII
+   17 9 0 d_r #R_deg_mRNA_Q
+   18 1 1,1 rate_repl #R_repl
+   19 11 11,11 grow #R_grow
+end reactions
+begin groups
+    1 Obs_CI               2
+    2 Obs_Cro              3
+    3 Obs_CII              4
+    4 Obs_Q                5
+    5 Obs_DNA              1
+    6 Obs_Vol              11
+    7 Obs_mRNA_Q           9
+    8 Obs_mRNA_antiQ       10
+end groups
