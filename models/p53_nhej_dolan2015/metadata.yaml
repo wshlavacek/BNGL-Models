@@ -1,0 +1,97 @@
+# metadata.yaml — p53_nhej_dolan2015
+id: p53_nhej_dolan2015
+created: 2026-07-23
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, network_free, adapted_from_bngl, ai_assisted]
+  description: >
+    Integrated stochastic model of DNA double-strand-break repair by
+    non-homologous end joining (NHEJ) coupled to ATM/p53/Mdm2 damage signaling
+    and p53/p21-mediated early senescence, from Dolan et al. (2015), PLoS Comput
+    Biol 11(5):e1004246 (doi:10.1371/journal.pcbi.1004246). The model body
+    (molecule types, seed species, observables, functions and the 2339 reaction
+    rules) is transcribed VERBATIM from the published Supplementary File S11
+    (pcbi.1004246.s011.bngl); the authors' section comments are preserved.
+    House-style wrapping was added (begin model / header metadata, same-line unit
+    comments on parameters from the S1/S3 Tables and on seed species, and the
+    actions block). The published study simulated the model NETWORK-FREE with
+    NFsim (an ensemble of ~50 stochastic single-cell runs). One behavior-
+    preserving re-encoding was required for NFsim >=1.14.3: the published Sen
+    senescence counter used Sen(int~1~10~PLUS~MINUS) with NFsim's PLUS/MINUS
+    integer increment/decrement operators, which NFsim >=1.14.3 rejects when the
+    operator labels are declared as allowed states; it is re-encoded as an
+    explicit 10-level integer counter (dynamically identical, and interpreted
+    consistently by all three network-free engines). As deposited, irradiation
+    is off and DNA damage is driven only by chronic background ROS -- the non-
+    irradiated baseline of Fig. 4. The model has no multivalent aggregation or
+    same-complex binding, so standard (legacy) BioNetGen NFsim is a valid
+    reference (no -bscb / -utl required).
+
+files:
+  - name: p53_nhej_dolan2015.bngl
+    role: primary
+    description: >
+      Rule-based, network-free (NFsim) integrated model of NHEJ DSB repair,
+      ATM/p53/Mdm2 damage signaling and p53/p21 early senescence. Fifty
+      independent DNA loci (DNA1..DNA50) each carry a break-state site
+      (ok/sdsb/cdsb) and an H2AX component (u/p/foc); chronic background ROS
+      (steady state ~kROS/kdROS = 10) creates DSBs that recruit Ku70/80 +
+      DNA-PKcs (D-NHEJ) or PARP-1 + Ligase III (B-NHEJ), activate an ATM (state
+      0 -> the locus index i, tagging site i), and build damage foci.
+      Phosphorylated p53 escapes Mdm2 degradation, pulsing p53/Mdm2/p21/GADD45;
+      p21 feeds back through p38 to ROS and (when sustained) flips a Sen switch
+      that depletes Ku70/80 and PARP-1. The committed protocol is one
+      representative single-cell NFsim run over 2400 min (chronic background ROS,
+      no irradiation) reproducing Fig. 4; uncomment the IR event and timer
+      functions to enable acute irradiation.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: run_dolan2015.py
+    role: verification
+    description: >
+      Self-contained driver. `reference` runs the committed model's faithful
+      published protocol with standard BioNetGen NFsim (seed 2015 reproduces the
+      committed reference .gdat) and checks the paper's stated non-irradiated
+      baseline claims (ROS ~ 10; p21 stays < 15; DNA damage foci low/transient;
+      no cell enters senescence). `independent` is the model-specification check:
+      with DNA damage off (kdam1=kdam2=0), an independent SciPy mean-field ODE of
+      the p53/Mdm2/p21/GADD45/p38/ROS core is compared to the BNG-NFsim ensemble
+      mean (matched time) -- linear / high-copy observables match tightly while
+      the low-copy UNBOUND species (free Mdm2, Mdm2 mRNA, free p53) show the
+      expected stochastic offset from mean-field (negative p53-Mdm2 binding
+      covariance), and the exact identity E[Mdm2_mRNA] == E[p53_Unphos] is
+      checked. `agreement` is the three-engine network-free cross-check (issue
+      #10, task 4): standard BioNetGen NFsim v1.14.3, bngsim NfsimSession, and
+      bngsim RuleMonkeySession agree on the same rules within Monte-Carlo error
+      (pairwise z-scores). `plot` builds the verification PNG.
+  - name: verify_dolan2015.png
+    role: figure
+    description: >
+      Verification figure. Top: reproduced Fig. 4 non-irradiated baseline
+      (single-cell ROS ~ 10 with transient DNA damage foci; damage-triggered p53
+      pulses with low p21). Bottom: independent mean-field ODE vs BNG-NFsim
+      ensemble for the damage-off signaling core (bar + identity-line panels),
+      and the three network-free engines (BNG NFsim, bngsim NFsim, bngsim
+      RuleMonkey) overlaid as ensemble mean +/- s.e.m.
+  - name: reference/p53_nhej_dolan2015_nfr.gdat
+    role: reference
+    description: >
+      Committed representative single-cell NFsim run of the faithful published
+      protocol (2400 min, chronic background ROS, BNG NFsim, seed 2015).
+  - name: reference/independent.npz
+    role: reference
+    description: >
+      Cached mean-field ODE values and BNG-NFsim damage-off ensemble
+      (mean +/- s.e.m.) for the model-specification check.
+  - name: reference/agreement.npz
+    role: reference
+    description: >
+      Cached three-engine ensembles (per-seed observable trajectories) for the
+      network-free agreement cross-check.
