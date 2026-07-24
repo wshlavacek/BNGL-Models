@@ -1,0 +1,87 @@
+# metadata.yaml — multisite_egfr_phosphorylation_salazarcavazos2020
+id: multisite_egfr_phosphorylation_salazarcavazos2020
+created: 2026-07-24
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, ai_assisted]
+  description: >
+    Rule-based model of ligand-driven multisite EGFR phosphorylation in CHO
+    EGFR-GFP cells, from Salazar-Cavazos E, Franco Nitta C, Mitra ED, Wilson BS,
+    Lidke KA, Hlavacek WS, Lidke DS (2020), Mol Biol Cell 31(7):695-708
+    (doi:10.1091/mbc.E19-09-0548). EGF binds EGFR; two liganded receptors
+    dimerize (a state change with an activator and a receiver kinase); the active
+    dimer trans-phosphorylates three C-tail tyrosine classes (Y1068, Y1173,
+    lumped YN); constitutive phosphatases dephosphorylate; and the adaptors Grb2
+    and Shc1 bind pY1068 and pY1173. House-styled from the authors' BioNetGen
+    model (Supplemental File S1 / 190127_CHO_EGFR_best-fit.bngl), at the
+    PyBioNetFit differential-evolution best fit to the single-molecule pull-down
+    (SiMPull) % phosphorylation data (Fig 2), via the validated
+    pybnf-jobs/Salazar-Cavazos-2019/egfr_simpull job. Folder named for the 2020
+    publication year (the pybnf-job folder is labeled 2019).
+
+files:
+  - name: multisite_egfr_phosphorylation_salazarcavazos2020.bngl
+    role: primary
+    description: >
+      Deterministic ODE model (finite 75-species / 618-reaction network) of
+      multisite EGFR phosphorylation. Six fitted parameters (Grb2/Shc1 copy
+      numbers, base dephosphorylation constants for Y1068 and YN, and the
+      kphos/kdephos ratios for Y1068 and YN) hold the PyBioNetFit best fit; all
+      other constants are the paper's fixed values. EGF binding (extracellular
+      volume) and adaptor binding (cytoplasmic volume) live in two implicitly
+      handled compartments — no begin compartments block is imposed (§1.2.2). The
+      actions block runs an ODE EGF dose-response parameter_scan (suffix scan,
+      #@figure Fig 2C) and a 25 nM time course (suffix ode, #@figure Fig 2D);
+      an SSA stub is included commented out (feasible but slow at ~1e6 EGF copies).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_salazarcavazos2020.ipynb
+    role: verification
+    description: >
+      Self-contained verification notebook. (1) Model-specification: re-integrates
+      the BioNetGen-generated 75-species network with an independent SciPy
+      mass-action integrator (LSODA), agreeing with BioNetGen CVODE to ~1e-7. (2)
+      Reported data: reproduces the SiMPull Fig 2 EGF dose response and 25 nM time
+      course for pY1068, pY1173, and pan-PY at the best fit (total chi_sq ≈ 356,
+      overall median ~10% rel err — the authors' published global fit).
+      Regenerates verify_salazarcavazos2020.png. Requires BNG2.pl (BNGPATH) and
+      scipy/numpy/matplotlib.
+  - name: verify_salazarcavazos2020.png
+    role: figure
+    description: >
+      Verification figure (2x3). Top row: EGF dose response (Fig 2A/2C), model
+      curve vs SiMPull data, for pY1068 / pY1173 / pan-PY. Bottom row: 25 nM time
+      course (Fig 2D), model (BNG line) with independent SciPy (open markers, the
+      model-spec check) vs SiMPull data.
+  - name: reference/multisite_egfr_phosphorylation_salazarcavazos2020.net
+    role: reference
+    description: BioNetGen-generated reaction network (75 species, 618 reactions).
+  - name: reference/multisite_egfr_phosphorylation_salazarcavazos2020_ode.gdat
+    role: reference
+    description: >
+      Committed 25 nM EGF ODE time course from the actions block: all observables
+      and % phosphorylation functions vs time (0–300 s).
+  - name: reference/multisite_egfr_phosphorylation_salazarcavazos2020_scan.scan
+    role: reference
+    description: >
+      Committed EGF dose-response parameter_scan from the actions block: all
+      observables and % phosphorylation functions at 5 min for EGF = 0.5/5/50 nM.
+  - name: reference/salazarcavazos2020_fig2a_doseresponse.csv
+    role: reference
+    description: >
+      Salazar-Cavazos et al. (2020) Fig 2A SiMPull EGF dose-response data (the fit
+      target): % pY1068 / pY1173 / pan-PY at 0.5/5/50 nM with SD; from
+      pybnf-jobs/Salazar-Cavazos-2019/egfr_simpull/dose_resp.exp.
+  - name: reference/salazarcavazos2020_fig2d_timecourse.csv
+    role: reference
+    description: >
+      Salazar-Cavazos et al. (2020) Fig 2D SiMPull 25 nM EGF time-course data (the
+      fit target): % pY1068 / pY1173 / pan-PY at 60/120/300 s with SD; from
+      pybnf-jobs/Salazar-Cavazos-2019/egfr_simpull/EGF_25nM.exp.

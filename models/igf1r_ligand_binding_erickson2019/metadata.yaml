@@ -1,0 +1,88 @@
+# metadata.yaml — igf1r_ligand_binding_erickson2019
+id: igf1r_ligand_binding_erickson2019
+created: 2026-07-24
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, ai_assisted]
+  description: >
+    Harmonic-oscillator model of IGF1 binding to its receptor IGF1R, the
+    mechanism of Kiselyov et al. (2009), Mol Syst Biol 5:243
+    (doi:10.1038/msb.2008.78), re-fit by Erickson et al. (2019), PLoS Comput
+    Biol 15(1):e1006706 (doi:10.1371/journal.pcbi.1006706). IGF1R is a preformed
+    disulfide-linked dimer whose two half-sites (Site 1, Site 2) form one
+    bivalent binding pocket; a single IGF1 binds one half-site and can crosslink
+    the partner chain's reciprocal half-site (avidity). Seven rate constants are
+    free; the eighth (a2prime) is fixed by detailed balance. House-styled from
+    the authors' own BioNetFit model (Erickson 2019 SI "S2 Compressed File
+    Archive", IGF1R_fit.bngl — the file that produced Table 1), at the Table-1
+    best fit, via the validated pybnf-jobs/Erickson-2019/igf1r job. The model
+    reproduces the Kiselyov et al. (2009) radioligand competition (Fig 5B) and
+    2 h-preincubation dissociation (Fig 5D, 20/60 min) data — i.e. Erickson
+    et al. (2019) Fig 3.
+
+files:
+  - name: igf1r_ligand_binding_erickson2019.bngl
+    role: primary
+    description: >
+      Deterministic ODE model (finite 27-species / 96-reaction network) of
+      IGF1/IGF1R bivalent binding. Two binding rules (free IGF1 to Site 1 / Site
+      2, contingent on the partner half-site being free) plus four crosslinking
+      rules (intramolecular tethering, each contingent on the reciprocal
+      crosslink being absent); a2prime derived by detailed balance. The actions
+      block runs a 7 pM labeled-IGF1 binding time course (suffix ode) and a
+      steady-state competition dose-response parameter_scan (suffix scan,
+      #@figure Fig 3A / Fig 5B). The stateful 24 pM-preincubate → wash →
+      dissociation assay (Fig 5D / Fig 3B) is reproduced in the verification
+      notebook. ssa/psa/nfr are not used — the radioligand assay is an inherently
+      deterministic equilibrium/relaxation readout.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_erickson2019.ipynb
+    role: verification
+    description: >
+      Self-contained verification notebook. (1) Model-specification: re-integrates
+      the BioNetGen-generated network with an independent SciPy mass-action
+      integrator (LSODA), agreeing with BioNetGen CVODE to ~1e-7. (2) Reported
+      data: reproduces the Kiselyov (2009) Fig 5B competition (median ~1% rel err)
+      and Fig 5D 20/60-min dissociation (median ~6% rel err) at the Erickson (2019)
+      Table-1 fit. Regenerates verify_erickson2019.png. Requires BNG2.pl (BNGPATH)
+      and scipy/numpy/matplotlib.
+  - name: verify_erickson2019.png
+    role: figure
+    description: >
+      Verification figure. Panel A: steady-state competition (Fig 5B), model vs
+      data. Panel B: dissociation after 2 h preincubation (Fig 5D, 20/60 min).
+      Panel C: model-specification check — BioNetGen ODE (lines) vs independent
+      SciPy integration (open markers) of the labeled-IGF1 binding time course.
+  - name: reference/igf1r_ligand_binding_erickson2019.net
+    role: reference
+    description: BioNetGen-generated reaction network (27 species, 96 reactions).
+  - name: reference/igf1r_ligand_binding_erickson2019_ode.gdat
+    role: reference
+    description: >
+      Committed ODE time course from the actions block: bound / free / crosslinked
+      labeled IGF1 vs time (7 pM labeled IGF1, 0–14400 s).
+  - name: reference/igf1r_ligand_binding_erickson2019_scan.scan
+    role: reference
+    description: >
+      Committed steady-state competition parameter_scan from the actions block:
+      bound / free / crosslinked labeled IGF1 at 4 h vs unlabeled IGF1 dose.
+  - name: reference/kiselyov2009_fig5b_competition_digitized.csv
+    role: reference
+    description: >
+      Kiselyov et al. (2009) Fig 5B competition data (the Erickson F5B fit target),
+      relative bound labeled IGF1 vs unlabeled dose with SD; from
+      pybnf-jobs/Erickson-2019/igf1r/F5B.exp.
+  - name: reference/kiselyov2009_fig5d_dissociation_digitized.csv
+    role: reference
+    description: >
+      Kiselyov et al. (2009) Fig 5D dissociation data (the Erickson F5D fit target),
+      fraction bound labeled IGF1 remaining at 20 and 60 min vs unlabeled dose with
+      SD; from pybnf-jobs/Erickson-2019/igf1r/F5D_20min.exp and F5D_60min.exp.

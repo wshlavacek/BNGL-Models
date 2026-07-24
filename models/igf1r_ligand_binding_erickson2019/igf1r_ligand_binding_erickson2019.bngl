@@ -1,0 +1,216 @@
+begin model
+
+#@title: IGF1R ligand binding (Erickson et al., 2019)
+
+#@description: |
+#  Harmonic-oscillator model of insulin-like growth factor 1 (IGF1) binding to
+#  its receptor IGF1R, a preformed disulfide-linked dimer with two half-sites
+#  (Site 1, Site 2) that together form one bivalent binding pocket. A single
+#  IGF1 first binds one half-site (S1 or S2) and can then CROSSLINK the partner
+#  chain's reciprocal half-site within the same dimer, so binding is bivalent
+#  (avidity) rather than 1:1 -- the Kiselyov et al. (2009) "harmonic oscillator"
+#  mechanism. Encoded as mass action with strict steric rules (one ligand per
+#  S1/S2 pocket; a crosslink blocks the reciprocal crosslink); the eighth rate
+#  constant a2prime is fixed by detailed balance (Erickson et al., 2019, Eq 1),
+#  leaving seven free constants. Simulated as a deterministic ODE on a finite
+#  27-species network. Behavior: a radioligand competition/dissociation assay --
+#  labeled ("hot") IGF1 binds to a plateau, then titrated unlabeled ("cold")
+#  IGF1 displaces it along a curvilinear (negatively cooperative) competition
+#  curve, and crosslinking makes dissociation accelerate over time. Parameters
+#  are the Erickson et al. (2019) Table 1 best fit of this mechanism to the
+#  Kiselyov et al. (2009) Fig 5B (competition) and Fig 5D (dissociation) data.
+
+#@keyword: |
+#  receptor-ligand binding, IGF1, IGF1R, harmonic oscillator, avidity,
+#  bivalent crosslinking, competition binding, radioligand assay, negative
+#  cooperativity, detailed balance, mass action, Homo sapiens
+
+#@reference: |
+#  Erickson KE, Rukhlenko OS, Shahinuzzaman M, Slavkova KP, Kholodenko BN,
+#  Hlavacek WS, et al. (2019). Modeling cell line-specific recruitment of
+#  signaling proteins to the insulin-like growth factor 1 receptor. PLoS Comput
+#  Biol 15(1):e1006706. doi:10.1371/journal.pcbi.1006706 -- source of the
+#  Table 1 best-fit rate constants and the Fig 3 reproduction.
+#  Kiselyov VV, Versteyhe S, Gauguin L, De Meyts P (2009). Harmonic oscillator
+#  model of the insulin and IGF1 receptors' allosteric binding and activation.
+#  Mol Syst Biol 5:243. doi:10.1038/msb.2008.78 -- the binding mechanism and the
+#  Fig 5B/5D radioligand data reproduced here.
+
+#@note: |
+#  PROVENANCE. Reaction rules, molecule types, and fixed constants are the
+#  Erickson et al. (2019) BioNetFit model (SI "S2 Compressed File Archive",
+#  IGF1R_fit.bngl -- the file that produced Table 1), house-styled here. The
+#  seven fitted rate constants hold the Erickson Table 1 ("This Study") values;
+#  a2prime is derived by detailed balance. Adapted from the validated
+#  pybnf-jobs/Erickson-2019/igf1r job.
+
+begin parameters
+
+  # Subvolume scaling factor: fraction of the reference volume simulated (§1.1);
+  # multiplies the reference volume and ligand/receptor copy numbers.
+  f 1.0 # dimensionless
+
+  # Avogadro constant (exact)
+  NA 6.02214076e23 # molecules/mol
+
+  # Reference volume: extracellular fluid per cell in the radioligand assay
+  #   (15 cm dish, ~95% confluent, ~1.7e7 cells/dish, ~35 mL medium/dish ->
+  #   ~2.1e-9 L per cell; Kiselyov et al., 2009).
+  V_ref 2.1e-9*f # L/cell
+
+  # --- Fitted rate constants: Erickson et al. (2019) Table 1 ("This Study") ---
+  # Association rate constant, free IGF1 to Site 1
+  a1_perMpers 2.8e5 # /M/s
+  # Association rate constant, free IGF1 to Site 2
+  a2_perMpers 1.5e4 # /M/s
+  # Dissociation rate constant, IGF1 from Site 1
+  d1 5.0e-2 # /s
+  # Dissociation rate constant, IGF1 from Site 2
+  d2 1.9e-4 # /s
+  # Crosslinking (intramolecular tethering) forward rate constant; a1prime = kcr
+  kcr 5.6e-3 # /s
+  # Uncrosslinking rate constant, release from Site 1
+  d1prime 1.9e-5 # /s
+  # Uncrosslinking rate constant, release from Site 2
+  d2prime 1.3e-2 # /s
+
+  # Association rates converted from /M/s to /(molecule/cell)/s
+  a1 a1_perMpers/(NA*V_ref) # /(molecule/cell)/s
+  a2 a2_perMpers/(NA*V_ref) # /(molecule/cell)/s
+  # Forward crosslinking rate constant (Site 2 -> Site 1 tethering)
+  a1prime kcr # /s
+  # a2prime is fixed by the detailed-balance constraint (Erickson et al., 2019, Eq 1)
+  a2prime (a2*a1prime*d1*d2prime)/(a1*d1prime*d2) # /s
+
+  # --- Ligand and receptor amounts ---
+  # Labeled ("hot") IGF1 concentration: 7 pM for the steady-state competition
+  #   assay (Fig 5B); the dissociation assay (Fig 5D) uses 24 pM (set in the driver).
+  IGF1_hot_conc 7.0e-12 # M
+  # Unlabeled ("cold") competitor IGF1 concentration (scanned)
+  IGF1_cold_conc 0 # M
+  # Copies per cell = concentration x NA x reference volume
+  IGF1_hot_total IGF1_hot_conc*(NA*V_ref) # molecules
+  IGF1_cold_total IGF1_cold_conc*(NA*V_ref) # molecules
+  # Total IGF1R chains (two chains per disulfide-linked receptor dimer)
+  IGF1R_total 20000*f # molecules
+
+end parameters
+
+begin molecule types
+
+  # Insulin-like growth factor 1 (ligand). ds ("dimerization surface") and
+  # hs ("hexamerization surface") are the two receptor-contact faces of the
+  # harmonic-oscillator mechanism; label distinguishes tracer from competitor.
+  IGF1(ds,hs,label~hot~cold)
+  # IGF1 receptor chain. S1 = Site 1, S2 = Site 2 (the two half-sites of the
+  # bivalent pocket); C = cysteines forming the constitutive dimer disulfide
+  # bond (C!0 links the two chains of one receptor dimer).
+  IGF1R(S1,S2,C)
+
+end molecule types
+
+begin seed species
+
+  # Free labeled IGF1
+  IGF1(ds,hs,label~hot) IGF1_hot_total # molecules
+  # Free unlabeled IGF1
+  IGF1(ds,hs,label~cold) IGF1_cold_total # molecules
+  # Preformed empty IGF1R dimers (two chains disulfide-linked through C!0)
+  IGF1R(S1,S2,C!0).IGF1R(S1,S2,C!0) 0.5*IGF1R_total # molecules
+
+end seed species
+
+begin observables
+
+  # Bound labeled IGF1 (the assay readout): ligand engaged at Site 1 only,
+  # at Site 2 only, or crosslinking both half-sites of one dimer (avidity).
+  Molecules IGF1_hot_bound IGF1(ds!+,hs,label~hot) \
+    IGF1(ds,hs!+,label~hot) \
+    IGF1R(S1!1).IGF1(ds!1,hs!2,label~hot).IGF1R(S2!2)
+  # Free labeled IGF1 remaining in solution
+  Species IGF1_hot_free IGF1(ds,hs,label~hot)
+  # Crosslinked (doubly tethered) labeled IGF1 -- the avidity species
+  Molecules IGF1_hot_crosslinked IGF1R(S1!1).IGF1(ds!1,hs!2,label~hot).IGF1R(S2!2)
+
+end observables
+
+begin functions
+
+  # Dimensional conversions (uncomment for concentration output)
+# IGF1_hot_bound_conc() = IGF1_hot_bound/(NA*V_ref) # M
+# IGF1_hot_free_conc() = IGF1_hot_free/(NA*V_ref) # M
+
+end functions
+
+begin reaction rules
+
+  # Free IGF1 reversibly binds a free Site 1 in a dimer, contingent on the
+  # partner chain's Site 2 being free (one ligand per S1/S2 half-pocket).
+  IGF1(ds,hs)+IGF1R(S1,C!0).IGF1R(S2,C!0)<->\
+    IGF1(ds!1,hs).IGF1R(S1!1,C!0).IGF1R(S2,C!0) a1,d1
+
+  # Free IGF1 reversibly binds a free Site 2 in a dimer, contingent on the
+  # partner chain's Site 1 being free.
+  IGF1(ds,hs)+IGF1R(S2,C!0).IGF1R(S1,C!0)<->\
+    IGF1(ds,hs!1).IGF1R(S2!1,C!0).IGF1R(S1,C!0) a2,d2
+
+  # IGF1 tethered at Site 1 crosslinks to the partner chain's Site 2 (avidity),
+  # contingent on the reciprocal S2-S1 crosslink being absent.
+  IGF1R(S1!1,C!0).IGF1R(S1,S2,C!0).IGF1(ds!1,hs)<->\
+    IGF1R(S1!1,C!0).IGF1R(S1,S2!2,C!0).IGF1(ds!1,hs!2) a2prime,d2prime
+  IGF1R(S1!1,S2,C!0).IGF1R(S1!+,S2,C!0).IGF1(ds!1,hs)<->\
+    IGF1R(S1!1,S2,C!0).IGF1R(S1!+,S2!2,C!0).IGF1(ds!1,hs!2) a2prime,d2prime
+
+  # IGF1 tethered at Site 2 crosslinks to the partner chain's Site 1,
+  # contingent on the reciprocal S1-S2 crosslink being absent.
+  IGF1R(S2!1,C!0).IGF1R(S1,S2,C!0).IGF1(ds,hs!1)<->\
+    IGF1R(S2!1,C!0).IGF1R(S1!2,S2,C!0).IGF1(ds!2,hs!1) a1prime,d1prime
+  IGF1R(S1,S2!1,C!0).IGF1R(S1,S2!+,C!0).IGF1(ds,hs!1)<->\
+    IGF1R(S1,S2!1,C!0).IGF1R(S1!2,S2!+,C!0).IGF1(ds!2,hs!1) a1prime,d1prime
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1})  # 27 species, 96 reactions
+  saveConcentrations()
+
+  #@note: |
+  #  The IGF1R radioligand-binding assay is an inherently ODE (deterministic
+  #  equilibrium/relaxation) readout of ~1e4 receptor copies, so ssa/psa/nfr are
+  #  not used. The full Erickson Fig 3 fit -- the steady-state competition
+  #  (Fig 3A) AND the stateful 2 h-preincubate -> wash -> dissociation assay
+  #  (Fig 3B, 20/60 min) -- is reproduced against the Kiselyov (2009) data and
+  #  cross-checked against an independent SciPy integration in
+  #  verify_erickson2019.ipynb.
+
+  # Labeled-ligand binding kinetics (no competitor)
+
+  #@protocol: |
+  #  Relaxation of 7 pM labeled IGF1 binding to preformed IGF1R dimers to steady
+  #  state over 4 h. Bound labeled IGF1 rises to a plateau; a fraction becomes
+  #  crosslinked (avidity) within the dimer.
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>14400,n_steps=>240})
+
+  # Steady-state competition dose-response
+
+  #@protocol: |
+  #  4 h steady-state competition: 7 pM labeled IGF1 held fixed while unlabeled
+  #  IGF1 is titrated (IGF1_cold_conc scanned ~2.6 pM - 66 nM). Readout is bound
+  #  labeled IGF1 vs competitor dose -- the radioligand competition curve,
+  #  normalized to the no-competitor value in the notebook.
+
+  #@figure: Fig. 3A in Erickson et al. (2019), Fig. 5B in Kiselyov et al. (2009)
+
+  resetConcentrations()
+  parameter_scan({method=>"ode",suffix=>"scan",parameter=>"IGF1_cold_conc",\
+    par_scan_vals=>[2.5822e-12,1.3178e-12,6.9016e-12,1.3065e-11,2.6498e-11,\
+    6.6104e-11,1.2953e-10,2.5822e-10,6.5536e-10,1.2841e-9,2.6498e-9,6.7254e-9,\
+    1.3178e-8,2.5822e-8,6.5536e-8,1.2841e-7,2.6498e-7,6.6104e-7],\
+    t_start=>0,t_end=>14400,n_steps=>10,reset_conc=>1})
+
+end actions
