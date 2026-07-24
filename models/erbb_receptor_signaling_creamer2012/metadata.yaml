@@ -1,0 +1,110 @@
+# metadata.yaml — erbb_receptor_signaling_creamer2012
+id: erbb_receptor_signaling_creamer2012
+created: 2026-07-23
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, network_free, ai_assisted]
+  description: >
+    Large rule-based model for ERBB-family (EGFR/ErbB2/ErbB3/ErbB4) receptor
+    signaling of Creamer et al. (2012), BMC Systems Biology 6:107
+    (doi:10.1186/1752-0509-6-107). The model body (parameters, molecule types,
+    seed species, reaction rules and observables) is the published Supplementary
+    File 1 (1752-0509-6-107-S1.bngl, identical to the model-guide copy
+    ErbB_model.bngl except for trailing whitespace and a "written by Matt Creamer"
+    header line), transcribed with the authors' inline rule numbers, section
+    headers and per-observable comments preserved. 19 molecule types carry
+    explicitly tracked S/T/Y phosphosites; the model resolves site-specific
+    phosphorylation kinetics for 55 individual residues plus ERK and Akt
+    activation. The reaction network is far too large to enumerate (>10^100
+    reachable species), so the model is simulated NETWORK-FREE with NFsim; the
+    published file ends with writeXML() only and that protocol is encoded natively
+    in the begin actions block. Two value-preserving edits make the published model
+    runnable under current BioNetGen/NFsim and reproduce the paper's subvolume
+    simulation: (1) 33 detailed-balance parameters that the file defines as chained
+    expressions are folded to numeric literals (BioNetGen exports them as XML
+    <Function> elements, which NFsim >=1.14 cannot evaluate when functions
+    reference functions); each folded literal keeps its original expression as a
+    comment. (2) A house-style subvolume factor f implements the paper's
+    compartment-size scaling (Methods used 0.2): copy numbers x f, bimolecular
+    association rates / f. f=1 recovers the published full-cell model exactly.
+
+files:
+  - name: erbb_receptor_signaling_creamer2012.bngl
+    role: primary
+    description: >
+      Rule-based, network-free (NFsim) model of EGF/HRG-driven ERBB receptor
+      signaling: four receptors bind ligand, homo-/hetero-dimerize,
+      cross-phosphorylate, internalize/recycle, and recruit Shc/Grb2/Sos1/Gab1 to
+      activate KRas -> Raf1 -> MEK1 -> ERK2 (with ERK2 negative feedback) and
+      PI3K -> PIP3 -> PDK1 -> Akt1. Copy numbers are scaled by the reserved
+      subvolume factor f (default 0.02; f=1 = published full-cell model). The active
+      protocol equilibrates the basal state with ligand binding off, turns ligand
+      binding on (EGF and HRG at 5 nM each), then follows the 180 min response,
+      reporting phosphorylation time courses for 55 S/T/Y residues plus ERK and Akt
+      (Fig. 4).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: run_creamer2012.py
+    role: verification
+    description: >
+      Self-contained driver. `reference` runs the committed model's faithful
+      published protocol with standard BioNetGen NFsim (committed subvolume f=0.02)
+      and checks the Fig. 4 kinetic spectrum against the committed reference .gdat.
+      `agreement` runs the three-engine network-free cross-check — standard
+      BioNetGen NFsim, bngsim NfsimSession, and the exact bngsim RuleMonkeySession —
+      on a reduced identical single-phase ligand-on protocol (f=0.002) and
+      quantifies agreement by the pairwise z-score of ensemble means. `flags`
+      determines whether -bscb / -utl change results by comparing default NFsim,
+      -bscb, and -bscb -utl against the exact RuleMonkey ensemble. `fig4_ensemble`
+      caches per-site ensemble-mean response curves; `plot` builds the verification
+      PNG. Subvolume/ligand parameters are baked into the BNG-XML before load to
+      avoid the bngsim set_param propagation gaps (lanl/bngsim#44).
+  - name: verify_creamer2012.ipynb
+    role: verification
+    description: >
+      Notebook that calls the driver logic: runs the faithful protocol under
+      BioNetGen NFsim, reports the three-engine (NFsim / NFsim / exact RuleMonkey)
+      agreement and the -bscb/-utl no-op finding, compares the simulated per-site
+      ensemble mean against the digitized Fig. 4, and renders verify_creamer2012.png.
+  - name: verify_creamer2012.png
+    role: figure
+    description: >
+      Verification figure: faithful 180 min response and flat ligand-off
+      equilibration; three network-free engines overlaid (agreeing within
+      Monte-Carlo error); -bscb/-utl shown to be no-ops vs the exact method; and the
+      digitized vs simulated Fig. 4 heat maps with the per-site sustainment
+      comparison.
+  - name: reference/erbb_receptor_signaling_creamer2012_equil.gdat
+    role: reference
+    description: Equilibration observables (ligand off; flat basal state), BNG NFsim, f=0.02.
+  - name: reference/erbb_receptor_signaling_creamer2012_erbb.gdat
+    role: reference
+    description: 180 min stimulation-response observables (published protocol), BNG NFsim, f=0.02.
+  - name: reference/agreement.npz
+    role: reference
+    description: >
+      Cached three-engine ensembles (per-seed observable trajectories) for the
+      reduced-subvolume network-free agreement cross-check.
+  - name: reference/flags.npz
+    role: reference
+    description: >
+      Cached NFsim ensembles for default / -bscb / -bscb -utl vs exact RuleMonkey,
+      with the verdict that the molecularity flags are no-ops for this model.
+  - name: reference/fig4_sim.npz
+    role: reference
+    description: >
+      Cached 8-seed ensemble-mean per-site response trajectories (full 180 min
+      protocol, f=0.02) used for the reported-data comparison against Fig. 4.
+  - name: reference/creamer2012_fig4_digitized.csv
+    role: reference
+    description: >
+      Digitized Fig. 4 heat map (55 sites x 60 time columns, per-site
+      max-normalized), extracted by matching heat-map pixels to the figure's own
+      green-black-red colorbar gradient.
