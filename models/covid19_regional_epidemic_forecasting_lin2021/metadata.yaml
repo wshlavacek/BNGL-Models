@@ -1,0 +1,97 @@
+# metadata.yaml — covid19_regional_epidemic_forecasting_lin2021
+id: covid19_regional_epidemic_forecasting_lin2021
+created: 2026-07-24
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, bug_fix, ai_assisted]
+  description: >
+    Deterministic compartmental (SEIR-type) model of a regional COVID-19 epidemic
+    from Lin YT, Neumann J, Miller EF, Posner RG, Mallela A, Safta C, Ray J,
+    Thakur G, Chinthavali S, Hlavacek WS (2021), Emerg Infect Dis 27(3):767-778
+    (doi:10.3201/eid2703.203364), parameterized for the New York City MSA
+    (New York-Newark-Jersey City, NY-NJ-PA). S -> E1..E5 (5-stage Erlang
+    incubation) -> A / I -> H -> R / D, with mixing/protected/quarantined
+    behavioral states and time-gated social distancing; the fit target is daily
+    new detected cases (New York Times data), scored in the original with a
+    negative-binomial count likelihood. House-styled from the authors' PyBioNetFit
+    models via the validated pybnf-jobs/Lin-2021 jobs. Two forms are included: the
+    two-phase (n=1) "BigApple" primary at the authors' published maximum-a-posteriori
+    estimate, and the single-phase (n=0) variant (the published NYC structure /
+    Mallela et al. 2023 per-MSA form). The single-phase variant carries a
+    provenance bug fix: the shipped DataS1 file had a placeholder S0 (Alabama's
+    population), corrected here to NYC's census population, with nominals from an
+    independent differential-evolution fit.
+
+files:
+  - name: covid19_regional_epidemic_forecasting_lin2021.bngl
+    role: primary
+    description: >
+      Two-phase (n=1) NYC model at the authors' published MAP (26-species /
+      61-reaction ODE). Two social-distancing phases (onset sigma ~ day 33,
+      tau1 ~ day 143) capture the broad spring-2020 plateau; reproduces the daily
+      new-case forecast of Lin et al. (2021) Fig 3 over t=0..170. ODE-only (a
+      counter() clock and if(t>=...) rate-law functions require deterministic
+      integration; the ~19.2M population precludes SSA; NFsim lacks if() rate
+      laws). Actions block simulates the daily forecast (#@figure Fig 3).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: covid19_regional_epidemic_forecasting_lin2021_singlephase.bngl
+    role: variant
+    description: >
+      Single-phase (n=0) NYC model (27-species / 62-reaction ODE) — the published
+      NYC structure (Lin et al. 2021 Fig 3 is conditioned on n=0) and the Mallela
+      et al. (2023) per-MSA form. Differs from the primary: one social-distancing
+      period (fixed onset sigma=63), an added H->D death transition, counter()
+      seeded at 0, and fit observable CumNum_detected_cases_Cum(). S0 corrected to
+      NYC census; nominals from an independent de fit. Captures the wave but
+      overshoots the peak (~22,500 vs ~15,900 cases/day) — motivating the primary.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_lin2021.ipynb
+    role: verification
+    description: >
+      Self-contained verification notebook covering both models. (1)
+      Model-specification: re-implements the paper's compartmental ODEs
+      independently in SciPy (S->E->A/I->H->R/D with M/P/Q states and time-gated
+      rates) and matches BioNetGen's daily new-case trajectory to ~1e-6. (2)
+      Reported data: the two-phase primary reproduces the published NYC MAP
+      forecast (median ~18% rel err, peak within ~9%); the single-phase variant
+      reproduces the wave (median ~16%) but overshoots the peak. Regenerates
+      verify_lin2021.png. Requires BNG2.pl (BNGPATH) and scipy/numpy/matplotlib.
+  - name: verify_lin2021.png
+    role: figure
+    description: >
+      Verification figure (2 panels). Left: two-phase primary daily new-case
+      forecast vs NYT data. Right: single-phase variant. Each shows the model (BNG
+      line) with the independent SciPy compartmental ODE (open markers, the
+      model-spec check) over the NYT data points; phase-onset days marked.
+  - name: reference/covid19_regional_epidemic_forecasting_lin2021.net
+    role: reference
+    description: BioNetGen-generated network for the two-phase primary (26 species, 61 reactions).
+  - name: reference/covid19_regional_epidemic_forecasting_lin2021_ode.gdat
+    role: reference
+    description: >
+      Committed two-phase ODE time course from the actions block (t=0..170): all
+      observables and functions, incl. the cumulative detected-case count fDCs_Cum.
+  - name: reference/covid19_regional_epidemic_forecasting_lin2021_singlephase.net
+    role: reference
+    description: BioNetGen-generated network for the single-phase variant (27 species, 62 reactions).
+  - name: reference/covid19_regional_epidemic_forecasting_lin2021_singlephase_ode.gdat
+    role: reference
+    description: >
+      Committed single-phase ODE time course from the actions block (t=0..151):
+      all observables and functions, incl. CumNum_detected_cases_Cum().
+  - name: reference/lin2021_nyc_daily_cases_nyt.csv
+    role: reference
+    description: >
+      New York Times daily new reported COVID-19 cases for the NYC MSA (the fit
+      target; model day 0 = 2020-01-21), aggregated from the NYT county dataset;
+      from pybnf-jobs/Lin-2021/nyc_multiphase/nyc_multiphase.exp and nyc/nyc.exp.

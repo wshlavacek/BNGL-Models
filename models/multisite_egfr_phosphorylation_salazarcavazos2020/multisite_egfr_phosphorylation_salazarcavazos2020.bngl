@@ -1,0 +1,337 @@
+begin model
+
+#@title: Multisite EGFR phosphorylation (Salazar-Cavazos et al., 2020)
+
+#@description: |
+#  Rule-based model of ligand-driven multisite phosphorylation of the epidermal
+#  growth factor receptor (EGFR) in CHO EGFR-GFP cells. EGF reversibly binds
+#  EGFR; two liganded receptors dimerize -- modeled as a state change II~u->II~b
+#  in which one kinase becomes the activator (Kin~act) and the other the receiver
+#  (Kin~rec) -- and the active dimer trans-phosphorylates three C-tail tyrosine
+#  classes: Y1068, Y1173, and a lumped "other" YN. Constitutive phosphatases
+#  dephosphorylate; the adaptors Grb2 (SH2) and Shc1 (PTB) bind pY1068 and pY1173
+#  and sterically protect those sites from dephosphorylation. All interactions are
+#  mass action; the reaction network is finite (75 species), so the model is a
+#  deterministic ODE. Behavior: site-specific phosphorylation rises with EGF dose
+#  and time, with pY1173 consistently exceeding pY1068. The paper's finding --
+#  reproduced by this fit -- is that the *bias* among sites tracks adaptor-protein
+#  abundances (bound adaptor shields its pTyr), while the overall *extent* of
+#  single- and multisite phosphorylation is set by receptor dimer lifetime.
+
+#@keyword: |
+#  receptor tyrosine kinase, EGFR, epidermal growth factor, multisite
+#  phosphorylation, receptor dimerization, trans-phosphorylation, adaptor
+#  proteins, Grb2, Shc1, dephosphorylation, mass action, signal transduction,
+#  Cricetulus griseus
+
+#@reference: |
+#  Salazar-Cavazos E, Franco Nitta C, Mitra ED, Wilson BS, Lidke KA, Hlavacek WS,
+#  Lidke DS (2020). Multisite EGFR phosphorylation is regulated by adaptor
+#  protein abundances and dimer lifetimes. Mol Biol Cell 31(7):695-708.
+#  doi:10.1091/mbc.E19-09-0548 -- the model, the SiMPull data (Fig 2), and the
+#  best-fit parameters reproduced here.
+
+#@note: |
+#  PROVENANCE. Molecule types, seed species, observables, functions, rules, and
+#  fixed parameter values are the authors' BioNetGen model (Supplemental File S1
+#  / 190127_CHO_EGFR_best-fit.bngl), house-styled here. The six fitted parameters
+#  (Grb2/Shc1 totals, base dephosphorylation constants for Y1068 and YN, and the
+#  kphos/kdephos ratios for Y1068 and YN) hold the PyBioNetFit differential-
+#  evolution best fit to the CHO EGFR-GFP SiMPull data (0.5/5/50 nM dose response
+#  + 25 nM time course). Adapted from the validated
+#  pybnf-jobs/Salazar-Cavazos-2019/egfr_simpull job.
+#
+#  COMPARTMENTS. EGF binding uses the extracellular fluid volume per cell
+#  (Vextra); Grb2/Shc1 binding uses the cytoplasmic volume (Vc). These two
+#  compartments are handled implicitly through the rate-constant unit conversions
+#  (following the source model); no begin compartments block is imposed, so
+#  BioNetGen does not apply its own volume scaling (§1.2.2).
+
+begin parameters
+
+  # === Fitted parameters (PyBioNetFit best fit to CHO EGFR-GFP SiMPull data) ===
+  # Total Grb2 copy number per cell
+  GRB2_total_0 169853.19422230462 # molecules
+  # Total Shc1 copy number per cell
+  SHC1_total_0 649425.6012099041 # molecules
+  # Base dephosphorylation rate constant, Y1068
+  kdephosY1068_0 1.6588142136877735 # /s
+  # Base dephosphorylation rate constant, other sites YN
+  kdephosYN_0 0.01718186979848268 # /s
+  # kphos/kdephos ratio at Y1068
+  ratio_kpkd_Y1068 0.15754585734593093 # dimensionless
+  # kphos/kdephos ratio at YN
+  ratio_kpkd_YN 0.44476356871177164 # dimensionless
+
+  # === Scan hooks (multipliers; 1.0 = no effect at nominal) ===
+  kdephosY1068_f 1.0 # dimensionless
+  kdephosY1173_f 1.0 # dimensionless
+  kphos_f 1.0 # dimensionless
+  GRB2_f 1.0 # dimensionless
+
+  # Typical protein-protein association rate constant (Morimatsu et al., 2007)
+  kon__ 5.0e6 # /M/s
+  # EGF-EGFR association rate (set to match the kinetics of Reddy et al., 2016)
+  kon_EGF__ 8.0e6 # /M/s
+  # EGF-EGFR equilibrium dissociation constant (from likelihood profiling; ~2 nM)
+  Kd_EGF__ 2.0e-9 # M
+  # Equal Y1068/Y1173 dephosphorylation assumed (Kleiman et al., 2011)
+  ratio_kdephosY1173 1.0 # dimensionless
+  # Equal Y1068/Y1173 phosphorylation assumed (Kim et al., 2012)
+  ratio_kphosY1173 1.0 # dimensionless
+
+  # Avogadro constant
+  NA 6.02214e23 # molecules/mol
+
+  # Subvolume scaling factor: fraction of a cell simulated (§1.1)
+  f 1 # dimensionless
+
+  # Cytoplasmic volume (1-2 pL is typical for a mammalian cell; Fujioka et al., 2006)
+  Vc f*1.0e-12 # L/cell
+
+  # Number of cells per 60 mm dish (10 million)
+  numCells 1.0e7 # cells/dish
+  # Volume of media per dish (10 mL)
+  volMedia 1.0e-2 # L/dish
+  # Volume of extracellular fluid surrounding one cell
+  Vextra f*volMedia/numCells # L/cell
+
+  # Adaptor and receptor copy numbers per cell
+  GRB2_total_pre GRB2_total_0*f # molecules
+  GRB2_total GRB2_total_pre*GRB2_f # molecules
+  # Total EGFR (flow-cytometry estimate for the CHO EGFR-GFP line)
+  EGFR_total 7.7e5*f # molecules
+  SHC1_total SHC1_total_0*f # molecules
+
+  # EGF concentration (25 nM = the time-course condition; scanned for dose response)
+  EGFconc 25.0e-9 # M
+  # EGF copies per cell
+  EGF_total EGFconc*(NA*Vextra) # molecules
+
+  # Association rate constants (M-based)
+  kon kon__ # /M/s
+  kon_EGF kon_EGF__ # /M/s
+
+  # EGF-EGFR: dissociation constant in copies, and count-based rate constants
+  Kd_EGF Kd_EGF__*(NA*Vextra) # molecules
+  kp_EGF kon_EGF/(NA*Vextra) # /(molecule/cell)/s
+  km_EGF Kd_EGF*kp_EGF # /s
+
+  # EGFR dimerization dissociation constant (copies); set so EGFR_total/KD_dim >> 1
+  # at high receptor number (7.7e5 for CHO EGFR-GFP)
+  KD_dim 7.7e5/20 # molecules
+
+  # Dimer (liganded-liganded) dissociation/association; km_dim estimated by
+  # Low-Nam et al. (2011). Rates with suffix _pre are multiplied by scan factors.
+  km_dim_L_L_pre 0.273 # /s
+  kp_dim_L_L_pre km_dim_L_L_pre/KD_dim # /(molecule/cell)/s
+  offrate_f 1.0 # dimensionless
+  onrate_f 1.0 # dimensionless
+  km_dim_L_L km_dim_L_L_pre*offrate_f # /s
+  kp_dim_L_L kp_dim_L_L_pre*onrate_f # /(molecule/cell)/s
+
+  # Grb2 SH2 binding pY1068 (Kd estimated by Morimatsu et al., 2007)
+  Kd_GE 0.6e-6*(NA*Vc) # molecules
+  kp_GE kon/(NA*Vc) # /(molecule/cell)/s
+  km_GE Kd_GE*kp_GE # /s
+
+  # Shc1 PTB binding pY1173 (Kd assumed equal to Grb2-SH2; Hause et al., 2012)
+  Kd_SE 0.6e-6*(NA*Vc) # molecules
+  kp_SE kon/(NA*Vc) # /(molecule/cell)/s
+  km_SE Kd_SE*kp_SE # /s
+
+  # Pseudo-first-order dephosphorylation rate constants
+  kdephosY1068_pre kdephosY1068_0 # /s
+  kdephosY1173_pre kdephosY1068_pre*ratio_kdephosY1173 # /s
+  kdephosYN_pre kdephosYN_0 # /s
+
+  # Pseudo-first-order phosphorylation rate constants (kphos = ratio * kdephos)
+  kphosY1068_pre ratio_kpkd_Y1068*kdephosY1068_0 # /s
+  kphosY1173_pre kphosY1068_pre*ratio_kphosY1173 # /s
+  kphosYN_pre ratio_kpkd_YN*kdephosYN_0 # /s
+
+  # Apply scan factors last so they do not propagate into derived parameters
+  kdephosY1068 kdephosY1068_pre*kdephosY1068_f # /s
+  kdephosY1173 kdephosY1173_pre*kdephosY1173_f # /s
+  kdephosYN kdephosYN_pre # /s
+  kphosY1068 kphosY1068_pre*kphos_f # /s
+  kphosY1173 kphosY1173_pre*kphos_f # /s
+  kphosYN kphosYN_pre*kphos_f # /s
+
+  # Receiver-kinase self-phosphorylation rate relative to activator (Kovacs et al., 2015)
+  ratio_kphos_receiver 0.7 # dimensionless
+
+end parameters
+
+begin molecule types
+
+  # EGF ligand; EGFL is the receptor-binding site
+  EGF(EGFL)
+  # EGFR. I_III = ectodomain EGF-binding site; II = dimerization arm
+  # (u = monomer, b = dimer); Kin = kinase conformation (0 inactive, act activator,
+  # rec receiver); Y1068/Y1173/YN = C-tail tyrosines (0 unphosphorylated, P phospho)
+  EGFR(I_III,II~u~b,Kin~0~act~rec,Y1068~0~P,Y1173~0~P,YN~0~P)
+  # Grb2 adaptor; SH2 domain binds pY1068
+  GRB2(SH2)
+  # Shc1 adaptor; PTB domain binds pY1173
+  SHC1(PTB)
+
+end molecule types
+
+begin seed species
+
+  EGF(EGFL) EGF_total # molecules
+  EGFR(I_III,II~u,Kin~0,Y1068~0,Y1173~0,YN~0) EGFR_total # molecules
+  GRB2(SH2) GRB2_total # molecules
+  SHC1(PTB) SHC1_total # molecules
+
+end seed species
+
+begin observables
+
+  # Totals
+  Molecules EGF EGF()
+  Molecules EGFRtot EGFR()
+  Molecules Grb2tot GRB2()
+  Molecules Shc1tot SHC1()
+  # EGF-bound receptor, monomers, dimers, activator/receiver
+  Molecules EGFR_EGF EGFR(I_III!+)
+  Molecules monR EGFR(II~u,Kin~0)
+  Molecules dimR EGFR(II~b)
+  Molecules dimR_act EGFR(II~b,Kin~act)
+  Molecules dimR_rec EGFR(II~b,Kin~rec)
+  # Site-specific phosphorylation (the SiMPull readouts)
+  Molecules pY1068 EGFR(Y1068~P!?)
+  Molecules pY1173 EGFR(Y1173~P!?)
+  Molecules pYN EGFR(YN~P!?)
+  Molecules unphosR EGFR(Y1068~0,Y1173~0,YN~0)
+  Molecules pY1068_act EGFR(Y1068~P!?,Kin~act)
+  Molecules pY1068_rec EGFR(Y1068~P!?,Kin~rec)
+  # Adaptor-bound receptor
+  Molecules Grb2_EGFR GRB2(SH2!+)
+  Molecules Shc1_EGFR SHC1(PTB!+)
+  # Multisite (dual/triple) phosphorylation
+  Molecules pY1068_pY1173 EGFR(Y1068~P!?,Y1173~P!?)
+  Molecules pY1068_pYN EGFR(Y1068~P!?,YN~P!?)
+  Molecules pY1173_pYN EGFR(Y1173~P!?,YN~P!?)
+  Molecules pYpYpYN EGFR(Y1068~P!?,Y1173~P!?,YN~P!?)
+  # Dual pY by monomer/dimer
+  Molecules monR_pYpY EGFR(II~u,Y1068~P!?,Y1173~P!?)
+  Molecules dimR_pYpY EGFR(II~b,Y1068~P!?,Y1173~P!?)
+
+end observables
+
+begin functions
+
+  # SiMPull readouts: % of EGFR phosphorylated at each site (fit observables)
+  pY1068_percent() 100*pY1068/EGFRtot
+  pY1173_percent() 100*pY1173/EGFRtot
+  pYN_percent() 100*pYN/EGFRtot
+  # % phosphorylated in at least one site (pan-PY readout)
+  phosR_per() 100*(EGFRtot-unphosR)/EGFRtot
+  unphosR_per() 100*unphosR/EGFRtot
+  # Dual pY1068/pY1173 measures
+  pYpY_per() 100*pY1068_pY1173/EGFRtot
+  random_pYpY_per() 100*(pY1068/EGFRtot)*(pY1173/EGFRtot)
+  pY1173inP68_per() 100*pY1068_pY1173/(pY1068+1)
+  # Dual pY by receptor oligomeric state (+1 avoids division by zero)
+  monR_pYpY_per() 100*monR_pYpY/(monR+1)
+  dimR_pYpY_per() 100*dimR_pYpY/(dimR+1)
+  # Coincidence of pY1173 / pY1068 with pYN
+  pY1173inPYN_per() 100*pY1173_pYN/(pYN+1)
+  pY1173inP68PYN_per() 100*pYpYpYN/(pY1068_pYN+1)
+  pYpYinPYN_per() 100*pYpYpYN/(pYN+1)
+
+end functions
+
+begin reaction rules
+
+  # EGF reversibly binds an EGFR monomer
+  EGF(EGFL)+EGFR(I_III,II~u)<->EGF(EGFL!1).EGFR(I_III!1,II~u) kp_EGF,km_EGF
+
+  # Two EGF-bound receptors dimerize (state change II~u->II~b); one kinase becomes
+  # the activator (Kin~act), the other the receiver (Kin~rec). kp/2 = single-site.
+  EGFR(I_III!+,II~u,Kin~0)+EGFR(I_III!+,II~u,Kin~0)->\
+    EGFR(I_III!+,II~b,Kin~act)+EGFR(I_III!+,II~b,Kin~rec) kp_dim_L_L/2
+
+  # Dimer dissociation; the kinase reverts to inactive (Kin~0)
+  EGFR(II~b,Kin~act)->EGFR(II~u,Kin~0) km_dim_L_L
+  EGFR(II~b,Kin~rec)->EGFR(II~u,Kin~0) km_dim_L_L
+
+  # Trans-phosphorylation of the C-tail in the activator receptor (within a dimer)
+  EGFR(II~b,Y1068~0,Kin~act)->EGFR(II~b,Y1068~P,Kin~act) kphosY1068
+  EGFR(II~b,Y1173~0,Kin~act)->EGFR(II~b,Y1173~P,Kin~act) kphosY1173
+  EGFR(II~b,YN~0,Kin~act)->EGFR(II~b,YN~P,Kin~act) kphosYN
+
+  # Phosphorylation of the C-tail in the receiver receptor by itself (within a dimer)
+  EGFR(II~b,Y1068~0,Kin~rec)->EGFR(II~b,Y1068~P,Kin~rec) kphosY1068*ratio_kphos_receiver
+  EGFR(II~b,Y1173~0,Kin~rec)->EGFR(II~b,Y1173~P,Kin~rec) kphosY1173*ratio_kphos_receiver
+  EGFR(II~b,YN~0,Kin~rec)->EGFR(II~b,YN~P,Kin~rec) kphosYN*ratio_kphos_receiver
+
+  # Unregulated dephosphorylation (constitutive phosphatases)
+  EGFR(Y1068~P)->EGFR(Y1068~0) kdephosY1068
+  EGFR(Y1173~P)->EGFR(Y1173~0) kdephosY1173
+  EGFR(YN~P)->EGFR(YN~0) kdephosYN
+
+  # Grb2 (SH2) binds pY1068
+  GRB2(SH2)+EGFR(Y1068~P)<->GRB2(SH2!1).EGFR(Y1068~P!1) kp_GE,km_GE
+
+  # Shc1 (PTB) binds pY1173
+  SHC1(PTB)+EGFR(Y1173~P)<->SHC1(PTB!1).EGFR(Y1173~P!1) kp_SE,km_SE
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1})  # 75 species, 618 reactions
+  saveParameters("p0")
+  saveConcentrations("c0")
+
+  #@note: |
+  #  Preferred method is ODE (the paper's deterministic fit). The network is
+  #  finite, so SSA is also feasible but slow at these copy numbers (~1e6 EGF at
+  #  25 nM); it is left commented. NFsim is not used. The two protocols below
+  #  reproduce the best-fit panels of Fig 2; both are verified against the SiMPull
+  #  data and against an independent SciPy integration in
+  #  verify_salazarcavazos2020.ipynb.
+
+  # EGFR phosphorylation dose-response (Fig 2C)
+
+  #@protocol: |
+  #  Steady-state (5 min) EGF dose-response: scan EGFconc over the three fitted
+  #  SiMPull doses (0.5, 5, 50 nM); readout is % of EGFR phosphorylated at pY1068,
+  #  pY1173, and pan-PY (phosR_per). Reproduces the best-fit simulation panel
+  #  Fig 2C, fit to the Fig 2A dose-response data.
+
+  #@figure: Fig. 2C in Salazar-Cavazos et al. (2020)
+
+  parameter_scan({method=>"ode",suffix=>"scan",parameter=>"EGFconc",\
+    par_scan_vals=>[0.5e-9,5.0e-9,50.0e-9],t_start=>0,t_end=>300,n_steps=>3,\
+    print_functions=>1,reset_conc=>1})
+
+  # EGFR phosphorylation time course at 25 nM EGF (Fig 2D)
+
+  #@protocol: |
+  #  25 nM EGF time course (0-300 s): % pY1068, pY1173, and pan-PY vs time.
+  #  Reproduces the best-fit curves overlaid on the SiMPull time-course data in
+  #  Fig 2D.
+
+  #@figure: Fig. 2D in Salazar-Cavazos et al. (2020)
+
+  resetParameters("p0")
+  resetConcentrations("c0")
+  setParameter("EGFconc",25.0e-9)
+  setConcentration("EGF(EGFL)","EGF_total")
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>300,n_steps=>300,\
+    print_functions=>1})
+
+#  resetParameters("p0")
+#  resetConcentrations("c0")
+#  setParameter("EGFconc",25.0e-9)
+#  setConcentration("EGF(EGFL)","EGF_total")
+#  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>300,n_steps=>300,\
+#    print_functions=>1})
+
+end actions

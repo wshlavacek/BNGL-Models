@@ -1,0 +1,194 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 delta_t                    1  # Constant
+    2 n                          1  # Constant
+    3 t0                         32.831672  # Constant
+    4 t_delta                    0.072681  # Constant
+    5 sigma                      t0+t_delta  # ConstantExpression
+    6 p0                         0.872484  # Constant
+    7 lambda0                    0.098304  # Constant
+    8 t_delta2                   110.222846  # Constant
+    9 tau1                       (t0+t_delta)+t_delta2  # ConstantExpression
+   10 p1                         0.736221  # Constant
+   11 lambda1                    5.180963  # Constant
+   12 beta                       2.033369  # Constant
+   13 fD                         0.114511  # Constant
+   14 S0                         19216182  # Constant
+   15 I0                         1  # Constant
+   16 mb                         0.1  # Constant
+   17 rhoE                       1.1  # Constant
+   18 rhoA                       0.9  # Constant
+   19 kL                         0.94  # Constant
+   20 kQ                         0.0038  # Constant
+   21 jQ                         0.4  # Constant
+   22 fA                         0.44  # Constant
+   23 fH                         0.054  # Constant
+   24 fR                         0.79  # Constant
+   25 cA                         0.26  # Constant
+   26 cI                         0.12  # Constant
+   27 cH                         0.17  # Constant
+   28 _rateLaw2                  1  # Constant
+   29 _rateLaw21                 kL*fA  # ConstantExpression
+   30 _rateLaw22                 kL*fA  # ConstantExpression
+   31 _rateLaw23                 kL*fA  # ConstantExpression
+   32 _rateLaw24                 kL*(1-fA)  # ConstantExpression
+   33 _rateLaw25                 kL*(1-fA)  # ConstantExpression
+   34 _rateLaw26                 kL*(1-fA)  # ConstantExpression
+   35 _rateLaw28                 cI*(1-fH)  # ConstantExpression
+   36 _rateLaw29                 cI*(1-fH)  # ConstantExpression
+   37 _rateLaw31                 cI*fH  # ConstantExpression
+   38 _rateLaw32                 cI*fH  # ConstantExpression
+   39 _rateLaw33                 cH*fR  # ConstantExpression
+end parameters
+begin functions
+    1 U() if((t>=t0),1,0)
+    2 Lambda() if(((t>=sigma)&&(t<tau1)),lambda0,if(((t>=tau1)&&(t<200)),lambda1,0))
+    3 P() if(((t>=sigma)&&(t<tau1)),p0,if(((t>=tau1)&&(t<200)),p1,0))
+    4 kQfunc() if((t>=t0),kQ,0)
+    5 jQfunc() if((t>=t0),jQ,0)
+    6 cIfunc() if((t>=t0),cI,0)
+    7 phiM() if((t>=t0),((IM+(rhoE*E2to5M))+(rhoA*AM)),0)
+    8 phiP() (IP+(rhoE*E2to5P))+(rhoA*AP)
+    9 CumNum_symptomatic_cases() ((((IM+IP)+IQ)+H)+((1-fA)*R))+D
+   10 CumNum_detected_cases_Cum() fD*(((((IM+IP)+IQ)+H)+((1-fA)*R))+D)
+   11 CumNum_all_cases() fD*((((((((IM+IP)+IQ)+AM)+AP)+AQ)+H)+R)+D)
+   12 _rateLaw1() ((fD*(1-fA))*kL)*nE5_MP
+   13 _rateLaw3() (beta/S0)*(phiM()+(mb*phiP()))
+   14 _rateLaw4() (mb*(beta/S0))*(phiM()+(mb*phiP()))
+   15 _rateLaw5() (U()*Lambda())*P()
+   16 _rateLaw6() (U()*Lambda())*(1-P())
+   17 _rateLaw7() (U()*Lambda())*P()
+   18 _rateLaw8() (U()*Lambda())*(1-P())
+   19 _rateLaw9() (U()*Lambda())*P()
+   20 _rateLaw10() (U()*Lambda())*(1-P())
+   21 _rateLaw11() (U()*Lambda())*P()
+   22 _rateLaw12() (U()*Lambda())*(1-P())
+   23 _rateLaw13() (U()*Lambda())*P()
+   24 _rateLaw14() (U()*Lambda())*(1-P())
+   25 _rateLaw15() (U()*Lambda())*P()
+   26 _rateLaw16() (U()*Lambda())*(1-P())
+   27 _rateLaw17() (U()*Lambda())*P()
+   28 _rateLaw18() (U()*Lambda())*(1-P())
+   29 _rateLaw19() (U()*Lambda())*P()
+   30 _rateLaw20() (U()*Lambda())*(1-P())
+   31 _rateLaw27() cIfunc()*(1-fH)
+   32 _rateLaw30() cIfunc()*fH
+end functions
+begin species
+    1 counter() 1
+    2 S(state~M) S0
+    3 I(state~M) I0
+    4 fDCs() 0
+    5 E1(state~M) 0
+    6 S(state~P) 0
+    7 I(state~P) 0
+    8 I(state~Q) 0
+    9 R() 0
+   10 H() 0
+   11 E1(state~P) 0
+   12 E2(state~M) 0
+   13 E2(state~P) 0
+   14 E2(state~Q) 0
+   15 E3(state~M) 0
+   16 E3(state~P) 0
+   17 E3(state~Q) 0
+   18 E4(state~M) 0
+   19 E4(state~P) 0
+   20 E4(state~Q) 0
+   21 E5(state~M) 0
+   22 E5(state~P) 0
+   23 E5(state~Q) 0
+   24 A(state~M) 0
+   25 A(state~P) 0
+   26 A(state~Q) 0
+end species
+begin reactions
+    1 0 4 _rateLaw1 #_R1
+    2 0 1 _rateLaw2 #_R2
+    3 2 5 _rateLaw3 #_R3
+    4 2 6 _rateLaw5 #_R5
+    5 3 7 _rateLaw19 #_R12
+    6 3 8 kQfunc #_R23
+    7 3 8 jQfunc #_R25
+    8 3 9 _rateLaw27 #_R47
+    9 3 10 _rateLaw30 #_R50
+   10 6 11 _rateLaw4 #_R4
+   11 6 2 _rateLaw6 #_reverse__R5
+   12 5 11 _rateLaw7 #_R6
+   13 7 3 _rateLaw20 #_reverse__R12
+   14 7 8 kQ #_R24
+   15 7 8 jQ #_R26
+   16 5 12 kL #_R27
+   17 7 9 _rateLaw28 #_R48
+   18 8 9 _rateLaw29 #_R49
+   19 7 10 _rateLaw31 #_R51
+   20 8 10 _rateLaw32 #_R52
+   21 10 9 _rateLaw33 #_R53
+   22 11 5 _rateLaw8 #_reverse__R6
+   23 12 13 _rateLaw9 #_R7
+   24 12 14 kQ #_R13
+   25 11 13 kL #_R28
+   26 12 15 kL #_R29
+   27 13 12 _rateLaw10 #_reverse__R7
+   28 15 16 _rateLaw11 #_R8
+   29 13 14 kQ #_R14
+   30 15 17 kQ #_R15
+   31 13 16 kL #_R30
+   32 14 17 kL #_R31
+   33 15 18 kL #_R32
+   34 16 15 _rateLaw12 #_reverse__R8
+   35 18 19 _rateLaw13 #_R9
+   36 16 17 kQ #_R16
+   37 18 20 kQ #_R17
+   38 16 19 kL #_R33
+   39 17 20 kL #_R34
+   40 18 21 kL #_R35
+   41 19 18 _rateLaw14 #_reverse__R9
+   42 21 22 _rateLaw15 #_R10
+   43 19 20 kQ #_R18
+   44 21 23 kQ #_R19
+   45 19 22 kL #_R36
+   46 20 23 kL #_R37
+   47 21 24 _rateLaw21 #_R38
+   48 21 3 _rateLaw24 #_R41
+   49 22 21 _rateLaw16 #_reverse__R10
+   50 24 25 _rateLaw17 #_R11
+   51 22 23 kQ #_R20
+   52 24 26 kQ #_R21
+   53 22 25 _rateLaw22 #_R39
+   54 23 26 _rateLaw23 #_R40
+   55 22 7 _rateLaw25 #_R42
+   56 23 8 _rateLaw26 #_R43
+   57 24 9 cA #_R44
+   58 25 24 _rateLaw18 #_reverse__R11
+   59 25 26 kQ #_R22
+   60 25 9 cA #_R45
+   61 26 9 cA #_R46
+end reactions
+begin groups
+    1 SM                   2
+    2 SP                   6
+    3 nStotal              2,6
+    4 E1M                  5
+    5 E1P                  11
+    6 E2M                  12
+    7 E2P                  13
+    8 E2to5M               12,15,18,21
+    9 E2to5P               13,16,19,22
+   10 E2to5Q               14,17,20,23
+   11 nE2_MP               12,13
+   12 nE3_MP               15,16
+   13 nE4_MP               18,19
+   14 nE5_MP               21,22
+   15 IM                   3
+   16 IP                   7
+   17 IQ                   8
+   18 AM                   24
+   19 AP                   25
+   20 AQ                   26
+   21 H                    10
+   22 R                    9
+   23 D                    
+   24 t                    1
+   25 fDCs_Cum             4
+end groups

@@ -1,0 +1,190 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 delta_t                    1  # Constant
+    2 n                          0  # Constant
+    3 t0                         26.633393  # Constant
+    4 sigma                      63  # Constant
+    5 p0                         0.591675  # Constant
+    6 lambda0                    9.160433  # Constant
+    7 beta                       0.537913  # Constant
+    8 fD                         0.883484  # Constant
+    9 S0                         19216182  # Constant
+   10 I0                         1  # Constant
+   11 mb                         0.1  # Constant
+   12 rhoE                       1.1  # Constant
+   13 rhoA                       0.9  # Constant
+   14 kL                         0.94  # Constant
+   15 kQ                         0.0038  # Constant
+   16 jQ                         0.4  # Constant
+   17 fA                         0.44  # Constant
+   18 fH                         0.054  # Constant
+   19 fR                         0.79  # Constant
+   20 cA                         0.26  # Constant
+   21 cI                         0.12  # Constant
+   22 cH                         0.17  # Constant
+   23 _rateLaw2                  1  # Constant
+   24 _rateLaw21                 kL*fA  # ConstantExpression
+   25 _rateLaw22                 kL*fA  # ConstantExpression
+   26 _rateLaw23                 kL*fA  # ConstantExpression
+   27 _rateLaw24                 kL*(1-fA)  # ConstantExpression
+   28 _rateLaw25                 kL*(1-fA)  # ConstantExpression
+   29 _rateLaw26                 kL*(1-fA)  # ConstantExpression
+   30 _rateLaw28                 cI*(1-fH)  # ConstantExpression
+   31 _rateLaw29                 cI*(1-fH)  # ConstantExpression
+   32 _rateLaw31                 cI*fH  # ConstantExpression
+   33 _rateLaw32                 cI*fH  # ConstantExpression
+   34 _rateLaw33                 cH*fR  # ConstantExpression
+   35 _rateLaw34                 cH*(1-fR)  # ConstantExpression
+end parameters
+begin functions
+    1 U() if((t>sigma),1,0)
+    2 Lambda() if((t>=sigma),lambda0,0)
+    3 P() if((t>=sigma),p0,0)
+    4 kQfunc() if((t>t0),kQ,0)
+    5 jQfunc() if((t>t0),jQ,0)
+    6 cIfunc() if((t>t0),cI,0)
+    7 phiM() if((t>t0),((IM+(rhoE*E2to5M))+(rhoA*AM)),0)
+    8 phiP() (IP+(rhoE*E2to5P))+(rhoA*AP)
+    9 CumNum_detected_cases_Cum() fD*(((((IM+IP)+IQobs)+H)+((1-fA)*R))+D)
+   10 _rateLaw1() ((fD*(1-fA))*kL)*nE5_MP
+   11 _rateLaw3() (beta/S0)*(phiM()+(mb*phiP()))
+   12 _rateLaw4() (mb*(beta/S0))*(phiM()+(mb*phiP()))
+   13 _rateLaw5() (U()*Lambda())*P()
+   14 _rateLaw6() (U()*Lambda())*(1-P())
+   15 _rateLaw7() (U()*Lambda())*P()
+   16 _rateLaw8() (U()*Lambda())*(1-P())
+   17 _rateLaw9() (U()*Lambda())*P()
+   18 _rateLaw10() (U()*Lambda())*(1-P())
+   19 _rateLaw11() (U()*Lambda())*P()
+   20 _rateLaw12() (U()*Lambda())*(1-P())
+   21 _rateLaw13() (U()*Lambda())*P()
+   22 _rateLaw14() (U()*Lambda())*(1-P())
+   23 _rateLaw15() (U()*Lambda())*P()
+   24 _rateLaw16() (U()*Lambda())*(1-P())
+   25 _rateLaw17() (U()*Lambda())*P()
+   26 _rateLaw18() (U()*Lambda())*(1-P())
+   27 _rateLaw19() (U()*Lambda())*P()
+   28 _rateLaw20() (U()*Lambda())*(1-P())
+   29 _rateLaw27() cIfunc()*(1-fH)
+   30 _rateLaw30() cIfunc()*fH
+end functions
+begin species
+    1 fDCS() 0
+    2 counter() 0
+    3 S(state~M) S0
+    4 I(state~M) I0
+    5 E1(state~M) 0
+    6 S(state~P) 0
+    7 I(state~P) 0
+    8 I(state~Q) 0
+    9 R() 0
+   10 H() 0
+   11 E1(state~P) 0
+   12 E2(state~M) 0
+   13 D() 0
+   14 E2(state~P) 0
+   15 E2(state~Q) 0
+   16 E3(state~M) 0
+   17 E3(state~P) 0
+   18 E3(state~Q) 0
+   19 E4(state~M) 0
+   20 E4(state~P) 0
+   21 E4(state~Q) 0
+   22 E5(state~M) 0
+   23 E5(state~P) 0
+   24 E5(state~Q) 0
+   25 A(state~M) 0
+   26 A(state~P) 0
+   27 A(state~Q) 0
+end species
+begin reactions
+    1 0 1 _rateLaw1 #_R1
+    2 0 2 _rateLaw2 #_R2
+    3 3 5 _rateLaw3 #_R3
+    4 3 6 _rateLaw5 #_R5
+    5 4 7 _rateLaw19 #_R12
+    6 4 8 kQfunc #_R23
+    7 4 8 jQfunc #_R25
+    8 4 9 _rateLaw27 #_R47
+    9 4 10 _rateLaw30 #_R50
+   10 6 11 _rateLaw4 #_R4
+   11 6 3 _rateLaw6 #_reverse__R5
+   12 5 11 _rateLaw7 #_R6
+   13 7 4 _rateLaw20 #_reverse__R12
+   14 7 8 kQ #_R24
+   15 7 8 jQ #_R26
+   16 5 12 kL #_R27
+   17 7 9 _rateLaw28 #_R48
+   18 8 9 _rateLaw29 #_R49
+   19 7 10 _rateLaw31 #_R51
+   20 8 10 _rateLaw32 #_R52
+   21 10 9 _rateLaw33 #_R53
+   22 10 13 _rateLaw34 #_R54
+   23 11 5 _rateLaw8 #_reverse__R6
+   24 12 14 _rateLaw9 #_R7
+   25 12 15 kQ #_R13
+   26 11 14 kL #_R28
+   27 12 16 kL #_R29
+   28 14 12 _rateLaw10 #_reverse__R7
+   29 16 17 _rateLaw11 #_R8
+   30 14 15 kQ #_R14
+   31 16 18 kQ #_R15
+   32 14 17 kL #_R30
+   33 15 18 kL #_R31
+   34 16 19 kL #_R32
+   35 17 16 _rateLaw12 #_reverse__R8
+   36 19 20 _rateLaw13 #_R9
+   37 17 18 kQ #_R16
+   38 19 21 kQ #_R17
+   39 17 20 kL #_R33
+   40 18 21 kL #_R34
+   41 19 22 kL #_R35
+   42 20 19 _rateLaw14 #_reverse__R9
+   43 22 23 _rateLaw15 #_R10
+   44 20 21 kQ #_R18
+   45 22 24 kQ #_R19
+   46 20 23 kL #_R36
+   47 21 24 kL #_R37
+   48 22 25 _rateLaw21 #_R38
+   49 22 4 _rateLaw24 #_R41
+   50 23 22 _rateLaw16 #_reverse__R10
+   51 25 26 _rateLaw17 #_R11
+   52 23 24 kQ #_R20
+   53 25 27 kQ #_R21
+   54 23 26 _rateLaw22 #_R39
+   55 24 27 _rateLaw23 #_R40
+   56 23 7 _rateLaw25 #_R42
+   57 24 8 _rateLaw26 #_R43
+   58 25 9 cA #_R44
+   59 26 25 _rateLaw18 #_reverse__R11
+   60 26 27 kQ #_R22
+   61 26 9 cA #_R45
+   62 27 9 cA #_R46
+end reactions
+begin groups
+    1 fDCS_Cum             1
+    2 SM                   3
+    3 SP                   6
+    4 nStotal              3,6
+    5 E1M                  5
+    6 E1P                  11
+    7 E2M                  12
+    8 E2P                  14
+    9 E2to5M               12,16,19,22
+   10 E2to5P               14,17,20,23
+   11 E2to5Q               15,18,21,24
+   12 nE2_MP               12,14
+   13 nE3_MP               16,17
+   14 nE4_MP               19,20
+   15 nE5_MP               22,23
+   16 IM                   4
+   17 IP                   7
+   18 IQobs                8
+   19 AM                   25
+   20 AP                   26
+   21 AQ                   27
+   22 H                    10
+   23 R                    9
+   24 D                    13
+   25 t                    2
+end groups

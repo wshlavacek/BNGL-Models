@@ -1,0 +1,16 @@
+# Kiselyov et al. (2009) Fig 5D -- IGF1/IGF1R dissociation after 2 h preincubation
+# (used as the Erickson et al. (2019) F5D fit target). 24 pM labeled IGF1 preloaded,
+# washed, then unlabeled IGF1 competition; bound labeled IGF1 remaining at 20 and
+# 60 min (fraction of pre-wash bound), mean +/- SD.
+# Source: pybnf-jobs/Erickson-2019/igf1r/F5D_20min.exp, F5D_60min.exp.
+cold_IGF1_M,frac_remaining_20min,SD_20min,frac_remaining_60min,SD_60min
+2.3e-10,0.91,0.08,0.84,0.08
+5.1e-10,0.91,0.07,0.86,0.11
+1.2e-09,0.87,0.1,0.82,0.14
+2.8e-09,0.84,0.11,0.72,0.07
+6.6e-09,0.83,0.11,0.58,0.07
+1.5e-08,0.63,0.06,0.41,0.08
+3.9e-08,0.48,0.06,0.31,0.05
+8.7e-08,0.35,0.04,0.25,0.03
+2.2e-07,0.33,0.04,0.24,0.03
+4.9e-07,0.33,0.05,0.24,0.03

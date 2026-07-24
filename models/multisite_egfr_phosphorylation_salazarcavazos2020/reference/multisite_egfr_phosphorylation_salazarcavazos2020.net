@@ -1,0 +1,802 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 GRB2_total_0          169853.19422230462  # Constant
+    2 SHC1_total_0          649425.6012099041  # Constant
+    3 kdephosY1068_0        1.6588142136877735  # Constant
+    4 kdephosYN_0           0.01718186979848268  # Constant
+    5 ratio_kpkd_Y1068      0.15754585734593093  # Constant
+    6 ratio_kpkd_YN         0.44476356871177164  # Constant
+    7 kdephosY1068_f        1.0  # Constant
+    8 kdephosY1173_f        1.0  # Constant
+    9 kphos_f               1.0  # Constant
+   10 GRB2_f                1.0  # Constant
+   11 kon__                 5.0e6  # Constant
+   12 kon_EGF__             8.0e6  # Constant
+   13 Kd_EGF__              2.0e-9  # Constant
+   14 ratio_kdephosY1173    1.0  # Constant
+   15 ratio_kphosY1173      1.0  # Constant
+   16 NA                    6.02214e23  # Constant
+   17 f                     1  # Constant
+   18 Vc                    f*1.0e-12  # ConstantExpression
+   19 numCells              1.0e7  # Constant
+   20 volMedia              1.0e-2  # Constant
+   21 Vextra                (f*volMedia)/numCells  # ConstantExpression
+   22 GRB2_total_pre        GRB2_total_0*f  # ConstantExpression
+   23 GRB2_total            GRB2_total_pre*GRB2_f  # ConstantExpression
+   24 EGFR_total            7.7e5*f  # ConstantExpression
+   25 SHC1_total            SHC1_total_0*f  # ConstantExpression
+   26 EGFconc               25.0e-9  # Constant
+   27 EGF_total             EGFconc*(NA*Vextra)  # ConstantExpression
+   28 kon                   kon__  # ConstantExpression
+   29 kon_EGF               kon_EGF__  # ConstantExpression
+   30 Kd_EGF                Kd_EGF__*(NA*Vextra)  # ConstantExpression
+   31 kp_EGF                kon_EGF/(NA*Vextra)  # ConstantExpression
+   32 km_EGF                Kd_EGF*kp_EGF  # ConstantExpression
+   33 KD_dim                7.7e5/20  # Constant
+   34 km_dim_L_L_pre        0.273  # Constant
+   35 kp_dim_L_L_pre        km_dim_L_L_pre/KD_dim  # ConstantExpression
+   36 offrate_f             1.0  # Constant
+   37 onrate_f              1.0  # Constant
+   38 km_dim_L_L            km_dim_L_L_pre*offrate_f  # ConstantExpression
+   39 kp_dim_L_L            kp_dim_L_L_pre*onrate_f  # ConstantExpression
+   40 Kd_GE                 0.6e-6*(NA*Vc)  # ConstantExpression
+   41 kp_GE                 kon/(NA*Vc)  # ConstantExpression
+   42 km_GE                 Kd_GE*kp_GE  # ConstantExpression
+   43 Kd_SE                 0.6e-6*(NA*Vc)  # ConstantExpression
+   44 kp_SE                 kon/(NA*Vc)  # ConstantExpression
+   45 km_SE                 Kd_SE*kp_SE  # ConstantExpression
+   46 kdephosY1068_pre      kdephosY1068_0  # ConstantExpression
+   47 kdephosY1173_pre      kdephosY1068_pre*ratio_kdephosY1173  # ConstantExpression
+   48 kdephosYN_pre         kdephosYN_0  # ConstantExpression
+   49 kphosY1068_pre        ratio_kpkd_Y1068*kdephosY1068_0  # ConstantExpression
+   50 kphosY1173_pre        kphosY1068_pre*ratio_kphosY1173  # ConstantExpression
+   51 kphosYN_pre           ratio_kpkd_YN*kdephosYN_0  # ConstantExpression
+   52 kdephosY1068          kdephosY1068_pre*kdephosY1068_f  # ConstantExpression
+   53 kdephosY1173          kdephosY1173_pre*kdephosY1173_f  # ConstantExpression
+   54 kdephosYN             kdephosYN_pre  # ConstantExpression
+   55 kphosY1068            kphosY1068_pre*kphos_f  # ConstantExpression
+   56 kphosY1173            kphosY1173_pre*kphos_f  # ConstantExpression
+   57 kphosYN               kphosYN_pre*kphos_f  # ConstantExpression
+   58 ratio_kphos_receiver  0.7  # Constant
+   59 _rateLaw1             kp_dim_L_L/2  # ConstantExpression
+   60 _rateLaw2             kphosY1068*ratio_kphos_receiver  # ConstantExpression
+   61 _rateLaw3             kphosY1173*ratio_kphos_receiver  # ConstantExpression
+   62 _rateLaw4             kphosYN*ratio_kphos_receiver  # ConstantExpression
+end parameters
+begin functions
+    1 pY1068_percent() (100*pY1068)/EGFRtot
+    2 pY1173_percent() (100*pY1173)/EGFRtot
+    3 pYN_percent() (100*pYN)/EGFRtot
+    4 phosR_per() (100*(EGFRtot-unphosR))/EGFRtot
+    5 unphosR_per() (100*unphosR)/EGFRtot
+    6 pYpY_per() (100*pY1068_pY1173)/EGFRtot
+    7 random_pYpY_per() (100*(pY1068/EGFRtot))*(pY1173/EGFRtot)
+    8 pY1173inP68_per() (100*pY1068_pY1173)/(pY1068+1)
+    9 monR_pYpY_per() (100*monR_pYpY)/(monR+1)
+   10 dimR_pYpY_per() (100*dimR_pYpY)/(dimR+1)
+   11 pY1173inPYN_per() (100*pY1173_pYN)/(pYN+1)
+   12 pY1173inP68PYN_per() (100*pYpYpYN)/(pY1068_pYN+1)
+   13 pYpYinPYN_per() (100*pYpYpYN)/(pYN+1)
+end functions
+begin species
+    1 EGF(EGFL) EGF_total
+    2 EGFR(II~u,I_III,Kin~0,Y1068~0,Y1173~0,YN~0) EGFR_total
+    3 GRB2(SH2) GRB2_total
+    4 SHC1(PTB) SHC1_total
+    5 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~0,Y1173~0,YN~0) 0
+    6 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~0,Y1173~0,YN~0) 0
+    7 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~0,Y1173~0,YN~0) 0
+    8 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~P,Y1173~0,YN~0) 0
+    9 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~0,Y1173~P,YN~0) 0
+   10 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~0,Y1173~0,YN~P) 0
+   11 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~P,Y1173~0,YN~0) 0
+   12 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~0,Y1173~P,YN~0) 0
+   13 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~0,Y1173~0,YN~P) 0
+   14 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~P,Y1173~0,YN~0) 0
+   15 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~0,Y1173~P,YN~0) 0
+   16 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~0,Y1173~0,YN~P) 0
+   17 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~P,Y1173~P,YN~0) 0
+   18 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~P,Y1173~0,YN~P) 0
+   19 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~0,Y1173~P,YN~P) 0
+   20 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~P,Y1173~P,YN~0) 0
+   21 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~P,Y1173~0,YN~P) 0
+   22 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~0,Y1173~P,YN~P) 0
+   23 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~P!2,Y1173~0,YN~0).GRB2(SH2!2) 0
+   24 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~P!2,Y1173~0,YN~0).GRB2(SH2!2) 0
+   25 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~0,Y1173~P!2,YN~0).SHC1(PTB!2) 0
+   26 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~0,Y1173~P!2,YN~0).SHC1(PTB!2) 0
+   27 EGFR(II~u,I_III,Kin~0,Y1068~P,Y1173~0,YN~0) 0
+   28 EGFR(II~u,I_III,Kin~0,Y1068~0,Y1173~P,YN~0) 0
+   29 EGFR(II~u,I_III,Kin~0,Y1068~0,Y1173~0,YN~P) 0
+   30 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~P,Y1173~P,YN~0) 0
+   31 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~P,Y1173~0,YN~P) 0
+   32 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~0,Y1173~P,YN~P) 0
+   33 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~P!2,Y1173~0,YN~0).GRB2(SH2!2) 0
+   34 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~0,Y1173~P!2,YN~0).SHC1(PTB!2) 0
+   35 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~P,Y1173~P,YN~P) 0
+   36 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~P,Y1173~P!2,YN~0).SHC1(PTB!2) 0
+   37 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~P!2,Y1173~P,YN~0).GRB2(SH2!2) 0
+   38 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~P!2,Y1173~0,YN~P).GRB2(SH2!2) 0
+   39 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~0,Y1173~P!2,YN~P).SHC1(PTB!2) 0
+   40 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~P,Y1173~P,YN~P) 0
+   41 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~P,Y1173~P!2,YN~0).SHC1(PTB!2) 0
+   42 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~P!2,Y1173~P,YN~0).GRB2(SH2!2) 0
+   43 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~P!2,Y1173~0,YN~P).GRB2(SH2!2) 0
+   44 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~0,Y1173~P!2,YN~P).SHC1(PTB!2) 0
+   45 EGFR(II~u,I_III,Kin~0,Y1068~P,Y1173~P,YN~0) 0
+   46 EGFR(II~u,I_III,Kin~0,Y1068~P,Y1173~0,YN~P) 0
+   47 EGFR(II~u,I_III,Kin~0,Y1068~0,Y1173~P,YN~P) 0
+   48 EGFR(II~u,I_III,Kin~0,Y1068~P!1,Y1173~0,YN~0).GRB2(SH2!1) 0
+   49 EGFR(II~u,I_III,Kin~0,Y1068~0,Y1173~P!1,YN~0).SHC1(PTB!1) 0
+   50 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~P,Y1173~P,YN~P) 0
+   51 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~P,Y1173~P!2,YN~0).SHC1(PTB!2) 0
+   52 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~P!2,Y1173~P,YN~0).GRB2(SH2!2) 0
+   53 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~P!2,Y1173~0,YN~P).GRB2(SH2!2) 0
+   54 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~0,Y1173~P!2,YN~P).SHC1(PTB!2) 0
+   55 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~P,Y1173~P!2,YN~P).SHC1(PTB!2) 0
+   56 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~P!2,Y1173~P,YN~P).GRB2(SH2!2) 0
+   57 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~P,Y1173~P!2,YN~P).SHC1(PTB!2) 0
+   58 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~P!2,Y1173~P,YN~P).GRB2(SH2!2) 0
+   59 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~P!2,Y1173~P!3,YN~0).GRB2(SH2!2).SHC1(PTB!3) 0
+   60 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~P!2,Y1173~P!3,YN~0).GRB2(SH2!2).SHC1(PTB!3) 0
+   61 EGFR(II~u,I_III,Kin~0,Y1068~P,Y1173~P,YN~P) 0
+   62 EGFR(II~u,I_III,Kin~0,Y1068~P,Y1173~P!1,YN~0).SHC1(PTB!1) 0
+   63 EGFR(II~u,I_III,Kin~0,Y1068~P!1,Y1173~P,YN~0).GRB2(SH2!1) 0
+   64 EGFR(II~u,I_III,Kin~0,Y1068~P!1,Y1173~0,YN~P).GRB2(SH2!1) 0
+   65 EGFR(II~u,I_III,Kin~0,Y1068~0,Y1173~P!1,YN~P).SHC1(PTB!1) 0
+   66 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~P,Y1173~P!2,YN~P).SHC1(PTB!2) 0
+   67 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~P!2,Y1173~P,YN~P).GRB2(SH2!2) 0
+   68 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~P!2,Y1173~P!3,YN~0).GRB2(SH2!2).SHC1(PTB!3) 0
+   69 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~act,Y1068~P!2,Y1173~P!3,YN~P).GRB2(SH2!2).SHC1(PTB!3) 0
+   70 EGF(EGFL!1).EGFR(II~b,I_III!1,Kin~rec,Y1068~P!2,Y1173~P!3,YN~P).GRB2(SH2!2).SHC1(PTB!3) 0
+   71 EGFR(II~u,I_III,Kin~0,Y1068~P,Y1173~P!1,YN~P).SHC1(PTB!1) 0
+   72 EGFR(II~u,I_III,Kin~0,Y1068~P!1,Y1173~P,YN~P).GRB2(SH2!1) 0
+   73 EGFR(II~u,I_III,Kin~0,Y1068~P!1,Y1173~P!2,YN~0).GRB2(SH2!1).SHC1(PTB!2) 0
+   74 EGF(EGFL!1).EGFR(II~u,I_III!1,Kin~0,Y1068~P!2,Y1173~P!3,YN~P).GRB2(SH2!2).SHC1(PTB!3) 0
+   75 EGFR(II~u,I_III,Kin~0,Y1068~P!1,Y1173~P!2,YN~P).GRB2(SH2!1).SHC1(PTB!2) 0
+end species
+begin reactions
+    1 1,2 5 kp_EGF #_R1
+    2 5 1,2 km_EGF #_reverse__R1
+    3 5,5 6,7 _rateLaw1 #_R2
+    4 6 5 km_dim_L_L #_R3
+    5 7 5 km_dim_L_L #_R4
+    6 6 8 kphosY1068 #_R5
+    7 6 9 kphosY1173 #_R6
+    8 6 10 kphosYN #_R7
+    9 7 11 _rateLaw2 #_R8
+   10 7 12 _rateLaw3 #_R9
+   11 7 13 _rateLaw4 #_R10
+   12 8 14 km_dim_L_L #_R3
+   13 9 15 km_dim_L_L #_R3
+   14 10 16 km_dim_L_L #_R3
+   15 11 14 km_dim_L_L #_R4
+   16 12 15 km_dim_L_L #_R4
+   17 13 16 km_dim_L_L #_R4
+   18 9 17 kphosY1068 #_R5
+   19 10 18 kphosY1068 #_R5
+   20 8 17 kphosY1173 #_R6
+   21 10 19 kphosY1173 #_R6
+   22 8 18 kphosYN #_R7
+   23 9 19 kphosYN #_R7
+   24 12 20 _rateLaw2 #_R8
+   25 13 21 _rateLaw2 #_R8
+   26 11 20 _rateLaw3 #_R9
+   27 13 22 _rateLaw3 #_R9
+   28 11 21 _rateLaw4 #_R10
+   29 12 22 _rateLaw4 #_R10
+   30 8 6 kdephosY1068 #_R11
+   31 11 7 kdephosY1068 #_R11
+   32 9 6 kdephosY1173 #_R12
+   33 12 7 kdephosY1173 #_R12
+   34 10 6 kdephosYN #_R13
+   35 13 7 kdephosYN #_R13
+   36 3,8 23 kp_GE #_R14
+   37 3,11 24 kp_GE #_R14
+   38 4,9 25 kp_SE #_R15
+   39 4,12 26 kp_SE #_R15
+   40 14 1,27 km_EGF #_reverse__R1
+   41 15 1,28 km_EGF #_reverse__R1
+   42 16 1,29 km_EGF #_reverse__R1
+   43 5,14 6,11 _rateLaw1 #_R2
+   44 5,15 6,12 _rateLaw1 #_R2
+   45 5,16 6,13 _rateLaw1 #_R2
+   46 5,14 7,8 _rateLaw1 #_R2
+   47 14,14 8,11 _rateLaw1 #_R2
+   48 14,15 8,12 _rateLaw1 #_R2
+   49 14,16 8,13 _rateLaw1 #_R2
+   50 5,15 7,9 _rateLaw1 #_R2
+   51 14,15 9,11 _rateLaw1 #_R2
+   52 15,15 9,12 _rateLaw1 #_R2
+   53 15,16 9,13 _rateLaw1 #_R2
+   54 5,16 7,10 _rateLaw1 #_R2
+   55 14,16 10,11 _rateLaw1 #_R2
+   56 15,16 10,12 _rateLaw1 #_R2
+   57 16,16 10,13 _rateLaw1 #_R2
+   58 17 30 km_dim_L_L #_R3
+   59 18 31 km_dim_L_L #_R3
+   60 19 32 km_dim_L_L #_R3
+   61 23 33 km_dim_L_L #_R3
+   62 25 34 km_dim_L_L #_R3
+   63 20 30 km_dim_L_L #_R4
+   64 21 31 km_dim_L_L #_R4
+   65 22 32 km_dim_L_L #_R4
+   66 24 33 km_dim_L_L #_R4
+   67 26 34 km_dim_L_L #_R4
+   68 19 35 kphosY1068 #_R5
+   69 25 36 kphosY1068 #_R5
+   70 18 35 kphosY1173 #_R6
+   71 23 37 kphosY1173 #_R6
+   72 17 35 kphosYN #_R7
+   73 23 38 kphosYN #_R7
+   74 25 39 kphosYN #_R7
+   75 22 40 _rateLaw2 #_R8
+   76 26 41 _rateLaw2 #_R8
+   77 21 40 _rateLaw3 #_R9
+   78 24 42 _rateLaw3 #_R9
+   79 20 40 _rateLaw4 #_R10
+   80 24 43 _rateLaw4 #_R10
+   81 26 44 _rateLaw4 #_R10
+   82 14 5 kdephosY1068 #_R11
+   83 17 9 kdephosY1068 #_R11
+   84 18 10 kdephosY1068 #_R11
+   85 20 12 kdephosY1068 #_R11
+   86 21 13 kdephosY1068 #_R11
+   87 15 5 kdephosY1173 #_R12
+   88 17 8 kdephosY1173 #_R12
+   89 19 10 kdephosY1173 #_R12
+   90 20 11 kdephosY1173 #_R12
+   91 22 13 kdephosY1173 #_R12
+   92 16 5 kdephosYN #_R13
+   93 18 8 kdephosYN #_R13
+   94 19 9 kdephosYN #_R13
+   95 21 11 kdephosYN #_R13
+   96 22 12 kdephosYN #_R13
+   97 3,14 33 kp_GE #_R14
+   98 3,17 37 kp_GE #_R14
+   99 3,18 38 kp_GE #_R14
+  100 3,20 42 kp_GE #_R14
+  101 3,21 43 kp_GE #_R14
+  102 23 3,8 km_GE #_reverse__R14
+  103 24 3,11 km_GE #_reverse__R14
+  104 4,15 34 kp_SE #_R15
+  105 4,17 36 kp_SE #_R15
+  106 4,19 39 kp_SE #_R15
+  107 4,20 41 kp_SE #_R15
+  108 4,22 44 kp_SE #_R15
+  109 25 4,9 km_SE #_reverse__R15
+  110 26 4,12 km_SE #_reverse__R15
+  111 1,27 14 kp_EGF #_R1
+  112 1,28 15 kp_EGF #_R1
+  113 1,29 16 kp_EGF #_R1
+  114 30 1,45 km_EGF #_reverse__R1
+  115 31 1,46 km_EGF #_reverse__R1
+  116 32 1,47 km_EGF #_reverse__R1
+  117 33 1,48 km_EGF #_reverse__R1
+  118 34 1,49 km_EGF #_reverse__R1
+  119 5,30 6,20 _rateLaw1 #_R2
+  120 5,31 6,21 _rateLaw1 #_R2
+  121 5,32 6,22 _rateLaw1 #_R2
+  122 5,33 6,24 _rateLaw1 #_R2
+  123 5,34 6,26 _rateLaw1 #_R2
+  124 14,30 8,20 _rateLaw1 #_R2
+  125 14,31 8,21 _rateLaw1 #_R2
+  126 14,32 8,22 _rateLaw1 #_R2
+  127 14,33 8,24 _rateLaw1 #_R2
+  128 14,34 8,26 _rateLaw1 #_R2
+  129 15,30 9,20 _rateLaw1 #_R2
+  130 15,31 9,21 _rateLaw1 #_R2
+  131 15,32 9,22 _rateLaw1 #_R2
+  132 15,33 9,24 _rateLaw1 #_R2
+  133 15,34 9,26 _rateLaw1 #_R2
+  134 16,30 10,20 _rateLaw1 #_R2
+  135 16,31 10,21 _rateLaw1 #_R2
+  136 16,32 10,22 _rateLaw1 #_R2
+  137 16,33 10,24 _rateLaw1 #_R2
+  138 16,34 10,26 _rateLaw1 #_R2
+  139 5,30 7,17 _rateLaw1 #_R2
+  140 14,30 11,17 _rateLaw1 #_R2
+  141 15,30 12,17 _rateLaw1 #_R2
+  142 16,30 13,17 _rateLaw1 #_R2
+  143 30,30 17,20 _rateLaw1 #_R2
+  144 30,31 17,21 _rateLaw1 #_R2
+  145 30,32 17,22 _rateLaw1 #_R2
+  146 30,33 17,24 _rateLaw1 #_R2
+  147 30,34 17,26 _rateLaw1 #_R2
+  148 5,31 7,18 _rateLaw1 #_R2
+  149 14,31 11,18 _rateLaw1 #_R2
+  150 15,31 12,18 _rateLaw1 #_R2
+  151 16,31 13,18 _rateLaw1 #_R2
+  152 30,31 18,20 _rateLaw1 #_R2
+  153 31,31 18,21 _rateLaw1 #_R2
+  154 31,32 18,22 _rateLaw1 #_R2
+  155 31,33 18,24 _rateLaw1 #_R2
+  156 31,34 18,26 _rateLaw1 #_R2
+  157 5,32 7,19 _rateLaw1 #_R2
+  158 14,32 11,19 _rateLaw1 #_R2
+  159 15,32 12,19 _rateLaw1 #_R2
+  160 16,32 13,19 _rateLaw1 #_R2
+  161 30,32 19,20 _rateLaw1 #_R2
+  162 31,32 19,21 _rateLaw1 #_R2
+  163 32,32 19,22 _rateLaw1 #_R2
+  164 32,33 19,24 _rateLaw1 #_R2
+  165 32,34 19,26 _rateLaw1 #_R2
+  166 5,33 7,23 _rateLaw1 #_R2
+  167 14,33 11,23 _rateLaw1 #_R2
+  168 15,33 12,23 _rateLaw1 #_R2
+  169 16,33 13,23 _rateLaw1 #_R2
+  170 30,33 20,23 _rateLaw1 #_R2
+  171 31,33 21,23 _rateLaw1 #_R2
+  172 32,33 22,23 _rateLaw1 #_R2
+  173 33,33 23,24 _rateLaw1 #_R2
+  174 33,34 23,26 _rateLaw1 #_R2
+  175 5,34 7,25 _rateLaw1 #_R2
+  176 14,34 11,25 _rateLaw1 #_R2
+  177 15,34 12,25 _rateLaw1 #_R2
+  178 16,34 13,25 _rateLaw1 #_R2
+  179 30,34 20,25 _rateLaw1 #_R2
+  180 31,34 21,25 _rateLaw1 #_R2
+  181 32,34 22,25 _rateLaw1 #_R2
+  182 33,34 24,25 _rateLaw1 #_R2
+  183 34,34 25,26 _rateLaw1 #_R2
+  184 35 50 km_dim_L_L #_R3
+  185 36 51 km_dim_L_L #_R3
+  186 37 52 km_dim_L_L #_R3
+  187 38 53 km_dim_L_L #_R3
+  188 39 54 km_dim_L_L #_R3
+  189 40 50 km_dim_L_L #_R4
+  190 41 51 km_dim_L_L #_R4
+  191 42 52 km_dim_L_L #_R4
+  192 43 53 km_dim_L_L #_R4
+  193 44 54 km_dim_L_L #_R4
+  194 39 55 kphosY1068 #_R5
+  195 38 56 kphosY1173 #_R6
+  196 36 55 kphosYN #_R7
+  197 37 56 kphosYN #_R7
+  198 44 57 _rateLaw2 #_R8
+  199 43 58 _rateLaw3 #_R9
+  200 41 57 _rateLaw4 #_R10
+  201 42 58 _rateLaw4 #_R10
+  202 27 2 kdephosY1068 #_R11
+  203 30 15 kdephosY1068 #_R11
+  204 31 16 kdephosY1068 #_R11
+  205 35 19 kdephosY1068 #_R11
+  206 36 25 kdephosY1068 #_R11
+  207 40 22 kdephosY1068 #_R11
+  208 41 26 kdephosY1068 #_R11
+  209 28 2 kdephosY1173 #_R12
+  210 30 14 kdephosY1173 #_R12
+  211 32 16 kdephosY1173 #_R12
+  212 35 18 kdephosY1173 #_R12
+  213 37 23 kdephosY1173 #_R12
+  214 40 21 kdephosY1173 #_R12
+  215 42 24 kdephosY1173 #_R12
+  216 29 2 kdephosYN #_R13
+  217 31 14 kdephosYN #_R13
+  218 32 15 kdephosYN #_R13
+  219 35 17 kdephosYN #_R13
+  220 38 23 kdephosYN #_R13
+  221 39 25 kdephosYN #_R13
+  222 40 20 kdephosYN #_R13
+  223 43 24 kdephosYN #_R13
+  224 44 26 kdephosYN #_R13
+  225 3,27 48 kp_GE #_R14
+  226 3,30 52 kp_GE #_R14
+  227 3,31 53 kp_GE #_R14
+  228 3,35 56 kp_GE #_R14
+  229 3,36 59 kp_GE #_R14
+  230 3,40 58 kp_GE #_R14
+  231 3,41 60 kp_GE #_R14
+  232 33 3,14 km_GE #_reverse__R14
+  233 37 3,17 km_GE #_reverse__R14
+  234 38 3,18 km_GE #_reverse__R14
+  235 42 3,20 km_GE #_reverse__R14
+  236 43 3,21 km_GE #_reverse__R14
+  237 4,28 49 kp_SE #_R15
+  238 4,30 51 kp_SE #_R15
+  239 4,32 54 kp_SE #_R15
+  240 4,35 55 kp_SE #_R15
+  241 4,37 59 kp_SE #_R15
+  242 4,40 57 kp_SE #_R15
+  243 4,42 60 kp_SE #_R15
+  244 34 4,15 km_SE #_reverse__R15
+  245 36 4,17 km_SE #_reverse__R15
+  246 39 4,19 km_SE #_reverse__R15
+  247 41 4,20 km_SE #_reverse__R15
+  248 44 4,22 km_SE #_reverse__R15
+  249 1,45 30 kp_EGF #_R1
+  250 1,46 31 kp_EGF #_R1
+  251 1,47 32 kp_EGF #_R1
+  252 1,48 33 kp_EGF #_R1
+  253 1,49 34 kp_EGF #_R1
+  254 50 1,61 km_EGF #_reverse__R1
+  255 51 1,62 km_EGF #_reverse__R1
+  256 52 1,63 km_EGF #_reverse__R1
+  257 53 1,64 km_EGF #_reverse__R1
+  258 54 1,65 km_EGF #_reverse__R1
+  259 5,50 6,40 _rateLaw1 #_R2
+  260 5,51 6,41 _rateLaw1 #_R2
+  261 5,52 6,42 _rateLaw1 #_R2
+  262 5,53 6,43 _rateLaw1 #_R2
+  263 5,54 6,44 _rateLaw1 #_R2
+  264 14,50 8,40 _rateLaw1 #_R2
+  265 14,51 8,41 _rateLaw1 #_R2
+  266 14,52 8,42 _rateLaw1 #_R2
+  267 14,53 8,43 _rateLaw1 #_R2
+  268 14,54 8,44 _rateLaw1 #_R2
+  269 15,50 9,40 _rateLaw1 #_R2
+  270 15,51 9,41 _rateLaw1 #_R2
+  271 15,52 9,42 _rateLaw1 #_R2
+  272 15,53 9,43 _rateLaw1 #_R2
+  273 15,54 9,44 _rateLaw1 #_R2
+  274 16,50 10,40 _rateLaw1 #_R2
+  275 16,51 10,41 _rateLaw1 #_R2
+  276 16,52 10,42 _rateLaw1 #_R2
+  277 16,53 10,43 _rateLaw1 #_R2
+  278 16,54 10,44 _rateLaw1 #_R2
+  279 30,50 17,40 _rateLaw1 #_R2
+  280 30,51 17,41 _rateLaw1 #_R2
+  281 30,52 17,42 _rateLaw1 #_R2
+  282 30,53 17,43 _rateLaw1 #_R2
+  283 30,54 17,44 _rateLaw1 #_R2
+  284 31,50 18,40 _rateLaw1 #_R2
+  285 31,51 18,41 _rateLaw1 #_R2
+  286 31,52 18,42 _rateLaw1 #_R2
+  287 31,53 18,43 _rateLaw1 #_R2
+  288 31,54 18,44 _rateLaw1 #_R2
+  289 32,50 19,40 _rateLaw1 #_R2
+  290 32,51 19,41 _rateLaw1 #_R2
+  291 32,52 19,42 _rateLaw1 #_R2
+  292 32,53 19,43 _rateLaw1 #_R2
+  293 32,54 19,44 _rateLaw1 #_R2
+  294 33,50 23,40 _rateLaw1 #_R2
+  295 33,51 23,41 _rateLaw1 #_R2
+  296 33,52 23,42 _rateLaw1 #_R2
+  297 33,53 23,43 _rateLaw1 #_R2
+  298 33,54 23,44 _rateLaw1 #_R2
+  299 34,50 25,40 _rateLaw1 #_R2
+  300 34,51 25,41 _rateLaw1 #_R2
+  301 34,52 25,42 _rateLaw1 #_R2
+  302 34,53 25,43 _rateLaw1 #_R2
+  303 34,54 25,44 _rateLaw1 #_R2
+  304 5,50 7,35 _rateLaw1 #_R2
+  305 14,50 11,35 _rateLaw1 #_R2
+  306 15,50 12,35 _rateLaw1 #_R2
+  307 16,50 13,35 _rateLaw1 #_R2
+  308 30,50 20,35 _rateLaw1 #_R2
+  309 31,50 21,35 _rateLaw1 #_R2
+  310 32,50 22,35 _rateLaw1 #_R2
+  311 33,50 24,35 _rateLaw1 #_R2
+  312 34,50 26,35 _rateLaw1 #_R2
+  313 50,50 35,40 _rateLaw1 #_R2
+  314 50,51 35,41 _rateLaw1 #_R2
+  315 50,52 35,42 _rateLaw1 #_R2
+  316 50,53 35,43 _rateLaw1 #_R2
+  317 50,54 35,44 _rateLaw1 #_R2
+  318 5,51 7,36 _rateLaw1 #_R2
+  319 14,51 11,36 _rateLaw1 #_R2
+  320 15,51 12,36 _rateLaw1 #_R2
+  321 16,51 13,36 _rateLaw1 #_R2
+  322 30,51 20,36 _rateLaw1 #_R2
+  323 31,51 21,36 _rateLaw1 #_R2
+  324 32,51 22,36 _rateLaw1 #_R2
+  325 33,51 24,36 _rateLaw1 #_R2
+  326 34,51 26,36 _rateLaw1 #_R2
+  327 50,51 36,40 _rateLaw1 #_R2
+  328 51,51 36,41 _rateLaw1 #_R2
+  329 51,52 36,42 _rateLaw1 #_R2
+  330 51,53 36,43 _rateLaw1 #_R2
+  331 51,54 36,44 _rateLaw1 #_R2
+  332 5,52 7,37 _rateLaw1 #_R2
+  333 14,52 11,37 _rateLaw1 #_R2
+  334 15,52 12,37 _rateLaw1 #_R2
+  335 16,52 13,37 _rateLaw1 #_R2
+  336 30,52 20,37 _rateLaw1 #_R2
+  337 31,52 21,37 _rateLaw1 #_R2
+  338 32,52 22,37 _rateLaw1 #_R2
+  339 33,52 24,37 _rateLaw1 #_R2
+  340 34,52 26,37 _rateLaw1 #_R2
+  341 50,52 37,40 _rateLaw1 #_R2
+  342 51,52 37,41 _rateLaw1 #_R2
+  343 52,52 37,42 _rateLaw1 #_R2
+  344 52,53 37,43 _rateLaw1 #_R2
+  345 52,54 37,44 _rateLaw1 #_R2
+  346 5,53 7,38 _rateLaw1 #_R2
+  347 14,53 11,38 _rateLaw1 #_R2
+  348 15,53 12,38 _rateLaw1 #_R2
+  349 16,53 13,38 _rateLaw1 #_R2
+  350 30,53 20,38 _rateLaw1 #_R2
+  351 31,53 21,38 _rateLaw1 #_R2
+  352 32,53 22,38 _rateLaw1 #_R2
+  353 33,53 24,38 _rateLaw1 #_R2
+  354 34,53 26,38 _rateLaw1 #_R2
+  355 50,53 38,40 _rateLaw1 #_R2
+  356 51,53 38,41 _rateLaw1 #_R2
+  357 52,53 38,42 _rateLaw1 #_R2
+  358 53,53 38,43 _rateLaw1 #_R2
+  359 53,54 38,44 _rateLaw1 #_R2
+  360 5,54 7,39 _rateLaw1 #_R2
+  361 14,54 11,39 _rateLaw1 #_R2
+  362 15,54 12,39 _rateLaw1 #_R2
+  363 16,54 13,39 _rateLaw1 #_R2
+  364 30,54 20,39 _rateLaw1 #_R2
+  365 31,54 21,39 _rateLaw1 #_R2
+  366 32,54 22,39 _rateLaw1 #_R2
+  367 33,54 24,39 _rateLaw1 #_R2
+  368 34,54 26,39 _rateLaw1 #_R2
+  369 50,54 39,40 _rateLaw1 #_R2
+  370 51,54 39,41 _rateLaw1 #_R2
+  371 52,54 39,42 _rateLaw1 #_R2
+  372 53,54 39,43 _rateLaw1 #_R2
+  373 54,54 39,44 _rateLaw1 #_R2
+  374 55 66 km_dim_L_L #_R3
+  375 56 67 km_dim_L_L #_R3
+  376 59 68 km_dim_L_L #_R3
+  377 57 66 km_dim_L_L #_R4
+  378 58 67 km_dim_L_L #_R4
+  379 60 68 km_dim_L_L #_R4
+  380 59 69 kphosYN #_R7
+  381 60 70 _rateLaw4 #_R10
+  382 45 28 kdephosY1068 #_R11
+  383 46 29 kdephosY1068 #_R11
+  384 50 32 kdephosY1068 #_R11
+  385 51 34 kdephosY1068 #_R11
+  386 55 39 kdephosY1068 #_R11
+  387 57 44 kdephosY1068 #_R11
+  388 45 27 kdephosY1173 #_R12
+  389 47 29 kdephosY1173 #_R12
+  390 50 31 kdephosY1173 #_R12
+  391 52 33 kdephosY1173 #_R12
+  392 56 38 kdephosY1173 #_R12
+  393 58 43 kdephosY1173 #_R12
+  394 46 27 kdephosYN #_R13
+  395 47 28 kdephosYN #_R13
+  396 50 30 kdephosYN #_R13
+  397 53 33 kdephosYN #_R13
+  398 54 34 kdephosYN #_R13
+  399 55 36 kdephosYN #_R13
+  400 56 37 kdephosYN #_R13
+  401 57 41 kdephosYN #_R13
+  402 58 42 kdephosYN #_R13
+  403 3,45 63 kp_GE #_R14
+  404 3,46 64 kp_GE #_R14
+  405 3,50 67 kp_GE #_R14
+  406 3,51 68 kp_GE #_R14
+  407 3,55 69 kp_GE #_R14
+  408 3,57 70 kp_GE #_R14
+  409 48 3,27 km_GE #_reverse__R14
+  410 52 3,30 km_GE #_reverse__R14
+  411 53 3,31 km_GE #_reverse__R14
+  412 56 3,35 km_GE #_reverse__R14
+  413 58 3,40 km_GE #_reverse__R14
+  414 59 3,36 km_GE #_reverse__R14
+  415 60 3,41 km_GE #_reverse__R14
+  416 4,45 62 kp_SE #_R15
+  417 4,47 65 kp_SE #_R15
+  418 4,50 66 kp_SE #_R15
+  419 4,52 68 kp_SE #_R15
+  420 4,56 69 kp_SE #_R15
+  421 4,58 70 kp_SE #_R15
+  422 49 4,28 km_SE #_reverse__R15
+  423 51 4,30 km_SE #_reverse__R15
+  424 54 4,32 km_SE #_reverse__R15
+  425 55 4,35 km_SE #_reverse__R15
+  426 57 4,40 km_SE #_reverse__R15
+  427 59 4,37 km_SE #_reverse__R15
+  428 60 4,42 km_SE #_reverse__R15
+  429 1,61 50 kp_EGF #_R1
+  430 1,62 51 kp_EGF #_R1
+  431 1,63 52 kp_EGF #_R1
+  432 1,64 53 kp_EGF #_R1
+  433 1,65 54 kp_EGF #_R1
+  434 66 1,71 km_EGF #_reverse__R1
+  435 67 1,72 km_EGF #_reverse__R1
+  436 68 1,73 km_EGF #_reverse__R1
+  437 5,66 6,57 _rateLaw1 #_R2
+  438 5,67 6,58 _rateLaw1 #_R2
+  439 5,68 6,60 _rateLaw1 #_R2
+  440 14,66 8,57 _rateLaw1 #_R2
+  441 14,67 8,58 _rateLaw1 #_R2
+  442 14,68 8,60 _rateLaw1 #_R2
+  443 15,66 9,57 _rateLaw1 #_R2
+  444 15,67 9,58 _rateLaw1 #_R2
+  445 15,68 9,60 _rateLaw1 #_R2
+  446 16,66 10,57 _rateLaw1 #_R2
+  447 16,67 10,58 _rateLaw1 #_R2
+  448 16,68 10,60 _rateLaw1 #_R2
+  449 30,66 17,57 _rateLaw1 #_R2
+  450 30,67 17,58 _rateLaw1 #_R2
+  451 30,68 17,60 _rateLaw1 #_R2
+  452 31,66 18,57 _rateLaw1 #_R2
+  453 31,67 18,58 _rateLaw1 #_R2
+  454 31,68 18,60 _rateLaw1 #_R2
+  455 32,66 19,57 _rateLaw1 #_R2
+  456 32,67 19,58 _rateLaw1 #_R2
+  457 32,68 19,60 _rateLaw1 #_R2
+  458 33,66 23,57 _rateLaw1 #_R2
+  459 33,67 23,58 _rateLaw1 #_R2
+  460 33,68 23,60 _rateLaw1 #_R2
+  461 34,66 25,57 _rateLaw1 #_R2
+  462 34,67 25,58 _rateLaw1 #_R2
+  463 34,68 25,60 _rateLaw1 #_R2
+  464 50,66 35,57 _rateLaw1 #_R2
+  465 50,67 35,58 _rateLaw1 #_R2
+  466 50,68 35,60 _rateLaw1 #_R2
+  467 51,66 36,57 _rateLaw1 #_R2
+  468 51,67 36,58 _rateLaw1 #_R2
+  469 51,68 36,60 _rateLaw1 #_R2
+  470 52,66 37,57 _rateLaw1 #_R2
+  471 52,67 37,58 _rateLaw1 #_R2
+  472 52,68 37,60 _rateLaw1 #_R2
+  473 53,66 38,57 _rateLaw1 #_R2
+  474 53,67 38,58 _rateLaw1 #_R2
+  475 53,68 38,60 _rateLaw1 #_R2
+  476 54,66 39,57 _rateLaw1 #_R2
+  477 54,67 39,58 _rateLaw1 #_R2
+  478 54,68 39,60 _rateLaw1 #_R2
+  479 5,66 7,55 _rateLaw1 #_R2
+  480 14,66 11,55 _rateLaw1 #_R2
+  481 15,66 12,55 _rateLaw1 #_R2
+  482 16,66 13,55 _rateLaw1 #_R2
+  483 30,66 20,55 _rateLaw1 #_R2
+  484 31,66 21,55 _rateLaw1 #_R2
+  485 32,66 22,55 _rateLaw1 #_R2
+  486 33,66 24,55 _rateLaw1 #_R2
+  487 34,66 26,55 _rateLaw1 #_R2
+  488 50,66 40,55 _rateLaw1 #_R2
+  489 51,66 41,55 _rateLaw1 #_R2
+  490 52,66 42,55 _rateLaw1 #_R2
+  491 53,66 43,55 _rateLaw1 #_R2
+  492 54,66 44,55 _rateLaw1 #_R2
+  493 66,66 55,57 _rateLaw1 #_R2
+  494 66,67 55,58 _rateLaw1 #_R2
+  495 66,68 55,60 _rateLaw1 #_R2
+  496 5,67 7,56 _rateLaw1 #_R2
+  497 14,67 11,56 _rateLaw1 #_R2
+  498 15,67 12,56 _rateLaw1 #_R2
+  499 16,67 13,56 _rateLaw1 #_R2
+  500 30,67 20,56 _rateLaw1 #_R2
+  501 31,67 21,56 _rateLaw1 #_R2
+  502 32,67 22,56 _rateLaw1 #_R2
+  503 33,67 24,56 _rateLaw1 #_R2
+  504 34,67 26,56 _rateLaw1 #_R2
+  505 50,67 40,56 _rateLaw1 #_R2
+  506 51,67 41,56 _rateLaw1 #_R2
+  507 52,67 42,56 _rateLaw1 #_R2
+  508 53,67 43,56 _rateLaw1 #_R2
+  509 54,67 44,56 _rateLaw1 #_R2
+  510 66,67 56,57 _rateLaw1 #_R2
+  511 67,67 56,58 _rateLaw1 #_R2
+  512 67,68 56,60 _rateLaw1 #_R2
+  513 5,68 7,59 _rateLaw1 #_R2
+  514 14,68 11,59 _rateLaw1 #_R2
+  515 15,68 12,59 _rateLaw1 #_R2
+  516 16,68 13,59 _rateLaw1 #_R2
+  517 30,68 20,59 _rateLaw1 #_R2
+  518 31,68 21,59 _rateLaw1 #_R2
+  519 32,68 22,59 _rateLaw1 #_R2
+  520 33,68 24,59 _rateLaw1 #_R2
+  521 34,68 26,59 _rateLaw1 #_R2
+  522 50,68 40,59 _rateLaw1 #_R2
+  523 51,68 41,59 _rateLaw1 #_R2
+  524 52,68 42,59 _rateLaw1 #_R2
+  525 53,68 43,59 _rateLaw1 #_R2
+  526 54,68 44,59 _rateLaw1 #_R2
+  527 66,68 57,59 _rateLaw1 #_R2
+  528 67,68 58,59 _rateLaw1 #_R2
+  529 68,68 59,60 _rateLaw1 #_R2
+  530 69 74 km_dim_L_L #_R3
+  531 70 74 km_dim_L_L #_R4
+  532 61 47 kdephosY1068 #_R11
+  533 62 49 kdephosY1068 #_R11
+  534 66 54 kdephosY1068 #_R11
+  535 61 46 kdephosY1173 #_R12
+  536 63 48 kdephosY1173 #_R12
+  537 67 53 kdephosY1173 #_R12
+  538 61 45 kdephosYN #_R13
+  539 64 48 kdephosYN #_R13
+  540 65 49 kdephosYN #_R13
+  541 66 51 kdephosYN #_R13
+  542 67 52 kdephosYN #_R13
+  543 69 59 kdephosYN #_R13
+  544 70 60 kdephosYN #_R13
+  545 3,61 72 kp_GE #_R14
+  546 3,62 73 kp_GE #_R14
+  547 3,66 74 kp_GE #_R14
+  548 63 3,45 km_GE #_reverse__R14
+  549 64 3,46 km_GE #_reverse__R14
+  550 67 3,50 km_GE #_reverse__R14
+  551 68 3,51 km_GE #_reverse__R14
+  552 69 3,55 km_GE #_reverse__R14
+  553 70 3,57 km_GE #_reverse__R14
+  554 4,61 71 kp_SE #_R15
+  555 4,63 73 kp_SE #_R15
+  556 4,67 74 kp_SE #_R15
+  557 62 4,45 km_SE #_reverse__R15
+  558 65 4,47 km_SE #_reverse__R15
+  559 66 4,50 km_SE #_reverse__R15
+  560 68 4,52 km_SE #_reverse__R15
+  561 69 4,56 km_SE #_reverse__R15
+  562 70 4,58 km_SE #_reverse__R15
+  563 1,71 66 kp_EGF #_R1
+  564 1,72 67 kp_EGF #_R1
+  565 1,73 68 kp_EGF #_R1
+  566 74 1,75 km_EGF #_reverse__R1
+  567 5,74 6,70 _rateLaw1 #_R2
+  568 14,74 8,70 _rateLaw1 #_R2
+  569 15,74 9,70 _rateLaw1 #_R2
+  570 16,74 10,70 _rateLaw1 #_R2
+  571 30,74 17,70 _rateLaw1 #_R2
+  572 31,74 18,70 _rateLaw1 #_R2
+  573 32,74 19,70 _rateLaw1 #_R2
+  574 33,74 23,70 _rateLaw1 #_R2
+  575 34,74 25,70 _rateLaw1 #_R2
+  576 50,74 35,70 _rateLaw1 #_R2
+  577 51,74 36,70 _rateLaw1 #_R2
+  578 52,74 37,70 _rateLaw1 #_R2
+  579 53,74 38,70 _rateLaw1 #_R2
+  580 54,74 39,70 _rateLaw1 #_R2
+  581 66,74 55,70 _rateLaw1 #_R2
+  582 67,74 56,70 _rateLaw1 #_R2
+  583 68,74 59,70 _rateLaw1 #_R2
+  584 5,74 7,69 _rateLaw1 #_R2
+  585 14,74 11,69 _rateLaw1 #_R2
+  586 15,74 12,69 _rateLaw1 #_R2
+  587 16,74 13,69 _rateLaw1 #_R2
+  588 30,74 20,69 _rateLaw1 #_R2
+  589 31,74 21,69 _rateLaw1 #_R2
+  590 32,74 22,69 _rateLaw1 #_R2
+  591 33,74 24,69 _rateLaw1 #_R2
+  592 34,74 26,69 _rateLaw1 #_R2
+  593 50,74 40,69 _rateLaw1 #_R2
+  594 51,74 41,69 _rateLaw1 #_R2
+  595 52,74 42,69 _rateLaw1 #_R2
+  596 53,74 43,69 _rateLaw1 #_R2
+  597 54,74 44,69 _rateLaw1 #_R2
+  598 66,74 57,69 _rateLaw1 #_R2
+  599 67,74 58,69 _rateLaw1 #_R2
+  600 68,74 60,69 _rateLaw1 #_R2
+  601 74,74 69,70 _rateLaw1 #_R2
+  602 71 65 kdephosY1068 #_R11
+  603 72 64 kdephosY1173 #_R12
+  604 71 62 kdephosYN #_R13
+  605 72 63 kdephosYN #_R13
+  606 74 68 kdephosYN #_R13
+  607 3,71 75 kp_GE #_R14
+  608 72 3,61 km_GE #_reverse__R14
+  609 73 3,62 km_GE #_reverse__R14
+  610 74 3,66 km_GE #_reverse__R14
+  611 4,72 75 kp_SE #_R15
+  612 71 4,61 km_SE #_reverse__R15
+  613 73 4,63 km_SE #_reverse__R15
+  614 74 4,67 km_SE #_reverse__R15
+  615 1,75 74 kp_EGF #_R1
+  616 75 73 kdephosYN #_R13
+  617 75 3,71 km_GE #_reverse__R14
+  618 75 4,72 km_SE #_reverse__R15
+end reactions
+begin groups
+    1 EGF                  1,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,50,51,52,53,54,55,56,57,58,59,60,66,67,68,69,70,74
+    2 EGFRtot              2,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75
+    3 Grb2tot              3,23,24,33,37,38,42,43,48,52,53,56,58,59,60,63,64,67,68,69,70,72,73,74,75
+    4 Shc1tot              4,25,26,34,36,39,41,44,49,51,54,55,57,59,60,62,65,66,68,69,70,71,73,74,75
+    5 EGFR_EGF             5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,50,51,52,53,54,55,56,57,58,59,60,66,67,68,69,70,74
+    6 monR                 2,5,14,15,16,27,28,29,30,31,32,33,34,45,46,47,48,49,50,51,52,53,54,61,62,63,64,65,66,67,68,71,72,73,74,75
+    7 dimR                 6,7,8,9,10,11,12,13,17,18,19,20,21,22,23,24,25,26,35,36,37,38,39,40,41,42,43,44,55,56,57,58,59,60,69,70
+    8 dimR_act             6,8,9,10,17,18,19,23,25,35,36,37,38,39,55,56,59,69
+    9 dimR_rec             7,11,12,13,20,21,22,24,26,40,41,42,43,44,57,58,60,70
+   10 pY1068               8,11,14,17,18,20,21,23,24,27,30,31,33,35,36,37,38,40,41,42,43,45,46,48,50,51,52,53,55,56,57,58,59,60,61,62,63,64,66,67,68,69,70,71,72,73,74,75
+   11 pY1173               9,12,15,17,19,20,22,25,26,28,30,32,34,35,36,37,39,40,41,42,44,45,47,49,50,51,52,54,55,56,57,58,59,60,61,62,63,65,66,67,68,69,70,71,72,73,74,75
+   12 pYN                  10,13,16,18,19,21,22,29,31,32,35,38,39,40,43,44,46,47,50,53,54,55,56,57,58,61,64,65,66,67,69,70,71,72,74,75
+   13 unphosR              2,5,6,7
+   14 pY1068_act           8,17,18,23,35,36,37,38,55,56,59,69
+   15 pY1068_rec           11,20,21,24,40,41,42,43,57,58,60,70
+   16 Grb2_EGFR            23,24,33,37,38,42,43,48,52,53,56,58,59,60,63,64,67,68,69,70,72,73,74,75
+   17 Shc1_EGFR            25,26,34,36,39,41,44,49,51,54,55,57,59,60,62,65,66,68,69,70,71,73,74,75
+   18 pY1068_pY1173        17,20,30,35,36,37,40,41,42,45,50,51,52,55,56,57,58,59,60,61,62,63,66,67,68,69,70,71,72,73,74,75
+   19 pY1068_pYN           18,21,31,35,38,40,43,46,50,53,55,56,57,58,61,64,66,67,69,70,71,72,74,75
+   20 pY1173_pYN           19,22,32,35,39,40,44,47,50,54,55,56,57,58,61,65,66,67,69,70,71,72,74,75
+   21 pYpYpYN              35,40,50,55,56,57,58,61,66,67,69,70,71,72,74,75
+   22 monR_pYpY            30,45,50,51,52,61,62,63,66,67,68,71,72,73,74,75
+   23 dimR_pYpY            17,20,35,36,37,40,41,42,55,56,57,58,59,60,69,70
+end groups
