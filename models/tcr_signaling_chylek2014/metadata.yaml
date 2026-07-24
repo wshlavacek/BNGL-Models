@@ -1,0 +1,80 @@
+# metadata.yaml — tcr_signaling_chylek2014
+id: tcr_signaling_chylek2014
+created: 2026-07-23
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, network_free, ai_assisted]
+  description: >
+    Early T-cell-receptor (TCR) and CD28 co-stimulation signaling model of
+    Chylek et al. (2014), PLoS ONE 9(8):e104240
+    (doi:10.1371/journal.pone.0104240). The model body (parameters, molecule
+    types, seed species, reaction rules, and observables) is the published
+    Supplementary File A in File S1 (the clean BNGL encoding of the model),
+    transcribed unchanged; the authors' inline "Rule N" comments and
+    per-observable figure notes are preserved. Twenty molecule types carry
+    explicitly tracked phosphosites and the model resolves the site-specific
+    (multisite) phosphorylation dynamics of the first seconds of stimulation.
+    The original study simulated the model NETWORK-FREE with NFsim, driven by
+    the RNF (Run NFsim) script in Supplementary File B. RNF files are
+    deprecated, so that protocol is encoded natively in the begin actions block
+    (equilibrate 500 s with ligand binding off, then setParameter turns on
+    kfl/kfl_m per File B and a 60 s stimulation response is simulated). Because
+    the combinatorial complexity is multisite phosphorylation rather than
+    multivalent aggregation, the model has no same-complex-binding ambiguity and
+    standard (legacy) BioNetGen NFsim is a valid reference (no -bscb / -utl
+    required).
+
+files:
+  - name: tcr_signaling_chylek2014.bngl
+    role: primary
+    description: >
+      Rule-based, network-free (NFsim) model of early TCR/CD28 signaling with
+      site-specific multisite phosphorylation: anti-CD3/anti-CD28 ligands
+      crosslink TCR and CD28, CD28-recruited LCK phosphorylates the TCR/CD3 ITAM
+      tyrosines, ZAP70 docks and phosphorylates the LAT/LCP2(SLP-76) scaffold
+      engaging PLCG1/ITK/NCK/WAS, with PTPN6(SHP-1), PAG1/CSK, and DOK1/DOK2
+      negative regulation and basal phosphorylation/dephosphorylation at every
+      site. Copy numbers are scaled by the subvolume fraction Fx=0.02. The active
+      protocol is the published two-phase NFsim run (equilibrate, turn on ligand
+      binding, 60 s response); set the PTPN6 or LCP2 seed-species copy number to
+      0 to reproduce a knockdown.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: run_tcr_chylek2014.py
+    role: verification
+    description: >
+      Self-contained driver. `reference` runs the committed model's faithful
+      published protocol with standard BioNetGen NFsim (full subvolume Fx=0.02)
+      and checks it against the committed reference .gdat. `agreement` runs the
+      three-engine network-free cross-check — standard BioNetGen NFsim, bngsim
+      NfsimSession, and bngsim RuleMonkeySession — on a reduced but identical
+      single-phase ligand-on protocol (Fx=0.005, no equilibration, which
+      RuleMonkey cannot afford at full subvolume), and quantifies agreement by
+      the pairwise z-score of ensemble means. `plot` builds the verification PNG.
+  - name: verify_tcr_chylek2014.png
+    role: figure
+    description: >
+      Verification figure. Top row: the faithful published protocol (flat basal
+      equilibration with ligand off; 60 s stimulation response) from standard
+      BioNetGen NFsim at Fx=0.02. Bottom row: the three network-free engines
+      (BNG NFsim, bngsim NFsim, bngsim RuleMonkey) overlaid as ensemble
+      mean +/- s.e.m. phosphosite trajectories, showing they agree within
+      Monte-Carlo error on the reduced-subvolume cross-check.
+  - name: reference/tcr_signaling_chylek2014_equil.gdat
+    role: reference
+    description: Equilibration observables (ligand off; flat basal state), BNG NFsim.
+  - name: reference/tcr_signaling_chylek2014_tcr.gdat
+    role: reference
+    description: 60 s stimulation-response observables (published protocol), BNG NFsim.
+  - name: reference/agreement.npz
+    role: reference
+    description: >
+      Cached three-engine ensembles (per-seed observable trajectories) for the
+      reduced-subvolume network-free agreement cross-check.
