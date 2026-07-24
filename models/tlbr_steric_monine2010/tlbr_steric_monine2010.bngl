@@ -1,0 +1,205 @@
+begin model
+
+#@title: TLBR steric aggregation (Monine et al., 2010)
+
+#@description: |
+#  Kinetic trivalent-ligand / bivalent-receptor (TLBR) model of Monine et al.
+#  (2010) for equilibrium binding of a fluorophore-labeled trivalent antigen
+#  (compound 6a) to bivalent IgE-FceRI complexes on RBL mast cells. A trivalent
+#  ligand L(s,s,s) captures free receptor sites (single-site association K1) and a
+#  tethered ligand arm crosslinks a second receptor (single-site K2); every bond
+#  breaks at koff. Because each ligand has three arms and each receptor two sites,
+#  crosslinking builds cell-surface receptor aggregates that grow without bound:
+#  the reaction network is infinite, so the model is simulated NETWORK-FREE (NFsim
+#  / RuleMonkey). The steric constraint of the TLBR model is that ligand-induced
+#  aggregates are ACYCLIC (the equivalent-site Goldstein-Perelson assumption) --
+#  trees, never rings -- enforced by NFsim's block-same-complex-binding (-bscb),
+#  which forbids a tethered ligand arm from binding a receptor already in its own
+#  aggregate. Across a titration of total ligand, the bound-ligand fraction
+#  lambda = (L_total-L_free)/(2*R_total) traces the sigmoidal Fig 2a isotherm; at
+#  the fitted parameters the system passes a sol-gel percolation transition into
+#  extensive aggregation over the ~0.2-30 nM dose range.
+
+#@keyword: |
+#  receptor aggregation, multivalent ligand, trivalent ligand, bivalent receptor,
+#  crosslinking, network-free simulation, NFsim, RuleMonkey, steric constraint,
+#  acyclic aggregates, sol-gel transition, equilibrium binding, IgE, FceRI,
+#  mast cell, Rattus norvegicus
+
+#@reference: |
+#  Monine MI, Posner RG, Savage PB, Faeder JR, Hlavacek WS (2010). Modeling
+#  multivalent ligand-receptor interactions with steric constraints on
+#  configurations of cell-surface receptor aggregates. Biophys J 98(1):48-56.
+#  doi:10.1016/j.bpj.2009.09.043 -- model (Eqs 4-6), Fig 2a binding data, and
+#  Table 1 fit (TLBR column: K1=0.467/nM, K2=87.03/nM, alpha=0.816).
+#  Posner RG, Geng D, Haymore S, Bogert J, Pecht I, Licht A, Savage PB (2007).
+#  Trivalent antigens for degranulation of mast cells. Org Lett 9(18):3551-3554.
+#  doi:10.1021/ol071231z -- synthesis of the trivalent ligand (compound 6a).
+
+#@note: |
+#  Folder/file name per issue #11 (tlbr_steric_monine2010); TLBR =
+#  trivalent-ligand / bivalent-receptor. This is the equivalent-site TLBR model
+#  (Monine 2010 Eqs 4-6), the kinetic version of the Goldstein-Perelson
+#  equilibrium model -- the model fit in Fig 2a / Table 1. The paper's Models I-III
+#  impose further steric constraints (cyclic dimers, hexagonal-lattice clashes) via
+#  spatial application-condition checks that standard NFsim/RuleMonkey cannot
+#  express; they are not encoded here. K1, K2 and alpha are the three quantities
+#  fit to Fig 2a; the shipped values are Monine 2010's own Table-1 best fit. The
+#  K1-K2 fit is sloppy / non-identifiable (paper Fig S2), so the reproduced
+#  isotherm -- not the individual constants -- is the identifiable check. Adapted
+#  to house style from the validated pybnf-jobs/Monine-2010/tlbr model (BioNetFit-1
+#  example 3 / PyBNF corpus 11-TLBR).
+
+begin parameters
+
+# Avogadro constant (exact)
+NA 6.02214076e23 # molecules/mol
+
+# Subvolume factor: fraction of one cell simulated (Monine 2010 Table 1 used 0.1%
+# of a cell). Molecule counts are scaled by f and bimolecular rate constants by
+# 1/f; f=1 recovers the whole-cell system. Reserved house-style name (subvolume).
+f 0.001 # dimensionless
+
+# Cell density of the RBL suspension (1e6 cells/mL)
+cell_density 1.0e9 # cells/L
+
+# Reference extracellular volume per cell (= 1/cell_density); the simulated
+# subvolume is f*V_ref = 1e-12 L (Monine 2010 reference constant V* = 1e-12 L).
+V_ref 1.0/cell_density # L/cell
+
+# Receptors per whole cell (Monine 2010 reference constant N_R* = 3e5); the
+# simulated subvolume holds f*RT_cell = 300 receptors.
+RT_cell 3.0e5 # molecules/cell
+RT f*RT_cell # molecules
+
+# Total ligand concentration -- the dose scanned to reproduce Fig 2a. LT is the
+# corresponding molecule count in the simulated subvolume (~1.3e5 at the top dose).
+LT_conc 7.0 # nM
+LT LT_conc*1.0e-9*NA*f*V_ref # molecules
+
+# Single-site dissociation rate constant (Monine 2010 reference constant); both
+# bond types break at koff.
+koff 0.01 # /s
+
+# Single-site equilibrium association constants (Monine 2010 Table 1, TLBR model).
+# K1: free ligand arm to a receptor site; K2: tethered ligand arm to a second
+# receptor (crosslinking). Fit to Fig 2a together with alpha.
+K1 0.467 # /nM
+K2 87.03 # /nM
+
+# Fluorescence readout scale factor (Monine 2010 Table 1): lambda = alpha*FL1.
+alpha 0.816 # dimensionless
+inv_alpha 1.0/alpha # dimensionless
+
+# Single-site forward rate constants derived from the equilibrium constants:
+# kf = K*koff/(NA*V_sim), K in /nM -> *1e9 -> /M; V_sim = f*V_ref.
+kf1 K1*1.0e9*koff/(NA*f*V_ref) # /molecule/s
+kf2 K2*1.0e9*koff/(NA*f*V_ref) # /molecule/s
+
+end parameters
+
+begin molecule types
+
+# Trivalent ligand (compound 6a): three identical DNP hapten arms.
+L(s,s,s)
+
+# Bivalent cell-surface receptor (IgE-FceRI): two identical antigen-combining sites.
+R(s,s)
+
+end molecule types
+
+begin seed species
+
+L(s,s,s) LT # molecules
+R(s,s) RT # molecules
+
+end seed species
+
+begin observables
+
+# Total ligand and receptor molecule counts.
+Molecules L_total L()
+Molecules R_total R()
+
+# Free (fully unbound) ligand: all three arms open.
+Species L_free L(s,s,s)
+
+end observables
+
+begin functions
+
+# Amount of ligand bound per receptor site (Monine 2010 Fig 2a ordinate, SI Eq 10);
+# R is bivalent, so 2*R_total is the total number of receptor sites.
+lambda() (L_total-L_free)/(2.0*R_total)
+
+# Scaled fluorescence FL1 = lambda/alpha (SI Eq 11). Multiplying by inv_alpha (not
+# dividing by alpha) avoids a divide-by-zero when the namespace is initialized.
+FL() inv_alpha*(L_total-L_free)/(2.0*R_total)
+
+end functions
+
+begin reaction rules
+
+# Capture of a free ligand arm by a free receptor site (single-site kf1); Eq 4.
+capture: L(s,s,s)+R(s) -> L(s!1,s,s).R(s!1) kf1
+
+# Crosslinking: an already-tethered ligand (>=1 arm bound) captures a second free
+# receptor (single-site kf2). Acyclic aggregates only -- see the -bscb note in the
+# actions block; Eq 5.
+crosslink: L(s!+,s)+R(s) -> L(s!+,s!1).R(s!1) kf2
+
+# Dissociation of any ligand-receptor bond (single-site koff); Eq 6.
+dissociate: L(s!1).R(s!1) -> L(s)+R(s) koff
+
+end reaction rules
+
+end model
+
+begin actions
+
+  #@note: |
+  #  Network generation is infeasible: the trivalent ligand crosslinks bivalent
+  #  receptors into aggregates that grow without bound, so the model is simulated
+  #  network-free. Steric-constraint / robustness flags for the TLBR model:
+  #    -bscb  block same-complex binding -- forbids a tethered ligand arm from
+  #           binding a receptor already in its own aggregate, i.e. enforces the
+  #           TLBR model's ACYCLIC-aggregate (equivalent-site) assumption. Without
+  #           it, NFsim closes rings and simulates a different model.
+  #    gml    global molecule limit raised to the 32-bit max so the ~1.3e5 ligands
+  #           at the top dose are never silently truncated (BNG default is 2e5).
+  #  print_functions writes lambda()/FL() into the .scan. Correctness is confirmed
+  #  by agreement of two independent network-free algorithms, NFsim (Yang et al.
+  #  2008) and RuleMonkey (Colvin et al. 2009/2010), both with -bscb (bngsim turns
+  #  -bscb on by default). A network-free run WITHOUT -bscb -- the legacy default --
+  #  closes rings and simulates a different model, so it is not a valid reference
+  #  (see run_monine2010.py, task 3 of issue #11).
+
+  # Fig 2a dose-response: equilibrium bound-ligand fraction vs total ligand
+
+  #@protocol: |
+  #  Titrate total ligand LT_conc across the 12 experimental doses of Monine 2010
+  #  Fig 2a (5e-4 to 213 nM), each simulated network-free to t_end=5000 s
+  #  (equilibrium; NFsim has no steady-state solve) at the Table-1 best fit. The
+  #  endpoint lambda = (L_total-L_free)/(2*R_total) is the Fig 2a ordinate and
+  #  FL=lambda/alpha the scaled fluorescence. NFsim is stochastic -- average
+  #  several seeds for a smooth isotherm (run_monine2010.py does this).
+
+  #@figure: Fig. 2a in Monine et al. (2010)
+
+  parameter_scan({parameter=>"LT_conc",\
+    par_scan_vals=>[0.0005006902,0.001362623,0.0044341334,0.0149210839,\
+    0.0441574,0.1507897315,0.5013619944,1.5652727704,5.2257161826,\
+    16.9016532291,67.9604112309,213.4593409505],\
+    method=>"nf",suffix=>"scan",t_start=>0,t_end=>5000,n_steps=>50,\
+    gml=>2147483647,print_functions=>1,param=>"-bscb"})
+
+  # Single-dose aggregation kinetics (alternative; uncomment to run one dose)
+
+  #@protocol: |
+  #  One representative dose (default LT_conc=7 nM) simulated network-free to
+  #  equilibrium, showing the time course of ligand capture and crosslinking.
+
+#  simulate({method=>"nf",suffix=>"nfr",t_start=>0,t_end=>5000,n_steps=>250,\
+#    gml=>2147483647,print_functions=>1,param=>"-bscb"})
+
+end actions

@@ -1,0 +1,23 @@
+# Monine et al. (2010) Biophys J 98(1):48-56, Fig 2a: flow-cytometric equilibrium
+# binding of Alexa-488-labeled trivalent antigen (compound 6a) to IgE-FceRI on RBL
+# cells, as a function of total ligand dose.
+#   LTconc_nM : total ligand concentration (nM)
+#   FL1       : scaled fluorescence = bound-ligand fraction (0-1); the Fig 2a
+#               ordinate is lambda = alpha*FL1 with alpha = 0.816 (Table 1, TLBR).
+# This is the original recorded 12-dose dataset (10 significant figures), the same
+# set used as BioNetFit-1 example 3 / PyBNF corpus 11-TLBR. It is the fit target of
+# Monine 2010 Table 1. Provenance: pybnf-jobs/Monine-2010/tlbr/tlbr.exp (see that
+# job's VALIDATION.md, which traces it to Fig 2a).
+LTconc_nM,FL1
+0.0005006902,0.004888544
+0.001362623,-0.0016556821
+0.0044341334,0.0018911886
+0.0149210839,0.0176273048
+0.0441574,0.0415561926
+0.1507897315,0.2057684534
+0.5013619944,0.4269447413
+1.5652727704,0.5017002142
+5.2257161826,0.6008341783
+16.9016532291,0.7060841749
+67.9604112309,0.888530348
+213.4593409505,1.0243034146
