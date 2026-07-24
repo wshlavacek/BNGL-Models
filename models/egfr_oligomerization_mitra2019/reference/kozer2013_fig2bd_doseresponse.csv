@@ -1,0 +1,11 @@
+# Kozer et al. (2013) Mol BioSyst 9:1849-1863, average-normalized dose-response data (t_end=600 s).
+# pre1_dose = EGFR cluster density (Fig 2B); pre3_dose = phospho-EGFR (Fig 2D); each column
+# scaled so its measurement average is 1. _SD are per-point standard deviations. NaN = missing.
+# Traced from pybnf-jobs/Kozer-2013/egfr_nf/doseresponse.exp.
+LT_nM,pre1_dose,pre3_dose,pre1_dose_SD,pre3_dose_SD
+0.001,1.458475188,0.003982258,0.1607725361,0.1348354268
+0.01,NaN,NaN,NaN,NaN
+0.1,1.25073985,0.196028707,0.1435540497,0.1348448243
+1,0.867006516,1.339255747,0.09760798,0.1110409398
+10,0.693893734,1.731277712,0.0803894937,0.1348448243
+100,0.731401504,1.730285101,0.0861246883,0.130869679

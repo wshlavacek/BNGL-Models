@@ -1,0 +1,393 @@
+begin model
+
+#@title: EGFR oligomerization (Mitra et al., 2019)
+
+#@description: |
+#  Network-free (NFsim / RuleMonkey) model of EGF-driven higher-order EGFR
+#  oligomerization and activation. EGF binds the EGFR ectodomain; ligated (and
+#  unligated) receptors crosslink ectodomain-to-ectodomain, and the crosslinked
+#  receptors' cytoplasmic tails switch to an active conformation (cd~c -> cd~o),
+#  lock together (tail-tail association), and trans-phosphorylate (Y~u -> Y~p).
+#  Because a receptor can crosslink on two faces, EGFR builds cell-surface
+#  oligomers that grow WITHOUT BOUND (species tracked to 20-mers), so the reaction
+#  network is infinite and the model is simulated NETWORK-FREE. Beyond simple
+#  chain growth, tethered receptors can close small rings, and ring closure is
+#  enhanced by an effective-concentration factor chi_r (the model's one fitted
+#  aggregation parameter besides the tail kinetics). With the shipped PyBioNetFit
+#  best fit, EGF drives a monomer/dimer pool into stable tetrameric rings (higher
+#  oligomers stay unpopulated -- 0% of receptors above tetramer) while pEGFR rises
+#  over ~minutes, reproducing the Kozer et al. (2013) EGFR cluster-density and
+#  phospho-EGFR data (Fig 2B/2D dose-response, Fig 3B/3D time course).
+
+#@keyword: |
+#  receptor aggregation, EGFR, epidermal growth factor, ectodomain crosslinking,
+#  higher-order oligomerization, receptor clustering, ring closure,
+#  trans-phosphorylation, network-free simulation, NFsim, RuleMonkey,
+#  block same-complex binding, unbounded aggregation, Homo sapiens
+
+#@reference: |
+#  Mitra ED, Suderman R, Colvin J, Ionkov A, Hu A, Sauro HM, Posner RG,
+#  Hlavacek WS (2019). PyBioNetFit and the Biological Property Specification
+#  Language. iScience 19:1012-1036. doi:10.1016/j.isci.2019.08.045 -- source of
+#  the network-free reformulation (BioNetFit-1 "example 2",
+#  example2_starting_point.bngl) and the best-fit parameters used here.
+#  Kozer N, Barua D, Orchard S, Nice EC, Burgess AW, Hlavacek WS, Clayton AHA
+#  (2013). Exploring higher-order EGFR oligomerisation and phosphorylation -- a
+#  combined experimental and theoretical approach. Mol BioSyst 9(7):1849-1863.
+#  doi:10.1039/c3mb70073a -- the model biology and the cluster-density /
+#  phospho-EGFR data (Fig 2B/2D/3B/3D) reproduced here.
+#  Macdonald JL, Pike LJ (2008). Proc Natl Acad Sci USA 105:112-117 -- EGF-binding
+#  and ectodomain-crosslinking equilibrium constants. Low-Nam ST et al. (2011).
+#  Nat Struct Mol Biol 18:1244-1249 -- crosslink dissociation rates. Elleman TC
+#  et al. (2001). Biochemistry 40:8930-8939 -- EGF dissociation rate.
+
+#@note: |
+#  PROVENANCE. The network-free EGFR model is the Mitra et al. (2019) PyBioNetFit
+#  / BioNetFit-1 "example 2" (edited by B.R. Thomas, W.S. Hlavacek, E.D. Mitra), an
+#  UNBOUNDED reformulation of the Kozer et al. (2013) higher-order-clustering
+#  model, fit to the Kozer 2013 data. It is NOT the Kozer et al. (2014) Biochemistry
+#  SI (bi500182x_si_001.txt), which is a tetramer-capped ODE model with Grb2 -- a
+#  different formulation, not reproduced here. Kozer 2013/2014 published
+#  experiment + capped ODE, never a network-free simulation; the network-free
+#  study is Mitra 2019. See pybnf-jobs/Kozer-2013/egfr_nf/VALIDATION.md.
+#
+#  AGGREGATION vs SIGNALING complexity. Unlike multisite-signaling network-free
+#  models, EGFR ectodomain crosslinking is genuine multivalent AGGREGATION: the
+#  bimolecular crosslink rules join two SEPARATE aggregates ("not tethered"),
+#  while ring closure within an aggregate is handled by the dedicated
+#  chi_r-enhanced rules. To keep those meanings distinct the crosslink rules must
+#  block same-complex binding (NFsim -bscb); without it a plain crosslink could
+#  close a ring at the wrong (unenhanced) rate. So legacy NFsim without -bscb is
+#  not a self-evidently valid reference; correctness is instead confirmed by
+#  agreement of two independent network-free algorithms, NFsim (Yang et al. 2008)
+#  and RuleMonkey (Colvin et al. 2009/2010), both with -bscb (run_mitra2019.py).
+#  At the shipped fit -bscb and no-bscb differ by only a few percent, because
+#  higher-order rings are only rarely populated. The 4-molecule ring-closure
+#  patterns also need the NFsim universal-traversal-limit raised (-utl 5; auto
+#  value 4 is too shallow).
+#
+#  PARAMETERS are the PyBioNetFit best fit (Mitra 2019 Data S1, RuleHub
+#  04-egfrnf/fit_ade, chi_sq=13.4): k_o, k_c, kaf, kar, chi_r and the four
+#  observable-scale factors alpha*_pre. The kinetic constants are sloppy /
+#  non-identifiable (near-equal objective across the paper's algorithms); the
+#  reproduced curves -- not the individual constants -- are the identifiable check.
+
+begin parameters
+
+# Avogadro constant (exact)
+NA 6.02214076e23 # molecules/mol
+
+# Subvolume factor: fraction of one cell's extracellular fluid simulated (Kozer/
+# Mitra used 1% of a cell). Molecule counts scale with f; f=1 recovers the whole
+# cell. Reserved house-style name for the subvolume fraction.
+f 0.01 # dimensionless
+
+# RBL/EGFR cell suspension density (6e8 cells/L)
+cell_density 6.0e8 # cells/L
+
+# Extracellular fluid volume per cell (= 1/cell_density); the simulated subvolume
+# is f*V_ref.
+V_ref 1.0/cell_density # L/cell
+Vo f*V_ref # L
+
+# Molecules per nM in the simulated subvolume: count = conc[nM]*1e-9*NA*Vo. This
+# is the nM <-> molecule-count conversion (Faeder et al. 2009 convention); 1 nM in
+# a whole cell is ~1e6 molecules, ~1e4 in this f=0.01 subvolume.
+nM_to_count 1.0e-9*NA*Vo # molecules/nM
+
+# Total EGF concentration. 30 nM is the default (fixed-dose) value; the dose-
+# response scan varies LT_nM over 0.001-100 nM. LT is the corresponding count.
+LT_nM 30 # nM
+LT LT_nM*nM_to_count # molecules
+
+# Total EGFR (0.09 nM ~ 90,000 receptors per cell; ~900 in the f=0.01 subvolume).
+RT 0.09*nM_to_count # molecules
+
+# EGF binding to EGFR NOT crosslinked via the ectodomain (monomeric EGFR);
+# Macdonald and Pike (2008). K11 association constant, k11r dissociation rate
+# (Elleman et al. 2001), k11f the derived single-site forward rate.
+K11 4.6 # /nM
+k11r 0.02 # /s
+k11f K11*k11r/nM_to_count # /molecule/s
+
+# EGF binding to EGFR crosslinked to a second, EGF-free EGFR; Macdonald and Pike
+# (2008). The /2 converts the effective equilibrium constant K21 to a single-site
+# forward rate (BioNetGen re-applies statistical factors).
+K21 5.3 # /nM
+k21r 0.02 # /s
+k21f K21*k21r/2/nM_to_count # /molecule/s
+
+# EGF binding to EGFR crosslinked to a second, EGF-bound EGFR; Macdonald and Pike
+# (2008). The x2 converts the effective K22 to a single-site forward rate.
+K22 0.34 # /nM
+k22r 0.2 # /s
+k22f 2*K22*k22r/nM_to_count # /molecule/s
+
+# Ectodomain-ectodomain crosslinking, both receptors EGF-free; Macdonald and Pike
+# (2008), Low-Nam et al. (2011). The x2 in l20f is the A+A same-species single-site
+# correction.
+L20 212 # /nM
+l20r 1.24 # /s
+l20f 2*L20*l20r/nM_to_count # /molecule/s
+
+# Ectodomain crosslinking, one receptor EGF-bound; L21 from detailed balance
+# (L21 = K21*L20/K11), l21r from Low-Nam et al. (2011).
+L21 244 # /nM
+l21r 0.738 # /s
+l21f L21*l21r/nM_to_count # /molecule/s
+
+# Ectodomain crosslinking, both receptors EGF-bound; L22 from detailed balance
+# (L22 = K22*L21/K11), l22r from Low-Nam et al. (2011). x2 same-species correction.
+L22 18.0 # /nM
+l22r 0.272 # /s
+l22f 2*L22*l22r/nM_to_count # /molecule/s
+
+# Cytoplasmic-tail conformational switch (fitted): ligand-mediated activation k_o
+# (cd~c -> cd~o) and ligand-independent deactivation k_c (cd~o -> cd~c).
+k_o 3.54931 # /s
+k_c 15.8220 # /s
+
+# Tail-tail association of active tails (fitted, single-site) and its per-count
+# forward rate kaf_pc used in the rules; dissociation kar.
+kaf 45.0460 # /nM/s
+kaf_pc kaf/nM_to_count # /molecule/s
+kar 0.64255 # /s
+
+# EGFR trans-phosphorylation and dephosphorylation; consistent with Kleiman et al.
+# (2011).
+kp 1 # /s
+kdp 1 # /s
+
+# Ring-closure enhancement (fitted): an effective local concentration presented to
+# a tethered crosslinking partner. chi_r_pc is the per-count factor multiplying the
+# forward crosslink rate in the (unimolecular) ring-closure rules.
+chi_r 1907.32 # nM
+chi_r_pc chi_r*nM_to_count # molecules
+
+# Fitted observable-scale factors mapping model counts to the average-normalized
+# Kozer 2013 data (Mitra 2019 best fit; the well-determined fit output). Used by
+# the commented conversion functions below and by run_mitra2019.py.
+#   alpha1_pre: cluster density vs dose  (Fig 2B)
+#   alpha2_pre: cluster density vs time  (Fig 3B)
+#   alpha3_pre: phospho-EGFR   vs dose  (Fig 2D)
+#   alpha4_pre: phospho-EGFR   vs time  (Fig 3D)
+alpha1_pre 2.5718e-5 # /(molecule/cell)
+alpha2_pre 2.7509e-5 # /(molecule/cell)
+alpha3_pre 5.0739e-5 # /(molecule/cell)
+alpha4_pre 3.2791e-5 # /(molecule/cell)
+
+# Initial monomer/dimer split from the ligand-free ectodomain crosslink
+# equilibrium (KD = 2*l20r/l20f): MT monomers and DT dimers so that MT + 2*DT = RT.
+KD 2*l20r/l20f # molecules
+term -1+sqrt(1+8*RT/KD) # dimensionless
+MT term*KD/4 # molecules
+DT term*term*KD/16 # molecules
+
+end parameters
+
+begin molecule types
+
+# Epidermal growth factor: one receptor-binding site.
+EGF(rec)
+
+# EGFR: ectodomain crosslink face (back), EGF-binding site (lig), cytoplasmic-tail
+# conformation (cd: c closed / o open-active), activation-loop tyrosine (Y: u/p).
+EGFR(back,lig,cd~c~o,Y~u~p)
+
+end molecule types
+
+begin seed species
+
+# Free EGF, plus the ligand-free EGFR monomer/dimer pre-equilibrium.
+EGF(rec) LT # molecules
+EGFR(back,lig,cd~c,Y~u) MT # molecules
+EGFR(back!1,lig,cd~c,Y~u).EGFR(back!1,lig,cd~c,Y~u) DT # molecules
+
+end seed species
+
+begin observables
+
+# Free EGF and ligand-free EGFR.
+Molecules EGFfree EGF(rec)
+Molecules EGFRfree EGFR(lig)
+
+# All receptors (conserved).
+Molecules all_receptors EGFR()
+
+# EGFR oligomer-size distribution: species with exactly N receptors, N=1..20.
+# The model is unbounded; tracking to 20-mers captures all populated sizes (higher
+# orders are essentially never occupied at the fitted parameters).
+Species monomer EGFR==1
+Species dimer EGFR==2
+Species trimer EGFR==3
+Species tetramer EGFR==4
+Species pentamer EGFR==5
+Species hexamer EGFR==6
+Species heptamer EGFR==7
+Species octamer EGFR==8
+Species nonamer EGFR==9
+Species decamer EGFR==10
+Species undecamer EGFR==11
+Species dodecamer EGFR==12
+Species tridecamer EGFR==13
+Species tetradecamer EGFR==14
+Species pentadecamer EGFR==15
+Species hexadecamer EGFR==16
+Species heptadecamer EGFR==17
+Species octadecamer EGFR==18
+Species nonadecamer EGFR==19
+Species icosadecamer EGFR==20
+
+# Phosphorylated EGFR (activation-loop tyrosine); the Fig 2D/3D readout.
+Molecules pEGFR EGFR(Y~p)
+
+end observables
+
+begin functions
+
+# Total EGFR clusters = number of oligomeric species of every size; the Fig 2B/3B
+# cluster-density readout. References observables only, so it evaluates under
+# NFsim (a function that references another function does not -- see the scaled
+# conversions below).
+Clusters() monomer+dimer+trimer+tetramer+pentamer+hexamer+heptamer+octamer+nonamer\
+  +decamer+undecamer+dodecamer+tridecamer+tetradecamer+pentadecamer+hexadecamer\
+  +heptadecamer+octadecamer+nonadecamer+icosadecamer
+
+# Receptors partitioned into small (<=tetramer) vs large (>=pentamer) oligomers,
+# per cell (/f); diagnostic for how much mass sits above the tetramer.
+receptors_in_small_oligo() (1*monomer+2*dimer+3*trimer+4*tetramer)/f
+receptors_in_large_oligo() (5*pentamer+6*hexamer+7*heptamer+8*octamer+9*nonamer\
+  +10*decamer+11*undecamer+12*dodecamer+13*tridecamer+14*tetradecamer+15*pentadecamer\
+  +16*hexadecamer+17*heptadecamer+18*octadecamer+19*nonadecamer+20*icosadecamer)/f
+
+# Scaled model outputs directly comparable to the average-normalized Kozer 2013
+# data (alpha*_pre*observable/f, per-cell). Commented out because they reference
+# the Clusters() function, and NFsim cannot evaluate a function that references
+# another function; run_mitra2019.py applies the same scaling from the oligomer
+# columns instead. Uncomment only for network-generating (ODE/SSA) runs.
+# pre1_dose() alpha1_pre*Clusters()/f  # cluster density vs dose  (Fig 2B)
+# pre2_time() alpha2_pre*Clusters()/f  # cluster density vs time  (Fig 3B)
+# pre3_dose() alpha3_pre*pEGFR/f        # phospho-EGFR   vs dose  (Fig 2D)
+# pre4_time() alpha4_pre*pEGFR/f        # phospho-EGFR   vs time  (Fig 3D)
+
+end functions
+
+begin reaction rules
+
+# EGF binding to EGFR not crosslinked via the ectodomain.
+R_bind_egf_free: EGF(rec)+EGFR(back,lig) <-> EGF(rec!1).EGFR(back,lig!1) k11f,k11r
+
+# EGF binding to EGFR crosslinked to a second EGFR, both EGF-free.
+R_bind_egf_xl0: EGF(rec)+EGFR(back!1,lig).EGFR(back!1,lig) <-> \
+  EGF(rec!2).EGFR(back!1,lig!2).EGFR(back!1,lig) k21f,k21r
+
+# EGF binding to EGFR crosslinked to a second, EGF-bound EGFR.
+R_bind_egf_xl1: EGF(rec)+EGF(rec!1).EGFR(back!2,lig!1).EGFR(back!2,lig) <-> \
+  EGF(rec!3).EGF(rec!1).EGFR(back!2,lig!1).EGFR(back!2,lig!3) k22f,k22r
+
+# Ectodomain crosslinking of two untethered EGFR, both EGF-free.
+R_xlink_ecto_00: EGFR(back,lig)+EGFR(back,lig) <-> EGFR(back!1,lig).EGFR(back!1,lig) l20f,l20r
+
+# Ectodomain crosslinking of two untethered EGFR, one EGF-bound.
+R_xlink_ecto_01: EGFR(back,lig)+EGF(rec!1).EGFR(back,lig!1) <-> \
+  EGFR(back!2,lig).EGF(rec!1).EGFR(back!2,lig!1) l21f,l21r
+
+# Ectodomain crosslinking of two untethered EGFR, both EGF-bound.
+R_xlink_ecto_11: EGF(rec!1).EGFR(back,lig!1)+EGF(rec!2).EGFR(back,lig!2) <-> \
+  EGF(rec!1).EGFR(back!3,lig!1).EGF(rec!2).EGFR(back!3,lig!2) l22f,l22r
+
+# Ring closure: ectodomain crosslink between two tethered EGFR, both EGF-free
+# (rate enhanced by chi_r).
+R_ringclose_ecto_00: \
+  EGFR(cd~o!4,back,lig).EGFR(cd~o!2,back,lig).EGFR(cd~o!2,back!3).EGFR(cd~o!4,back!3) <-> \
+  EGFR(cd~o!4,back!1,lig).EGFR(cd~o!2,back!1,lig).EGFR(cd~o!2,back!3).EGFR(cd~o!4,back!3) \
+  chi_r_pc*l20f,l20r
+
+# Ring closure: ectodomain crosslink between two tethered EGFR, one EGF-bound.
+R_ringclose_ecto_01: \
+  EGFR(cd~o!4,back,lig).EGFR(cd~o!2,back,lig!+).EGFR(cd~o!2,back!3).EGFR(cd~o!4,back!3) <-> \
+  EGFR(cd~o!4,back!1,lig).EGFR(cd~o!2,back!1,lig!+).EGFR(cd~o!2,back!3).EGFR(cd~o!4,back!3) \
+  chi_r_pc*l21f,l21r
+
+# Ring closure: ectodomain crosslink between two tethered EGFR, both EGF-bound.
+R_ringclose_ecto_11: \
+  EGFR(cd~o!4,back,lig!+).EGFR(cd~o!2,back,lig!+).EGFR(cd~o!2,back!3).EGFR(cd~o!4,back!3) <-> \
+  EGFR(cd~o!4,back!1,lig!+).EGFR(cd~o!2,back!1,lig!+).EGFR(cd~o!2,back!3).EGFR(cd~o!4,back!3) \
+  chi_r_pc*l22f,l22r
+
+# Ligand-mediated activating conformation change of the EGFR cytoplasmic tail.
+R_tail_open: EGFR(lig!+,cd~c) -> EGFR(lig!+,cd~o) k_o
+
+# Ligand-independent deactivating conformation change of the EGFR tail.
+R_tail_close: EGFR(cd~o) -> EGFR(cd~c) k_c
+
+# Tail-tail association of two untethered active-tail EGFR.
+R_xlink_tail: EGFR(cd~o)+EGFR(cd~o) <-> EGFR(cd~o!1).EGFR(cd~o!1) kaf_pc,kar
+
+# Ring closure: tail-tail association between two tethered active-tail EGFR.
+R_ringclose_tail: \
+  EGFR(cd~o,back!1).EGFR(cd~o!3,back!1).EGFR(cd~o!3,back!2).EGFR(cd~o,back!2) <-> \
+  EGFR(cd~o!4,back!1).EGFR(cd~o!3,back!1).EGFR(cd~o!3,back!2).EGFR(cd~o!4,back!2) \
+  chi_r_pc*kaf_pc,kar
+
+# Trans-phosphorylation of the activation-loop tyrosine within a tail-tail pair.
+R_phos: EGFR(cd~o!1).EGFR(cd~o!1,Y~u) -> EGFR(cd~o!1).EGFR(cd~o!1,Y~p) kp
+
+# Dephosphorylation.
+R_dephos: EGFR(Y~p) -> EGFR(Y~u) kdp
+
+end reaction rules
+
+end model
+
+begin actions
+
+  #@note: |
+  #  Network generation is infeasible: EGFR forms unbounded ectodomain-crosslinked
+  #  oligomers, so the model is simulated network-free. NFsim flags:
+  #    -bscb  block same-complex binding -- the bimolecular crosslink rules join
+  #           two separate aggregates; ring closure within an aggregate is the
+  #           dedicated chi_r-enhanced rules. Without -bscb a plain crosslink could
+  #           also close a ring, at the wrong (unenhanced) rate.
+  #    -utl 5 raise the universal traversal limit above the 4-molecule ring-closure
+  #           patterns (auto value 4 is too shallow and can silently corrupt the
+  #           ring rules' reactant lists).
+  #    gml    global molecule limit at the 32-bit max: the top dose holds ~1e6 EGF
+  #           particles, well above BNG's 2e5 default.
+  #  print_functions writes Clusters()/receptors_* into the output. Correctness for
+  #  this aggregation model is confirmed by agreement of two independent
+  #  network-free algorithms (BioNetGen NFsim and RuleMonkey, both -bscb; see
+  #  run_mitra2019.py), not by legacy NFsim alone.
+
+  saveConcentrations()
+
+  # EGFR cluster density & phospho-EGFR vs EGF dose
+
+  #@protocol: |
+  #  Network-free dose-response: scan total EGF LT_nM over 0.001-100 nM (log,
+  #  6 points), each run to the t_end=600 s endpoint. Clusters() is the cluster
+  #  density (Fig 2B) and pEGFR the phospho-EGFR (Fig 2D); run_mitra2019.py scales
+  #  both by the fitted alpha*_pre and compares to the average-normalized data.
+  #  NFsim is stochastic -- average replicate scans for smooth curves.
+
+  #@figure: Fig. 2B and Fig. 2D in Kozer et al. (2013)
+
+  parameter_scan({parameter=>"LT_nM",par_min=>0.001,par_max=>100,n_scan_pts=>6,\
+    log_scale=>1,method=>"nf",suffix=>"scan",t_start=>0,t_end=>600,n_steps=>1,\
+    gml=>2147483647,print_functions=>1,param=>"-bscb -utl 5"})
+
+  resetConcentrations()
+
+  # EGFR cluster density & phospho-EGFR vs time at 30 nM EGF
+
+  #@protocol: |
+  #  Network-free time course at the default 30 nM EGF to t_end=600 s. Clusters()
+  #  (Fig 3B) and pEGFR (Fig 3D) vs time; run_mitra2019.py scales by alpha2_pre /
+  #  alpha4_pre and compares to the average-normalized data.
+
+  #@figure: Fig. 3B and Fig. 3D in Kozer et al. (2013)
+
+  simulate({method=>"nf",suffix=>"nfr",t_start=>0,t_end=>600,n_steps=>20,\
+    gml=>2147483647,print_functions=>1,param=>"-bscb -utl 5"})
+
+end actions
