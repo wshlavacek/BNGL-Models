@@ -1,0 +1,323 @@
+begin model
+
+#@title: |
+#  Phage lambda lysis-lysogeny decision, detailed network-free model
+#  (Cortes et al., 2017)
+
+#@description: |
+#  Network-free (NFsim / RuleMonkey) reformulation of the QSSA-reduced
+#  "detailed" post-infection decision model of Cortes, Trinh, Zeng &
+#  Balazsi (2017), Biophys J 113:2110-2120 (Supporting Material Eqs.
+#  38-55). The circuit tracks the four decision proteins CI, Cro, CII
+#  and Q, their transcripts (plus the paQ anti-Q small RNA), a
+#  stochastically REPLICATING population of viral genomes DNA(), and a
+#  cell that grows in volume. Fast dimerization, DNA-operator binding
+#  and CII-FtsH binding are folded (QSSA) into mean-field promoter
+#  occupancies that appear as functional transcription/replication
+#  rates: pR (Cro/CII/Q operon) and pRM (CI) are governed by the
+#  competing CI2/Cro2 occupancy F0/F_CI/F_CRO of pRM/R (Hill n=2 in
+#  monomer, i.e. dimer control); pRE (CI) and paQ (anti-Q) are switched
+#  on by the CII2 occupancy E_CII/A_CII (Hill n=2); CII degradation is
+#  the FtsH-saturable rate d_CII = alpha_yf/(1 + kappa_FtsH*[CII]).
+#  Concentrations are counts divided by the rescaled cell volume
+#  v = Obs_Vol/Vscale, carried by a self-catalytic volume-proxy clock
+#  Vol() growing exponentially v(t)=v0*exp(g t) (doubling time 100 min)
+#  and capped at v=2; 1 molecule ~ 1 nM in an average cell (v=1).
+#  DYNAMICS: transcription from pR makes Cro (a weak pRM/R repressor)
+#  and Q rise first; a transient "bell-shaped" CII pulse (grows, then
+#  is quenched by FtsH and dilution) can, at high enough per-cell viral
+#  concentration m/v, activate pRE to boost CI above Cro and cross the
+#  CI threshold -> LYSOGENY, while indirectly repressing Q via anti-Q
+#  RNA interference. If instead Q crosses its threshold first, late
+#  lytic genes fire -> LYSIS. The intrinsic discrete-molecule noise of
+#  the SSA/NFsim trajectory replaces the paper's fitted Langevin term,
+#  so the MOI-/volume-dependent probability of lysogeny (rising and
+#  saturating toward 1 at high MOI) emerges first-principles from the
+#  threshold-crossing race. The lysis-vs-lysogeny classifier is a
+#  post-processing readout of the CI/CII/Q threshold crossings
+#  (criteria #1/#2 of the SI); see run_cortes2017.py.
+
+#@keyword: |
+#  gene regulation, bacteriophage lambda, lysis-lysogeny decision,
+#  cell-fate decision, threshold crossing, first-passage, bistable,
+#  CII, Q antitermination, CI-Cro switch, viral DNA replication,
+#  RNA interference, incoherent feedforward loop, network-free, NFsim,
+#  Hill kinetics, stochastic gene expression, Escherichia coli
+
+#@reference: |
+#  Cortes MG, Trinh JT, Zeng L, Balazsi G (2017). Late-Arriving Signals
+#  Contribute Less to Cell-Fate Decisions. Biophys J 113(9):2110-2120.
+#  doi:10.1016/j.bpj.2017.09.012  (detailed model: Supporting Material
+#  Sec. 1, reduced reactions Eqs. 38-55, parameters Tables S1-S3.)
+
+#@note: |
+#  Population/units convention. Interpretation is POPULATION-based
+#  (molecule counts). Concentrations use the paper's rescaling
+#  [X] = N / v in nM, where the rescaled volume v = Obs_Vol/Vscale and
+#  1 molecule in an average cell (v=1) is approximated as 1 nM (the
+#  paper takes Vbar ~ 1.5e-15 L so 1/(NA*Vbar) ~ 1.1 nM ~ 1 nM; the
+#  Table S2/S3 fit uses the 1-nM/molecule approximation, which this
+#  model reproduces exactly by writing [X] = Obs_X*Vscale/Obs_Vol).
+#  NA and V_ref are provided for population conversion only.
+
+#@note: |
+#  Network-free engine notes. All functional rate laws are written as
+#  SELF-CONTAINED expressions of Molecules-type observables and
+#  parameters only (no function-of-function), because NFsim >=1.14
+#  cannot evaluate an XML <Function> that references another
+#  <Function>. The shared pRM/R partition-function denominator is
+#  therefore repeated inline in rate_pR/rate_pRM/rate_repl. The volume
+#  cap uses the comparison term (Obs_Vol<VolCap), which evaluates to
+#  1.0/0.0 in BNG, NFsim and RuleMonkey. The reduced model is a finite
+#  network (DNA + 5 RNAs + 4 proteins + clock), so ODE and generate-
+#  first SSA are also feasible and are provided for verification; the
+#  stochastic %lysogeny-vs-MOI result is produced network-free by the
+#  driver. Bake MOI/v0 into the XML (text substitution) before an NFsim
+#  run: post-init NFsim rate constants are not re-derived from changed
+#  parameters.
+
+begin parameters
+  # --- Population-conversion constants (§1.3; used for [X] mapping only) ---
+  NA      6.02214076e23  # /mol
+  # Average E. coli cell volume Vbar used by the paper to rescale volume.
+  V_ref   1.5e-15        # L/cell
+
+  # --- Infection / cell-size inputs (overridden by the driver) ---
+  # Multiplicity of infection = initial viral genome copies injected.
+  MOI     1              # molecules
+  # Rescaled initial cell volume at infection (0.5 small, 1 average, 1.5 large).
+  v0      1.0            # dimensionless
+
+  # --- Volume-proxy clock (carries v(t)=v0*exp(g t), capped at v=2) ---
+  # Clock scale: Obs_Vol = v*Vscale. Large so the birth-process clock is
+  # effectively deterministic (CV ~ 1/sqrt(Vscale)) yet cheap.
+  Vscale  1000           # molecules per unit rescaled volume
+  VolCap  2*Vscale       # clock ceiling at rescaled volume v=2
+  # Exponential growth rate g = ln(2)/t_double, t_double = 100 min (Table S2).
+  t_double 100           # min
+  g       0.0069314718   # /min
+
+  # --- Transcription rate constants (Table S2) ---
+  # Rightwards transcription from pR (cro-cII-Q operon).
+  k_R     1.1699         # /min
+  # Transcription from pRM (CI maintenance).
+  k_RM    0.2848         # /min
+  # Transcription from pRE (CI establishment, CII-activated).
+  k_RE    0.4938         # /min
+  # Transcription from activated paQ (anti-Q sRNA, CII-activated).
+  k_a     0.4386         # /min
+
+  # --- Translation and RNA turnover (Table S2) ---
+  sigma   0.6371         # /min
+  d_r     0.2476         # /min
+  # Anti-Q sRNA : Q-mRNA duplex-formation (RNA interference) rate.
+  alpha_r 0.1544         # /nM/min
+
+  # --- Protein turnover (Table S2) ---
+  d_CI    0.0849         # /min
+  d_Cro   0.002          # /min
+  d_Q     0.00258        # /min
+  # CII degradation is FtsH-saturable: d_CII = alpha_yf/(1 + kappa_FtsH*[CII]).
+  alpha_yf   2.9464      # /min
+  kappa_FtsH 1/5.0396    # /nM
+
+  # --- Viral DNA replication (Table S2) ---
+  # Theta-mode from free pR (omega) and Cro-bound pR (omega_Cro).
+  omega     0.4045       # /min
+  omega_Cro 0.021        # /min
+
+  # --- Promoter occupancy constants (Table S3; single-site, dimer/Hill n=2) ---
+  # pRM/R competitive occupancy by CI2 (kappa_CI) and Cro2 (kappa_Cro).
+  kappa_CI  (1/5.84)^2   # /nM^2
+  kappa_Cro (1/30.37)^2  # /nM^2
+  # pRE activation by CII2.
+  kappa_pRE (1/72.54)^2  # /nM^2
+  # paQ activation by CII2.
+  kappa_paQ (1/20.78)^2  # /nM^2
+
+  # --- Decision thresholds (Table S2 / Fig. S4; read by the classifier) ---
+  # Q lysis threshold; CI lysogeny threshold (criteria #1); CII lysogeny
+  # threshold (criteria #2). Not used in any rate law.
+  Q_T     134.897        # nM
+  CI_T    61.0073        # nM
+  CII_T   22.0           # nM
+end parameters
+
+begin molecule types
+  # Viral genome copy; the shared template for all promoters and the unit
+  # of theta/sigma-mode replication. Seeded at MOI, grows stochastically.
+  DNA()
+  # Decision proteins (phage lambda). Monomers; multimerization is QSSA.
+  CI()
+  Cro()
+  CII()
+  Q()
+  # Transcripts. mRNA_antiQ is the paQ anti-Q small RNA.
+  mRNA_CI()
+  mRNA_Cro()
+  mRNA_CII()
+  mRNA_Q()
+  mRNA_antiQ()
+  # Volume-proxy clock particle (count/Vscale = rescaled cell volume v).
+  Vol()
+end molecule types
+
+begin seed species
+  DNA()         MOI       # molecules
+  CI()          0         # molecules
+  Cro()         0         # molecules
+  CII()         0         # molecules
+  Q()           0         # molecules
+  mRNA_CI()     0         # molecules
+  mRNA_Cro()    0         # molecules
+  mRNA_CII()    0         # molecules
+  mRNA_Q()      0         # molecules
+  mRNA_antiQ()  0         # molecules
+  Vol()         v0*Vscale # molecules
+end seed species
+
+begin observables
+  # Decision proteins (counts; concentration [X]=Obs_X*Vscale/Obs_Vol nM).
+  Molecules Obs_CI         CI()
+  Molecules Obs_Cro        Cro()
+  Molecules Obs_CII        CII()
+  Molecules Obs_Q          Q()
+  # Genome copy number and the volume clock (v = Obs_Vol/Vscale).
+  Molecules Obs_DNA        DNA()
+  Molecules Obs_Vol        Vol()
+  # RNA-interference pair (insight into Q downregulation).
+  Molecules Obs_mRNA_Q     mRNA_Q()
+  Molecules Obs_mRNA_antiQ mRNA_antiQ()
+end observables
+
+begin functions
+  # pR transcription: k_R x fraction of free pRM/R promoters, F0 =
+  # 1/(1 + kappa_CI*[CI]^2 + kappa_Cro*[Cro]^2). [X] = Obs_X*Vscale/Obs_Vol.
+  rate_pR() = k_R/(1 + kappa_CI*(Obs_CI*Vscale/Obs_Vol)^2 + \
+    kappa_Cro*(Obs_Cro*Vscale/Obs_Vol)^2)
+
+  # pRM transcription: k_RM x F_CI (fraction of pRM/R bound by CI2).
+  rate_pRM() = k_RM*kappa_CI*(Obs_CI*Vscale/Obs_Vol)^2/(1 + \
+    kappa_CI*(Obs_CI*Vscale/Obs_Vol)^2 + kappa_Cro*(Obs_Cro*Vscale/Obs_Vol)^2)
+
+  # pRE transcription: k_RE x E_CII (fraction of pRE activated by CII2).
+  rate_pRE() = k_RE*kappa_pRE*(Obs_CII*Vscale/Obs_Vol)^2/(1 + \
+    kappa_pRE*(Obs_CII*Vscale/Obs_Vol)^2)
+
+  # paQ transcription: k_a x A_CII (fraction of paQ activated by CII2).
+  rate_paQ() = k_a*kappa_paQ*(Obs_CII*Vscale/Obs_Vol)^2/(1 + \
+    kappa_paQ*(Obs_CII*Vscale/Obs_Vol)^2)
+
+  # Anti-Q : Q-mRNA duplex formation. Bimolecular rate constant alpha_r/v
+  # gives propensity (alpha_r/v)*N_Q*N_antiQ (paper reaction rate alpha_r/V).
+  rate_antiQ() = alpha_r*Vscale/Obs_Vol
+
+  # FtsH-saturable CII degradation rate d_CII (QSSA of CII-FtsH binding).
+  deg_CII() = alpha_yf/(1 + kappa_FtsH*Obs_CII*Vscale/Obs_Vol)
+
+  # Viral replication rate = omega*F0 + omega_Cro*F_CRO (theta-mode from free
+  # and Cro-bound pR); numerator/denominator inlined to avoid function-of-function.
+  rate_repl() = (omega + omega_Cro*kappa_Cro*(Obs_Cro*Vscale/Obs_Vol)^2)/(1 + \
+    kappa_CI*(Obs_CI*Vscale/Obs_Vol)^2 + kappa_Cro*(Obs_Cro*Vscale/Obs_Vol)^2)
+
+  # Exponential volume growth, switched off once the clock reaches v=2.
+  grow() = g*(Obs_Vol<VolCap)
+
+  # --- Dimensional conversions (uncomment for nM concentration output) ---
+# CI_conc()  = Obs_CI*Vscale/Obs_Vol   # nM
+# Cro_conc() = Obs_Cro*Vscale/Obs_Vol  # nM
+# CII_conc() = Obs_CII*Vscale/Obs_Vol  # nM
+# Q_conc()   = Obs_Q*Vscale/Obs_Vol    # nM
+end functions
+
+begin reaction rules
+  # --- Transcription (each viral genome is a template; rate = k x occupancy) ---
+  # pR fires the cro-cII-Q operon (decoupled transcripts, SI assumption 3).
+  R_txn_pR:  DNA() -> DNA() + mRNA_Cro() + mRNA_CII() + mRNA_Q()  rate_pR()
+  # pRE and pRM both make CI mRNA (establishment vs maintenance).
+  R_txn_pRE: DNA() -> DNA() + mRNA_CI()  rate_pRE()
+  R_txn_pRM: DNA() -> DNA() + mRNA_CI()  rate_pRM()
+  # paQ makes the anti-Q small RNA.
+  R_txn_paQ: DNA() -> DNA() + mRNA_antiQ()  rate_paQ()
+
+  # --- Translation (per transcript) ---
+  R_tl_CI:  mRNA_CI()  -> mRNA_CI()  + CI()   sigma
+  R_tl_Cro: mRNA_Cro() -> mRNA_Cro() + Cro()  sigma
+  R_tl_CII: mRNA_CII() -> mRNA_CII() + CII()  sigma
+  R_tl_Q:   mRNA_Q()   -> mRNA_Q()   + Q()    sigma
+
+  # --- RNA interference: anti-Q sequesters and co-degrades Q mRNA ---
+  R_antiQ: mRNA_Q() + mRNA_antiQ() -> 0  rate_antiQ() DeleteMolecules
+
+  # --- Protein turnover (CII via FtsH-saturable functional rate) ---
+  R_deg_CI:  CI()  -> 0  d_CI
+  R_deg_Cro: Cro() -> 0  d_Cro
+  R_deg_CII: CII() -> 0  deg_CII()
+  R_deg_Q:   Q()   -> 0  d_Q
+
+  # --- RNA turnover (anti-Q RNA has no first-order decay; SI Eqs. 51-54) ---
+  R_deg_mRNA_CI:  mRNA_CI()  -> 0  d_r
+  R_deg_mRNA_Cro: mRNA_Cro() -> 0  d_r
+  R_deg_mRNA_CII: mRNA_CII() -> 0  d_r
+  R_deg_mRNA_Q:   mRNA_Q()   -> 0  d_r
+
+  # --- Viral DNA replication (theta-mode; grows the genome population) ---
+  R_repl: DNA() -> DNA() + DNA()  rate_repl()
+
+  # --- Cell-volume growth clock (self-catalytic; exponential, capped at v=2) ---
+  R_grow: Vol() -> Vol() + Vol()  grow()
+end reaction rules
+
+end model
+
+begin actions
+  # Reduced detailed model: a finite network (DNA + 5 RNAs + 4 proteins +
+  # clock), so ODE / generate-first SSA / network-free NFsim are all feasible.
+  # Two protocols are active (benchmarking, save/reset between them): a
+  # deterministic ODE reference and a seeded single-cell SSA trajectory
+  # (Fig. S2). The population %lysogeny-vs-MOI decision statistics (Fig. S3)
+  # need many seeds + the threshold classifier and are produced network-free
+  # by run_cortes2017.py; NFsim/RuleMonkey parity is checked there too.
+  generate_network({overwrite=>1})  # 11 species, 19 reactions
+  saveConcentrations()
+
+  # Deterministic mean-field decision trajectory (average cell, MOI=1)
+
+  #@protocol: |
+  #  Integrate the reduced ODEs (SI Eqs. 38-55) for an average-sized cell
+  #  (v0=1) at MOI=1 over the ~60 min decision window. Shows the
+  #  characteristic transient "bell-shaped" CII pulse and the early rise of
+  #  Cro and Q. This deterministic mean-field trajectory is the committed
+  #  reference and is verified against an independent SciPy integration of
+  #  Eqs. 38-55 in verify_cortes2017.ipynb (max rel err ~1e-6).
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>60,n_steps=>240})
+
+  # Stochastic single-cell trajectory (seeded SSA; Fig. S2)
+
+  #@protocol: |
+  #  One stochastic realization (Gillespie SSA on the generated network).
+  #  seed=>2017 yields a LYSOGENIC single cell (CI rises past its threshold,
+  #  Q stays below its own) -- a Fig. S2 lysogenic trajectory. Individual
+  #  runs are lysogenic or lytic; the average DNA copy number by 60 min is
+  #  ~30 for lysogeny and ~100 for lysis (Fig. S2). The mean lysogenic and
+  #  lytic trajectories are reproduced in verify_cortes2017.ipynb.
+
+  #@figure: Fig. S2 in Cortes et al. (2017)
+
+  resetConcentrations()
+  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>60,n_steps=>240,\
+    seed=>2017})
+
+  # Network-free single-cell trajectory (NFsim, rejection sampling)
+
+  #@protocol: |
+  #  Same model simulated network-free (NFsim), equivalent to the SSA on
+  #  this finite network. Used at scale by run_cortes2017.py for the
+  #  decision statistics and NFsim/RuleMonkey parity checks.
+
+#  resetConcentrations()
+#  simulate({method=>"nf",suffix=>"nfr",t_start=>0,t_end=>60,n_steps=>240,\
+#    gml=>2147483647})
+end actions

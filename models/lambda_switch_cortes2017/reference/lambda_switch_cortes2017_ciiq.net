@@ -1,0 +1,28 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 m_over_v  2.0  # Constant
+    2 mu_c      1.0  # Constant
+    3 mu_q      0.5  # Constant
+    4 Gamma     1.0  # Constant
+    5 eps       0.001  # Constant
+    6 d0        0.025  # Constant
+    7 kc        1.0  # Constant
+end parameters
+begin functions
+    1 prod_c() mu_c*m_over_v
+    2 prod_q() mu_q*((((m_over_v*(1-(Gamma*(Obs_c^4))))/(1+(Gamma*(Obs_c^4))))-eps)+sqrt((((((m_over_v*(1-(Gamma*(Obs_c^4))))/(1+(Gamma*(Obs_c^4))))-eps)^2)+(((4*m_over_v)*eps)/(1+(Gamma*(Obs_c^4)))))))
+end functions
+begin species
+    1 C() 0
+    2 Q() 0
+end species
+begin reactions
+    1 0 1 prod_c #R_prod_c
+    2 1 0 kc #R_dec_c
+    3 0 2 prod_q #R_prod_q
+    4 2 0 d0 #R_dec_q
+end reactions
+begin groups
+    1 Obs_c                1
+    2 Obs_q                2
+end groups

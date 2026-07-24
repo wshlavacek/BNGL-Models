@@ -1,0 +1,134 @@
+# metadata.yaml — lambda_switch_cortes2017
+id: lambda_switch_cortes2017
+created: 2026-07-24
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_ode, reformulation, ai_assisted]
+  description: >
+    Network-free (NFsim / RuleMonkey) reformulation of the phage-lambda
+    lysis/lysogeny decision model of Cortes, Trinh, Zeng & Balazsi
+    (2017), Biophys J 113:2110-2120, whose own simulations are
+    deterministic ODE and chemical-Langevin SDE. The novel network-free
+    formulation is intended to be functionally equivalent to the
+    published model: the primary file is a direct BNGL encoding of the
+    QSSA-reduced "detailed" reaction set (Supporting Material Eqs.
+    38-55) -- CI/Cro/CII/Q proteins and transcripts, a stochastically
+    replicating viral-genome population, mean-field promoter occupancies
+    (Tables S3) and an FtsH-saturable CII degradation, with cell-volume
+    growth carried by a self-catalytic Vol() clock. A per-genome variant
+    makes the fast DNA-operator binding explicit and per-copy (the
+    natural home of network-free), and a dimensionless ODE-only file
+    reproduces the paper's reduced two-variable CII-Q threshold model
+    (Eqs. 70-71). The intrinsic discrete-molecule noise of the SSA/NFsim
+    trajectory replaces the paper's fitted Langevin noise term, so the
+    MOI- and cell-volume-dependent probability of lysogeny (rising and
+    saturating toward 1 at high MOI) emerges from the CII/CI-vs-Q
+    threshold-crossing race. Complements lambda_switch_arkin1998: where
+    the Arkin reconstruction matches a 1998 paper, this matches the
+    modern single-cell lysogeny-vs-MOI data (Fig. S3).
+
+files:
+  - name: lambda_switch_cortes2017.bngl
+    role: primary
+    description: >
+      Detailed reduced model (SI Eqs. 38-55), network-free. Finite
+      network (DNA + 5 RNAs + 4 proteins + Vol clock), so ODE, seeded
+      SSA (Fig. S2 single-cell trajectory), and NFsim are all feasible;
+      the population %lysogeny-vs-MOI statistics (Fig. S3) are produced
+      by run_cortes2017.py. Global mean-field promoter occupancies,
+      exponential Vol() clock capped at v=2, theta-mode DNA replication.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: lambda_switch_cortes2017_pergenome.bngl
+    role: variant
+    description: >
+      Per-genome operator-state variant: each replicating genome carries
+      explicit pRM/R (free/CI/Cro), pRE (free/CII) and paQ (free/CII)
+      states with fast reversible binding (kon_X = kappa_X*koff). In the
+      fast-binding QSSA limit the occupancies self-average to the
+      detailed model's mean-field fractions -- functionally equivalent
+      (verified: matching %lysogeny-vs-MOI within stochastic noise) --
+      while exposing per-copy promoter telegraph noise. Network-free
+      (NFsim/RuleMonkey) only; drive with run_cortes2017.py under
+      CORTES_MODEL=pergenome.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: lambda_switch_cortes2017_ciiq.bngl
+    role: related
+    description: >
+      Simple two-variable CII-Q first-passage threshold model (main-text
+      Eqs. 1-2; SI Eqs. 70-71). DIMENSIONLESS (rescaled c=[CII]/C_T,
+      q=[Q]/Q_T; tau=t*d_c) and therefore ODE-only. Reproduces the
+      incoherent-feed-forward steady states of Fig. 1C (q_ss rises then
+      collapses as m/v increases past the c=1 crossover).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: run_cortes2017.py
+    role: verification
+    description: >
+      Self-contained driver: substitutes MOI/v0 into a model, generates
+      BNG-XML, simulates network-free via bngsim (NFsim/RuleMonkey), and
+      classifies each stochastic run by the SI decision criteria #1
+      ([Q] never crosses Q_T and [CI] crosses CI_T -> lysogeny) and #2
+      (CII crosses CII_T before Q crosses Q_T). Modes: sweep (%lysogeny
+      vs MOI for small/average/large cells), traj (Fig. S2 example
+      trajectories), parity (NFsim vs RuleMonkey). Drives either the
+      detailed or the per-genome model (CORTES_MODEL).
+  - name: verify_cortes2017.ipynb
+    role: verification
+    description: >
+      Verifies (1) the detailed model's BNG ODE against an independent
+      SciPy integration of Eqs. 38-55 (max rel err ~1e-6); (2) the
+      network-free stochastic %lysogeny-vs-MOI against the digitized
+      Fig. S3 single-cell data for three cell sizes (RMSE ~8%); (3)
+      functional equivalence of the per-genome variant to the detailed
+      model, and NFsim/RuleMonkey parity; (4) the simple CII-Q model's
+      steady states against analytic Eqs. 72-74 (Fig. 1C). Regenerates
+      verify_cortes2017.png.
+  - name: verify_cortes2017.png
+    role: figure
+    description: >
+      Six-panel verification: ODE model-spec overlay, %lysogeny-vs-MOI
+      vs Fig. S3 data, per-genome equivalence, Fig. 1C simple model,
+      Fig. S2 trajectories, and NFsim/RuleMonkey parity.
+  # Reference simulation data (committed regression baselines)
+  - name: reference/lambda_switch_cortes2017.net
+    role: reference
+  - name: reference/lambda_switch_cortes2017_ode.gdat
+    role: reference
+    description: Deterministic mean-field ODE reference (MOI=1, average cell).
+  - name: reference/lambda_switch_cortes2017_ssa.gdat
+    role: reference
+    description: Seeded (seed=2017) lysogenic single-cell SSA trajectory (Fig. S2).
+  - name: reference/lambda_switch_cortes2017_pergenome.xml
+    role: reference
+    description: BNG-XML for the network-free per-genome variant.
+  - name: reference/lambda_switch_cortes2017_ciiq.net
+    role: reference
+  - name: reference/lambda_switch_cortes2017_ciiq_ode.gdat
+    role: reference
+    description: Simple CII-Q model ODE reference (lysogenic example, m/v=2).
+  - name: reference/lambda_switch_cortes2017_ciiq_scan.scan
+    role: reference
+    description: Simple CII-Q steady states vs m/v (Fig. 1C scan).
+  - name: reference/cortes2017_lysogeny_sweep.npz
+    role: reference
+    description: >
+      Cached network-free stochastic results used by the notebook:
+      %lysogeny-vs-MOI (detailed, 1000 seeds, criteria #1/#2, three cell
+      sizes), Fig. S2 mean lyso/lytic trajectories, per-genome-vs-detailed
+      equivalence, and NFsim/RuleMonkey parity.
+  - name: reference/cortes2017_figS3_lysogeny_vs_moi_digitized.csv
+    role: reference
+    description: >
+      Experimental single-cell %lysogeny-vs-MOI data digitized from
+      Fig. S3 (small/average/large cells, MOI 1-5) for data verification.

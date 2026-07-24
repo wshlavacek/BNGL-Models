@@ -1,0 +1,1264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created by BioNetGen 2.9.3  -->
+<sbml xmlns="http://www.sbml.org/sbml/level3" level="3" version="1">
+  <model id="lambda_switch_cortes2017_pergenome">
+    <ListOfParameters>
+      <Parameter id="NA" type="Constant" value="6.0221408e+23" expr="6.02214076e23"/>
+      <Parameter id="V_ref" type="Constant" value="1.5e-15" expr="1.5e-15"/>
+      <Parameter id="MOI" type="Constant" value="1" expr="1"/>
+      <Parameter id="v0" type="Constant" value="1" expr="1.0"/>
+      <Parameter id="Vscale" type="Constant" value="1000" expr="1000"/>
+      <Parameter id="VolCap" type="Constant" value="2000" expr="2*Vscale"/>
+      <Parameter id="t_double" type="Constant" value="100" expr="100"/>
+      <Parameter id="g" type="Constant" value="0.0069314718" expr="0.0069314718"/>
+      <Parameter id="k_R" type="Constant" value="1.1699" expr="1.1699"/>
+      <Parameter id="k_RM" type="Constant" value="0.2848" expr="0.2848"/>
+      <Parameter id="k_RE" type="Constant" value="0.4938" expr="0.4938"/>
+      <Parameter id="k_a" type="Constant" value="0.4386" expr="0.4386"/>
+      <Parameter id="sigma" type="Constant" value="0.6371" expr="0.6371"/>
+      <Parameter id="d_r" type="Constant" value="0.2476" expr="0.2476"/>
+      <Parameter id="alpha_r" type="Constant" value="0.1544" expr="0.1544"/>
+      <Parameter id="d_CI" type="Constant" value="0.0849" expr="0.0849"/>
+      <Parameter id="d_Cro" type="Constant" value="0.002" expr="0.002"/>
+      <Parameter id="d_Q" type="Constant" value="0.00258" expr="0.00258"/>
+      <Parameter id="alpha_yf" type="Constant" value="2.9464" expr="2.9464"/>
+      <Parameter id="kappa_FtsH" type="Constant" value="0.19842845" expr="1/5.0396"/>
+      <Parameter id="omega" type="Constant" value="0.4045" expr="0.4045"/>
+      <Parameter id="omega_Cro" type="Constant" value="0.021" expr="0.021"/>
+      <Parameter id="kappa_CI" type="Constant" value="0.029320698" expr="(1/5.84)^2"/>
+      <Parameter id="kappa_Cro" type="Constant" value="0.0010842025" expr="(1/30.37)^2"/>
+      <Parameter id="kappa_pRE" type="Constant" value="0.00019003995" expr="(1/72.54)^2"/>
+      <Parameter id="kappa_paQ" type="Constant" value="0.0023158419" expr="(1/20.78)^2"/>
+      <Parameter id="koff" type="Constant" value="60" expr="60.0"/>
+      <Parameter id="kon_CI" type="Constant" value="1.7592419" expr="kappa_CI*koff"/>
+      <Parameter id="kon_Cro" type="Constant" value="0.065052152" expr="kappa_Cro*koff"/>
+      <Parameter id="kon_pRE" type="Constant" value="0.011402397" expr="kappa_pRE*koff"/>
+      <Parameter id="kon_paQ" type="Constant" value="0.13895052" expr="kappa_paQ*koff"/>
+      <Parameter id="Q_T" type="Constant" value="134.897" expr="134.897"/>
+      <Parameter id="CI_T" type="Constant" value="61.0073" expr="61.0073"/>
+      <Parameter id="CII_T" type="Constant" value="22" expr="22.0"/>
+      <Parameter id="_InitialConc1" type="Constant" value="1000" expr="v0*Vscale"/>
+    </ListOfParameters>
+    <ListOfMoleculeTypes>
+      <MoleculeType id="CI"/>
+      <MoleculeType id="CII"/>
+      <MoleculeType id="Cro"/>
+      <MoleculeType id="DNA">
+        <ListOfComponentTypes>
+          <ComponentType id="pRMR">
+            <ListOfAllowedStates>
+              <AllowedState id="free"/>
+              <AllowedState id="CI"/>
+              <AllowedState id="Cro"/>
+            </ListOfAllowedStates>
+          </ComponentType>
+          <ComponentType id="pRE">
+            <ListOfAllowedStates>
+              <AllowedState id="free"/>
+              <AllowedState id="CII"/>
+            </ListOfAllowedStates>
+          </ComponentType>
+          <ComponentType id="paQ">
+            <ListOfAllowedStates>
+              <AllowedState id="free"/>
+              <AllowedState id="CII"/>
+            </ListOfAllowedStates>
+          </ComponentType>
+        </ListOfComponentTypes>
+      </MoleculeType>
+      <MoleculeType id="Q"/>
+      <MoleculeType id="Vol"/>
+      <MoleculeType id="mRNA_CI"/>
+      <MoleculeType id="mRNA_CII"/>
+      <MoleculeType id="mRNA_Cro"/>
+      <MoleculeType id="mRNA_Q"/>
+      <MoleculeType id="mRNA_antiQ"/>
+    </ListOfMoleculeTypes>
+    <ListOfCompartments>
+    </ListOfCompartments>
+    <ListOfSpecies>
+      <Species id="S1"  concentration="MOI" name="DNA(pRE~free,pRMR~free,paQ~free)">
+        <ListOfMolecules>
+          <Molecule id="S1_M1" name="DNA">
+            <ListOfComponents>
+              <Component id="S1_M1_C1" name="pRE" state="free" numberOfBonds="0"/>
+              <Component id="S1_M1_C2" name="pRMR" state="free" numberOfBonds="0"/>
+              <Component id="S1_M1_C3" name="paQ" state="free" numberOfBonds="0"/>
+            </ListOfComponents>
+          </Molecule>
+        </ListOfMolecules>
+      </Species>
+      <Species id="S2"  concentration="0" name="CI()">
+        <ListOfMolecules>
+          <Molecule id="S2_M1" name="CI"/>
+        </ListOfMolecules>
+      </Species>
+      <Species id="S3"  concentration="0" name="Cro()">
+        <ListOfMolecules>
+          <Molecule id="S3_M1" name="Cro"/>
+        </ListOfMolecules>
+      </Species>
+      <Species id="S4"  concentration="0" name="CII()">
+        <ListOfMolecules>
+          <Molecule id="S4_M1" name="CII"/>
+        </ListOfMolecules>
+      </Species>
+      <Species id="S5"  concentration="0" name="Q()">
+        <ListOfMolecules>
+          <Molecule id="S5_M1" name="Q"/>
+        </ListOfMolecules>
+      </Species>
+      <Species id="S6"  concentration="0" name="mRNA_CI()">
+        <ListOfMolecules>
+          <Molecule id="S6_M1" name="mRNA_CI"/>
+        </ListOfMolecules>
+      </Species>
+      <Species id="S7"  concentration="0" name="mRNA_Cro()">
+        <ListOfMolecules>
+          <Molecule id="S7_M1" name="mRNA_Cro"/>
+        </ListOfMolecules>
+      </Species>
+      <Species id="S8"  concentration="0" name="mRNA_CII()">
+        <ListOfMolecules>
+          <Molecule id="S8_M1" name="mRNA_CII"/>
+        </ListOfMolecules>
+      </Species>
+      <Species id="S9"  concentration="0" name="mRNA_Q()">
+        <ListOfMolecules>
+          <Molecule id="S9_M1" name="mRNA_Q"/>
+        </ListOfMolecules>
+      </Species>
+      <Species id="S10"  concentration="0" name="mRNA_antiQ()">
+        <ListOfMolecules>
+          <Molecule id="S10_M1" name="mRNA_antiQ"/>
+        </ListOfMolecules>
+      </Species>
+      <Species id="S11"  concentration="_InitialConc1" name="Vol()">
+        <ListOfMolecules>
+          <Molecule id="S11_M1" name="Vol"/>
+        </ListOfMolecules>
+      </Species>
+    </ListOfSpecies>
+    <ListOfReactionRules>
+      <ReactionRule id="RR1" name="R_bind_CI" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR1_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR1_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR1_RP1_M1_C1" name="pRMR" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR1_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR1_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR1_PP1_M1_C1" name="pRMR" state="CI" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR1_RateLaw" type="Function" name="kon_CI_f" totalrate="0">
+          <ListOfArguments>
+          </ListOfArguments>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR1_RP1_M1" targetID="RR1_PP1_M1"/>
+          <MapItem sourceID="RR1_RP1_M1_C1" targetID="RR1_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <StateChange site="RR1_RP1_M1_C1" finalState="CI"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR2" name="R_unbind_CI" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR2_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR2_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR2_RP1_M1_C1" name="pRMR" state="CI" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR2_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR2_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR2_PP1_M1_C1" name="pRMR" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR2_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="koff"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR2_RP1_M1" targetID="RR2_PP1_M1"/>
+          <MapItem sourceID="RR2_RP1_M1_C1" targetID="RR2_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <StateChange site="RR2_RP1_M1_C1" finalState="free"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR3" name="R_bind_Cro" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR3_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR3_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR3_RP1_M1_C1" name="pRMR" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR3_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR3_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR3_PP1_M1_C1" name="pRMR" state="Cro" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR3_RateLaw" type="Function" name="kon_Cro_f" totalrate="0">
+          <ListOfArguments>
+          </ListOfArguments>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR3_RP1_M1" targetID="RR3_PP1_M1"/>
+          <MapItem sourceID="RR3_RP1_M1_C1" targetID="RR3_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <StateChange site="RR3_RP1_M1_C1" finalState="Cro"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR4" name="R_unbind_Cro" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR4_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR4_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR4_RP1_M1_C1" name="pRMR" state="Cro" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR4_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR4_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR4_PP1_M1_C1" name="pRMR" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR4_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="koff"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR4_RP1_M1" targetID="RR4_PP1_M1"/>
+          <MapItem sourceID="RR4_RP1_M1_C1" targetID="RR4_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <StateChange site="RR4_RP1_M1_C1" finalState="free"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR5" name="R_bind_pRE" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR5_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR5_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR5_RP1_M1_C1" name="pRE" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR5_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR5_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR5_PP1_M1_C1" name="pRE" state="CII" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR5_RateLaw" type="Function" name="kon_pRE_f" totalrate="0">
+          <ListOfArguments>
+          </ListOfArguments>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR5_RP1_M1" targetID="RR5_PP1_M1"/>
+          <MapItem sourceID="RR5_RP1_M1_C1" targetID="RR5_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <StateChange site="RR5_RP1_M1_C1" finalState="CII"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR6" name="R_unbind_pRE" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR6_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR6_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR6_RP1_M1_C1" name="pRE" state="CII" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR6_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR6_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR6_PP1_M1_C1" name="pRE" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR6_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="koff"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR6_RP1_M1" targetID="RR6_PP1_M1"/>
+          <MapItem sourceID="RR6_RP1_M1_C1" targetID="RR6_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <StateChange site="RR6_RP1_M1_C1" finalState="free"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR7" name="R_bind_paQ" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR7_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR7_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR7_RP1_M1_C1" name="paQ" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR7_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR7_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR7_PP1_M1_C1" name="paQ" state="CII" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR7_RateLaw" type="Function" name="kon_paQ_f" totalrate="0">
+          <ListOfArguments>
+          </ListOfArguments>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR7_RP1_M1" targetID="RR7_PP1_M1"/>
+          <MapItem sourceID="RR7_RP1_M1_C1" targetID="RR7_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <StateChange site="RR7_RP1_M1_C1" finalState="CII"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR8" name="R_unbind_paQ" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR8_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR8_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR8_RP1_M1_C1" name="paQ" state="CII" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR8_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR8_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR8_PP1_M1_C1" name="paQ" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR8_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="koff"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR8_RP1_M1" targetID="RR8_PP1_M1"/>
+          <MapItem sourceID="RR8_RP1_M1_C1" targetID="RR8_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <StateChange site="RR8_RP1_M1_C1" finalState="free"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR9" name="R_txn_pR" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR9_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR9_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR9_RP1_M1_C1" name="pRMR" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR9_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR9_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR9_PP1_M1_C1" name="pRMR" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR9_PP2">
+            <ListOfMolecules>
+              <Molecule id="RR9_PP2_M1" name="mRNA_Cro"/>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR9_PP3">
+            <ListOfMolecules>
+              <Molecule id="RR9_PP3_M1" name="mRNA_CII"/>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR9_PP4">
+            <ListOfMolecules>
+              <Molecule id="RR9_PP4_M1" name="mRNA_Q"/>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR9_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="k_R"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR9_RP1_M1" targetID="RR9_PP1_M1"/>
+          <MapItem sourceID="RR9_RP1_M1_C1" targetID="RR9_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <Add id="RR9_PP2_M1"/>
+          <Add id="RR9_PP3_M1"/>
+          <Add id="RR9_PP4_M1"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR10" name="R_txn_pRM" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR10_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR10_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR10_RP1_M1_C1" name="pRMR" state="CI" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR10_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR10_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR10_PP1_M1_C1" name="pRMR" state="CI" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR10_PP2">
+            <ListOfMolecules>
+              <Molecule id="RR10_PP2_M1" name="mRNA_CI"/>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR10_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="k_RM"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR10_RP1_M1" targetID="RR10_PP1_M1"/>
+          <MapItem sourceID="RR10_RP1_M1_C1" targetID="RR10_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <Add id="RR10_PP2_M1"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR11" name="R_txn_pRE" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR11_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR11_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR11_RP1_M1_C1" name="pRE" state="CII" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR11_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR11_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR11_PP1_M1_C1" name="pRE" state="CII" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR11_PP2">
+            <ListOfMolecules>
+              <Molecule id="RR11_PP2_M1" name="mRNA_CI"/>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR11_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="k_RE"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR11_RP1_M1" targetID="RR11_PP1_M1"/>
+          <MapItem sourceID="RR11_RP1_M1_C1" targetID="RR11_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <Add id="RR11_PP2_M1"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR12" name="R_txn_paQ" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR12_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR12_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR12_RP1_M1_C1" name="paQ" state="CII" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR12_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR12_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR12_PP1_M1_C1" name="paQ" state="CII" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR12_PP2">
+            <ListOfMolecules>
+              <Molecule id="RR12_PP2_M1" name="mRNA_antiQ"/>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR12_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="k_a"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR12_RP1_M1" targetID="RR12_PP1_M1"/>
+          <MapItem sourceID="RR12_RP1_M1_C1" targetID="RR12_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <Add id="RR12_PP2_M1"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR13" name="R_tl_CI" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR13_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR13_RP1_M1" name="mRNA_CI"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR13_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR13_PP1_M1" name="mRNA_CI"/>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR13_PP2">
+            <ListOfMolecules>
+              <Molecule id="RR13_PP2_M1" name="CI"/>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR13_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="sigma"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR13_RP1_M1" targetID="RR13_PP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Add id="RR13_PP2_M1"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR14" name="R_tl_Cro" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR14_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR14_RP1_M1" name="mRNA_Cro"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR14_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR14_PP1_M1" name="mRNA_Cro"/>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR14_PP2">
+            <ListOfMolecules>
+              <Molecule id="RR14_PP2_M1" name="Cro"/>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR14_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="sigma"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR14_RP1_M1" targetID="RR14_PP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Add id="RR14_PP2_M1"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR15" name="R_tl_CII" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR15_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR15_RP1_M1" name="mRNA_CII"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR15_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR15_PP1_M1" name="mRNA_CII"/>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR15_PP2">
+            <ListOfMolecules>
+              <Molecule id="RR15_PP2_M1" name="CII"/>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR15_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="sigma"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR15_RP1_M1" targetID="RR15_PP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Add id="RR15_PP2_M1"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR16" name="R_tl_Q" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR16_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR16_RP1_M1" name="mRNA_Q"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR16_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR16_PP1_M1" name="mRNA_Q"/>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR16_PP2">
+            <ListOfMolecules>
+              <Molecule id="RR16_PP2_M1" name="Q"/>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR16_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="sigma"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR16_RP1_M1" targetID="RR16_PP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Add id="RR16_PP2_M1"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR17" name="R_antiQ" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR17_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR17_RP1_M1" name="mRNA_Q"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+          <ReactantPattern id="RR17_RP2">
+            <ListOfMolecules>
+              <Molecule id="RR17_RP2_M1" name="mRNA_antiQ"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+        </ListOfProductPatterns>
+        <RateLaw id="RR17_RateLaw" type="Function" name="rate_antiQ" totalrate="0">
+          <ListOfArguments>
+          </ListOfArguments>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR17_RP1_M1"/>
+          <MapItem sourceID="RR17_RP2_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Delete id="RR17_RP1_M1" DeleteMolecules="1"/>
+          <Delete id="RR17_RP2_M1" DeleteMolecules="1"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR18" name="R_deg_CI" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR18_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR18_RP1_M1" name="CI"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+        </ListOfProductPatterns>
+        <RateLaw id="RR18_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="d_CI"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR18_RP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Delete id="RR18_RP1" DeleteMolecules="0"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR19" name="R_deg_Cro" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR19_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR19_RP1_M1" name="Cro"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+        </ListOfProductPatterns>
+        <RateLaw id="RR19_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="d_Cro"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR19_RP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Delete id="RR19_RP1" DeleteMolecules="0"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR20" name="R_deg_CII" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR20_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR20_RP1_M1" name="CII"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+        </ListOfProductPatterns>
+        <RateLaw id="RR20_RateLaw" type="Function" name="deg_CII" totalrate="0">
+          <ListOfArguments>
+          </ListOfArguments>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR20_RP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Delete id="RR20_RP1" DeleteMolecules="0"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR21" name="R_deg_Q" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR21_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR21_RP1_M1" name="Q"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+        </ListOfProductPatterns>
+        <RateLaw id="RR21_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="d_Q"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR21_RP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Delete id="RR21_RP1" DeleteMolecules="0"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR22" name="R_deg_mRNA_CI" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR22_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR22_RP1_M1" name="mRNA_CI"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+        </ListOfProductPatterns>
+        <RateLaw id="RR22_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="d_r"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR22_RP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Delete id="RR22_RP1" DeleteMolecules="0"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR23" name="R_deg_mRNA_Cro" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR23_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR23_RP1_M1" name="mRNA_Cro"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+        </ListOfProductPatterns>
+        <RateLaw id="RR23_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="d_r"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR23_RP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Delete id="RR23_RP1" DeleteMolecules="0"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR24" name="R_deg_mRNA_CII" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR24_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR24_RP1_M1" name="mRNA_CII"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+        </ListOfProductPatterns>
+        <RateLaw id="RR24_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="d_r"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR24_RP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Delete id="RR24_RP1" DeleteMolecules="0"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR25" name="R_deg_mRNA_Q" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR25_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR25_RP1_M1" name="mRNA_Q"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+        </ListOfProductPatterns>
+        <RateLaw id="RR25_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="d_r"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR25_RP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Delete id="RR25_RP1" DeleteMolecules="0"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR26" name="R_repl_free" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR26_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR26_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR26_RP1_M1_C1" name="pRMR" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR26_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR26_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR26_PP1_M1_C1" name="pRMR" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR26_PP2">
+            <ListOfMolecules>
+              <Molecule id="RR26_PP2_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR26_PP2_M1_C1" name="pRMR" state="free" numberOfBonds="0"/>
+                  <Component id="RR26_PP2_M1_C2" name="pRE" state="free" numberOfBonds="0"/>
+                  <Component id="RR26_PP2_M1_C3" name="paQ" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR26_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="omega"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR26_RP1_M1" targetID="RR26_PP1_M1"/>
+          <MapItem sourceID="RR26_RP1_M1_C1" targetID="RR26_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <Add id="RR26_PP2_M1"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR27" name="R_repl_Cro" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR27_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR27_RP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR27_RP1_M1_C1" name="pRMR" state="Cro" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR27_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR27_PP1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR27_PP1_M1_C1" name="pRMR" state="Cro" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR27_PP2">
+            <ListOfMolecules>
+              <Molecule id="RR27_PP2_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="RR27_PP2_M1_C1" name="pRMR" state="free" numberOfBonds="0"/>
+                  <Component id="RR27_PP2_M1_C2" name="pRE" state="free" numberOfBonds="0"/>
+                  <Component id="RR27_PP2_M1_C3" name="paQ" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR27_RateLaw" type="Ele" totalrate="0">
+          <ListOfRateConstants>
+            <RateConstant value="omega_Cro"/>
+          </ListOfRateConstants>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR27_RP1_M1" targetID="RR27_PP1_M1"/>
+          <MapItem sourceID="RR27_RP1_M1_C1" targetID="RR27_PP1_M1_C1"/>
+        </Map>
+        <ListOfOperations>
+          <Add id="RR27_PP2_M1"/>
+        </ListOfOperations>
+      </ReactionRule>
+      <ReactionRule id="RR28" name="R_grow" symmetry_factor="1">
+        <ListOfReactantPatterns>
+          <ReactantPattern id="RR28_RP1">
+            <ListOfMolecules>
+              <Molecule id="RR28_RP1_M1" name="Vol"/>
+            </ListOfMolecules>
+          </ReactantPattern>
+        </ListOfReactantPatterns>
+        <ListOfProductPatterns>
+          <ProductPattern id="RR28_PP1">
+            <ListOfMolecules>
+              <Molecule id="RR28_PP1_M1" name="Vol"/>
+            </ListOfMolecules>
+          </ProductPattern>
+          <ProductPattern id="RR28_PP2">
+            <ListOfMolecules>
+              <Molecule id="RR28_PP2_M1" name="Vol"/>
+            </ListOfMolecules>
+          </ProductPattern>
+        </ListOfProductPatterns>
+        <RateLaw id="RR28_RateLaw" type="Function" name="grow" totalrate="0">
+          <ListOfArguments>
+          </ListOfArguments>
+        </RateLaw>
+        <Map>
+          <MapItem sourceID="RR28_RP1_M1" targetID="RR28_PP1_M1"/>
+        </Map>
+        <ListOfOperations>
+          <Add id="RR28_PP2_M1"/>
+        </ListOfOperations>
+      </ReactionRule>
+    </ListOfReactionRules>
+    <ListOfObservables>
+      <Observable id="O1" name="Obs_CI" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O1_P1">
+            <ListOfMolecules>
+              <Molecule id="O1_P1_M1" name="CI"/>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+      <Observable id="O2" name="Obs_Cro" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O2_P1">
+            <ListOfMolecules>
+              <Molecule id="O2_P1_M1" name="Cro"/>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+      <Observable id="O3" name="Obs_CII" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O3_P1">
+            <ListOfMolecules>
+              <Molecule id="O3_P1_M1" name="CII"/>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+      <Observable id="O4" name="Obs_Q" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O4_P1">
+            <ListOfMolecules>
+              <Molecule id="O4_P1_M1" name="Q"/>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+      <Observable id="O5" name="Obs_DNA" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O5_P1">
+            <ListOfMolecules>
+              <Molecule id="O5_P1_M1" name="DNA"/>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+      <Observable id="O6" name="Obs_Vol" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O6_P1">
+            <ListOfMolecules>
+              <Molecule id="O6_P1_M1" name="Vol"/>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+      <Observable id="O7" name="Obs_pRMR_free" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O7_P1">
+            <ListOfMolecules>
+              <Molecule id="O7_P1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="O7_P1_M1_C1" name="pRMR" state="free" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+      <Observable id="O8" name="Obs_pRMR_CI" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O8_P1">
+            <ListOfMolecules>
+              <Molecule id="O8_P1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="O8_P1_M1_C1" name="pRMR" state="CI" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+      <Observable id="O9" name="Obs_pRMR_Cro" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O9_P1">
+            <ListOfMolecules>
+              <Molecule id="O9_P1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="O9_P1_M1_C1" name="pRMR" state="Cro" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+      <Observable id="O10" name="Obs_pRE_CII" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O10_P1">
+            <ListOfMolecules>
+              <Molecule id="O10_P1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="O10_P1_M1_C1" name="pRE" state="CII" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+      <Observable id="O11" name="Obs_paQ_CII" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O11_P1">
+            <ListOfMolecules>
+              <Molecule id="O11_P1_M1" name="DNA">
+                <ListOfComponents>
+                  <Component id="O11_P1_M1_C1" name="paQ" state="CII" numberOfBonds="0"/>
+                </ListOfComponents>
+              </Molecule>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+      <Observable id="O12" name="Obs_mRNA_Q" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O12_P1">
+            <ListOfMolecules>
+              <Molecule id="O12_P1_M1" name="mRNA_Q"/>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+      <Observable id="O13" name="Obs_mRNA_antiQ" type="Molecules">
+        <ListOfPatterns>
+          <Pattern id="O13_P1">
+            <ListOfMolecules>
+              <Molecule id="O13_P1_M1" name="mRNA_antiQ"/>
+            </ListOfMolecules>
+          </Pattern>
+        </ListOfPatterns>
+      </Observable>
+    </ListOfObservables>
+    <ListOfFunctions>
+      <Function id="kon_CI_f">
+        <ListOfReferences>
+          <Reference name="Vscale" type="Constant"/>
+          <Reference name="kon_CI" type="ConstantExpression"/>
+          <Reference name="Obs_CI" type="Observable"/>
+          <Reference name="Obs_Vol" type="Observable"/>
+        </ListOfReferences>
+        <Expression> kon_CI*(((Obs_CI*Vscale)/Obs_Vol)^2) </Expression>
+      </Function>
+      <Function id="kon_Cro_f">
+        <ListOfReferences>
+          <Reference name="Vscale" type="Constant"/>
+          <Reference name="kon_Cro" type="ConstantExpression"/>
+          <Reference name="Obs_Cro" type="Observable"/>
+          <Reference name="Obs_Vol" type="Observable"/>
+        </ListOfReferences>
+        <Expression> kon_Cro*(((Obs_Cro*Vscale)/Obs_Vol)^2) </Expression>
+      </Function>
+      <Function id="kon_pRE_f">
+        <ListOfReferences>
+          <Reference name="Vscale" type="Constant"/>
+          <Reference name="kon_pRE" type="ConstantExpression"/>
+          <Reference name="Obs_CII" type="Observable"/>
+          <Reference name="Obs_Vol" type="Observable"/>
+        </ListOfReferences>
+        <Expression> kon_pRE*(((Obs_CII*Vscale)/Obs_Vol)^2) </Expression>
+      </Function>
+      <Function id="kon_paQ_f">
+        <ListOfReferences>
+          <Reference name="Vscale" type="Constant"/>
+          <Reference name="kon_paQ" type="ConstantExpression"/>
+          <Reference name="Obs_CII" type="Observable"/>
+          <Reference name="Obs_Vol" type="Observable"/>
+        </ListOfReferences>
+        <Expression> kon_paQ*(((Obs_CII*Vscale)/Obs_Vol)^2) </Expression>
+      </Function>
+      <Function id="deg_CII">
+        <ListOfReferences>
+          <Reference name="Vscale" type="Constant"/>
+          <Reference name="alpha_yf" type="Constant"/>
+          <Reference name="kappa_FtsH" type="Constant"/>
+          <Reference name="Obs_CII" type="Observable"/>
+          <Reference name="Obs_Vol" type="Observable"/>
+        </ListOfReferences>
+        <Expression> alpha_yf/(1+(((kappa_FtsH*Obs_CII)*Vscale)/Obs_Vol)) </Expression>
+      </Function>
+      <Function id="rate_antiQ">
+        <ListOfReferences>
+          <Reference name="Vscale" type="Constant"/>
+          <Reference name="alpha_r" type="Constant"/>
+          <Reference name="Obs_Vol" type="Observable"/>
+        </ListOfReferences>
+        <Expression> (alpha_r*Vscale)/Obs_Vol </Expression>
+      </Function>
+      <Function id="grow">
+        <ListOfReferences>
+          <Reference name="g" type="Constant"/>
+          <Reference name="VolCap" type="ConstantExpression"/>
+          <Reference name="Obs_Vol" type="Observable"/>
+        </ListOfReferences>
+        <Expression> g*(Obs_Vol&lt;VolCap) </Expression>
+      </Function>
+    </ListOfFunctions>
+  </model>
+</sbml>

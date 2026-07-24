@@ -1,0 +1,152 @@
+begin model
+
+#@title: |
+#  Phage lambda lysis-lysogeny decision, simple CII-Q threshold model
+#  (Cortes et al., 2017)
+
+#@description: |
+#  The reduced two-variable CII-Q first-passage threshold model of
+#  Cortes et al. (2017), Biophys J 113:2110-2120 (main-text Eqs. 1-2;
+#  Supporting Material Sec. 2, Eqs. 70-71). It is the coarse-grained
+#  companion of the detailed network-free model
+#  (lambda_switch_cortes2017.bngl): viral replication, Cro and CI are
+#  absorbed into effective rate constants, leaving only the rescaled
+#  CII and Q concentrations c = [CII]/C_T and q = [Q]/Q_T (each
+#  normalized to its decision threshold, so the thresholds are 1):
+#    dc/dtau = mu_c*(m/v) - c
+#    dq/dtau = mu_q*[ (m/v)(1-Gamma c^4)/(1+Gamma c^4) - eps
+#                     + sqrt( ((m/v)(1-Gamma c^4)/(1+Gamma c^4) - eps)^2
+#                             + 4(m/v)eps/(1+Gamma c^4) ) ] - d0*q
+#  where tau = t*d_c is rescaled time and m/v is the per-cell viral
+#  concentration (MOI m over rescaled initial cell volume v). The q
+#  equation's square root is the QSSA solution of the Q / anti-Q sRNA
+#  interference (a Michaelis-Menten-like antitermination), which makes
+#  the CII-Q motif an incoherent feed-forward loop: rising m/v both
+#  drives Q and, via the CII^4 term, represses it. DYNAMICS: c relaxes
+#  toward c_ss = mu_c*(m/v); q rises with m/v at low viral concentration
+#  but is quenched (q_ss -> 0) at high m/v once c^4 repression dominates.
+#  DECISION (first-passage): LYSOGENY if c crosses 1 before q crosses 1,
+#  LYSIS if q crosses 1 first -> the probability of lysogeny increases
+#  monotonically with MOI and decreases with cell volume, matching the
+#  detailed model and the experimental data.
+
+#@keyword: |
+#  gene regulation, bacteriophage lambda, lysis-lysogeny decision,
+#  cell-fate decision, threshold crossing, first-passage, CII, Q,
+#  incoherent feedforward loop, RNA interference, Hill kinetics,
+#  quasi-steady-state, dimensionless, ODE, Escherichia coli
+
+#@reference: |
+#  Cortes MG, Trinh JT, Zeng L, Balazsi G (2017). Late-Arriving Signals
+#  Contribute Less to Cell-Fate Decisions. Biophys J 113(9):2110-2120.
+#  doi:10.1016/j.bpj.2017.09.012  (simple CII-Q model: main-text Eqs.
+#  1-2; Supporting Material Sec. 2, Eqs. 70-71.)
+
+#@note: |
+#  DIMENSIONLESS, ODE-ONLY model. The variables c and q are
+#  concentrations rescaled by their decision thresholds (c=[CII]/C_T,
+#  q=[Q]/Q_T) and time is rescaled (tau = t*d_c), so the state is a pair
+#  of continuous fractions rather than molecule counts. Per BNGL house
+#  style, such a model is incompatible with SSA/NFsim (a fraction is not
+#  a molecule count) and is simulated only with method=>"ode". The
+#  square-root right-hand side is a QSSA algebraic expression, not a
+#  mass-action propensity; it is carried as a functional creation rate.
+#  Threshold concentrations used for the underlying rescaling are
+#  C_T ~ 20 nM and Q_T ~ 100 nM (main text); the decision thresholds of
+#  the rescaled variables are therefore both 1.
+
+begin parameters
+  # Per-cell viral concentration m/v = MOI / rescaled initial cell volume.
+  # Raise m_over_v (higher MOI or smaller cell) to bias toward lysogeny.
+  m_over_v 2.0     # dimensionless
+
+  # Rescaled effective transcription rates from pR (main text; SI Sec. 2.2).
+  mu_c     1.0     # dimensionless
+  mu_q     0.5     # dimensionless
+  # Rescaled CII-tetramer / paQ association constant (Gamma = C_T^4 * ...).
+  Gamma    1.0     # dimensionless
+  # Rescaled anti-Q / Q RNA-interference strength (eps = d_r^2/(k*alpha_r)).
+  eps      0.001   # dimensionless
+  # Rescaled Q degradation-to-CII-degradation ratio, d0 = d_q/d_c.
+  d0       0.025   # dimensionless
+  # Rescaled CII decay coefficient (d_c/d_c = 1; the "-c" term of Eq. 70).
+  kc       1.0     # dimensionless
+end parameters
+
+begin molecule types
+  # Rescaled CII concentration c = [CII]/C_T (decision threshold c = 1).
+  C()
+  # Rescaled Q concentration q = [Q]/Q_T (decision threshold q = 1).
+  Q()
+end molecule types
+
+begin seed species
+  C()  0  # dimensionless
+  Q()  0  # dimensionless
+end seed species
+
+begin observables
+  # Rescaled CII (c) and Q (q); the lysis/lysogeny race is c vs q crossing 1.
+  Molecules Obs_c C()
+  Molecules Obs_q Q()
+end observables
+
+begin functions
+  # CII production from pR, proportional to viral concentration (Eq. 70).
+  prod_c() = mu_c*m_over_v
+
+  # Q production: QSSA of the Q / anti-Q sRNA interference (Eq. 71). The
+  # CII^4 (Obs_c^4) term makes this an incoherent feed-forward loop on m/v.
+  prod_q() = mu_q*(m_over_v*(1-Gamma*Obs_c^4)/(1+Gamma*Obs_c^4) - eps + \
+    sqrt((m_over_v*(1-Gamma*Obs_c^4)/(1+Gamma*Obs_c^4) - eps)^2 + \
+    4*m_over_v*eps/(1+Gamma*Obs_c^4)))
+end functions
+
+begin reaction rules
+  # dc/dtau = mu_c*(m/v) - c  (zeroth-order production and first-order decay)
+  R_prod_c: 0 -> C()  prod_c()
+  R_dec_c:  C() -> 0  kc
+
+  # dq/dtau = prod_q(c, m/v) - d0*q
+  R_prod_q: 0 -> Q()  prod_q()
+  R_dec_q:  Q() -> 0  d0
+end reaction rules
+
+end model
+
+begin actions
+  # Dimensionless (rescaled c, q) -> ODE-only (no SSA/NFsim; §1.1).
+  generate_network({overwrite=>1})  # 2 species, 4 reactions
+  saveConcentrations()
+
+  # CII-Q threshold-crossing trajectory (lysogenic example)
+
+  #@protocol: |
+  #  Integrate the rescaled CII-Q ODEs (Eqs. 70-71) over rescaled time
+  #  tau for m/v = 2 (high per-cell viral concentration). Expect c to
+  #  rise past its threshold (c -> mu_c*(m/v) = 2 > 1) while q stays
+  #  quenched near 0 (CII^4 RNA-interference repression) -> the c=1
+  #  threshold is crossed before q=1, i.e. LYSOGENY. Reduce m_over_v
+  #  below ~1 to see q win the race instead (LYSIS). This reproduces the
+  #  CII-Q phase-space trajectories and steady states of Fig. 1 B,C; the
+  #  MOI-dependent %lysogeny is obtained by scanning m_over_v (see
+  #  verify_cortes2017.ipynb). The transient c(tau), q(tau) trajectory is
+  #  a CII-Q decision trajectory of the Fig. 1B family.
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>20,n_steps=>400})
+
+  # Steady-state c and q versus viral concentration m/v (Fig. 1C)
+
+  #@protocol: |
+  #  Scan m_over_v to trace the steady-state rescaled CII (c_ss = m/v)
+  #  and Q (q_ss) attractors versus viral concentration: q_ss rises then
+  #  falls as m/v increases (peak near the c=1 crossover), while c_ss
+  #  grows linearly -> lysogeny dominates at high m/v.
+
+  #@figure: Fig. 1C in Cortes et al. (2017)
+
+  parameter_scan({method=>"ode",parameter=>"m_over_v",par_min=>0.1,\
+    par_max=>10,n_scan_pts=>100,log_scale=>1,t_start=>0,t_end=>200,\
+    n_steps=>400,suffix=>"scan"})
+end actions

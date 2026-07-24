@@ -1,0 +1,255 @@
+begin model
+
+#@title: |
+#  Phage lambda lysis-lysogeny decision, per-genome operator-state model
+#  (Cortes et al., 2017)
+
+#@description: |
+#  Network-free (NFsim / RuleMonkey) variant of the detailed Cortes et
+#  al. (2017) model (lambda_switch_cortes2017.bngl) in which the fast
+#  DNA-operator binding that the primary model folds into mean-field
+#  promoter-occupancy FUNCTIONS is instead made EXPLICIT and PER GENOME.
+#  Each replicating viral genome DNA() carries three discrete operator
+#  states -- pRM/R (free / CI2-bound / Cro2-bound, a single competitive
+#  site per SI assumption 1), pRE (free / CII2-bound), and paQ (free /
+#  CII2-bound) -- that flip stochastically via reversible binding whose
+#  pseudo-first-order on-rates are kon_X = kappa_X*koff scaled by the
+#  squared repressor/activator concentration (dimer control, Hill n=2),
+#  and whose common off-rate koff is fast. Transcription and replication
+#  are then gated by each genome's OWN instantaneous operator state
+#  (pR/replication from a free or Cro-bound pRM/R, pRM from a CI-bound
+#  pRM/R, pRE and paQ from CII-bound operators), giving per-genome
+#  promoter telegraph noise for free -- exactly the discrete per-copy
+#  stochasticity that a mean-field genome population cannot represent.
+#  In the fast-binding (koff >> transcription/degradation) limit the
+#  operator occupancies self-average to the QSSA fractions F0/F_CI/
+#  F_CRO/E_CII/A_CII, so this model is FUNCTIONALLY EQUIVALENT to the
+#  detailed model (verified: matching %lysogeny-vs-MOI within stochastic
+#  noise in verify_cortes2017.ipynb) while exposing the operator states
+#  as observables. All remaining chemistry (translation, FtsH-saturable
+#  CII degradation, anti-Q/Q RNA interference, exponential Vol() clock,
+#  theta-mode DNA replication) is identical to the primary model.
+#  DYNAMICS and DECISION are as in the detailed model: a bell-shaped CII
+#  pulse can win the CI/CII-vs-Q threshold-crossing race toward lysogeny
+#  at high per-cell viral concentration m/v; classified by
+#  run_cortes2017.py (CORTES_MODEL=pergenome).
+
+#@keyword: |
+#  gene regulation, bacteriophage lambda, lysis-lysogeny decision,
+#  cell-fate decision, threshold crossing, per-genome operator states,
+#  promoter telegraph noise, CI-Cro switch, CII, Q, viral DNA
+#  replication, RNA interference, network-free, NFsim, Hill kinetics,
+#  stochastic gene expression, Escherichia coli
+
+#@reference: |
+#  Cortes MG, Trinh JT, Zeng L, Balazsi G (2017). Late-Arriving Signals
+#  Contribute Less to Cell-Fate Decisions. Biophys J 113(9):2110-2120.
+#  doi:10.1016/j.bpj.2017.09.012  (detailed model + QSSA promoter
+#  occupancies: Supporting Material Sec. 1, Eqs. 28-37; Table S3.)
+
+#@note: |
+#  Relationship to the primary model. This variant "unfolds" the QSSA of
+#  Eqs. 28-37: instead of transcribing every genome at k*F(occupancy),
+#  each genome binds/unbinds repressors explicitly and transcribes only
+#  when in the transcription-competent state. The single combined
+#  constant kappa_X = (Delta_X/delta_X)(Gamma_X/gamma_X) reported in
+#  Table S3 fixes only the binding-equilibrium ratio kon_X/koff = kappa_X;
+#  the absolute rates are not identified by the paper, so koff is chosen
+#  large enough for the quasi-steady-state (fast-binding) limit to hold
+#  (koff/k_R ~ 50). Larger koff sharpens the equivalence at higher NFsim
+#  cost; koff is a free "how-fast-is-fast" knob, not a fitted parameter.
+#  NETWORK-FREE ONLY: distinct per-genome operator-state combinations
+#  make the reaction network combinatorial, so this file writes XML for
+#  NFsim/RuleMonkey and is NOT run via generate_network. All rate
+#  functions are self-contained (no function-of-function; NFsim >=1.14).
+#  Population/units convention as in the primary model:
+#  [X] = Obs_X*Vscale/Obs_Vol nM, 1 molecule ~ 1 nM at rescaled volume 1.
+
+begin parameters
+  # --- Population-conversion constants (units mapping only) ---
+  NA      6.02214076e23  # /mol
+  V_ref   1.5e-15        # L/cell
+
+  # --- Infection / cell-size inputs (overridden by the driver) ---
+  MOI     1              # molecules
+  v0      1.0            # dimensionless
+
+  # --- Volume-proxy clock (v(t)=v0*exp(g t), capped at v=2) ---
+  Vscale  1000           # molecules per unit rescaled volume
+  VolCap  2*Vscale       # clock ceiling at rescaled volume v=2
+  t_double 100           # min
+  g       0.0069314718   # /min
+
+  # --- Transcription rate constants (Table S2) ---
+  k_R     1.1699         # /min
+  k_RM    0.2848         # /min
+  k_RE    0.4938         # /min
+  k_a     0.4386         # /min
+
+  # --- Translation and RNA turnover (Table S2) ---
+  sigma   0.6371         # /min
+  d_r     0.2476         # /min
+  alpha_r 0.1544         # /nM/min
+
+  # --- Protein turnover (Table S2) ---
+  d_CI    0.0849         # /min
+  d_Cro   0.002          # /min
+  d_Q     0.00258        # /min
+  alpha_yf   2.9464      # /min
+  kappa_FtsH 1/5.0396    # /nM
+
+  # --- Viral DNA replication (Table S2) ---
+  omega     0.4045       # /min
+  omega_Cro 0.021        # /min
+
+  # --- Operator binding: equilibrium ratios kappa_X (Table S3) ---
+  kappa_CI  (1/5.84)^2   # /nM^2
+  kappa_Cro (1/30.37)^2  # /nM^2
+  kappa_pRE (1/72.54)^2  # /nM^2
+  kappa_paQ (1/20.78)^2  # /nM^2
+  # Common fast operator off-rate (QSSA limit; koff/k_R ~ 50). on-rates
+  # kon_X = kappa_X*koff reproduce kon_X/koff = kappa_X (Table S3).
+  koff      60.0         # /min
+  kon_CI    kappa_CI*koff   # /nM^2/min
+  kon_Cro   kappa_Cro*koff  # /nM^2/min
+  kon_pRE   kappa_pRE*koff  # /nM^2/min
+  kon_paQ   kappa_paQ*koff  # /nM^2/min
+
+  # --- Decision thresholds (read by the classifier; no rate uses them) ---
+  Q_T     134.897        # nM
+  CI_T    61.0073        # nM
+  CII_T   22.0           # nM
+end parameters
+
+begin molecule types
+  # Viral genome with three explicit operator states.
+  DNA(pRMR~free~CI~Cro,pRE~free~CII,paQ~free~CII)
+  # Decision proteins (monomers; dimerization is QSSA inside the on-rates).
+  CI()
+  Cro()
+  CII()
+  Q()
+  # Transcripts (mRNA_antiQ is the paQ anti-Q small RNA).
+  mRNA_CI()
+  mRNA_Cro()
+  mRNA_CII()
+  mRNA_Q()
+  mRNA_antiQ()
+  # Volume-proxy clock particle (count/Vscale = rescaled cell volume v).
+  Vol()
+end molecule types
+
+begin seed species
+  # All genomes start with empty operators.
+  DNA(pRMR~free,pRE~free,paQ~free)  MOI  # molecules
+  CI()          0         # molecules
+  Cro()         0         # molecules
+  CII()         0         # molecules
+  Q()           0         # molecules
+  mRNA_CI()     0         # molecules
+  mRNA_Cro()    0         # molecules
+  mRNA_CII()    0         # molecules
+  mRNA_Q()      0         # molecules
+  mRNA_antiQ()  0         # molecules
+  Vol()         v0*Vscale # molecules
+end seed species
+
+begin observables
+  # Decision proteins ([X] = Obs_X*Vscale/Obs_Vol nM).
+  Molecules Obs_CI         CI()
+  Molecules Obs_Cro        Cro()
+  Molecules Obs_CII        CII()
+  Molecules Obs_Q          Q()
+  # Total genome copy number (all operator states) and the volume clock.
+  Molecules Obs_DNA        DNA()
+  Molecules Obs_Vol        Vol()
+  # Per-genome operator occupancies (the per-copy states the primary
+  # model can only represent as mean-field fractions).
+  Molecules Obs_pRMR_free  DNA(pRMR~free)
+  Molecules Obs_pRMR_CI    DNA(pRMR~CI)
+  Molecules Obs_pRMR_Cro   DNA(pRMR~Cro)
+  Molecules Obs_pRE_CII    DNA(pRE~CII)
+  Molecules Obs_paQ_CII    DNA(paQ~CII)
+  # RNA-interference pair.
+  Molecules Obs_mRNA_Q     mRNA_Q()
+  Molecules Obs_mRNA_antiQ mRNA_antiQ()
+end observables
+
+begin functions
+  # Operator on-rates: pseudo-first-order in the squared (dimer) repressor/
+  # activator concentration. [X] = Obs_X*Vscale/Obs_Vol.
+  kon_CI_f()  = kon_CI*(Obs_CI*Vscale/Obs_Vol)^2
+  kon_Cro_f() = kon_Cro*(Obs_Cro*Vscale/Obs_Vol)^2
+  kon_pRE_f() = kon_pRE*(Obs_CII*Vscale/Obs_Vol)^2
+  kon_paQ_f() = kon_paQ*(Obs_CII*Vscale/Obs_Vol)^2
+
+  # FtsH-saturable CII degradation rate d_CII (QSSA of CII-FtsH binding).
+  deg_CII() = alpha_yf/(1 + kappa_FtsH*Obs_CII*Vscale/Obs_Vol)
+
+  # Anti-Q : Q-mRNA duplex formation (propensity (alpha_r/v)*N_Q*N_antiQ).
+  rate_antiQ() = alpha_r*Vscale/Obs_Vol
+
+  # Exponential volume growth, off once the clock reaches v=2.
+  grow() = g*(Obs_Vol<VolCap)
+end functions
+
+begin reaction rules
+  # --- Per-genome operator binding / unbinding (fast; QSSA limit) ---
+  # pRM/R: competitive CI2 vs Cro2 occupancy of a single site.
+  R_bind_CI:   DNA(pRMR~free) -> DNA(pRMR~CI)   kon_CI_f()
+  R_unbind_CI: DNA(pRMR~CI)   -> DNA(pRMR~free) koff
+  R_bind_Cro:  DNA(pRMR~free) -> DNA(pRMR~Cro)  kon_Cro_f()
+  R_unbind_Cro:DNA(pRMR~Cro)  -> DNA(pRMR~free) koff
+  # pRE and paQ: CII2 activation.
+  R_bind_pRE:  DNA(pRE~free)  -> DNA(pRE~CII)   kon_pRE_f()
+  R_unbind_pRE:DNA(pRE~CII)   -> DNA(pRE~free)  koff
+  R_bind_paQ:  DNA(paQ~free)  -> DNA(paQ~CII)   kon_paQ_f()
+  R_unbind_paQ:DNA(paQ~CII)   -> DNA(paQ~free)  koff
+
+  # --- Transcription, gated by each genome's own operator state ---
+  # pR fires from a transcription-competent (free) pRM/R promoter.
+  R_txn_pR:  DNA(pRMR~free) -> DNA(pRMR~free) + mRNA_Cro() + mRNA_CII() + mRNA_Q()  k_R
+  # pRM fires from a CI-bound pRM/R (maintenance); pRE from CII-bound pRE.
+  R_txn_pRM: DNA(pRMR~CI) -> DNA(pRMR~CI) + mRNA_CI()  k_RM
+  R_txn_pRE: DNA(pRE~CII) -> DNA(pRE~CII) + mRNA_CI()  k_RE
+  # paQ fires from a CII-bound paQ (anti-Q sRNA).
+  R_txn_paQ: DNA(paQ~CII) -> DNA(paQ~CII) + mRNA_antiQ()  k_a
+
+  # --- Translation ---
+  R_tl_CI:  mRNA_CI()  -> mRNA_CI()  + CI()   sigma
+  R_tl_Cro: mRNA_Cro() -> mRNA_Cro() + Cro()  sigma
+  R_tl_CII: mRNA_CII() -> mRNA_CII() + CII()  sigma
+  R_tl_Q:   mRNA_Q()   -> mRNA_Q()   + Q()    sigma
+
+  # --- RNA interference: anti-Q sequesters and co-degrades Q mRNA ---
+  R_antiQ: mRNA_Q() + mRNA_antiQ() -> 0  rate_antiQ() DeleteMolecules
+
+  # --- Protein turnover (CII via FtsH-saturable functional rate) ---
+  R_deg_CI:  CI()  -> 0  d_CI
+  R_deg_Cro: Cro() -> 0  d_Cro
+  R_deg_CII: CII() -> 0  deg_CII()
+  R_deg_Q:   Q()   -> 0  d_Q
+
+  # --- RNA turnover (anti-Q RNA has no first-order decay; SI Eqs. 51-54) ---
+  R_deg_mRNA_CI:  mRNA_CI()  -> 0  d_r
+  R_deg_mRNA_Cro: mRNA_Cro() -> 0  d_r
+  R_deg_mRNA_CII: mRNA_CII() -> 0  d_r
+  R_deg_mRNA_Q:   mRNA_Q()   -> 0  d_r
+
+  # --- Viral DNA replication (theta-mode); daughter starts with empty
+  #     operators. From a free pRM/R (omega) or a Cro-bound pRM/R (omega_Cro).
+  R_repl_free: DNA(pRMR~free) -> DNA(pRMR~free) + DNA(pRMR~free,pRE~free,paQ~free) omega
+  R_repl_Cro:  DNA(pRMR~Cro) -> DNA(pRMR~Cro) + DNA(pRMR~free,pRE~free,paQ~free) omega_Cro
+
+  # --- Cell-volume growth clock (self-catalytic; exponential, capped at v=2) ---
+  R_grow: Vol() -> Vol() + Vol()  grow()
+end reaction rules
+
+end model
+
+begin actions
+  # Per-genome operator states make the network combinatorial -> NFsim /
+  # RuleMonkey only (no generate_network). Simulate the XML via
+  # run_cortes2017.py with CORTES_MODEL=pergenome.
+  writeXML()
+end actions
