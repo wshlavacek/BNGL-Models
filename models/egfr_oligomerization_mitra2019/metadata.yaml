@@ -1,0 +1,145 @@
+# metadata.yaml — egfr_oligomerization_mitra2019
+id: egfr_oligomerization_mitra2019
+created: 2026-07-24
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, reformulation, network_free, adapted_from_bngl,
+    ai_assisted]
+  description: >
+    Network-free (NFsim / RuleMonkey) model of EGF-driven higher-order EGFR
+    ectodomain-crosslinking oligomerization and activation. The model is the
+    Mitra et al. (2019) PyBioNetFit / BioNetFit-1 "example 2"
+    (example2_starting_point.bngl, edited by B.R. Thomas, W.S. Hlavacek,
+    E.D. Mitra; iScience 19:1012-1036, doi:10.1016/j.isci.2019.08.045) -- an
+    UNBOUNDED network-free reformulation of the higher-order-clustering model of
+    Kozer et al. (2013), Mol BioSyst 9:1849-1863 (doi:10.1039/c3mb70073a) -- fit to
+    the Kozer 2013 average-normalized cluster-density and phospho-EGFR data
+    (Fig 2B/2D dose-response, Fig 3B/3D time course). EGF binds the EGFR ectodomain
+    and ligated/unligated receptors crosslink ectodomain-to-ectodomain into
+    cell-surface oligomers that grow without bound (species tracked to 20-mers), so
+    the reaction network is infinite and the model is simulated NETWORK-FREE.
+    Because this is genuine multivalent AGGREGATION, the bimolecular crosslink rules
+    join two SEPARATE aggregates while ring closure within an aggregate is the
+    dedicated chi_r-enhanced rules; the crosslink rules therefore block same-complex
+    binding (NFsim -bscb), and the 4-molecule ring-closure patterns need the
+    universal traversal limit raised (-utl 5). Legacy BioNetGen NFsim is not a
+    self-evidently valid reference for an aggregation model, so correctness is
+    confirmed by agreement of two INDEPENDENT network-free algorithms, NFsim
+    (Yang et al. 2008) and RuleMonkey (Colvin et al. 2009/2010), both with -bscb.
+    IMPORTANT PROVENANCE: this is NOT the Kozer et al. (2014) Biochemistry SI
+    (bi500182x_si_001.txt), which is a tetramer-capped ODE model with Grb2 -- a
+    different formulation, not reproduced here; Kozer 2013/2014 published experiment
+    plus capped ODE, and the network-free study is Mitra 2019 (see
+    pybnf-jobs/Kozer-2013/egfr_nf/VALIDATION.md). Adapted to house style from the
+    validated pybnf-jobs/Kozer-2013/egfr_nf model, at the PyBioNetFit best fit
+    (Mitra 2019 Data S1, RuleHub 04-egfrnf/fit_ade, chi_sq=13.4).
+
+files:
+  - name: egfr_oligomerization_mitra2019.bngl
+    role: primary
+    description: >
+      Network-free (NFsim / RuleMonkey) EGFR oligomerization model. EGF binds EGFR;
+      ligated/unligated receptors crosslink ectodomain-to-ectodomain (single-site
+      constants L20/L21/L22 with EGF-occupancy-dependent EGF affinities K11/K21/K22),
+      close small rings at an enhanced rate (chi_r), switch their cytoplasmic tails
+      to an active conformation (k_o/k_c), lock tail-to-tail (kaf/kar), and
+      trans-phosphorylate (kp/kdp). Molecule-count units in an f=0.01 subvolume
+      (~900 receptors; up to ~1e6 EGF at the top dose). The begin actions block runs
+      two network-free protocols with param=>"-bscb -utl 5" and gml at the 32-bit
+      max: a dose-response parameter_scan over EGF (0.001-100 nM; cluster density
+      Fig 2B, phospho-EGFR Fig 2D) and a 30 nM time course (Fig 3B/3D). Clusters()
+      and pEGFR are the readouts (run_mitra2019.py scales them by the fitted
+      alpha*_pre and compares to the average-normalized data). Shipped kinetics are
+      the sloppy/non-identifiable Mitra 2019 best fit; the reproduced curves -- not
+      the individual constants -- are the identifiable check.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: run_mitra2019.py
+    role: verification
+    description: >
+      Self-contained driver. `reference` reproduces Kozer 2013 Fig 2B/2D/3B/3D: the
+      network-free NFsim protocol (-bscb -utl 5) at the best fit, replicate-averaged,
+      vs the average-normalized cluster-density and phospho-EGFR data -- reports
+      chi_sq and median/max relative error per dataset. `agreement` is the
+      independent-algorithm cross-check (issue #8, capability group): the two
+      INDEPENDENT network-free algorithms bngsim provides -- NfsimSession (NFsim,
+      Yang 2008) and the exact RuleMonkeySession (RuleMonkey, Colvin 2009/2010), both
+      -bscb -- agree on per-dose equilibrium pEGFR / cluster counts within
+      Monte-Carlo scale (the reference of record), at RuleMonkey-tractable doses
+      (0.1/1/10 nM; RuleMonkey is exact and steps every EGF particle). BNG2.pl's
+      bundled legacy NFsim v1.14.3 binary is run for contrast: it reads ~12% lower on
+      pEGFR (a binary-version difference, not the traversal limit -- utl 4/5/6 give
+      the same means), which is exactly why legacy NFsim is not the reference for this
+      aggregation model. A no-bscb NFsim run is also included; at this fit -bscb and
+      no-bscb differ by only a few percent (higher-order rings are only rarely
+      populated). `plot`
+      builds the verification PNG. Each dose is baked into its own XML before loading
+      because bngsim RuleMonkey does not re-derive seed-species counts on set_param.
+  - name: verify_mitra2019.ipynb
+    role: verification
+    description: >
+      Verification notebook. Loads the committed reference data and reports the two
+      checks: the Kozer 2013 Fig 2B/2D/3B/3D reproduction metrics (chi_sq,
+      median/max relative error) and the three-engine independent-algorithm
+      agreement (NFsim = RuleMonkey with -bscb) plus the no-bscb contrast; displays
+      verify_mitra2019.png. run_mitra2019.py is the engine that regenerates the
+      reference data.
+  - name: verify_mitra2019.png
+    role: figure
+    description: >
+      Verification figure. Four panels reproduce Kozer 2013 Fig 3B (cluster density
+      vs time), Fig 3D (phospho-EGFR vs time), Fig 2B (cluster density vs dose), and
+      Fig 2D (phospho-EGFR vs dose), model (NFsim, -bscb) overlaid on the data. Fifth
+      panel: the two independent bngsim network-free engines (NFsim, RuleMonkey, both
+      -bscb) agree on per-dose equilibrium pEGFR, with BNG2.pl's legacy NFsim v1.14.3
+      shown reading ~12% lower (why legacy NFsim is not the reference here). Sixth
+      panel: -bscb vs no-bscb (same NFsim engine), coinciding because rings are
+      unpopulated at this fit.
+  - name: reference/egfr_oligomerization_mitra2019.xml
+    role: reference
+    description: >
+      BioNetGen writeXML() export of the network-free model at the default 30 nM
+      EGF dose, the input consumed by the bngsim NFsim / RuleMonkey engines.
+  - name: reference/egfr_oligomerization_mitra2019_scan.scan
+    role: reference
+    description: >
+      Committed BioNetGen NFsim parameter_scan output from the model's actions block
+      (dose response, 6 doses 0.001-100 nM, -bscb -utl 5, single seed): LT_nM, the
+      oligomer-size species counts, pEGFR, and Clusters() at t_end=600 s.
+  - name: reference/egfr_oligomerization_mitra2019_nfr.gdat
+    role: reference
+    description: >
+      Committed BioNetGen NFsim time-course output from the model's actions block
+      (30 nM EGF, -bscb -utl 5, single seed): the oligomer-size species counts,
+      pEGFR, and Clusters() vs time to t_end=600 s.
+  - name: reference/kozer2013_fig2bd_doseresponse.csv
+    role: reference
+    description: >
+      Kozer 2013 average-normalized dose-response data used for the reported-data
+      check: EGF dose (nM) vs cluster density (Fig 2B) and phospho-EGFR (Fig 2D),
+      each with per-point SD; traced from pybnf-jobs/Kozer-2013/egfr_nf/doseresponse.exp.
+  - name: reference/kozer2013_fig3bd_timecourse.csv
+    role: reference
+    description: >
+      Kozer 2013 average-normalized time-course data (30 nM EGF) used for the
+      reported-data check: time (s) vs cluster density (Fig 3B) and phospho-EGFR
+      (Fig 3D), each with per-point SD; traced from
+      pybnf-jobs/Kozer-2013/egfr_nf/timecourse.exp.
+  - name: reference/reproduction.npz
+    role: reference
+    description: >
+      Cached Fig 2B/2D/3B/3D reproduction: replicate-averaged scaled model outputs
+      per time point and per dose, the data, and the chi_sq metrics.
+  - name: reference/agreement.npz
+    role: reference
+    description: >
+      Cached three-engine per-dose equilibrium pEGFR / cluster ensembles (BNG NFsim,
+      bngsim NFsim, bngsim RuleMonkey, plus bngsim NFsim without -bscb) for the
+      network-free algorithm agreement cross-check.
