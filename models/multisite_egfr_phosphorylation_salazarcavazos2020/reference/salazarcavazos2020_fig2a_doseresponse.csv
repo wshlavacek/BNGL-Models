@@ -1,0 +1,8 @@
+# Salazar-Cavazos et al. (2020) Fig 2A -- CHO EGFR-GFP SiMPull EGF dose response
+# (5 min, 37 C). % EGFR phosphorylated at pY1068, pY1173, pan-PY (phosR), mean +/- SD.
+# The 3 doses are the significant-change points used in the global fit.
+# Source: pybnf-jobs/Salazar-Cavazos-2019/egfr_simpull/dose_resp.exp.
+EGF_M,pY1068_pct,pY1173_pct,panPY_pct,pY1068_SD,pY1173_SD,panPY_SD
+5e-10,3.3,4.19,6.29,0.29,0.31,0.61
+5e-09,12.42,17.68,26.09,0.66,0.66,0.97
+5e-08,19.62,23.5,40.83,0.98,0.8,1.3

@@ -1,0 +1,7 @@
+# Salazar-Cavazos et al. (2020) Fig 2D -- CHO EGFR-GFP SiMPull 25 nM EGF time course.
+# % EGFR phosphorylated at pY1068, pY1173, pan-PY (phosR) vs time (s), mean +/- SD.
+# Source: pybnf-jobs/Salazar-Cavazos-2019/egfr_simpull/EGF_25nM.exp.
+time_s,pY1068_pct,pY1173_pct,panPY_pct,pY1068_SD,pY1173_SD,panPY_SD
+60,9.35,17.96,41.92,0.67,0.79,0.2
+120,9.47,19.15,42.64,0.69,0.88,0.26
+300,12.07,21.38,50.59,0.85,1.02,0.34
