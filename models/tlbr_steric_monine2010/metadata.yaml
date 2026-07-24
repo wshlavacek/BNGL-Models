@@ -1,0 +1,121 @@
+# metadata.yaml — tlbr_steric_monine2010
+id: tlbr_steric_monine2010
+created: 2026-07-24
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, network_free, adapted_from_bngl, ai_assisted]
+  description: >
+    Kinetic trivalent-ligand / bivalent-receptor (TLBR) model of Monine et al.
+    (2010), Biophys J 98(1):48-56 (doi:10.1016/j.bpj.2009.09.043), for
+    equilibrium binding of a fluorophore-labeled trivalent antigen (compound 6a,
+    synthesized in Posner et al. 2007, Org Lett 9:3551) to bivalent IgE-FceRI on
+    RBL mast cells. This is the equivalent-site TLBR model (paper Eqs 4-6), the
+    kinetic version of the Goldstein-Perelson equilibrium model, and the model fit
+    in Fig 2a / Table 1. A trivalent ligand crosslinks bivalent receptors into
+    aggregates that grow without bound, so the reaction network is infinite and the
+    model is simulated NETWORK-FREE. Its one steric constraint is that aggregates
+    are ACYCLIC (trees, never rings), the equivalent-site assumption; this is
+    enforced by NFsim's block-same-complex-binding (-bscb). Because same-complex
+    binding is exactly what distinguishes the acyclic TLBR model from a
+    ring-forming one, legacy BioNetGen NFsim without -bscb is not a valid reference
+    by itself; correctness is confirmed instead by agreement of two INDEPENDENT
+    network-free algorithms, NFsim (Yang et al. 2008) and RuleMonkey (Colvin et al.
+    2009/2010), both run with -bscb. The model is adapted to house style from the
+    validated pybnf-jobs/Monine-2010/tlbr model (BioNetFit-1 example 3 / PyBNF
+    corpus 11-TLBR); house-style wrapping (header metadata, single-site parameter
+    semantics with V_ref and a subvolume factor f, and a begin actions block
+    encoding the Fig 2a dose-response with -bscb + gml) was added. The paper's
+    Models I-III add further steric constraints (cyclic dimers, hexagonal-lattice
+    clashes) via spatial application-condition checks that standard NFsim/RuleMonkey
+    cannot express; they are not encoded here.
+
+files:
+  - name: tlbr_steric_monine2010.bngl
+    role: primary
+    description: >
+      Network-free (NFsim / RuleMonkey) TLBR model. A trivalent ligand L(s,s,s)
+      captures free receptor sites (single-site association K1) and a tethered
+      ligand arm crosslinks a second receptor (single-site K2); every bond breaks
+      at koff. Cell-fraction units: a subvolume f=0.001 of a cell holds 300
+      receptors and up to ~1.3e5 ligands at the top dose. The begin actions block
+      is a network-free parameter_scan over the 12 experimental doses of Monine
+      2010 Fig 2a (each to equilibrium t_end=5000 s) with param=>"-bscb" (acyclic
+      aggregates) and gml at the 32-bit max; the endpoint lambda =
+      (L_total-L_free)/(2*R_total) is the Fig 2a ordinate, FL=lambda/alpha the
+      scaled fluorescence. Shipped nominals K1=0.467/nM, K2=87.03/nM, alpha=0.816
+      are Monine 2010's own Table-1 best fit. The K1-K2 fit is sloppy /
+      non-identifiable (paper Fig S2), so the reproduced isotherm -- not the
+      individual constants -- is the identifiable check.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: run_monine2010.py
+    role: verification
+    description: >
+      Self-contained driver. `reference` reproduces Monine 2010 Fig 2a: the
+      network-free NFsim parameter_scan (-bscb) over the 12 doses at the Table-1
+      fit, averaged over replicate scans, vs the Fig 2a binding data -- reports the
+      fit objective sos (FL space), the RMS in lambda (Monine kept fits with
+      RMS < 0.02, SI Eq 11), and the relative error over doses above the noise
+      floor. `agreement` is the independent-algorithm cross-check (issue #11, task
+      3): three network-free engines running the same acyclic rules with -bscb --
+      BioNetGen NFsim v1.14.3, bngsim NfsimSession, and bngsim RuleMonkeySession --
+      agree on the per-dose equilibrium lambda to within the Monte-Carlo scale
+      (well inside Monine's RMS < 0.02); for contrast, NFsim WITHOUT -bscb allows
+      ring closure and shifts lambda (largest at low dose, where a ligand can
+      double-bond one receptor into a 1:1 ring that -bscb forbids), so a no-bscb
+      run is not a valid reference. `plot` builds the verification PNG. bngsim's
+      RuleMonkey does not re-derive seed-species counts on set_param, so each dose
+      is baked into its own XML before loading.
+  - name: verify_monine2010.ipynb
+    role: verification
+    description: >
+      Verification notebook. Loads the committed reference data and reports the two
+      checks: the Fig 2a reproduction metrics (sos, RMS in lambda < 0.02) and the
+      three-engine independent-algorithm agreement (max |d lambda| < 0.02, NFsim =
+      RuleMonkey with -bscb) plus the no-bscb contrast; displays verify_monine2010.png.
+      run_monine2010.py is the engine that regenerates the reference data.
+  - name: verify_monine2010.png
+    role: figure
+    description: >
+      Verification figure. Left: Fig 2a reproduction (acyclic TLBR, -bscb) overlaid
+      on the Monine 2010 binding data. Middle: the three network-free engines
+      (BioNetGen NFsim, bngsim NFsim, bngsim RuleMonkey), all -bscb, overlaid as
+      per-dose equilibrium lambda (mean +/- s.e.m.). Right: -bscb vs no-bscb (same
+      NFsim engine) showing that blocking same-complex binding is required to
+      simulate the acyclic TLBR model.
+  - name: reference/tlbr_steric_monine2010.xml
+    role: reference
+    description: >
+      BioNetGen writeXML() export of the network-free model (default LT_conc=7 nM),
+      the input consumed by the bngsim NFsim / RuleMonkey engines.
+  - name: reference/tlbr_steric_monine2010_scan.scan
+    role: reference
+    description: >
+      Committed BioNetGen NFsim parameter_scan output from the model's actions
+      block (12 doses, -bscb, single seed): LT_conc, L_total, R_total, L_free,
+      lambda(), FL() at t_end=5000 s.
+  - name: reference/monine2010_fig2a_binding.csv
+    role: reference
+    description: >
+      Monine 2010 Fig 2a binding data used for the reported-data check: total
+      ligand dose (nM) vs scaled fluorescence FL1 (bound-ligand fraction), the
+      original recorded 12-dose dataset (traced to Fig 2a in
+      pybnf-jobs/Monine-2010/tlbr/VALIDATION.md).
+  - name: reference/reproduction.npz
+    role: reference
+    description: >
+      Cached Fig 2a reproduction: model FL per dose (replicate-averaged), the data,
+      and the sos / RMS-lambda metrics.
+  - name: reference/agreement.npz
+    role: reference
+    description: >
+      Cached three-engine per-dose lambda ensembles (BNG NFsim, bngsim NFsim,
+      bngsim RuleMonkey, plus bngsim NFsim without -bscb) for the network-free
+      algorithm agreement cross-check.
