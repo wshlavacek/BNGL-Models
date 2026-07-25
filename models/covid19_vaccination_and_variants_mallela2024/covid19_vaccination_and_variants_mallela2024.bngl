@@ -1,0 +1,601 @@
+begin model
+
+#@title: COVID-19 vaccination and variants (Mallela et al., 2024)
+
+#@description: |
+#  Deterministic compartmental model of COVID-19 transmission dynamics in the
+#  metropolitan statistical area (MSA) surrounding New York City (New
+#  York-Newark-Jersey City, NY-NJ-PA), parameterized to daily reports of newly
+#  confirmed cases from 2020-01-21 to 2021-10-31. It extends the model of Lin
+#  et al. (2021) with vaccination and two more transmissible SARS-CoV-2
+#  variants. Unvaccinated persons progress S -> E1..E5 (a five-stage Erlang
+#  incubation period) -> A (asymptomatic) or I (mildly symptomatic) -> H
+#  (severe) -> R / D, each carrying a behavioral state M (mixing) <-> P
+#  (social-distancing) or Q (quarantined by testing or symptom-driven
+#  self-isolation). Vaccination moves susceptible and recovered persons at the
+#  empirical per capita rate mu(t) into V1..V6, a six-stage Erlang waiting time
+#  for vaccine-induced immunity; persons leaving V6 are partitioned into
+#  SV,1..SV,4 by how many of the three circulating strains their immune
+#  response neutralizes, and breakthrough infections run through a single-stage
+#  incubation EV -> AV / IV -> HV -> R / D. Social distancing is two
+#  coordinated step functions, a setpoint protected fraction Ptau(t) and an
+#  eigenvalue Lambdatau(t) setting how fast that setpoint is approached, which
+#  switch at sigma, tau1, tau2, tau3; a third step function Ytheta(t)
+#  multiplies the transmission rate constant beta by y1 at the Alpha takeoff
+#  time theta1 and by y2 at the Delta takeoff time theta2. A counter() molecule
+#  integrates simulation time into the observable t, which every if(t...) rate
+#  law reads. Behavior: 4 distinct social-distancing periods plus the two
+#  variant step changes reproduce the observed sequence of surges in detected
+#  cases over 2020-2021 -- the fit observable fDCs_Cum is the cumulative count
+#  of detected symptomatic cases, whose day-to-day increment is the predicted
+#  daily case report. Parameters hold the authors' published maximum a
+#  posteriori estimate.
+
+#@keyword: |
+#  epidemiology, COVID-19, SARS-CoV-2, vaccination, viral variant, Alpha
+#  variant, Delta variant, compartmental model, SEIR, social distancing,
+#  quarantine, Erlang, mass action, step function, Bayesian inference,
+#  Homo sapiens
+
+#@reference: |
+#  Mallela A, Chen Y, Lin YT, Miller EF, Neumann J, He Z, Nelson KE, Posner RG,
+#  Hlavacek WS (2024). Impacts of Vaccination and Severe Acute Respiratory
+#  Syndrome Coronavirus 2 Variants Alpha and Delta on Coronavirus Disease 2019
+#  Transmission Dynamics in Four Metropolitan Areas of the United States.
+#  Bull Math Biol 86:31. doi:10.1007/s11538-024-01258-4 -- the model
+#  (Appendix Eqs. 1-40), the fixed parameters (Table 3), and the New York City
+#  maximum a posteriori estimate (Table 1) reproduced here (Fig. 4A).
+#  Lin YT, Neumann J, Miller EF, Posner RG, Mallela A, Safta C, Ray J, Thakur G,
+#  Chinthavali S, Hlavacek WS (2021). Daily Forecasting of Regional Epidemics of
+#  Coronavirus Disease with Bayesian Uncertainty Quantification, United States.
+#  Emerg Infect Dis 27(3):767-778. doi:10.3201/eid2703.203364 -- the base model
+#  that this one extends, and the source of the fixed epidemiological constants.
+
+#@note: |
+#  PROVENANCE. Molecule types, seed species, functions, and rules follow the
+#  authors' own PyBioNetFit model (NYC/NYC.bngl in the Vax_and_Variants example
+#  of lanl/PyBNF), house-styled here: component names lowercased, switch-time
+#  parameters re-expressed in the paper's notation (sigma, tau1, tau2, tau3,
+#  theta1, theta2 are absolute times built from the fitted increments t_sigma,
+#  t_tau1, t_tau2, t_tau3, t_theta2, which is how the authors parameterized the
+#  fit and what keeps the switch times ordered), fH/25 written as the paper's
+#  mh*fH, and the observable set reduced to those the rate laws and the paper's
+#  Fig. 4C population decomposition need. Fitted-parameter nominals are the
+#  published MAP (NYC/Output/adaptive_files/MLE_params.txt), which agrees with
+#  Table 1 of Mallela et al. (2024) to the precision printed there.
+#
+#  VACCINATION GATE. v_times_PhiV() carries the authors' `if(t<=582,...)` gate
+#  verbatim: no vaccination occurs before day 583 (2021-08-26). For New York
+#  City the empirical series (Covid Act Now) starts on day 298, so the gate
+#  discards days 298-582 of it -- 93% of the vaccinations completed by
+#  2021-10-31. This is the model as fit -- the published MAP was inferred
+#  through the gate, and it is what reproduces the reported case data;
+#  releasing it (mu(t) active from the first reported day) suppresses the 2021
+#  Delta surge and degrades agreement with the case data. See
+#  verify_mallela2024.ipynb.
+#
+#  UNITS. Populations are counts of individuals; the model is inherently
+#  population-based (no molar concentration), so no NA / reference-volume
+#  conversion applies. The negative-binomial dispersion parameter r of the
+#  likelihood (Table 1) is not a model parameter and is omitted here.
+
+begin parameters
+
+  # === Region-specific fixed parameter; see Table 3 in Mallela et al. (2024) ===
+  # Total population of the New York City (New York-Newark-Jersey City, NY-NJ-PA) MSA
+  S0 19216182 # individuals
+
+  # === Adjustable parameters at the published MAP; see Table 1 in Mallela et al. (2024) ===
+  # Start of local disease transmission; model day 0 = 2020-01-21
+  t0 9.559722923033691 # d
+  # Delay from t0 to the start of the initial social-distancing period
+  t_sigma 58.81209868073662 # d
+  # Start of the initial social-distancing period
+  sigma t0+t_sigma # d
+  # Delay from sigma to the start of the 2nd social-distancing period
+  t_tau1 74.23972317021604 # d
+  # Start of the 2nd social-distancing period
+  tau1 sigma+t_tau1 # d
+  # Delay from tau1 to the start of the 3rd social-distancing period
+  t_tau2 34.08342225201716 # d
+  # Start of the 3rd social-distancing period
+  tau2 tau1+t_tau2 # d
+  # Delay from tau2 to the start of the 4th social-distancing period
+  t_tau3 84.99379481643842 # d
+  # Start of the 4th social-distancing period
+  tau3 tau2+t_tau3 # d
+
+  # Setpoint fraction of susceptibles practicing social distancing, one per
+  # period (p0, p1, p2, p3)
+  p0 0.4825392298736484 # dimensionless
+  p1 0.4036984792247579 # dimensionless
+  p2 0.4086163765730662 # dimensionless
+  p3 0.263410377595072 # dimensionless
+
+  # Social-distancing eigenvalues setting how fast that setpoint is approached
+  # (lambda0, lambda1, lambda2, lambda3)
+  lambda0 9.744581638319751 # /d
+  lambda1 2.670229799761919 # /d
+  lambda2 0.3885685867371318 # /d
+  lambda3 8.108094961546312 # /d
+
+  # Takeoff time of SARS-CoV-2 variant Alpha (lineage B.1.1.7)
+  theta1 380.9571643541644 # d
+  # Delay from the Alpha takeoff to the Delta takeoff
+  t_theta2 131.3929774103862 # d
+  # Takeoff time of SARS-CoV-2 variant Delta (lineage B.1.617.2)
+  theta2 theta1+t_theta2 # d
+  # Transmissibility of Alpha relative to ancestral strains
+  y1 1.380828173620698 # dimensionless
+  # Transmissibility of Delta relative to ancestral strains
+  y2 2.113655218153205 # dimensionless
+  # Rate constant for disease transmission by ancestral strains
+  beta 0.373760909135265 # /d
+  # Fraction of new symptomatic infections detected and reported
+  fD 0.3867759332126686 # dimensionless
+
+  # === Universal fixed parameters; see Table 3 in Mallela et al. (2024) ===
+  # Number of infectious persons at t = t0
+  I0 1 # individuals
+  # Reduction in risk of infection from social distancing
+  mb 0.1 # dimensionless
+  # Reduction in risk of severe disease from vaccination
+  mh 0.04 # dimensionless
+  # Relative infectiousness of persons in the incubation period
+  rhoE 1.1 # dimensionless
+  # Relative infectiousness of asymptomatic persons
+  rhoA 0.9 # dimensionless
+  # Fraction of infections that never become symptomatic
+  fA 0.44 # dimensionless
+  # Fraction of symptomatic cases that become severe (unvaccinated)
+  fH 0.054 # dimensionless
+  # Fraction of persons with severe disease who recover
+  fR 0.79 # dimensionless
+  # Cumulative fraction of vaccinated persons protected against ancestral
+  # strains (f0), against Alpha as well (f1), and against Delta as well (f2)
+  f0 0.9 # dimensionless
+  f1 0.81 # dimensionless
+  f2 0.69 # dimensionless
+  # Rate constant for progression through each incubation stage
+  kL 0.94 # /d
+  # Rate constant for testing-driven quarantine
+  kQ 0.0038 # /d
+  # Rate constant for symptom-driven self-isolation
+  jQ 0.4 # /d
+  # Rate constant for completing immune clearance without symptoms
+  cA 0.26 # /d
+  # Rate constant for completing immune clearance or progressing to severe disease
+  cI 0.12 # /d
+  # Rate constant for recovery from or death after severe disease
+  cH 0.17 # /d
+  # Rate constant for progression through each stage of the vaccine response
+  kV 0.3 # /d
+
+  # === Bookkeeping ===
+  # Case-reporting period (delta_t = 1 => daily case reports)
+  delta_t 1 # d
+  # Social-distancing periods considered beyond the initial one; see Table 1
+  n 3 # dimensionless
+
+end parameters
+
+begin molecule types
+
+  # Simulation clock: 0->counter() at rate 1 integrates time; observable t = counter
+  counter()
+  # Susceptible and unvaccinated; sd~M = mixing, sd~P = social-distancing
+  S(sd~M~P)
+  # Vaccinated and unexposed, by the breadth of the immune response raised
+  #  1: no strain neutralized, 2: ancestral only, 3: ancestral + Alpha,
+  #  4: ancestral + Alpha + Delta
+  SV(strain~1~2~3~4)
+  # Incubation period; stage~1..5 are the Erlang stages for unvaccinated persons
+  #  (vax~1 uses a single exponential stage), sd~Q = quarantined
+  E(stage~1~2~3~4~5,sd~M~P~Q,vax~0~1)
+  # Asymptomatic and in the immune-clearance phase
+  A(sd~M~P~Q,vax~0~1)
+  # Mildly symptomatic and in the immune-clearance phase
+  I(sd~M~P~Q,vax~0~1)
+  # Vaccinated; stage~1..6 are the Erlang stages of the immune response
+  V(stage~1~2~3~4~5~6)
+  # Severe disease; hospitalized or isolated at home
+  H(vax~0~1)
+  # Recovered
+  R(vax~0~1)
+  # Deceased
+  D()
+  # Detected-case accumulator (the integral of fD times the detection rate)
+  fDCs()
+
+end molecule types
+
+begin seed species
+
+  counter() 0 # dimensionless
+  S(sd~M) S0-I0 # individuals
+  I(sd~M,vax~0) I0 # individuals
+  fDCs() 0 # individuals
+
+end seed species
+
+begin observables
+
+  # Simulation clock read by every if(t...) rate law
+  Molecules t counter()
+
+  # Susceptible and unvaccinated, by behavioral state (S_M, S_P)
+  Molecules S_M S(sd~M)
+  Molecules S_P S(sd~P)
+
+  # Exposed and unvaccinated, all five incubation stages (vaccination-eligible)
+  Molecules E_M E(sd~M,vax~0)
+  Molecules E_P E(sd~P,vax~0)
+  # Exposed, unvaccinated and infectious (stages 2-5; stage 1 is not infectious)
+  Molecules Einf_M E(stage~2,sd~M,vax~0) E(stage~3,sd~M,vax~0) \
+    E(stage~4,sd~M,vax~0) E(stage~5,sd~M,vax~0)
+  Molecules Einf_P E(stage~2,sd~P,vax~0) E(stage~3,sd~P,vax~0) \
+    E(stage~4,sd~P,vax~0) E(stage~5,sd~P,vax~0)
+  # Exposed and vaccinated (E_V); the whole population is infectious
+  Molecules E_V E(vax~1)
+  # Last incubation stage, unvaccinated: the source of newly symptomatic cases
+  Molecules E5_MPQ E(stage~5,sd~M,vax~0) E(stage~5,sd~P,vax~0) \
+    E(stage~5,sd~Q,vax~0)
+  # Exposed and quarantined, all stages (informational)
+  Molecules E_Q E(sd~Q,vax~0)
+
+  # Asymptomatic, immune-clearance phase
+  Molecules A_M A(sd~M,vax~0)
+  Molecules A_P A(sd~P,vax~0)
+  Molecules A_Q A(sd~Q,vax~0)
+  Molecules A_V A(vax~1)
+  # Mildly symptomatic, immune-clearance phase
+  Molecules I_M I(sd~M,vax~0)
+  Molecules I_P I(sd~P,vax~0)
+  Molecules I_Q I(sd~Q,vax~0)
+  Molecules I_V I(vax~1)
+
+  # Vaccinated and awaiting immunity (V1..V6), lumped
+  Molecules V_tot V()
+  # Vaccinated and unexposed, by breadth of protection (SV,1..SV,4)
+  Molecules SV_1 SV(strain~1)
+  Molecules SV_2 SV(strain~2)
+  Molecules SV_3 SV(strain~3)
+  Molecules SV_4 SV(strain~4)
+
+  # Severe disease, recovered, and deceased
+  Molecules H_U H(vax~0)
+  Molecules H_V H(vax~1)
+  Molecules R_U R(vax~0)
+  Molecules R_V R(vax~1)
+  Molecules D_tot D()
+
+  # Fit observable: cumulative detected symptomatic cases, fD*C_S(t)
+  Molecules fDCs_Cum fDCs()
+
+end observables
+
+begin functions
+
+  # Empirical daily per capita vaccination rate mu-tilde(t); see Eq. 37 in
+  # Mallela et al. (2024). A step function holding the reported fraction of the
+  # New York City MSA population completing vaccination on each day after
+  # 2020-01-21 (Covid Act Now); days 298-649 carry data, all others are 0.
+  v_rate()=\
+    if(t<=297,0,if(t<=298,1.12314383e-05,if(t<=299,9.94451901e-06,\
+    if(t<=300,4.74735912e-05,if(t<=301,2.11759573e-05,if(t<=302,0,\
+    if(t<=303,8.68001985e-05,if(t<=304,3.62421529e-05,if(t<=305,8.93918412e-05,\
+    if(t<=306,0.000146015146,if(t<=307,0.00010497702,if(t<=308,7.94473222e-05,\
+    if(t<=309,6.05025646e-05,if(t<=310,0.000364352105,if(t<=311,0.000201739564,\
+    if(t<=312,0.000357759509,if(t<=313,0.000269842203,if(t<=314,0.000257166618,\
+    if(t<=315,0.000470011593,if(t<=316,0.000451941228,if(t<=317,0.000253944211,\
+    if(t<=318,0.0006239742879999999,if(t<=319,0.00066809744,if(t<=320,0.000499101616,\
+    if(t<=321,0.000321104073,if(t<=322,0.000519506807,if(t<=323,0.000424076528,\
+    if(t<=324,0.000449397629,if(t<=325,0.000884025501,if(t<=326,0.000654416186,\
+    if(t<=327,0.00064374717,if(t<=328,0.000789273122,if(t<=329,0.000803543557,\
+    if(t<=330,0.000638530434,if(t<=331,0.00100160898,if(t<=332,0.000993807258,\
+    if(t<=333,0.00124114925,if(t<=334,0.00123426412,if(t<=335,0.00141321826,\
+    if(t<=336,0.00118332628,if(t<=337,0.00109470055,if(t<=338,0.00125019427,\
+    if(t<=339,0.00135455371,if(t<=340,0.0019431852,if(t<=341,0.00205543168,\
+    if(t<=342,0.00197207562,if(t<=343,0.0022614449,if(t<=344,0.00211490243,\
+    if(t<=345,0.00210695833,if(t<=346,0.00249495193,if(t<=347,0.00234941068,\
+    if(t<=348,0.00226462926,if(t<=349,0.00192793935,if(t<=350,0.002307822,\
+    if(t<=351,0.00177314607,if(t<=352,0.00204756246,if(t<=353,0.00223537455,\
+    if(t<=354,0.00265125171,if(t<=355,0.00215845046,if(t<=356,0.00219770402,\
+    if(t<=357,0.00178428238,if(t<=358,0.00184590186,if(t<=359,0.0018605743,\
+    if(t<=360,0.00184659497,if(t<=361,0.00229017668,if(t<=362,0.00253196493,\
+    if(t<=363,0.00239098899,if(t<=364,0.00211185421,if(t<=365,0.00219407719,\
+    if(t<=366,0.00212246707,if(t<=367,0.00269861999,if(t<=368,0.00266277044,\
+    if(t<=369,0.0022864101,if(t<=370,0.00238106143,if(t<=371,0.00288706782,\
+    if(t<=372,0.00241887213,if(t<=373,0.00264944029,if(t<=374,0.00283053906,\
+    if(t<=375,0.00324595184,if(t<=376,0.00288717874,if(t<=377,0.00276439946,\
+    if(t<=378,0.00244384282,if(t<=379,0.00233597338,if(t<=380,0.00279352064,\
+    if(t<=381,0.00286037951,if(t<=382,0.00328170603,if(t<=383,0.002822949,\
+    if(t<=384,0.00278954494,if(t<=385,0.00312619711,if(t<=386,0.00324124337,\
+    if(t<=387,0.00365400495,if(t<=388,0.00402022148,if(t<=389,0.00451327855,\
+    if(t<=390,0.00463343495,if(t<=391,0.00361972256,if(t<=392,0.00421404306,\
+    if(t<=393,0.00450737728,if(t<=394,0.00385689985,if(t<=395,0.00706347035,\
+    if(t<=396,0.00548992622,if(t<=397,0.00561269851,if(t<=398,0.00565157042,\
+    if(t<=399,0.00465943143,if(t<=400,0.00360607661,if(t<=401,0.00424833829,\
+    if(t<=402,0.00506165543,if(t<=403,0.00554584679,if(t<=404,0.00567074572,\
+    if(t<=405,0.00521791533,if(t<=406,0.00511027778,if(t<=407,0.00463445002,\
+    if(t<=408,0.0048334687,if(t<=409,0.00495195688,if(t<=410,0.00549367799,\
+    if(t<=411,0.00563900702,if(t<=412,0.00467717288,if(t<=413,0.00464379518,\
+    if(t<=414,0.00459904476,if(t<=415,0.00454237307,if(t<=416,0.00500574242,\
+    if(t<=417,0.00531713904,if(t<=418,0.00561133477,if(t<=419,0.00533865191,\
+    if(t<=420,0.00495078846,if(t<=421,0.00463678844,if(t<=422,0.00473844747,\
+    if(t<=423,0.0054393895,if(t<=424,0.00545525246,if(t<=425,0.00541193326,\
+    if(t<=426,0.00509452208,if(t<=427,0.00660187229,if(t<=428,0.00417453135,\
+    if(t<=429,0.00467057068,if(t<=430,0.00516133914,if(t<=431,0.00579060434,\
+    if(t<=432,0.00527368183,if(t<=433,0.0046510559,if(t<=434,0.00430932033,\
+    if(t<=435,0.00469632041,if(t<=436,0.00451319727,if(t<=437,0.00525834823,\
+    if(t<=438,0.00514407899,if(t<=439,0.00424489032,if(t<=440,0.00338261955,\
+    if(t<=441,0.0038480963,if(t<=442,0.00292950561,if(t<=443,0.00356221514,\
+    if(t<=444,0.00426978001,if(t<=445,0.00498272013,if(t<=446,0.00406037155,\
+    if(t<=447,0.00385850101,if(t<=448,0.00311324383,if(t<=449,0.00287080426,\
+    if(t<=450,0.00249969302,if(t<=451,0.00303688666,if(t<=452,0.00373753143,\
+    if(t<=453,0.00334610566,if(t<=454,0.00271933283,if(t<=455,0.00249564984,\
+    if(t<=456,0.00211065932,if(t<=457,0.0026296495,if(t<=458,0.002927413,\
+    if(t<=459,0.00348787669,if(t<=460,0.00360563614,if(t<=461,0.00305593177,\
+    if(t<=462,0.0029747901,if(t<=463,0.00313546965,if(t<=464,0.00427331421,\
+    if(t<=465,0.00367859101,if(t<=466,0.0038757078,if(t<=467,0.00345077,\
+    if(t<=468,0.00294496232,if(t<=469,0.00280944761,if(t<=470,0.00320988109,\
+    if(t<=471,0.00327554366,if(t<=472,0.00291552997,if(t<=473,0.00379463693,\
+    if(t<=474,0.00296006542,if(t<=475,0.00296144959,if(t<=476,0.00226444315,\
+    if(t<=477,0.00222587449,if(t<=478,0.00208900522,if(t<=479,0.00235789914,\
+    if(t<=480,0.0023527227,if(t<=481,0.00225757636,if(t<=482,0.00156006694,\
+    if(t<=483,0.00200007592,if(t<=484,0.00177305229,if(t<=485,0.00132721137,\
+    if(t<=486,0.0016157386,if(t<=487,0.00160173321,if(t<=488,0.00161771581,\
+    if(t<=489,0.00120030271,if(t<=490,0.00106073605,if(t<=491,0.00109226802,\
+    if(t<=492,0.0009426437350000001,if(t<=493,0.00129775163,if(t<=494,0.00148914411,\
+    if(t<=495,0.00126664783,if(t<=496,0.00111729785,if(t<=497,0.000928262283,\
+    if(t<=498,0.00100128739,if(t<=499,0.000862123754,if(t<=500,0.00143578505,\
+    if(t<=501,0.00159369446,if(t<=502,0.001236268,if(t<=503,0.0010974177,\
+    if(t<=504,0.00116777929,if(t<=505,0.00129901145,if(t<=506,0.00143993669,\
+    if(t<=507,0.00137057727,if(t<=508,0.00129378217,if(t<=509,0.00105560763,\
+    if(t<=510,0.00076959134,if(t<=511,0.00100224246,if(t<=512,0.00126489835,\
+    if(t<=513,0.000839568459,if(t<=514,0.00104061086,if(t<=515,0.0012489978,\
+    if(t<=516,0.000909710251,if(t<=517,0.00106807397,if(t<=518,0.00092042926,\
+    if(t<=519,0.000568671374,if(t<=520,0.00107534612,if(t<=521,0.000977098888,\
+    if(t<=522,0.0011913604,if(t<=523,0.0020660573,if(t<=524,0.000776079056,\
+    if(t<=525,0.0009384054229999999,if(t<=526,0.0007691787249999999,\
+    if(t<=527,0.0008221690370000001,if(t<=528,0.000977691101,if(t<=529,0.00120703073,\
+    if(t<=530,0.00115212883,if(t<=531,0.0009606733930000001,if(t<=532,0.00093316483,\
+    if(t<=533,0.0007720669550000001,if(t<=534,0.00120225262,if(t<=535,0.0011870245,\
+    if(t<=536,0.00108866938,if(t<=537,0.0009816442539999999,if(t<=538,0.0013641676,\
+    if(t<=539,0.000946980045,if(t<=540,0.0009865161470000001,if(t<=541,0.00106015651,\
+    if(t<=542,0.0011457813,if(t<=543,0.00126624345,if(t<=544,0.00136449029,\
+    if(t<=545,0.00102888928,if(t<=546,0.000864759508,if(t<=547,0.0011350614,\
+    if(t<=548,0.00094079968,if(t<=549,0.00106408062,if(t<=550,0.00155375609,\
+    if(t<=551,0.000838952779,if(t<=552,0.00106263742,if(t<=553,0.00118428894,\
+    if(t<=554,0.000855891218,if(t<=555,0.000815682206,if(t<=556,0.00102089848,\
+    if(t<=557,0.00110255282,if(t<=558,0.00113035448,if(t<=559,0.00102012975,\
+    if(t<=560,0.00110705653,if(t<=561,0.000705581016,if(t<=562,0.000993763855,\
+    if(t<=563,0.00118845612,if(t<=564,0.00117255526,if(t<=565,0.000896920008,\
+    if(t<=566,0.00116252977,if(t<=567,0.0009774145669999999,if(t<=568,0.000774332103,\
+    if(t<=569,0.00102867561,if(t<=570,0.000824192259,if(t<=571,0.000945787156,\
+    if(t<=572,0.000867970103,if(t<=573,0.000975609124,if(t<=574,0.0009400845809999999,\
+    if(t<=575,0.000798736412,if(t<=576,0.000715158278,if(t<=577,0.000796893693,\
+    if(t<=578,0.000646695582,if(t<=579,0.000983652225,if(t<=580,0.000844168204,\
+    if(t<=581,0.000706883968,if(t<=582,0.00075490277,if(t<=583,0.000968707132,\
+    if(t<=584,0.000823652744,if(t<=585,0.000913533955,if(t<=586,0.000758321971,\
+    if(t<=587,0.000722756758,if(t<=588,0.000708912186,if(t<=589,0.000814718917,\
+    if(t<=590,0.000692181581,if(t<=591,0.000874866316,if(t<=592,0.000687077945,\
+    if(t<=593,0.00101249691,if(t<=594,0.000789045455,if(t<=595,0.000773614795,\
+    if(t<=596,0.000526705332,if(t<=597,0.000706965066,if(t<=598,0.000903633251,\
+    if(t<=599,0.000590024411,if(t<=600,0.000936203932,if(t<=601,0.000607883075,\
+    if(t<=602,0.000564723531,if(t<=603,0.000724888451,if(t<=604,0.00068726425,\
+    if(t<=605,0.000555183276,if(t<=606,0.000856091978,if(t<=607,0.000576251369,\
+    if(t<=608,0.0009014603059999999,if(t<=609,0.000536780404,\
+    if(t<=610,0.0006876480990000001,if(t<=611,0.000371006631,if(t<=612,0.000692669203,\
+    if(t<=613,0.00083516197,if(t<=614,0.00038463401,if(t<=615,0.000800101713,\
+    if(t<=616,0.000375803641,if(t<=617,0.0006264554589999999,if(t<=618,0.000526031526,\
+    if(t<=619,0.000499368607,if(t<=620,0.000428305584,if(t<=621,0.000909464485,\
+    if(t<=622,0.000351236661,if(t<=623,0.000566571376,if(t<=624,0.000429427975,\
+    if(t<=625,0.000499533864,if(t<=626,0.000526757148,if(t<=627,0.000225809721,\
+    if(t<=628,0.0005403013610000001,if(t<=629,0.000240458659,if(t<=630,0.000516079477,\
+    if(t<=631,0.000660882077,if(t<=632,0.000566899036,if(t<=633,0.00115467547,\
+    if(t<=634,0.000633427116,if(t<=635,0.000518385602,if(t<=636,0.000749428245,\
+    if(t<=637,0.000913122119,if(t<=638,0.000786391348,if(t<=639,0.0012730781,\
+    if(t<=640,0.00129256234,if(t<=641,0.00115637457,if(t<=642,0.00102572807,\
+    if(t<=643,0.00105539285,if(t<=644,0.00119078863,if(t<=645,0.000732476407,\
+    if(t<=646,0.0011368034,if(t<=647,0.00143053847,if(t<=648,0.000947157648,\
+    if(t<=649,0.00133587678,\
+    0)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))\
+    ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))\
+    ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))\
+    ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))\
+    ))))))))))))))))))
+
+  # Population eligible for vaccination, phi_V(t); see Eq. 31
+  PhiV()=if(t>=t0,S_M+S_P+E_M+E_P+A_M+A_P+R_U,0)
+
+  # Per capita vaccination rate mu(t) = S0*mu-tilde(t)/phi_V(t). The t<=582 gate
+  # is the authors' own; see the VACCINATION GATE note in the header.
+  v_times_PhiV()=if(t<=582,0,S0*v_rate()/PhiV())
+
+  # Variant transmissibility factor Y_theta(t); see Eq. 38
+  Ytheta()=if(t<=theta1,1,if(t<=theta2,y1,y2))
+
+  # Unit step functions U_sigma, U_theta1, U_theta2; see Eqs. 32-34
+  Usigma()=if(t>=sigma,1,0)
+  Utheta1()=if(t>=theta1,1,0)
+  Utheta2()=if(t>=theta2,1,0)
+
+  # Quarantine, self-isolation, and immune-clearance rate constants are held at
+  # 0 until the local epidemic starts, so I stays at I0 for t < t0
+  kQfunc()=if(t>=t0,kQ,0)
+  jQfunc()=if(t>=t0,jQ,0)
+  cIfunc()=if(t>=t0,cI,0)
+
+  # Effective infectious populations phi_M(t) and phi_P(t); see Eqs. 29-30
+  phiM()=if(t>=t0,I_M+I_V+rhoE*(Einf_M+E_V)+rhoA*(A_M+A_V),0)
+  phiP()=if(t>=t0,I_P+rhoE*Einf_P+rhoA*A_P,0)
+
+  # Social-distancing eigenvalue Lambda_tau(t) and setpoint P_tau(t), the two
+  # coordinated step functions of Eqs. 35-36; both are 0 before t = sigma
+  Lambdatau()=\
+    if(t>=sigma && t<tau1,lambda0,\
+    if(t>=tau1 && t<tau2,lambda1,\
+    if(t>=tau2 && t<tau3,lambda2,\
+    if(t>=tau3,lambda3,\
+    0))))
+  Ptau()=\
+    if(t>=sigma && t<tau1,p0,\
+    if(t>=tau1 && t<tau2,p1,\
+    if(t>=tau2 && t<tau3,p2,\
+    if(t>=tau3,p3,\
+    0))))
+
+end functions
+
+begin reaction rules
+
+  # Simulation clock and the detected-case accumulator; see Eqs. 39-40
+  0->counter() 1
+  0->fDCs() fD*(1-fA)*(kL*E5_MPQ+kL/5*E_V)
+
+  # Disease transmission to unvaccinated susceptibles; see Eqs. 1-4
+  S(sd~M)->E(stage~1,sd~M,vax~0) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  S(sd~P)->E(stage~1,sd~P,vax~0) mb*(Ytheta()*beta/S0)*(phiM()+mb*phiP())
+
+  # Adoption and relaxation of social distancing (mixing <-> protected)
+  S(sd~M)<->S(sd~P) Usigma()*Lambdatau()*Ptau(),\
+    Usigma()*Lambdatau()*(1-Ptau())
+  E(stage~1,sd~M,vax~0)<->E(stage~1,sd~P,vax~0) \
+    Usigma()*Lambdatau()*Ptau(),Usigma()*Lambdatau()*(1-Ptau())
+  E(stage~2,sd~M,vax~0)<->E(stage~2,sd~P,vax~0) \
+    Usigma()*Lambdatau()*Ptau(),Usigma()*Lambdatau()*(1-Ptau())
+  E(stage~3,sd~M,vax~0)<->E(stage~3,sd~P,vax~0) \
+    Usigma()*Lambdatau()*Ptau(),Usigma()*Lambdatau()*(1-Ptau())
+  E(stage~4,sd~M,vax~0)<->E(stage~4,sd~P,vax~0) \
+    Usigma()*Lambdatau()*Ptau(),Usigma()*Lambdatau()*(1-Ptau())
+  E(stage~5,sd~M,vax~0)<->E(stage~5,sd~P,vax~0) \
+    Usigma()*Lambdatau()*Ptau(),Usigma()*Lambdatau()*(1-Ptau())
+  A(sd~M,vax~0)<->A(sd~P,vax~0) Usigma()*Lambdatau()*Ptau(),\
+    Usigma()*Lambdatau()*(1-Ptau())
+  I(sd~M,vax~0)<->I(sd~P,vax~0) Usigma()*Lambdatau()*Ptau(),\
+    Usigma()*Lambdatau()*(1-Ptau())
+
+  # Testing-driven quarantine of exposed persons (stage 1 is undetectable)
+  E(stage~2,sd~M,vax~0)->E(stage~2,sd~Q,vax~0) kQ
+  E(stage~3,sd~M,vax~0)->E(stage~3,sd~Q,vax~0) kQ
+  E(stage~4,sd~M,vax~0)->E(stage~4,sd~Q,vax~0) kQ
+  E(stage~5,sd~M,vax~0)->E(stage~5,sd~Q,vax~0) kQ
+  E(stage~2,sd~P,vax~0)->E(stage~2,sd~Q,vax~0) kQ
+  E(stage~3,sd~P,vax~0)->E(stage~3,sd~Q,vax~0) kQ
+  E(stage~4,sd~P,vax~0)->E(stage~4,sd~Q,vax~0) kQ
+  E(stage~5,sd~P,vax~0)->E(stage~5,sd~Q,vax~0) kQ
+
+  # Progression through the five stages of the incubation period
+  E(stage~1,sd~M,vax~0)->E(stage~2,sd~M,vax~0) kL
+  E(stage~2,sd~M,vax~0)->E(stage~3,sd~M,vax~0) kL
+  E(stage~3,sd~M,vax~0)->E(stage~4,sd~M,vax~0) kL
+  E(stage~4,sd~M,vax~0)->E(stage~5,sd~M,vax~0) kL
+  E(stage~1,sd~P,vax~0)->E(stage~2,sd~P,vax~0) kL
+  E(stage~2,sd~P,vax~0)->E(stage~3,sd~P,vax~0) kL
+  E(stage~3,sd~P,vax~0)->E(stage~4,sd~P,vax~0) kL
+  E(stage~4,sd~P,vax~0)->E(stage~5,sd~P,vax~0) kL
+  E(stage~2,sd~Q,vax~0)->E(stage~3,sd~Q,vax~0) kL
+  E(stage~3,sd~Q,vax~0)->E(stage~4,sd~Q,vax~0) kL
+  E(stage~4,sd~Q,vax~0)->E(stage~5,sd~Q,vax~0) kL
+
+  # Entry into the immune-clearance phase, without and with symptoms
+  E(stage~5,sd~M,vax~0)->A(sd~M,vax~0) kL*fA
+  E(stage~5,sd~P,vax~0)->A(sd~P,vax~0) kL*fA
+  E(stage~5,sd~Q,vax~0)->A(sd~Q,vax~0) kL*fA
+  E(stage~5,sd~M,vax~0)->I(sd~M,vax~0) kL*(1-fA)
+  E(stage~5,sd~P,vax~0)->I(sd~P,vax~0) kL*(1-fA)
+  E(stage~5,sd~Q,vax~0)->I(sd~Q,vax~0) kL*(1-fA)
+
+  # Quarantine and symptom-driven self-isolation in the immune-clearance phase
+  I(sd~M,vax~0)->I(sd~Q,vax~0) jQfunc()+kQfunc()
+  I(sd~P,vax~0)->I(sd~Q,vax~0) jQfunc()+kQfunc()
+  A(sd~M,vax~0)->A(sd~Q,vax~0) kQfunc()
+  A(sd~P,vax~0)->A(sd~Q,vax~0) kQfunc()
+
+  # Recovery, progression to severe disease, and death (unvaccinated)
+  A(vax~0)->R(vax~0) cA
+  I(vax~0)->R(vax~0) cIfunc()*(1-fH)
+  I(vax~0)->H(vax~0) cIfunc()*fH
+  H(vax~0)->R(vax~0) cH*fR
+  H(vax~0)->D() cH*(1-fR)
+
+  # Vaccination of susceptible and of recovered unvaccinated persons at the
+  # empirical per capita rate mu(t); see Eqs. 17-18 and 28
+  S(sd~M)->V(stage~1) v_times_PhiV()
+  S(sd~P)->V(stage~1) v_times_PhiV()
+  R(vax~0)->R(vax~1) v_times_PhiV()
+
+  # Progression through the six stages of the immune response to vaccination
+  V(stage~1)->V(stage~2) kV
+  V(stage~2)->V(stage~3) kV
+  V(stage~3)->V(stage~4) kV
+  V(stage~4)->V(stage~5) kV
+  V(stage~5)->V(stage~6) kV
+
+  # Persons leaving V6 partition by how many circulating strains they neutralize
+  V(stage~6)->SV(strain~1) kV*(1-f0)
+  V(stage~6)->SV(strain~2) kV*(f0-f1)
+  V(stage~6)->SV(strain~3) kV*(f1-f2)
+  V(stage~6)->SV(strain~4) kV*f2
+
+  # Breakthrough infection of vaccinated persons; those still awaiting immunity
+  # (V1..V6) are fully susceptible, SV,2 only from the Alpha takeoff time and
+  # SV,3 only from the Delta takeoff time; see Eqs. 18-22 and 24
+  V(stage~1)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  V(stage~2)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  V(stage~3)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  V(stage~4)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  V(stage~5)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  V(stage~6)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  SV(strain~1)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  SV(strain~2)->E(stage~1,sd~M,vax~1) \
+    (Ytheta()*Utheta1()*beta/S0)*(phiM()+mb*phiP())
+  SV(strain~3)->E(stage~1,sd~M,vax~1) \
+    (Ytheta()*Utheta2()*beta/S0)*(phiM()+mb*phiP())
+
+  # Immune clearance after breakthrough infection; vaccination lowers the risk
+  # of severe disease by mh but not the probability of death once severe
+  E(stage~1,sd~M,vax~1)->A(sd~M,vax~1) (kL/5)*fA
+  E(stage~1,sd~M,vax~1)->I(sd~M,vax~1) (kL/5)*(1-fA)
+  A(sd~M,vax~1)->R(vax~1) cA
+  I(sd~M,vax~1)->R(vax~1) cIfunc()*(1-mh*fH)
+  I(sd~M,vax~1)->H(vax~1) cIfunc()*(mh*fH)
+  H(vax~1)->R(vax~1) cH*fR
+  H(vax~1)->D() cH*(1-fR)
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1})  # 42 species, 88 reactions
+
+  #@note: |
+  #  ODE-only. Time gating uses the counter() molecule as a deterministic clock
+  #  (0->counter() at rate 1, so the observable t equals simulation time); this
+  #  and the if(t...) rate-law functions require deterministic integration --
+  #  under SSA the clock would be a Poisson process, and NFsim supports neither
+  #  if() rate laws nor a population this size (19,216,182 individuals).
+
+  # New York City MSA daily new-case reproduction
+
+  #@protocol: |
+  #  Integrate the compartmental ODE over 2020-01-21 to 2021-10-31 (model day
+  #  t = 0..649) at the published maximum a posteriori estimate. The fit
+  #  observable fDCs_Cum is the cumulative count of detected symptomatic cases;
+  #  its day-to-day increment is the predicted number of cases reported that
+  #  day, which verify_mallela2024.ipynb overlays on the New York Times
+  #  surveillance data. Expect 4 distinct social-distancing periods (Ptau
+  #  and Lambdatau step at sigma, tau1, tau2, tau3) and two variant
+  #  step changes: Ytheta rises to y1 = 1.4 on day 381 (Alpha) and to
+  #  y2 = 2.1 on day 512 (Delta), which together reproduce the
+  #  observed sequence of surges in detected cases.
+
+  #@figure: Fig. 4 in Mallela et al. (2024)
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>649,n_steps=>649,\
+    print_functions=>1,atol=>1e-7,rtol=>1e-7})
+
+end actions
