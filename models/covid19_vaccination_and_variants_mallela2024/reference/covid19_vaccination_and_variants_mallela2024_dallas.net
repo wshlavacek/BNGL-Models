@@ -1,0 +1,285 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 S0             7573136  # Constant
+    2 t0             14.78390174375448  # Constant
+    3 t_sigma        50.24905218330111  # Constant
+    4 sigma          t0+t_sigma  # ConstantExpression
+    5 t_tau1         73.53908130227808  # Constant
+    6 tau1           sigma+t_tau1  # ConstantExpression
+    7 t_tau2         26.91825843610624  # Constant
+    8 tau2           tau1+t_tau2  # ConstantExpression
+    9 t_tau3         93.5523146964547  # Constant
+   10 tau3           tau2+t_tau3  # ConstantExpression
+   11 t_tau4         4.552190986493297  # Constant
+   12 tau4           tau3+t_tau4  # ConstantExpression
+   13 p0             0.3209672780806471  # Constant
+   14 p1             0.2700134594529  # Constant
+   15 p2             0.3763256311010729  # Constant
+   16 p3             0.2168691242922406  # Constant
+   17 p4             0.2383398667537445  # Constant
+   18 lambda0        9.698571963302307  # Constant
+   19 lambda1        2.810999181960522  # Constant
+   20 lambda2        0.6268426445167394  # Constant
+   21 lambda3        5.135934355557627  # Constant
+   22 lambda4        1.662258995579785  # Constant
+   23 theta1         376.6968466471686  # Constant
+   24 t_theta2       120.2745625755448  # Constant
+   25 theta2         theta1+t_theta2  # ConstantExpression
+   26 y1             1.108940281710055  # Constant
+   27 y2             1.629692672960086  # Constant
+   28 beta           0.3041729798051  # Constant
+   29 fD             0.481101273193522  # Constant
+   30 I0             1  # Constant
+   31 mb             0.1  # Constant
+   32 mh             0.04  # Constant
+   33 rhoE           1.1  # Constant
+   34 rhoA           0.9  # Constant
+   35 fA             0.44  # Constant
+   36 fH             0.054  # Constant
+   37 fR             0.79  # Constant
+   38 f0             0.9  # Constant
+   39 f1             0.81  # Constant
+   40 f2             0.69  # Constant
+   41 kL             0.94  # Constant
+   42 kQ             0.0038  # Constant
+   43 jQ             0.4  # Constant
+   44 cA             0.26  # Constant
+   45 cI             0.12  # Constant
+   46 cH             0.17  # Constant
+   47 kV             0.3  # Constant
+   48 delta_t        1  # Constant
+   49 n              4  # Constant
+   50 _InitialConc1  S0-I0  # ConstantExpression
+   51 _rateLaw1      1  # Constant
+   52 _rateLaw21     kL*fA  # ConstantExpression
+   53 _rateLaw22     kL*fA  # ConstantExpression
+   54 _rateLaw23     kL*fA  # ConstantExpression
+   55 _rateLaw24     kL*(1-fA)  # ConstantExpression
+   56 _rateLaw25     kL*(1-fA)  # ConstantExpression
+   57 _rateLaw26     kL*(1-fA)  # ConstantExpression
+   58 _rateLaw31     cH*fR  # ConstantExpression
+   59 _rateLaw32     cH*(1-fR)  # ConstantExpression
+   60 _rateLaw33     kV*(1-f0)  # ConstantExpression
+   61 _rateLaw34     kV*(f0-f1)  # ConstantExpression
+   62 _rateLaw35     kV*(f1-f2)  # ConstantExpression
+   63 _rateLaw36     kV*f2  # ConstantExpression
+   64 _rateLaw46     (kL/5)*fA  # ConstantExpression
+   65 _rateLaw47     (kL/5)*(1-fA)  # ConstantExpression
+   66 _rateLaw50     cH*fR  # ConstantExpression
+   67 _rateLaw51     cH*(1-fR)  # ConstantExpression
+end parameters
+begin functions
+    1 v_rate() if((t<=583),0,if((t<=584),0.00805307414,if((t<=585),3.59512238e-05,if((t<=586),0,if((t<=587),1.79756119e-05,if((t<=588),0,if((t<=589),1.79756119e-05,if((t<=590),1.79756119e-05,if((t<=591),0.00762261272,if((t<=592),3.68434652e-05,if((t<=593),0.0070790825,if((t<=594),3.18290023e-05,if((t<=595),1.88678533e-05,if((t<=596),3.18290023e-05,if((t<=597),1.88678533e-05,if((t<=598),0.009389631900000001,if((t<=599),5.59415983e-05,if((t<=600),0.0162599969,if((t<=601),0.469902921,if((t<=602),0.000925500559,if((t<=603),0.000662709406,if((t<=604),5.6293549e-05,if((t<=605),0.000712264167,if((t<=606),0.000661749783,if((t<=607),0.000470467419,if((t<=608),0.0005539412760000001,if((t<=609),0.000776118913,if((t<=610),0.000106733247,if((t<=611),0.000756636891,if((t<=612),0.000210899022,if((t<=613),0.000868938818,if((t<=614),0.00048709952,if((t<=615),5.59415983e-05,if((t<=616),0.000795917949,if((t<=617),7.86216622e-05,if((t<=618),0.000898281216,if((t<=619),6.05228178e-05,if((t<=620),0.000766003856,if((t<=621),7.01469394e-05,if((t<=622),0.000850130916,if((t<=623),0.0006290328460000001,if((t<=624),0.000705093713,if((t<=625),2.2260732e-05,if((t<=626),0.0003230324,if((t<=627),0.000666831627,if((t<=628),7.76620396e-05,if((t<=629),0.000944950643,if((t<=630),6.00638198e-05,if((t<=631),0.000807947915,if((t<=632),0.000173441389,if((t<=633),7.29575876e-05,if((t<=634),0.000812962378,if((t<=635),1.38533904e-05,if((t<=636),7.39172102e-05,if((t<=637),5.50493569e-05,if((t<=638),0.000130506859,if((t<=639),0.00128678364,if((t<=640),0.000629703467,if((t<=641),0.00060096718,if((t<=642),0.00092608279,if((t<=643),0.0012845791,if((t<=644),0.000967278756,if((t<=645),0.00106373924,if((t<=646),0.000690118944,if((t<=647),0.000900039721,if((t<=648),0.000916487107,if((t<=649),0.00131024755,0)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+    2 PhiV() if((t>=t0),((((((S_M+S_P)+E_M)+E_P)+A_M)+A_P)+R_U),0)
+    3 v_times_PhiV() if((t<=582),0,((S0*v_rate())/PhiV()))
+    4 Ytheta() if((t<=theta1),1,if((t<=theta2),y1,y2))
+    5 Usigma() if((t>=sigma),1,0)
+    6 Utheta1() if((t>=theta1),1,0)
+    7 Utheta2() if((t>=theta2),1,0)
+    8 kQfunc() if((t>=t0),kQ,0)
+    9 jQfunc() if((t>=t0),jQ,0)
+   10 cIfunc() if((t>=t0),cI,0)
+   11 phiM() if((t>=t0),(((I_M+I_V)+(rhoE*(Einf_M+E_V)))+(rhoA*(A_M+A_V))),0)
+   12 phiP() if((t>=t0),((I_P+(rhoE*Einf_P))+(rhoA*A_P)),0)
+   13 Lambdatau() if(((t>=sigma)&&(t<tau1)),lambda0,if(((t>=tau1)&&(t<tau2)),lambda1,if(((t>=tau2)&&(t<tau3)),lambda2,if(((t>=tau3)&&(t<tau4)),lambda3,if((t>=tau4),lambda4,0)))))
+   14 Ptau() if(((t>=sigma)&&(t<tau1)),p0,if(((t>=tau1)&&(t<tau2)),p1,if(((t>=tau2)&&(t<tau3)),p2,if(((t>=tau3)&&(t<tau4)),p3,if((t>=tau4),p4,0)))))
+   15 _rateLaw2() (fD*(1-fA))*((kL*E5_MPQ)+((kL/5)*E_V))
+   16 _rateLaw3() ((Ytheta()*beta)/S0)*(phiM()+(mb*phiP()))
+   17 _rateLaw4() (mb*((Ytheta()*beta)/S0))*(phiM()+(mb*phiP()))
+   18 _rateLaw5() (Usigma()*Lambdatau())*Ptau()
+   19 _rateLaw6() (Usigma()*Lambdatau())*(1-Ptau())
+   20 _rateLaw7() (Usigma()*Lambdatau())*Ptau()
+   21 _rateLaw8() (Usigma()*Lambdatau())*(1-Ptau())
+   22 _rateLaw9() (Usigma()*Lambdatau())*Ptau()
+   23 _rateLaw10() (Usigma()*Lambdatau())*(1-Ptau())
+   24 _rateLaw11() (Usigma()*Lambdatau())*Ptau()
+   25 _rateLaw12() (Usigma()*Lambdatau())*(1-Ptau())
+   26 _rateLaw13() (Usigma()*Lambdatau())*Ptau()
+   27 _rateLaw14() (Usigma()*Lambdatau())*(1-Ptau())
+   28 _rateLaw15() (Usigma()*Lambdatau())*Ptau()
+   29 _rateLaw16() (Usigma()*Lambdatau())*(1-Ptau())
+   30 _rateLaw17() (Usigma()*Lambdatau())*Ptau()
+   31 _rateLaw18() (Usigma()*Lambdatau())*(1-Ptau())
+   32 _rateLaw19() (Usigma()*Lambdatau())*Ptau()
+   33 _rateLaw20() (Usigma()*Lambdatau())*(1-Ptau())
+   34 _rateLaw27() jQfunc()+kQfunc()
+   35 _rateLaw28() jQfunc()+kQfunc()
+   36 _rateLaw29() cIfunc()*(1-fH)
+   37 _rateLaw30() cIfunc()*fH
+   38 _rateLaw37() ((Ytheta()*beta)/S0)*(phiM()+(mb*phiP()))
+   39 _rateLaw38() ((Ytheta()*beta)/S0)*(phiM()+(mb*phiP()))
+   40 _rateLaw39() ((Ytheta()*beta)/S0)*(phiM()+(mb*phiP()))
+   41 _rateLaw40() ((Ytheta()*beta)/S0)*(phiM()+(mb*phiP()))
+   42 _rateLaw41() ((Ytheta()*beta)/S0)*(phiM()+(mb*phiP()))
+   43 _rateLaw42() ((Ytheta()*beta)/S0)*(phiM()+(mb*phiP()))
+   44 _rateLaw43() ((Ytheta()*beta)/S0)*(phiM()+(mb*phiP()))
+   45 _rateLaw44() (((Ytheta()*Utheta1())*beta)/S0)*(phiM()+(mb*phiP()))
+   46 _rateLaw45() (((Ytheta()*Utheta2())*beta)/S0)*(phiM()+(mb*phiP()))
+   47 _rateLaw48() cIfunc()*(1-(mh*fH))
+   48 _rateLaw49() cIfunc()*(mh*fH)
+end functions
+begin species
+    1 counter() 0
+    2 S(sd~M) _InitialConc1
+    3 I(sd~M,vax~0) I0
+    4 fDCs() 0
+    5 E(sd~M,stage~1,vax~0) 0
+    6 S(sd~P) 0
+    7 I(sd~P,vax~0) 0
+    8 I(sd~Q,vax~0) 0
+    9 R(vax~0) 0
+   10 H(vax~0) 0
+   11 V(stage~1) 0
+   12 E(sd~P,stage~1,vax~0) 0
+   13 E(sd~M,stage~2,vax~0) 0
+   14 D() 0
+   15 R(vax~1) 0
+   16 V(stage~2) 0
+   17 E(sd~M,stage~1,vax~1) 0
+   18 E(sd~P,stage~2,vax~0) 0
+   19 E(sd~Q,stage~2,vax~0) 0
+   20 E(sd~M,stage~3,vax~0) 0
+   21 V(stage~3) 0
+   22 A(sd~M,vax~1) 0
+   23 I(sd~M,vax~1) 0
+   24 E(sd~P,stage~3,vax~0) 0
+   25 E(sd~Q,stage~3,vax~0) 0
+   26 E(sd~M,stage~4,vax~0) 0
+   27 V(stage~4) 0
+   28 H(vax~1) 0
+   29 E(sd~P,stage~4,vax~0) 0
+   30 E(sd~Q,stage~4,vax~0) 0
+   31 E(sd~M,stage~5,vax~0) 0
+   32 V(stage~5) 0
+   33 E(sd~P,stage~5,vax~0) 0
+   34 E(sd~Q,stage~5,vax~0) 0
+   35 A(sd~M,vax~0) 0
+   36 V(stage~6) 0
+   37 A(sd~P,vax~0) 0
+   38 A(sd~Q,vax~0) 0
+   39 SV(strain~1) 0
+   40 SV(strain~2) 0
+   41 SV(strain~3) 0
+   42 SV(strain~4) 0
+end species
+begin reactions
+    1 0 1 _rateLaw1 #_R1
+    2 0 4 _rateLaw2 #_R2
+    3 2 5 _rateLaw3 #_R3
+    4 2 6 _rateLaw5 #_R5
+    5 3 7 _rateLaw19 #_R12
+    6 3 8 _rateLaw27 #_R38
+    7 3 9 _rateLaw29 #_R43
+    8 3 10 _rateLaw30 #_R44
+    9 2 11 v_times_PhiV #_R47
+   10 6 12 _rateLaw4 #_R4
+   11 6 2 _rateLaw6 #_reverse__R5
+   12 5 12 _rateLaw7 #_R6
+   13 7 3 _rateLaw20 #_reverse__R12
+   14 5 13 kL #_R21
+   15 7 8 _rateLaw28 #_R39
+   16 7 9 _rateLaw29 #_R43
+   17 8 9 _rateLaw29 #_R43
+   18 7 10 _rateLaw30 #_R44
+   19 8 10 _rateLaw30 #_R44
+   20 10 9 _rateLaw31 #_R45
+   21 10 14 _rateLaw32 #_R46
+   22 6 11 v_times_PhiV #_R48
+   23 9 15 v_times_PhiV #_R49
+   24 11 16 kV #_R50
+   25 11 17 _rateLaw37 #_R59
+   26 12 5 _rateLaw8 #_reverse__R6
+   27 13 18 _rateLaw9 #_R7
+   28 13 19 kQ #_R13
+   29 13 20 kL #_R22
+   30 12 18 kL #_R25
+   31 16 21 kV #_R51
+   32 16 17 _rateLaw38 #_R60
+   33 17 22 _rateLaw46 #_R68
+   34 17 23 _rateLaw47 #_R69
+   35 18 13 _rateLaw10 #_reverse__R7
+   36 20 24 _rateLaw11 #_R8
+   37 20 25 kQ #_R14
+   38 18 19 kQ #_R17
+   39 20 26 kL #_R23
+   40 18 24 kL #_R26
+   41 19 25 kL #_R29
+   42 21 27 kV #_R52
+   43 21 17 _rateLaw39 #_R61
+   44 22 15 cA #_R70
+   45 23 15 _rateLaw48 #_R71
+   46 23 28 _rateLaw49 #_R72
+   47 24 20 _rateLaw12 #_reverse__R8
+   48 26 29 _rateLaw13 #_R9
+   49 26 30 kQ #_R15
+   50 24 25 kQ #_R18
+   51 26 31 kL #_R24
+   52 24 29 kL #_R27
+   53 25 30 kL #_R30
+   54 27 32 kV #_R53
+   55 27 17 _rateLaw40 #_R62
+   56 28 15 _rateLaw50 #_R73
+   57 28 14 _rateLaw51 #_R74
+   58 29 26 _rateLaw14 #_reverse__R9
+   59 31 33 _rateLaw15 #_R10
+   60 31 34 kQ #_R16
+   61 29 30 kQ #_R19
+   62 29 33 kL #_R28
+   63 30 34 kL #_R31
+   64 31 35 _rateLaw21 #_R32
+   65 31 3 _rateLaw24 #_R35
+   66 32 36 kV #_R54
+   67 32 17 _rateLaw41 #_R63
+   68 33 31 _rateLaw16 #_reverse__R10
+   69 35 37 _rateLaw17 #_R11
+   70 33 34 kQ #_R20
+   71 33 37 _rateLaw22 #_R33
+   72 34 38 _rateLaw23 #_R34
+   73 33 7 _rateLaw25 #_R36
+   74 34 8 _rateLaw26 #_R37
+   75 35 38 kQfunc #_R40
+   76 35 9 cA #_R42
+   77 36 39 _rateLaw33 #_R55
+   78 36 40 _rateLaw34 #_R56
+   79 36 41 _rateLaw35 #_R57
+   80 36 42 _rateLaw36 #_R58
+   81 36 17 _rateLaw42 #_R64
+   82 37 35 _rateLaw18 #_reverse__R11
+   83 37 38 kQfunc #_R41
+   84 37 9 cA #_R42
+   85 38 9 cA #_R42
+   86 39 17 _rateLaw43 #_R65
+   87 40 17 _rateLaw44 #_R66
+   88 41 17 _rateLaw45 #_R67
+end reactions
+begin groups
+    1 t                    1
+    2 S_M                  2
+    3 S_P                  6
+    4 E_M                  5,13,20,26,31
+    5 E_P                  12,18,24,29,33
+    6 Einf_M               13,20,26,31
+    7 Einf_P               18,24,29,33
+    8 E_V                  17
+    9 E5_MPQ               31,33,34
+   10 E_Q                  19,25,30,34
+   11 A_M                  35
+   12 A_P                  37
+   13 A_Q                  38
+   14 A_V                  22
+   15 I_M                  3
+   16 I_P                  7
+   17 I_Q                  8
+   18 I_V                  23
+   19 V_tot                11,16,21,27,32,36
+   20 SV_1                 39
+   21 SV_2                 40
+   22 SV_3                 41
+   23 SV_4                 42
+   24 H_U                  10
+   25 H_V                  28
+   26 R_U                  9
+   27 R_V                  15
+   28 D_tot                14
+   29 fDCs_Cum             4
+end groups

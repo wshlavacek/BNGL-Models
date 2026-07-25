@@ -1,0 +1,507 @@
+begin model
+
+#@title: COVID-19 vaccination and variants, Dallas MSA (Mallela et al., 2024)
+
+#@description: |
+#  Deterministic compartmental model of COVID-19 transmission dynamics in the
+#  metropolitan statistical area (MSA) surrounding Dallas (Dallas-Fort
+#  Worth-Arlington, TX), parameterized to daily reports of newly confirmed
+#  cases from 2020-01-21 to 2021-10-31. It extends the model of Lin et al.
+#  (2021) with vaccination and two more transmissible SARS-CoV-2 variants.
+#  Unvaccinated persons progress S -> E1..E5 (a five-stage Erlang incubation
+#  period) -> A (asymptomatic) or I (mildly symptomatic) -> H (severe) -> R /
+#  D, each carrying a behavioral state M (mixing) <-> P (social-distancing) or
+#  Q (quarantined by testing or symptom-driven self-isolation). Vaccination
+#  moves susceptible and recovered persons at the empirical per capita rate
+#  mu(t) into V1..V6, a six-stage Erlang waiting time for vaccine-induced
+#  immunity; persons leaving V6 are partitioned into SV,1..SV,4 by how many of
+#  the three circulating strains their immune response neutralizes, and
+#  breakthrough infections run through a single-stage incubation EV -> AV / IV
+#  -> HV -> R / D. Social distancing is two coordinated step functions, a
+#  setpoint protected fraction Ptau(t) and an eigenvalue Lambdatau(t) setting
+#  how fast that setpoint is approached, which switch at sigma, tau1, tau2,
+#  tau3, tau4; a third step function Ytheta(t) multiplies the transmission rate
+#  constant beta by y1 at the Alpha takeoff time theta1 and by y2 at the Delta
+#  takeoff time theta2. A counter() molecule integrates simulation time into
+#  the observable t, which every if(t...) rate law reads. Behavior: 5 distinct
+#  social-distancing periods plus the two variant step changes reproduce the
+#  observed sequence of surges in detected cases over 2020-2021 -- the fit
+#  observable fDCs_Cum is the cumulative count of detected symptomatic cases,
+#  whose day-to-day increment is the predicted daily case report. Parameters
+#  hold the authors' published maximum a posteriori estimate.
+
+#@keyword: |
+#  epidemiology, COVID-19, SARS-CoV-2, vaccination, viral variant, Alpha
+#  variant, Delta variant, compartmental model, SEIR, social distancing,
+#  quarantine, Erlang, mass action, step function, Bayesian inference,
+#  Homo sapiens
+
+#@reference: |
+#  Mallela A, Chen Y, Lin YT, Miller EF, Neumann J, He Z, Nelson KE, Posner RG,
+#  Hlavacek WS (2024). Impacts of Vaccination and Severe Acute Respiratory
+#  Syndrome Coronavirus 2 Variants Alpha and Delta on Coronavirus Disease 2019
+#  Transmission Dynamics in Four Metropolitan Areas of the United States.
+#  Bull Math Biol 86:31. doi:10.1007/s11538-024-01258-4 -- the model
+#  (Appendix Eqs. 1-40), the fixed parameters (Table 3), and the Dallas
+#  maximum a posteriori estimate (Table 1) reproduced here (Fig. 2A).
+#  Lin YT, Neumann J, Miller EF, Posner RG, Mallela A, Safta C, Ray J, Thakur G,
+#  Chinthavali S, Hlavacek WS (2021). Daily Forecasting of Regional Epidemics of
+#  Coronavirus Disease with Bayesian Uncertainty Quantification, United States.
+#  Emerg Infect Dis 27(3):767-778. doi:10.3201/eid2703.203364 -- the base model
+#  that this one extends, and the source of the fixed epidemiological constants.
+
+#@note: |
+#  PROVENANCE. Molecule types, seed species, functions, and rules follow the
+#  authors' own PyBioNetFit model (Dallas/Dallas.bngl in the Vax_and_Variants
+#  example of lanl/PyBNF), house-styled here: component names lowercased,
+#  switch-time parameters re-expressed in the paper's notation (sigma, tau1,
+#  tau2, tau3, tau4, theta1, theta2 are absolute times built from the fitted
+#  increments t_sigma, t_tau1, t_tau2, t_tau3, t_tau4, t_theta2, which is how
+#  the authors parameterized the fit and what keeps the switch times ordered),
+#  fH/25 written as the paper's mh*fH, and the observable set reduced to those
+#  the rate laws and the paper's Fig. 2C population decomposition need.
+#  Fitted-parameter nominals are the published MAP
+#  (Dallas/Output/adaptive_files/MLE_params.txt), which agrees with Table 1 of
+#  Mallela et al. (2024) to the precision printed there.
+#
+#  VACCINATION GATE. v_times_PhiV() carries the authors' `if(t<=582,...)` gate
+#  verbatim: no vaccination occurs before day 583 (2021-08-26). For Dallas the
+#  gate is inert: the empirical series (Democrat and Chronicle) itself starts
+#  on day 584, with the earlier vaccinations entering as a lump sum on day
+#  600-601. This is the model as fit -- the published MAP was inferred through
+#  the gate, and it is what reproduces the reported case data; releasing it
+#  (mu(t) active from the first reported day) suppresses the 2021 Delta surge
+#  and degrades agreement with the case data. See verify_mallela2024.ipynb.
+#
+#  UNITS. Populations are counts of individuals; the model is inherently
+#  population-based (no molar concentration), so no NA / reference-volume
+#  conversion applies. The negative-binomial dispersion parameter r of the
+#  likelihood (Table 1) is not a model parameter and is omitted here.
+
+begin parameters
+
+  # === Region-specific fixed parameter; see Table 3 in Mallela et al. (2024) ===
+  # Total population of the Dallas (Dallas-Fort Worth-Arlington, TX) MSA
+  S0 7573136 # individuals
+
+  # === Adjustable parameters at the published MAP; see Table 1 in Mallela et al. (2024) ===
+  # Start of local disease transmission; model day 0 = 2020-01-21
+  t0 14.78390174375448 # d
+  # Delay from t0 to the start of the initial social-distancing period
+  t_sigma 50.24905218330111 # d
+  # Start of the initial social-distancing period
+  sigma t0+t_sigma # d
+  # Delay from sigma to the start of the 2nd social-distancing period
+  t_tau1 73.53908130227808 # d
+  # Start of the 2nd social-distancing period
+  tau1 sigma+t_tau1 # d
+  # Delay from tau1 to the start of the 3rd social-distancing period
+  t_tau2 26.91825843610624 # d
+  # Start of the 3rd social-distancing period
+  tau2 tau1+t_tau2 # d
+  # Delay from tau2 to the start of the 4th social-distancing period
+  t_tau3 93.5523146964547 # d
+  # Start of the 4th social-distancing period
+  tau3 tau2+t_tau3 # d
+  # Delay from tau3 to the start of the 5th social-distancing period
+  t_tau4 4.552190986493297 # d
+  # Start of the 5th social-distancing period
+  tau4 tau3+t_tau4 # d
+
+  # Setpoint fraction of susceptibles practicing social distancing, one per
+  # period (p0, p1, p2, p3, p4)
+  p0 0.3209672780806471 # dimensionless
+  p1 0.2700134594529 # dimensionless
+  p2 0.3763256311010729 # dimensionless
+  p3 0.2168691242922406 # dimensionless
+  p4 0.2383398667537445 # dimensionless
+
+  # Social-distancing eigenvalues setting how fast that setpoint is approached
+  # (lambda0, lambda1, lambda2, lambda3, lambda4)
+  lambda0 9.698571963302307 # /d
+  lambda1 2.810999181960522 # /d
+  lambda2 0.6268426445167394 # /d
+  lambda3 5.135934355557627 # /d
+  lambda4 1.662258995579785 # /d
+
+  # Takeoff time of SARS-CoV-2 variant Alpha (lineage B.1.1.7)
+  theta1 376.6968466471686 # d
+  # Delay from the Alpha takeoff to the Delta takeoff
+  t_theta2 120.2745625755448 # d
+  # Takeoff time of SARS-CoV-2 variant Delta (lineage B.1.617.2)
+  theta2 theta1+t_theta2 # d
+  # Transmissibility of Alpha relative to ancestral strains
+  y1 1.108940281710055 # dimensionless
+  # Transmissibility of Delta relative to ancestral strains
+  y2 1.629692672960086 # dimensionless
+  # Rate constant for disease transmission by ancestral strains
+  beta 0.3041729798051 # /d
+  # Fraction of new symptomatic infections detected and reported
+  fD 0.481101273193522 # dimensionless
+
+  # === Universal fixed parameters; see Table 3 in Mallela et al. (2024) ===
+  # Number of infectious persons at t = t0
+  I0 1 # individuals
+  # Reduction in risk of infection from social distancing
+  mb 0.1 # dimensionless
+  # Reduction in risk of severe disease from vaccination
+  mh 0.04 # dimensionless
+  # Relative infectiousness of persons in the incubation period
+  rhoE 1.1 # dimensionless
+  # Relative infectiousness of asymptomatic persons
+  rhoA 0.9 # dimensionless
+  # Fraction of infections that never become symptomatic
+  fA 0.44 # dimensionless
+  # Fraction of symptomatic cases that become severe (unvaccinated)
+  fH 0.054 # dimensionless
+  # Fraction of persons with severe disease who recover
+  fR 0.79 # dimensionless
+  # Cumulative fraction of vaccinated persons protected against ancestral
+  # strains (f0), against Alpha as well (f1), and against Delta as well (f2)
+  f0 0.9 # dimensionless
+  f1 0.81 # dimensionless
+  f2 0.69 # dimensionless
+  # Rate constant for progression through each incubation stage
+  kL 0.94 # /d
+  # Rate constant for testing-driven quarantine
+  kQ 0.0038 # /d
+  # Rate constant for symptom-driven self-isolation
+  jQ 0.4 # /d
+  # Rate constant for completing immune clearance without symptoms
+  cA 0.26 # /d
+  # Rate constant for completing immune clearance or progressing to severe disease
+  cI 0.12 # /d
+  # Rate constant for recovery from or death after severe disease
+  cH 0.17 # /d
+  # Rate constant for progression through each stage of the vaccine response
+  kV 0.3 # /d
+
+  # === Bookkeeping ===
+  # Case-reporting period (delta_t = 1 => daily case reports)
+  delta_t 1 # d
+  # Social-distancing periods considered beyond the initial one; see Table 1
+  n 4 # dimensionless
+
+end parameters
+
+begin molecule types
+
+  # Simulation clock: 0->counter() at rate 1 integrates time; observable t = counter
+  counter()
+  # Susceptible and unvaccinated; sd~M = mixing, sd~P = social-distancing
+  S(sd~M~P)
+  # Vaccinated and unexposed, by the breadth of the immune response raised
+  #  1: no strain neutralized, 2: ancestral only, 3: ancestral + Alpha,
+  #  4: ancestral + Alpha + Delta
+  SV(strain~1~2~3~4)
+  # Incubation period; stage~1..5 are the Erlang stages for unvaccinated persons
+  #  (vax~1 uses a single exponential stage), sd~Q = quarantined
+  E(stage~1~2~3~4~5,sd~M~P~Q,vax~0~1)
+  # Asymptomatic and in the immune-clearance phase
+  A(sd~M~P~Q,vax~0~1)
+  # Mildly symptomatic and in the immune-clearance phase
+  I(sd~M~P~Q,vax~0~1)
+  # Vaccinated; stage~1..6 are the Erlang stages of the immune response
+  V(stage~1~2~3~4~5~6)
+  # Severe disease; hospitalized or isolated at home
+  H(vax~0~1)
+  # Recovered
+  R(vax~0~1)
+  # Deceased
+  D()
+  # Detected-case accumulator (the integral of fD times the detection rate)
+  fDCs()
+
+end molecule types
+
+begin seed species
+
+  counter() 0 # dimensionless
+  S(sd~M) S0-I0 # individuals
+  I(sd~M,vax~0) I0 # individuals
+  fDCs() 0 # individuals
+
+end seed species
+
+begin observables
+
+  # Simulation clock read by every if(t...) rate law
+  Molecules t counter()
+
+  # Susceptible and unvaccinated, by behavioral state (S_M, S_P)
+  Molecules S_M S(sd~M)
+  Molecules S_P S(sd~P)
+
+  # Exposed and unvaccinated, all five incubation stages (vaccination-eligible)
+  Molecules E_M E(sd~M,vax~0)
+  Molecules E_P E(sd~P,vax~0)
+  # Exposed, unvaccinated and infectious (stages 2-5; stage 1 is not infectious)
+  Molecules Einf_M E(stage~2,sd~M,vax~0) E(stage~3,sd~M,vax~0) \
+    E(stage~4,sd~M,vax~0) E(stage~5,sd~M,vax~0)
+  Molecules Einf_P E(stage~2,sd~P,vax~0) E(stage~3,sd~P,vax~0) \
+    E(stage~4,sd~P,vax~0) E(stage~5,sd~P,vax~0)
+  # Exposed and vaccinated (E_V); the whole population is infectious
+  Molecules E_V E(vax~1)
+  # Last incubation stage, unvaccinated: the source of newly symptomatic cases
+  Molecules E5_MPQ E(stage~5,sd~M,vax~0) E(stage~5,sd~P,vax~0) \
+    E(stage~5,sd~Q,vax~0)
+  # Exposed and quarantined, all stages (informational)
+  Molecules E_Q E(sd~Q,vax~0)
+
+  # Asymptomatic, immune-clearance phase
+  Molecules A_M A(sd~M,vax~0)
+  Molecules A_P A(sd~P,vax~0)
+  Molecules A_Q A(sd~Q,vax~0)
+  Molecules A_V A(vax~1)
+  # Mildly symptomatic, immune-clearance phase
+  Molecules I_M I(sd~M,vax~0)
+  Molecules I_P I(sd~P,vax~0)
+  Molecules I_Q I(sd~Q,vax~0)
+  Molecules I_V I(vax~1)
+
+  # Vaccinated and awaiting immunity (V1..V6), lumped
+  Molecules V_tot V()
+  # Vaccinated and unexposed, by breadth of protection (SV,1..SV,4)
+  Molecules SV_1 SV(strain~1)
+  Molecules SV_2 SV(strain~2)
+  Molecules SV_3 SV(strain~3)
+  Molecules SV_4 SV(strain~4)
+
+  # Severe disease, recovered, and deceased
+  Molecules H_U H(vax~0)
+  Molecules H_V H(vax~1)
+  Molecules R_U R(vax~0)
+  Molecules R_V R(vax~1)
+  Molecules D_tot D()
+
+  # Fit observable: cumulative detected symptomatic cases, fD*C_S(t)
+  Molecules fDCs_Cum fDCs()
+
+end observables
+
+begin functions
+
+  # Empirical daily per capita vaccination rate mu-tilde(t); see Eq. 37 in
+  # Mallela et al. (2024). A step function holding the reported fraction of the
+  # Dallas MSA population completing vaccination on each day after
+  # 2020-01-21 (Democrat and Chronicle); days 584-649 carry data, all others are 0.
+  v_rate()=\
+    if(t<=583,0,if(t<=584,0.00805307414,if(t<=585,3.59512238e-05,if(t<=586,0,\
+    if(t<=587,1.79756119e-05,if(t<=588,0,if(t<=589,1.79756119e-05,\
+    if(t<=590,1.79756119e-05,if(t<=591,0.00762261272,if(t<=592,3.68434652e-05,\
+    if(t<=593,0.0070790825,if(t<=594,3.18290023e-05,if(t<=595,1.88678533e-05,\
+    if(t<=596,3.18290023e-05,if(t<=597,1.88678533e-05,if(t<=598,0.009389631900000001,\
+    if(t<=599,5.59415983e-05,if(t<=600,0.0162599969,if(t<=601,0.469902921,\
+    if(t<=602,0.000925500559,if(t<=603,0.000662709406,if(t<=604,5.6293549e-05,\
+    if(t<=605,0.000712264167,if(t<=606,0.000661749783,if(t<=607,0.000470467419,\
+    if(t<=608,0.0005539412760000001,if(t<=609,0.000776118913,if(t<=610,0.000106733247,\
+    if(t<=611,0.000756636891,if(t<=612,0.000210899022,if(t<=613,0.000868938818,\
+    if(t<=614,0.00048709952,if(t<=615,5.59415983e-05,if(t<=616,0.000795917949,\
+    if(t<=617,7.86216622e-05,if(t<=618,0.000898281216,if(t<=619,6.05228178e-05,\
+    if(t<=620,0.000766003856,if(t<=621,7.01469394e-05,if(t<=622,0.000850130916,\
+    if(t<=623,0.0006290328460000001,if(t<=624,0.000705093713,if(t<=625,2.2260732e-05,\
+    if(t<=626,0.0003230324,if(t<=627,0.000666831627,if(t<=628,7.76620396e-05,\
+    if(t<=629,0.000944950643,if(t<=630,6.00638198e-05,if(t<=631,0.000807947915,\
+    if(t<=632,0.000173441389,if(t<=633,7.29575876e-05,if(t<=634,0.000812962378,\
+    if(t<=635,1.38533904e-05,if(t<=636,7.39172102e-05,if(t<=637,5.50493569e-05,\
+    if(t<=638,0.000130506859,if(t<=639,0.00128678364,if(t<=640,0.000629703467,\
+    if(t<=641,0.00060096718,if(t<=642,0.00092608279,if(t<=643,0.0012845791,\
+    if(t<=644,0.000967278756,if(t<=645,0.00106373924,if(t<=646,0.000690118944,\
+    if(t<=647,0.000900039721,if(t<=648,0.000916487107,if(t<=649,0.00131024755,\
+    0)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+
+  # Population eligible for vaccination, phi_V(t); see Eq. 31
+  PhiV()=if(t>=t0,S_M+S_P+E_M+E_P+A_M+A_P+R_U,0)
+
+  # Per capita vaccination rate mu(t) = S0*mu-tilde(t)/phi_V(t). The t<=582 gate
+  # is the authors' own; see the VACCINATION GATE note in the header.
+  v_times_PhiV()=if(t<=582,0,S0*v_rate()/PhiV())
+
+  # Variant transmissibility factor Y_theta(t); see Eq. 38
+  Ytheta()=if(t<=theta1,1,if(t<=theta2,y1,y2))
+
+  # Unit step functions U_sigma, U_theta1, U_theta2; see Eqs. 32-34
+  Usigma()=if(t>=sigma,1,0)
+  Utheta1()=if(t>=theta1,1,0)
+  Utheta2()=if(t>=theta2,1,0)
+
+  # Quarantine, self-isolation, and immune-clearance rate constants are held at
+  # 0 until the local epidemic starts, so I stays at I0 for t < t0
+  kQfunc()=if(t>=t0,kQ,0)
+  jQfunc()=if(t>=t0,jQ,0)
+  cIfunc()=if(t>=t0,cI,0)
+
+  # Effective infectious populations phi_M(t) and phi_P(t); see Eqs. 29-30
+  phiM()=if(t>=t0,I_M+I_V+rhoE*(Einf_M+E_V)+rhoA*(A_M+A_V),0)
+  phiP()=if(t>=t0,I_P+rhoE*Einf_P+rhoA*A_P,0)
+
+  # Social-distancing eigenvalue Lambda_tau(t) and setpoint P_tau(t), the two
+  # coordinated step functions of Eqs. 35-36; both are 0 before t = sigma
+  Lambdatau()=\
+    if(t>=sigma && t<tau1,lambda0,\
+    if(t>=tau1 && t<tau2,lambda1,\
+    if(t>=tau2 && t<tau3,lambda2,\
+    if(t>=tau3 && t<tau4,lambda3,\
+    if(t>=tau4,lambda4,\
+    0)))))
+  Ptau()=\
+    if(t>=sigma && t<tau1,p0,\
+    if(t>=tau1 && t<tau2,p1,\
+    if(t>=tau2 && t<tau3,p2,\
+    if(t>=tau3 && t<tau4,p3,\
+    if(t>=tau4,p4,\
+    0)))))
+
+end functions
+
+begin reaction rules
+
+  # Simulation clock and the detected-case accumulator; see Eqs. 39-40
+  0->counter() 1
+  0->fDCs() fD*(1-fA)*(kL*E5_MPQ+kL/5*E_V)
+
+  # Disease transmission to unvaccinated susceptibles; see Eqs. 1-4
+  S(sd~M)->E(stage~1,sd~M,vax~0) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  S(sd~P)->E(stage~1,sd~P,vax~0) mb*(Ytheta()*beta/S0)*(phiM()+mb*phiP())
+
+  # Adoption and relaxation of social distancing (mixing <-> protected)
+  S(sd~M)<->S(sd~P) Usigma()*Lambdatau()*Ptau(),\
+    Usigma()*Lambdatau()*(1-Ptau())
+  E(stage~1,sd~M,vax~0)<->E(stage~1,sd~P,vax~0) \
+    Usigma()*Lambdatau()*Ptau(),Usigma()*Lambdatau()*(1-Ptau())
+  E(stage~2,sd~M,vax~0)<->E(stage~2,sd~P,vax~0) \
+    Usigma()*Lambdatau()*Ptau(),Usigma()*Lambdatau()*(1-Ptau())
+  E(stage~3,sd~M,vax~0)<->E(stage~3,sd~P,vax~0) \
+    Usigma()*Lambdatau()*Ptau(),Usigma()*Lambdatau()*(1-Ptau())
+  E(stage~4,sd~M,vax~0)<->E(stage~4,sd~P,vax~0) \
+    Usigma()*Lambdatau()*Ptau(),Usigma()*Lambdatau()*(1-Ptau())
+  E(stage~5,sd~M,vax~0)<->E(stage~5,sd~P,vax~0) \
+    Usigma()*Lambdatau()*Ptau(),Usigma()*Lambdatau()*(1-Ptau())
+  A(sd~M,vax~0)<->A(sd~P,vax~0) Usigma()*Lambdatau()*Ptau(),\
+    Usigma()*Lambdatau()*(1-Ptau())
+  I(sd~M,vax~0)<->I(sd~P,vax~0) Usigma()*Lambdatau()*Ptau(),\
+    Usigma()*Lambdatau()*(1-Ptau())
+
+  # Testing-driven quarantine of exposed persons (stage 1 is undetectable)
+  E(stage~2,sd~M,vax~0)->E(stage~2,sd~Q,vax~0) kQ
+  E(stage~3,sd~M,vax~0)->E(stage~3,sd~Q,vax~0) kQ
+  E(stage~4,sd~M,vax~0)->E(stage~4,sd~Q,vax~0) kQ
+  E(stage~5,sd~M,vax~0)->E(stage~5,sd~Q,vax~0) kQ
+  E(stage~2,sd~P,vax~0)->E(stage~2,sd~Q,vax~0) kQ
+  E(stage~3,sd~P,vax~0)->E(stage~3,sd~Q,vax~0) kQ
+  E(stage~4,sd~P,vax~0)->E(stage~4,sd~Q,vax~0) kQ
+  E(stage~5,sd~P,vax~0)->E(stage~5,sd~Q,vax~0) kQ
+
+  # Progression through the five stages of the incubation period
+  E(stage~1,sd~M,vax~0)->E(stage~2,sd~M,vax~0) kL
+  E(stage~2,sd~M,vax~0)->E(stage~3,sd~M,vax~0) kL
+  E(stage~3,sd~M,vax~0)->E(stage~4,sd~M,vax~0) kL
+  E(stage~4,sd~M,vax~0)->E(stage~5,sd~M,vax~0) kL
+  E(stage~1,sd~P,vax~0)->E(stage~2,sd~P,vax~0) kL
+  E(stage~2,sd~P,vax~0)->E(stage~3,sd~P,vax~0) kL
+  E(stage~3,sd~P,vax~0)->E(stage~4,sd~P,vax~0) kL
+  E(stage~4,sd~P,vax~0)->E(stage~5,sd~P,vax~0) kL
+  E(stage~2,sd~Q,vax~0)->E(stage~3,sd~Q,vax~0) kL
+  E(stage~3,sd~Q,vax~0)->E(stage~4,sd~Q,vax~0) kL
+  E(stage~4,sd~Q,vax~0)->E(stage~5,sd~Q,vax~0) kL
+
+  # Entry into the immune-clearance phase, without and with symptoms
+  E(stage~5,sd~M,vax~0)->A(sd~M,vax~0) kL*fA
+  E(stage~5,sd~P,vax~0)->A(sd~P,vax~0) kL*fA
+  E(stage~5,sd~Q,vax~0)->A(sd~Q,vax~0) kL*fA
+  E(stage~5,sd~M,vax~0)->I(sd~M,vax~0) kL*(1-fA)
+  E(stage~5,sd~P,vax~0)->I(sd~P,vax~0) kL*(1-fA)
+  E(stage~5,sd~Q,vax~0)->I(sd~Q,vax~0) kL*(1-fA)
+
+  # Quarantine and symptom-driven self-isolation in the immune-clearance phase
+  I(sd~M,vax~0)->I(sd~Q,vax~0) jQfunc()+kQfunc()
+  I(sd~P,vax~0)->I(sd~Q,vax~0) jQfunc()+kQfunc()
+  A(sd~M,vax~0)->A(sd~Q,vax~0) kQfunc()
+  A(sd~P,vax~0)->A(sd~Q,vax~0) kQfunc()
+
+  # Recovery, progression to severe disease, and death (unvaccinated)
+  A(vax~0)->R(vax~0) cA
+  I(vax~0)->R(vax~0) cIfunc()*(1-fH)
+  I(vax~0)->H(vax~0) cIfunc()*fH
+  H(vax~0)->R(vax~0) cH*fR
+  H(vax~0)->D() cH*(1-fR)
+
+  # Vaccination of susceptible and of recovered unvaccinated persons at the
+  # empirical per capita rate mu(t); see Eqs. 17-18 and 28
+  S(sd~M)->V(stage~1) v_times_PhiV()
+  S(sd~P)->V(stage~1) v_times_PhiV()
+  R(vax~0)->R(vax~1) v_times_PhiV()
+
+  # Progression through the six stages of the immune response to vaccination
+  V(stage~1)->V(stage~2) kV
+  V(stage~2)->V(stage~3) kV
+  V(stage~3)->V(stage~4) kV
+  V(stage~4)->V(stage~5) kV
+  V(stage~5)->V(stage~6) kV
+
+  # Persons leaving V6 partition by how many circulating strains they neutralize
+  V(stage~6)->SV(strain~1) kV*(1-f0)
+  V(stage~6)->SV(strain~2) kV*(f0-f1)
+  V(stage~6)->SV(strain~3) kV*(f1-f2)
+  V(stage~6)->SV(strain~4) kV*f2
+
+  # Breakthrough infection of vaccinated persons; those still awaiting immunity
+  # (V1..V6) are fully susceptible, SV,2 only from the Alpha takeoff time and
+  # SV,3 only from the Delta takeoff time; see Eqs. 18-22 and 24
+  V(stage~1)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  V(stage~2)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  V(stage~3)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  V(stage~4)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  V(stage~5)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  V(stage~6)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  SV(strain~1)->E(stage~1,sd~M,vax~1) (Ytheta()*beta/S0)*(phiM()+mb*phiP())
+  SV(strain~2)->E(stage~1,sd~M,vax~1) \
+    (Ytheta()*Utheta1()*beta/S0)*(phiM()+mb*phiP())
+  SV(strain~3)->E(stage~1,sd~M,vax~1) \
+    (Ytheta()*Utheta2()*beta/S0)*(phiM()+mb*phiP())
+
+  # Immune clearance after breakthrough infection; vaccination lowers the risk
+  # of severe disease by mh but not the probability of death once severe
+  E(stage~1,sd~M,vax~1)->A(sd~M,vax~1) (kL/5)*fA
+  E(stage~1,sd~M,vax~1)->I(sd~M,vax~1) (kL/5)*(1-fA)
+  A(sd~M,vax~1)->R(vax~1) cA
+  I(sd~M,vax~1)->R(vax~1) cIfunc()*(1-mh*fH)
+  I(sd~M,vax~1)->H(vax~1) cIfunc()*(mh*fH)
+  H(vax~1)->R(vax~1) cH*fR
+  H(vax~1)->D() cH*(1-fR)
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1})  # 42 species, 88 reactions
+
+  #@note: |
+  #  ODE-only. Time gating uses the counter() molecule as a deterministic clock
+  #  (0->counter() at rate 1, so the observable t equals simulation time); this
+  #  and the if(t...) rate-law functions require deterministic integration --
+  #  under SSA the clock would be a Poisson process, and NFsim supports neither
+  #  if() rate laws nor a population this size (7,573,136 individuals).
+
+  # Dallas MSA daily new-case reproduction
+
+  #@protocol: |
+  #  Integrate the compartmental ODE over 2020-01-21 to 2021-10-31 (model day
+  #  t = 0..649) at the published maximum a posteriori estimate. The fit
+  #  observable fDCs_Cum is the cumulative count of detected symptomatic cases;
+  #  its day-to-day increment is the predicted number of cases reported that
+  #  day, which verify_mallela2024.ipynb overlays on the New York Times
+  #  surveillance data. Expect 5 distinct social-distancing periods (Ptau
+  #  and Lambdatau step at sigma, tau1, tau2, tau3, tau4) and two variant
+  #  step changes: Ytheta rises to y1 = 1.1 on day 377 (Alpha) and to
+  #  y2 = 1.6 on day 497 (Delta), which together reproduce the
+  #  observed sequence of surges in detected cases.
+
+  #@figure: Fig. 2 in Mallela et al. (2024)
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>649,n_steps=>649,\
+    print_functions=>1,atol=>1e-7,rtol=>1e-7})
+
+end actions

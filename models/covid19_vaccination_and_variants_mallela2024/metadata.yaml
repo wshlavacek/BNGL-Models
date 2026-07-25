@@ -1,0 +1,208 @@
+# metadata.yaml — covid19_vaccination_and_variants_mallela2024
+id: covid19_vaccination_and_variants_mallela2024
+created: 2026-07-25
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, extension, ai_assisted]
+  description: >
+    Deterministic compartmental model of COVID-19 transmission dynamics with
+    vaccination and the SARS-CoV-2 variants Alpha (B.1.1.7) and Delta
+    (B.1.617.2), from Mallela A, Chen Y, Lin YT, Miller EF, Neumann J, He Z,
+    Nelson KE, Posner RG, Hlavacek WS (2024), Bull Math Biol 86:31
+    (doi:10.1007/s11538-024-01258-4). One file per metropolitan statistical area
+    (MSA) analyzed in the paper — New York City (primary), Dallas, Houston, and
+    Phoenix — each at that region's published maximum a posteriori (MAP)
+    estimate (Table 1). The model extends Lin et al. (2021) with 15 populations
+    and 28 transitions covering vaccination (V1..V6 Erlang immune response,
+    SV,1..SV,4 breadth of protection, breakthrough infection EV/AV/IV/HV) and a
+    step function Y_theta(t) that raises the transmission rate constant at the
+    Alpha and Delta takeoff times. House-styled from the authors' own
+    PyBioNetFit models (examples/Vax_and_Variants in lanl/PyBNF); component
+    names lowercased, switch times re-expressed in the paper's notation
+    (sigma, tau_i, theta_1, theta_2), fH/25 written as the paper's mh*fH.
+    The regions differ in total population S0, the empirical vaccination series
+    v_rate(), and the number of social-distancing periods (n = 4 for Dallas and
+    Phoenix, n = 3 for Houston and New York City). The fitting-job siblings are
+    pybnf-jobs/Mallela-2024.
+
+files:
+  - name: covid19_vaccination_and_variants_mallela2024.bngl
+    role: primary
+    description: >
+      New York City MSA (New York-Newark-Jersey City, NY-NJ-PA), S0 = 19,216,182,
+      four social-distancing periods (n = 3). The richest of the four regions:
+      all four observed surges are attributable in turn to adoption of social
+      distancing, its relaxation, Alpha, and Delta, and it carries the paper's
+      highest transmissibility factors (y1 = 1.4, y2 = 2.1) and the R0 = 12
+      estimate for Delta. 42-species / 88-reaction ODE. ODE-only (a counter()
+      clock and if(t...) rate-law functions require deterministic integration;
+      the ~19.2M population precludes SSA and NFsim supports neither).
+      Actions block reproduces the daily new-case trajectory (#@figure Fig. 4).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: covid19_vaccination_and_variants_mallela2024_dallas.bngl
+    role: variant
+    description: >
+      Dallas-Fort Worth-Arlington, TX MSA, S0 = 7,573,136, five social-distancing
+      periods (n = 4). Same network (42 species, 88 reactions); differs from the
+      primary in S0, the MAP parameters, the vaccination series (Democrat and
+      Chronicle rather than Covid Act Now, starting on day 584), and the extra
+      social-distancing period tau4. Reproduces Fig. 2 in Mallela et al. (2024).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: covid19_vaccination_and_variants_mallela2024_houston.bngl
+    role: variant
+    description: >
+      Houston-The Woodlands-Sugar Land, TX MSA, S0 = 7,066,141, four
+      social-distancing periods (n = 3). Vaccination series from the Democrat and
+      Chronicle (day 584 onward). Carries the paper's slowest second-period
+      social-distancing eigenvalue (lambda1 = 0.11 /d) and its latest Delta
+      takeoff (theta2 = day 521). Reproduces Fig. 3 in Mallela et al. (2024).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: covid19_vaccination_and_variants_mallela2024_phoenix.bngl
+    role: variant
+    description: >
+      Phoenix-Mesa-Scottsdale, AZ MSA, S0 = 4,873,019, five social-distancing
+      periods (n = 4). Vaccination series from Covid Act Now (day 310 onward).
+      Carries the paper's highest detection fraction (fD = 0.54) and its latest
+      Alpha takeoff (theta1 = day 404). Reproduces Fig. 5 in Mallela et al. (2024).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_mallela2024.ipynb
+    role: verification
+    description: >
+      Self-contained verification notebook covering all four regions. (1)
+      Model-specification: re-implements the paper's Appendix Eqs. 1-40 (41 ODEs)
+      independently in NumPy/SciPy from the published equations, integrating
+      segment by segment across every discontinuity of P_tau, Lambda_tau,
+      Y_theta and the daily vaccination series; agrees with BioNetGen to
+      <= 2.3e-5 relative error on every shared observable (BNG runs at
+      atol = rtol = 1e-7). (2) Reported data: compares the predicted daily
+      new-case counts against the New York Times surveillance series with metrics
+      matched to the paper's negative-binomial noise model — 95% predictive-
+      interval coverage at the MAP (84% / 89% / 89% / 71%), the negative-binomial
+      NLL and its behavior under parameter perturbation, per-surge peak amplitude
+      and timing, and median relative error against a 7-day rolling mean. (3)
+      Quantifies the authors' if(t<=582,...) vaccination gate. Regenerates
+      verify_mallela2024.png. Requires BNG2.pl (BNGPATH) and scipy/numpy/matplotlib.
+  - name: verify_mallela2024.png
+    role: figure
+    description: >
+      Verification figure, 4 rows (one per MSA) x 2 columns. Left: daily newly
+      detected cases — BioNetGen (solid line), the independent SciPy integration
+      of Eqs. 1-40 (open markers, the model-spec check), the New York Times
+      reports, the 95% negative-binomial predictive interval at the MAP, the
+      social-distancing switch times, and the Alpha/Delta prevalence spans.
+      Right: the population decomposition of panel C of Figs. 2-5 as fractions
+      of S0 (BioNetGen areas, independent SciPy markers).
+  # BioNetGen reference outputs
+  - name: reference/covid19_vaccination_and_variants_mallela2024.net
+    role: reference
+    description: Generated network for the New York City primary (42 species, 88 reactions).
+  - name: reference/covid19_vaccination_and_variants_mallela2024_ode.gdat
+    role: reference
+    description: >
+      Committed New York City ODE time course from the actions block (t = 0..649,
+      daily): all 29 observables and the 48 functions, including the fit
+      observable fDCs_Cum.
+  - name: reference/covid19_vaccination_and_variants_mallela2024_dallas.net
+    role: reference
+    description: Generated network for the Dallas variant (42 species, 88 reactions).
+  - name: reference/covid19_vaccination_and_variants_mallela2024_dallas_ode.gdat
+    role: reference
+    description: Committed Dallas ODE time course from the actions block (t = 0..649, daily).
+  - name: reference/covid19_vaccination_and_variants_mallela2024_houston.net
+    role: reference
+    description: Generated network for the Houston variant (42 species, 88 reactions).
+  - name: reference/covid19_vaccination_and_variants_mallela2024_houston_ode.gdat
+    role: reference
+    description: Committed Houston ODE time course from the actions block (t = 0..649, daily).
+  - name: reference/covid19_vaccination_and_variants_mallela2024_phoenix.net
+    role: reference
+    description: Generated network for the Phoenix variant (42 species, 88 reactions).
+  - name: reference/covid19_vaccination_and_variants_mallela2024_phoenix_ode.gdat
+    role: reference
+    description: Committed Phoenix ODE time course from the actions block (t = 0..649, daily).
+  # SBML / SED-ML / COMBINE exports (bngsim.convert.net_to_omex, gate="full")
+  - name: reference/covid19_vaccination_and_variants_mallela2024.omex
+    role: reference
+    description: >
+      COMBINE archive for the New York City primary: SBML L3V2 (master), the
+      SED-ML uniform time course transcribed from the .bngl actions block, the
+      source .net and .bngl, a manifest, and a bngsim conversion report. Produced
+      by bngsim.convert.net_to_omex with gate="full"; the L0-L3 faithfulness
+      ladder passes (L3: source and conversion agree exactly on all 27,300
+      species-time cells).
+  - name: reference/covid19_vaccination_and_variants_mallela2024.xml
+    role: reference
+    description: >
+      SBML Level 3 Version 2 for the New York City primary, unpacked from the
+      .omex. The 353-branch empirical vaccination table becomes an equally deep
+      MathML <piecewise>, so a reader may need a raised recursion limit.
+  - name: reference/covid19_vaccination_and_variants_mallela2024.sedml
+    role: reference
+    description: >
+      SED-ML L1V3 simulation protocol for the New York City primary (uniform time
+      course, t = 0..649, 650 points, CVODE), unpacked from the .omex.
+  - name: reference/covid19_vaccination_and_variants_mallela2024_dallas.omex
+    role: reference
+    description: COMBINE archive for the Dallas variant (SBML + SED-ML + sources); L0-L3 pass.
+  - name: reference/covid19_vaccination_and_variants_mallela2024_dallas.xml
+    role: reference
+    description: SBML Level 3 Version 2 for the Dallas variant.
+  - name: reference/covid19_vaccination_and_variants_mallela2024_dallas.sedml
+    role: reference
+    description: SED-ML L1V3 simulation protocol for the Dallas variant.
+  - name: reference/covid19_vaccination_and_variants_mallela2024_houston.omex
+    role: reference
+    description: COMBINE archive for the Houston variant (SBML + SED-ML + sources); L0-L3 pass.
+  - name: reference/covid19_vaccination_and_variants_mallela2024_houston.xml
+    role: reference
+    description: SBML Level 3 Version 2 for the Houston variant.
+  - name: reference/covid19_vaccination_and_variants_mallela2024_houston.sedml
+    role: reference
+    description: SED-ML L1V3 simulation protocol for the Houston variant.
+  - name: reference/covid19_vaccination_and_variants_mallela2024_phoenix.omex
+    role: reference
+    description: COMBINE archive for the Phoenix variant (SBML + SED-ML + sources); L0-L3 pass.
+  - name: reference/covid19_vaccination_and_variants_mallela2024_phoenix.xml
+    role: reference
+    description: SBML Level 3 Version 2 for the Phoenix variant.
+  - name: reference/covid19_vaccination_and_variants_mallela2024_phoenix.sedml
+    role: reference
+    description: SED-ML L1V3 simulation protocol for the Phoenix variant.
+  # Reported simulation data used for the reported-data verification
+  - name: reference/mallela2024_nyc_daily_cases_nyt.csv
+    role: reference
+    description: >
+      New York Times daily reports of newly confirmed COVID-19 cases for the
+      New York City MSA, 2020-01-21 to 2021-10-30 (model day 0-648) — the fit
+      target of Fig. 4A. Aggregated from the NYT county-level dataset by the
+      authors; transcribed from NYC/NYC.exp in examples/Vax_and_Variants.
+  - name: reference/mallela2024_dallas_daily_cases_nyt.csv
+    role: reference
+    description: >
+      New York Times daily new-case reports for the Dallas MSA (model day 0-648),
+      the fit target of Fig. 2A; from Dallas/Dallas.exp.
+  - name: reference/mallela2024_houston_daily_cases_nyt.csv
+    role: reference
+    description: >
+      New York Times daily new-case reports for the Houston MSA (model day 0-648),
+      the fit target of Fig. 3A; from Houston/Houston.exp. Four anomalous negative
+      counts and a 14,300-case reporting dump on day 243 are retained as reported.
+  - name: reference/mallela2024_phoenix_daily_cases_nyt.csv
+    role: reference
+    description: >
+      New York Times daily new-case reports for the Phoenix MSA (model day 0-648),
+      the fit target of Fig. 5A; from Phoenix/Phoenix.exp.

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sedML xmlns="http://sed-ml.org/sed-ml/level1/version3" xmlns:mml="http://www.w3.org/1998/Math/MathML" level="1" version="3">
+  <listOfSimulations>
+    <uniformTimeCourse id="sim0" initialTime="0" outputStartTime="0" outputEndTime="648" numberOfPoints="648">
+      <algorithm kisaoID="KISAO:0000019">
+        <listOfAlgorithmParameters>
+          <algorithmParameter kisaoID="KISAO:0000209" value="1e-07" />
+          <algorithmParameter kisaoID="KISAO:0000211" value="1e-07" />
+        </listOfAlgorithmParameters>
+      </algorithm>
+    </uniformTimeCourse>
+  </listOfSimulations>
+  <listOfModels>
+    <model id="model0" language="urn:sedml:language:sbml" source="model.xml" />
+  </listOfModels>
+  <listOfTasks>
+    <task id="task0" modelReference="model0" simulationReference="sim0" />
+  </listOfTasks>
+  <listOfDataGenerators>
+    <dataGenerator id="dg_time" name="time">
+      <listOfVariables>
+        <variable id="var_time" name="time" taskReference="task0" symbol="urn:sedml:symbol:time" />
+      </listOfVariables>
+      <mml:math>
+        <mml:ci>var_time</mml:ci>
+      </mml:math>
+    </dataGenerator>
+  </listOfDataGenerators>
+  <listOfOutputs>
+    <report id="report0" name="bngsim report">
+      <listOfDataSets>
+        <dataSet id="ds_0" label="time" dataReference="dg_time" />
+      </listOfDataSets>
+    </report>
+  </listOfOutputs>
+</sedML>

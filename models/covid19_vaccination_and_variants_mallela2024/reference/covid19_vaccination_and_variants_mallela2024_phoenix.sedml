@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sedML xmlns="http://sed-ml.org/sed-ml/level1/version3" xmlns:ns1="urn:bngsim:protocol" level="1" version="3">
+  <annotation>
+    <ns1:protocol>{"source": "models/covid19_vaccination_and_variants_mallela2024/covid19_vaccination_and_variants_mallela2024_phoenix.bngl", "dropped": ["generate_network"], "lossy": [], "network_gen": "generate_network({overwrite=&gt;1})", "steps": [{"step": "experiment", "kind": "simulate", "method": "ode", "t_span": [0.0, 649.0], "n_points": 650, "scan_parameter": null, "scan_min": null, "scan_max": null, "scan_points": null, "scan_log": false, "reset_between": true, "label": "ode", "extra": {"print_functions": 1, "atol": 1e-07, "rtol": 1e-07}}]}</ns1:protocol>
+  </annotation>
+  <listOfModels>
+    <model id="model0" language="urn:sedml:language:sbml" source="model.xml" />
+  </listOfModels>
+  <listOfSimulations>
+    <uniformTimeCourse id="sim_0" initialTime="0" outputStartTime="0" outputEndTime="649" numberOfPoints="649">
+      <algorithm kisaoID="KISAO:0000019" />
+    </uniformTimeCourse>
+  </listOfSimulations>
+  <listOfTasks>
+    <task id="task_0" modelReference="model0" simulationReference="sim_0" />
+  </listOfTasks>
+</sedML>
