@@ -1,0 +1,13 @@
+{
+  "problem": "Schwen",
+  "slug": "Schwen_PONE2014",
+  "jstar": 952.4217251306842,
+  "J_paper": 943.9992974818219,
+  "reduced_objective": -311.86677562676823,
+  "n_scored": 286,
+  "k": 30,
+  "OG_nominal": -8.422427648862254,
+  "optimizer": "gntr",
+  "status": "setup only",
+  "interpretation": "Imports, simulates and scores. Observables are log10 (lognormal); for a log10 observable -log_likelihood carries the change-of-variables Jacobian, which the paper's Eq. 6 J* need not, so the nominal OG is recorded but NOT asserted as a validation (same caveat as the other log10 slugs). The nominal point evaluates at/just below the tightly-converged reference J*. Import exercised the #510 t=0-only-experiment fix. No optimizer claim."
+}

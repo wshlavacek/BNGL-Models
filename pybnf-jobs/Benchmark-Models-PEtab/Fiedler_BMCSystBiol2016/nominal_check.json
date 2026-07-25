@@ -1,0 +1,13 @@
+{
+  "problem": "Fiedler",
+  "slug": "Fiedler_BMCSystBiol2016",
+  "jstar": -58.58395532491055,
+  "J_paper": -58.58618893016114,
+  "reduced_objective": -124.74976332089761,
+  "n_scored": 72,
+  "k": 22,
+  "OG_nominal": -0.0022336052505949056,
+  "optimizer": "gntr",
+  "status": "objective validated",
+  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective (linear/Gaussian) against the paper's Eq. 6 NLL. Import exercised the #508 replicate-specific observableParameters/noiseParameters binding."
+}
