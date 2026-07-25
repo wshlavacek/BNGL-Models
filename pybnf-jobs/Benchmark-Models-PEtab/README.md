@@ -36,13 +36,15 @@ log-likelihood** at the best fit in `information_criteria.txt` (matching `scipy.
 
 exactly, for **both** linear and log10 observables.
 
-**This identity is now corroborated across the collection, not just argued.** For nine problems the
+**This identity is now corroborated across the collection, not just argued.** For ten problems the
 PEtab `nominalValue` point is the published optimum, and evaluating PyBNF's objective there
-reproduces the paper's `J*` to within the solved threshold — six to ~10⁻⁶ or better (see
-`nominal_check.json` in each slug). That is an end-to-end check of the whole imported chain: SBML
-model → simulation → observable formulas → noise model → objective.
+reproduces the paper's `J*` to within the solved threshold — six to ~10⁻⁶ or better, plus
+`Fiedler_BMCSystBiol2016` at ~2e−3 (see `nominal_check.json` in each slug). That is an end-to-end
+check of the whole imported chain: SBML model → simulation → observable formulas → noise model →
+objective. (For the log10 slugs the nominal check carries the change-of-variables Jacobian and is
+recorded but not asserted as a validation.)
 
-## Coverage: 19 of the 23 subset-I problems
+## Coverage: 22 of the 23 subset-I problems
 
 | slug | J\* | scale | k | n | optimizer | OG | status |
 |---|---|---|---|---|---|---|---|
@@ -50,11 +52,14 @@ model → simulation → observable formulas → noise model → objective.
 | `Boehm_JProteomeRes2014` | 138.2219682 | lin | 9 | 48 | gntr | 0.0012 | ✅ **solved** |
 | `Bruno_JExpBot2016` | −46.6881979 | lin | 13 | 77 | cmaes | 3.2e−06 † | 🟢 objective validated |
 | `Crauste_CellSystems2017` | 190.4570655 | lin | 12 | 21 | gntr | 0.509 † | 🟢 objective validated |
+| `Fiedler_BMCSystBiol2016` | −58.5839553 | lin | 22 | 72 | gntr | −0.0022 † | 🟢 objective validated |
 | `Perelson_Science1996` | 222.2807689 | log10 | 3 | 16 | cmaes | 5e−7 | ✅ **solved** |
 | `Rahman_MBS2016` | 21.1534861 | lin | 9 | 23 | gntr | 3.9e−06 † | 🟢 objective validated |
 | `Raia_CancerResearch2011` | 345.3097673 | lin | 39 | 205 | gntr | 0.78 † | 🟢 objective validated |
 | `SalazarCavazos_MBoC2020` | 366.8615730 | lin | 6 | 18 | gntr | 0.326 † | 🟢 objective validated |
 | `Sneyd_PNAS2002` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 | ✅ **solved** |
+| `Laske_PLOSComputBiol2019` | 276.0540613 | lin/ln | 13 | 42 | gntr | 96.7 † | ⚪ setup only |
+| `Schwen_PONE2014` | 952.4217251 | log10 | 30 | 286 | gntr | −8.42 † | ⚪ setup only |
 | `Elowitz_Nature2000` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † | ⚪ setup only |
 | `Borghans_BiophysChem1997` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ⚪ setup only |
 | `Zhao_QuantBiol2020` | 501.2270538 | lin | 28 | 82 | gntr | 276 † | ⚪ setup only |
@@ -79,16 +84,17 @@ Three status levels, and the difference matters:
 - ⚪ **setup only** — the job imports, simulates, and scores correctly, but its nominal point is not
   the published optimum, so nothing about optimality is claimed. These are ready-to-run jobs.
 
-### The 4 remaining subset-I problems
+### The 1 remaining subset-I problem
 
 | problem | blocker |
 |---|---|
-| `Blasi_CellSystems2016`, `Laske_PLOSComputBiol2019` | `observableTransformation = log` (natural log). PyBNF's `lognormal` family is log10; the Gaussian-on-ln-scale family is unimplemented, so import refuses rather than silently mis-scaling. |
-| `Fiedler_BMCSystBiol2016` | `observableParameters` scaling factors (`s_pErk_*`) import as free parameters that bind to no model entity (residual of the #495 placeholder-mapping class). |
-| `Schwen_PONE2014` | measurement grid has no positive time point; `TimeCourse` rejects it. |
+| `Blasi_CellSystems2016` | **Steady-state (`t = inf`) measurements.** Every Blasi measurement is at `t = inf`; the natural-log noise fix (#509) lets it *import*, but config load then crashes in `TimeCourse` (`OverflowError: cannot convert float infinity to integer`). PyBNF has steady-state support (a `steady_state=>1` ParamScan, ADR-0046), but the PEtab importer does not yet emit it for `time = inf`, so the measurement is materialized as a time course. This is a **new blocker, distinct from #509** — filed as a follow-up. |
 
-The five blockers filed during the earlier triage — **lanl/PyBNF#492–#496** — have all **landed**,
-which is what took importable coverage from 15/23 to 21/23 (19 of which also run).
+The earlier import blockers — **lanl/PyBNF#492–#496**, then **#508 (Fiedler, replicate
+`observableParameters`), #509 (Laske, natural-log `lnnormal` noise), #510 (Schwen, `t=0`-only
+experiment)** — have all **landed**. That took importable coverage from 15/23 to **22/23** (all 22 of
+which also run). What blocked Fiedler/Laske/Schwen in the 2026-07-18 triage is now resolved; only the
+steady-state gap above (Blasi) remains.
 
 ## Optimizer choice
 

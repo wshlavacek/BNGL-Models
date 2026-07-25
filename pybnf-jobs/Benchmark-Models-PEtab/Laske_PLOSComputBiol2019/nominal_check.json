@@ -1,0 +1,13 @@
+{
+  "problem": "Laske",
+  "slug": "Laske_PLOSComputBiol2019",
+  "jstar": 276.05406127180015,
+  "J_paper": 372.75319082302,
+  "reduced_objective": 73.06811803176683,
+  "n_scored": 42,
+  "k": 13,
+  "OG_nominal": 96.69912955121987,
+  "optimizer": "gntr",
+  "status": "setup only",
+  "interpretation": "Imports, simulates and scores; the PEtab nominal point is NOT the published optimum (OG = 96.7 >> 1.92), so no optimality is claimed. Import exercised the #509 natural-log (lnnormal) noise family alongside linear Gaussian observables."
+}
