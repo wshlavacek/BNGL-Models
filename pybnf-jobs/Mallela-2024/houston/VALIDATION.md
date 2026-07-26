@@ -146,8 +146,9 @@ transcribe.
 ## Toolchain requirement
 
 A gradient fit of **this class of model** — `if()`-gated rate laws plus a count likelihood — did
-not run on stock PyBNF. Two independent defects, both fixed upstream in PyBNF
-(`fix: gradient-fit a piecewise model with a count likelihood`), were required:
+not run on stock PyBNF. Two independent defects, both fixed upstream in
+[lanl/PyBNF#522](https://github.com/lanl/PyBNF/pull/522) (*fix: gradient-fit a piecewise
+model with a count likelihood*, merged as `7913d037`), were required:
 
 1. **Over-requested output-sensitivity selectors.** `bngsim_model/net_model.py` asked bngsim for an
    `expression:` sensitivity for **every** global function whenever `print_functions` was on.
