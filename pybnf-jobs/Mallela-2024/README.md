@@ -90,7 +90,7 @@ few peak days. Its NLL still improves.)
 > box center *is* the paper's estimate. This is the single most important choice in the confs.
 
 > ⚠️ **Gradient-fitting this class of model needed two upstream PyBNF fixes**
-> (`fix: gradient-fit a piecewise model with a count likelihood`), each of which made the objective
+> ([lanl/PyBNF#522](https://github.com/lanl/PyBNF/pull/522)), each of which made the objective
 > non-finite everywhere before it was fixed: (1) PyBNF asked bngsim for an output sensitivity of
 > *every* global function, and bngsim refuses any `if()`-bearing body — all 14 of this model's
 > functions are `if()` chains, so every simulation died; (2) the negative-binomial mean-slope

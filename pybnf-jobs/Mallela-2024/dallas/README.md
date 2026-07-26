@@ -120,8 +120,9 @@ pybnf -c dallas.conf          # L-BFGS-B gradient fit of beta and fD
 python make_reproduction.py   # reproduction figure + metrics (published MAP vs. this fit)
 ```
 
-Requires **PyBNF with the piecewise-gradient fixes** (`fix: gradient-fit a piecewise model with a
-count likelihood`) — see [`VALIDATION.md`](VALIDATION.md#toolchain-requirement).
+Requires **PyBNF with the piecewise-gradient fixes**
+([lanl/PyBNF#522](https://github.com/lanl/PyBNF/pull/522)) — see
+[`VALIDATION.md`](VALIDATION.md#toolchain-requirement).
 
 ## `_manifest.py` entry (if promoted to the PyBNF real-world corpus)
 
