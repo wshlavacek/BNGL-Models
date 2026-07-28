@@ -1,0 +1,43 @@
+# metadata.yaml — bursty_autoregulated_gene_expression_lin2016
+id: bursty_autoregulated_gene_expression_lin2016
+created: 2026-07-28
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_bngl, originally_rule_based, ai_assisted]
+  description: >
+    Curated from Lin and Doering (2016), Physical Review E 93:022409, and the
+    accompanying geneModel.bngl reference file. The primary model is a finite
+    two-species transcriptional autoregulation network with bursty translation.
+
+files:
+  - name: bursty_autoregulated_gene_expression_lin2016.bngl
+    role: primary
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_lin2016.ipynb
+    role: verification
+  - name: verify_lin2016.png
+    role: figure
+  - name: reference/bursty_autoregulated_gene_expression_lin2016.net
+    role: reference
+  - name: reference/bursty_autoregulated_gene_expression_lin2016_ode.net
+    role: reference
+  - name: reference/bursty_autoregulated_gene_expression_lin2016_ode.gdat
+    role: reference
+  - name: reference/bursty_autoregulated_gene_expression_lin2016_ode.cdat
+    role: reference
+  - name: reference/bursty_autoregulated_gene_expression_lin2016_ssa.net
+    role: reference
+  - name: reference/bursty_autoregulated_gene_expression_lin2016_ssa.gdat
+    role: reference
+  - name: reference/bursty_autoregulated_gene_expression_lin2016_ssa.cdat
+    role: reference
+  - name: reference/lin2016_fig3b_individual_based_digitized.csv
+    role: reference
