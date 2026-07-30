@@ -19,12 +19,26 @@ begin model
 #  doi:10.1103/PhysRevLett.94.218102
 
 #@note: |
-#  McKane and Newman (2005) specify N=3200 and all kinetic parameters but do not
-#  report the Fig. 1 initial populations. The supplied source BNGL assumes 800
-#  predators and 800 prey; this curation preserves that explicit assumption.
-#  Time is the paper's dimensionless ecological time. V_ref is a bookkeeping
-#  reactor volume required for population-conversion readiness and does not
-#  enter the population-based dynamics.
+#  McKane and Newman (2005) specify N=3200 and all kinetic parameters but never
+#  state the Fig. 1 initial populations; the supplied source BNGL assumed 800
+#  predators and 800 prey. That assumption has since been confirmed against
+#  Fig. 1 itself. The depth of the prey transient dip is fixed by the initial
+#  condition and is independent of any scaling of the time axis, and the
+#  digitized Fig. 1 lower panel puts its floor at 0.1456 in density units,
+#  against a mean-field value of 0.1461 for 800/800; 775/775 and 825/825 give
+#  0.1534 and 0.1390, so the initial population is pinned to 800 within about
+#  25 individuals. V_ref is a bookkeeping reactor volume required for
+#  population-conversion readiness and does not enter the dynamics.
+
+#@note: |
+#  Time here is the model's own time, in which the rate constants are those of
+#  Eq. 1 in McKane and Newman (2005). The published figures are drawn on a time
+#  base a uniform factor of about two slower: the Fig. 1 prey dip sits near
+#  t = 31-33 against the model's 15.7, and verify_mckane2005.ipynb independently
+#  fits 0.4937 for the Fig. 2 frequency axis. A uniform rescaling of all five
+#  rate constants is a pure rescaling of time, so it would reconcile both axes
+#  without moving the Eq. 5 fixed point or any transient amplitude. Every
+#  quantity verified in this collection is invariant under it.
 
 begin parameters
   # Population-conversion constants and bookkeeping reactor volume
