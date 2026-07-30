@@ -6,13 +6,13 @@ begin model
 
 #@description: |
 #  Variant of noise_induced_bistable_futile_cycle_samoilov2005 that differs in
-#  one respect: the homodimeric driver step N + N -> E+ + N is read with the
-#  classical Gillespie convention for identical reactants, in which the rate
-#  constant is defined per unordered pair, so the propensity is
-#  k_21*N*(N-1)/2 and the deterministic flux is k_21*N^2/2. In BNGL this is
-#  written by giving the rule the rate expression k_21/2, leaving the published
-#  parameter value untouched. Every other reaction, rate constant and initial
-#  count is identical to the primary model.
+#  one respect: k_21 is read as a per-unordered-pair constant for the driver
+#  step N + N -> E+ + N, rather than per ordered (converted, catalyst) pair.
+#  The propensity becomes k_21*N*(N-1)/2 and the deterministic flux
+#  k_21*N^2/2. In BNGL this is written by giving the rule the rate expression
+#  k_21/2, leaving the published parameter value untouched. Every other
+#  reaction, rate constant and initial count is identical to the primary
+#  model.
 #  Halving the driver noise deepens the low-X* well. The stationary density of
 #  X* becomes clearly bimodal, with modes near 110 and 286 molecules and about
 #  41% of the time spent below 190, closely matching the digitized Fig. 3A
@@ -128,10 +128,11 @@ begin reaction rules
   # Reverse branch: catalysis, restoring unmodified substrate and free E-
   R_cat_minus: S(e!1,mod~P).Eminus(s!1) -> S(e,mod~U) + Eminus(s)  k_minus_3
 
-  # Driver: N-catalyzed activation of a second N into free E+. The rate
-  # expression k_21/2 makes k_21 a per-unordered-pair constant, giving the
-  # classical homodimeric propensity k_21*N*(N-1)/2; this is the single
-  # difference from the primary model.
+  # Driver: N-catalyzed activation of a second N into free E+. BioNetGen writes
+  # k_21 for this rule because it counts ordered (converted, catalyst) pairs;
+  # the rate expression k_21/2 reinterprets k_21 as a per-unordered-pair
+  # constant, giving propensity k_21*N*(N-1)/2. This is the single difference
+  # from the primary model.
   R_driver_auto: N() + N() -> Eplus(s) + N()  k_21/2
   R_driver_auto_rev: Eplus(s) + N() -> N() + N()  k_minus_21
 
