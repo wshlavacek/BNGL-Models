@@ -1,0 +1,153 @@
+begin model
+
+#@title: |
+#  Enzymatic futile cycle without an external noise driver
+#  (Samoilov et al., 2005)
+
+#@description: |
+#  Control variant of noise_induced_bistable_futile_cycle_samoilov2005 in which
+#  the external noise driver of Expression 8 is deleted, leaving only the
+#  elementary enzymatic futile cycle of Expression 7: E+ binds the unmodified
+#  substrate X reversibly and converts it to X*, and E- binds X* reversibly and
+#  converts it back, both through explicit mass-action enzyme-substrate
+#  complexes. Without the driver the total forward enzyme E+ + C+ is a strict
+#  conserved quantity, so the only randomness left is the internal noise of the
+#  six cycle reactions themselves.
+#  The forward enzyme pool is seeded at 30 molecules, the conserved
+#  E+ + C+ + N pool of the driven model, so that the control sits at
+#  essentially the same average forward-enzyme level (29.3 molecules) as the
+#  driven system. The cycle then relaxes to a single stable state at
+#  X* = 291.5 molecules and stays there. The stationary distribution of X* is
+#  unimodal about 295 molecules, just over 1% above the deterministic value,
+#  and the fluctuations are fast: the mean of a 10 s trajectory varies by about
+#  2 molecules from seed to seed, against 13 for the driven model and 25 for
+#  its unordered-pair variant, so there is no slow switching to be found. This
+#  is the paper's demonstration that the bistability of the driven model is
+#  created by the external noise and not by the cycle mechanism or its own
+#  internal noise.
+
+#@keyword: |
+#  signal transduction, enzymatic futile cycle, substrate cycle, monostable,
+#  internal noise, mass action, Gillespie algorithm, covalent modification
+#  cycle, negative control, generic
+
+#@reference: |
+#  Samoilov M, Plyasunov S, Arkin AP (2005). Stochastic amplification and
+#  signaling in enzymatic futile cycles through noise-induced bistability with
+#  oscillations. Proceedings of the National Academy of Sciences USA
+#  102:2310-2315. doi:10.1073/pnas.0406841102
+
+#@note: |
+#  Notation map to Samoilov et al. (2005): S(mod~U) unbound is X, S(mod~P)
+#  unbound is X*, Eplus(s!+) is C+, Eminus(s!+) is C-, Eplus(s) is E+ and
+#  Eminus(s) is E-. All constants are given in terms of numbers of molecules,
+#  so this is a population-based model; V_ref is bookkeeping for population
+#  conversion and does not enter the dynamics. The Fig. 3 caption sets
+#  E+(t = 0) = 20 for the driven system, where the driver holds a further 10
+#  molecules of the same pool; this control seeds the whole pool of 30 as free
+#  enzyme so that the comparison is made at a matched average input level.
+
+begin parameters
+  # Population-conversion constants and bookkeeping reactor volume
+  NA     6.02214076e23  # molecules/mol
+  V_ref  1.0            # L/reactor
+
+  # Forward branch X + E+ <-> C+ -> X* + E+; see Expression 7 and the Fig. 3
+  # caption in Samoilov et al. (2005)
+  k_plus_1   40    # /molecule/s
+  k_plus_2   1e4   # /s
+  k_plus_3   1e4   # /s
+
+  # Reverse branch X* + E- <-> C- -> X + E-
+  k_minus_1  200   # /molecule/s
+  k_minus_2  100   # /s
+  k_minus_3  5e3   # /s
+
+  # Initial molecule counts; the forward enzyme pool matches the conserved
+  # E+ + C+ + N pool of the driven model
+  X_init       0     # molecules
+  X_star_init  2000  # molecules
+  E_plus_init  30    # molecules
+  E_minus_init 50    # molecules
+end parameters
+
+begin molecule types
+  # Cycle substrate; site e binds either enzyme and state mod carries the
+  # covalent modification
+  S(e,mod~U~P)
+  # S(mod~U) is the paper's X and S(mod~P) is its X*
+  # Forward (modifying) enzyme E+, here at a strictly conserved total level
+  Eplus(s)
+  # Reverse (demodifying) enzyme E-, at a strictly conserved total level
+  Eminus(s)
+end molecule types
+
+begin seed species
+  S(e,mod~U)  X_init        # molecules
+  S(e,mod~P)  X_star_init   # molecules
+  Eplus(s)    E_plus_init   # molecules
+  Eminus(s)   E_minus_init  # molecules
+end seed species
+
+begin observables
+  # Free substrate in each modification state; X and X* of Samoilov et al. (2005)
+  Molecules Obs_X       S(e,mod~U)
+  Molecules Obs_X_star  S(e,mod~P)
+
+  # Enzyme-substrate complexes C+ and C-
+  Molecules Obs_C_plus   Eplus(s!+)
+  Molecules Obs_C_minus  Eminus(s!+)
+
+  # Free enzymes E+ and E-
+  Molecules Obs_E_plus   Eplus(s)
+  Molecules Obs_E_minus  Eminus(s)
+
+  # Total forward enzyme E+T = E+ + C+, constant in the absence of the driver
+  Molecules Obs_E_plus_tot  Eplus()
+end observables
+
+begin reaction rules
+  # Forward branch: reversible binding of the unmodified substrate by E+
+  R_bind_plus: S(e,mod~U) + Eplus(s) <-> S(e!1,mod~U).Eplus(s!1)  k_plus_1, k_plus_2
+
+  # Forward branch: catalysis, releasing modified substrate and free E+
+  R_cat_plus: S(e!1,mod~U).Eplus(s!1) -> S(e,mod~P) + Eplus(s)  k_plus_3
+
+  # Reverse branch: reversible binding of the modified substrate by E-
+  R_bind_minus: S(e,mod~P) + Eminus(s) <-> S(e!1,mod~P).Eminus(s!1)  k_minus_1, k_minus_2
+
+  # Reverse branch: catalysis, restoring unmodified substrate and free E-
+  R_cat_minus: S(e!1,mod~P).Eminus(s!1) -> S(e,mod~U) + Eminus(s)  k_minus_3
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 6 species, 6 reactions
+  saveConcentrations()
+
+  # Internal noise only: no bistability
+
+  #@protocol: |
+  #  One exact Gillespie trajectory over t = 0..10 s, sampled every 0.005 s,
+  #  with the external driver removed. After a sub-millisecond transient X*
+  #  fluctuates rapidly about a single level near 295 molecules with no slow
+  #  switching, giving the unimodal signal-response histogram that Samoilov
+  #  et al. (2005) contrast with the driven case.
+
+  #@figure: Fig. 4B in Samoilov et al. (2005)
+
+  resetConcentrations()
+  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>10,n_steps=>2000,\
+    seed=>406841})
+
+  # Deterministic relaxation of the undriven cycle
+#  resetConcentrations()
+#  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>200,n_steps=>2000,\
+#    atol=>1e-10,rtol=>1e-10})
+
+  # Network-free SSA alternative
+#  resetConcentrations()
+#  simulate({method=>"nf",suffix=>"nfr",t_start=>0,t_end=>10,n_steps=>2000,\
+#    seed=>406841,complex=>1})
+end actions

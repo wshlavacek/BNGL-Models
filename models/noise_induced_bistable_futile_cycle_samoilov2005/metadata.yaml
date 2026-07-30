@@ -1,0 +1,117 @@
+# metadata.yaml — noise_induced_bistable_futile_cycle_samoilov2005
+id: noise_induced_bistable_futile_cycle_samoilov2005
+created: 2026-07-30
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_bngl, bug_fix, extension, ai_assisted]
+  description: >
+    Curated from Samoilov, Plyasunov and Arkin (2005), PNAS 102:2310-2315, and
+    its Supporting Text, starting from a supplied Antimony-derived
+    Samoilov2005_FutileCycle.bngl. The supplied file used k+2 = 2e4 for the
+    forward unbinding step, which is inconsistent with the Fig. 3 caption
+    (k+2 = 1e4) and with the fixed point reported in Supporting Text Section I;
+    the curated files use the published value. The supplied file also omitted
+    the external noise driver of Expression 8, which is the entire subject of
+    the paper, so the driver is added here. The primary model reproduces the
+    reported deterministic fixed point to five significant figures for six of
+    its seven values; the seventh, N, is inconsistent with the paper's own
+    conservation law and is documented in the verification notebook. The
+    _unordered_pair variant covers the alternative propensity convention for
+    the homodimeric driver step that the published Fig. 3A trace statistics
+    imply, and the _no_driver variant is the paper's negative control.
+
+files:
+  - name: noise_induced_bistable_futile_cycle_samoilov2005.bngl
+    role: primary
+    description: >
+      Expressions 7 and 8 with BioNetGen mass-action semantics for the
+      homodimeric driver step; deterministic limit is Eqs. S5.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: noise_induced_bistable_futile_cycle_samoilov2005_unordered_pair.bngl
+    role: variant
+    description: >
+      Driver step N + N -> E+ + N read per unordered pair (rate expression
+      k_21/2), which reproduces the Fig. 3A switching statistics but not the
+      reported deterministic fixed point.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: noise_induced_bistable_futile_cycle_samoilov2005_no_driver.bngl
+    role: variant
+    description: >
+      Expression 7 only, external noise driver deleted; the paper's control
+      showing that the bistability disappears with the driver.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_samoilov2005.ipynb
+    role: verification
+  - name: verify_samoilov2005.png
+    role: figure
+  # Reference simulation data
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005.net
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_ssa.net
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_ssa.gdat
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_ssa.cdat
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_ode.net
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_ode.gdat
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_ode.cdat
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_unordered_pair.net
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_unordered_pair_ssa.net
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_unordered_pair_ssa.gdat
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_unordered_pair_ssa.cdat
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_unordered_pair_ode.net
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_unordered_pair_ode.gdat
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_unordered_pair_ode.cdat
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_no_driver.net
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_no_driver_ssa.net
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_no_driver_ssa.gdat
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_no_driver_ssa.cdat
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_no_driver_ode.net
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_no_driver_ode.gdat
+    role: reference
+  - name: reference/noise_induced_bistable_futile_cycle_samoilov2005_no_driver_ode.cdat
+    role: reference
+  # Reported simulation data used for verification
+  - name: reference/samoilov2005_supp_fixed_point.csv
+    role: reference
+    description: >
+      Deterministic fixed point of Eqs. S5 reported verbatim in Supporting Text
+      Section I of Samoilov et al. (2005).
+  - name: reference/samoilov2005_fig3A_traces_digitized.csv
+    role: reference
+    description: >
+      Per-image-column min/mean/max of the X and X* traces digitized from
+      Fig. 3A of Samoilov et al. (2005) at 600 dpi.
+  - name: reference/samoilov2005_fig3A_inset_Eplus_digitized.csv
+    role: reference
+    description: >
+      Per-image-column min/mean/max of the free forward enzyme E+(t) digitized
+      from the Fig. 3A inset of Samoilov et al. (2005) at 600 dpi.

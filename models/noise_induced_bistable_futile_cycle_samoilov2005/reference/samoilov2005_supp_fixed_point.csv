@@ -1,0 +1,17 @@
+# Source: Samoilov et al. (2005) PNAS 102:2310-2315, Supporting Text Section I
+# ("Extended System"). For the parameter set of the Fig. 3 caption the paper
+# reports that Eqs. S5 have "a unique positive fixed point at X = 1766.1,
+# C+ = 21.719, E+ = 6.149, N = 2.213, E- = 6.562, C- = 43.438 and X* = 168.79,
+# which is also a stable node."
+# Values are molecule counts, transcribed verbatim from the Supporting Text.
+# Note: the reported N is inconsistent with the paper's own conserved forward
+# enzyme pool, E+ + C+ + N = 30 molecules, which the other six values satisfy
+# only with N = 2.132; see verify_samoilov2005.ipynb.
+symbol,observable,reported
+X,Obs_X,1766.1
+C+,Obs_C_plus,21.719
+E+,Obs_E_plus,6.149
+N,Obs_N,2.213
+E-,Obs_E_minus,6.562
+C-,Obs_C_minus,43.438
+X*,Obs_X_star,168.79
