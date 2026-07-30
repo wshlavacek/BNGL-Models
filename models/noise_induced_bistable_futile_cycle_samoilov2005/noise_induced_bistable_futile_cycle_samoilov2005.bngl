@@ -50,16 +50,30 @@ begin model
 #  dynamics.
 
 #@note: |
-#  The driver step N + N -> E+ + N has two identical reactant patterns. Under
-#  BioNetGen's mass-action semantics its ODE flux is k_21*N^2 and its SSA/NFsim
-#  propensity is k_21*N*(N-1), which reproduces Eq. S5 of the Supporting Text
-#  and, through it, every digit of the reported deterministic fixed point. The
-#  classical Gillespie convention for a homodimeric step instead uses
-#  k_21*N*(N-1)/2, which halves the driver noise and contradicts Eq. S5. The
-#  source is ambiguous on this point: this file reproduces the reported fixed
-#  point and the Fig. 3A E+ inset envelope, whereas the halved reading
-#  reproduces the Fig. 3A X* switching balance. The companion file with the
-#  _unordered_pair suffix implements the halved reading, and
+#  The driver step N + N -> E+ + N is an N-catalyzed conversion of a single N,
+#  not a pair conversion: it consumes two N and returns one, so BioNetGen
+#  writes the reaction as 5,5 -> 3,5 with rate constant k_21, and its
+#  propensity is k_21*N*(N-1) with ODE flux k_21*N^2. Contrast a rule that
+#  consumes both copies, such as A() + A() -> B(): there BioNetGen writes
+#  0.5*k and the propensity is 0.5*k*n*(n-1).
+#  The one-half is not something the products switch on or off. In both cases
+#  the propensity is the rate constant times the number of distinct
+#  microscopic channels; the transformation fixes what one channel is, and so
+#  how many there are. A pair conversion picks an unordered pair of molecules,
+#  giving n*(n-1)/2 channels. A catalyzed conversion picks which molecule is
+#  converted and which catalyzes it, giving n*(n-1) ordered channels. Do not
+#  assume either form: read the constant BioNetGen wrote into the .net file.
+
+#@note: |
+#  Samoilov et al. (2005) do not say whether their k_21 is per ordered channel
+#  or per unordered pair, and the two differ by a factor of two. Eq. S5 of the
+#  Supporting Text has dN/dt = ... - k_21*N^2, the per-ordered-channel reading,
+#  which is what this file implements and what reproduces every digit of the
+#  reported deterministic fixed point. The per-unordered-pair reading gives
+#  k_21*N*(N-1)/2, halving the driver noise. The source is ambiguous: this file
+#  reproduces the reported fixed point and the Fig. 3A E+ inset envelope,
+#  whereas the halved reading reproduces the Fig. 3A X* switching balance. The
+#  companion file with the _unordered_pair suffix implements it, and
 #  verify_samoilov2005.ipynb quantifies both.
 
 begin parameters
@@ -148,6 +162,8 @@ begin reaction rules
   R_cat_minus: S(e!1,mod~P).Eminus(s!1) -> S(e,mod~U) + Eminus(s)  k_minus_3
 
   # Driver: N-catalyzed activation of a second N into free E+, and its reverse.
+  # One N is converted and one catalyzes, so the propensity counts ordered
+  # (converted, catalyst) pairs: k_21*N*(N-1), not k_21*N*(N-1)/2.
   # This quadratic step is what makes the driver noise close to power p = 1.
   R_driver_auto: N() + N() -> Eplus(s) + N()  k_21
   R_driver_auto_rev: Eplus(s) + N() -> N() + N()  k_minus_21
