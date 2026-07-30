@@ -1,0 +1,46 @@
+# metadata.yaml — three_stage_stochastic_gene_expression_shahrezaei2008
+id: three_stage_stochastic_gene_expression_shahrezaei2008
+created: 2026-07-28
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags:
+    - literature
+    - adapted_from_bngl
+    - originally_rule_based
+    - reformulation
+    - ai_assisted
+  description: >
+    Curated from Shahrezaei and Swain (2008), PNAS 105:17256-17261,
+    the 2009 correction to Eq. 13, the supporting appendix, and the
+    supplied BioNetGen test-suite gene_expr_3stage.bngl model. The
+    primary model replaces auxiliary Src and Null species with direct
+    catalytic synthesis and degradation channels that implement the
+    paper's chemical master equation. Its seeded SSA protocol
+    reproduces the bimodal stationary protein distribution in Fig. 3D.
+
+files:
+  - name: three_stage_stochastic_gene_expression_shahrezaei2008.bngl
+    role: primary
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_shahrezaei2008.ipynb
+    role: verification
+  - name: verify_shahrezaei2008.png
+    role: figure
+  - name: reference/three_stage_stochastic_gene_expression_shahrezaei2008.net
+    role: reference
+  - name: reference/three_stage_stochastic_gene_expression_shahrezaei2008_ssa.net
+    role: reference
+  - name: reference/three_stage_stochastic_gene_expression_shahrezaei2008_ssa.gdat
+    role: reference
+  - name: reference/three_stage_stochastic_gene_expression_shahrezaei2008_ssa.cdat
+    role: reference
+  - name: reference/shahrezaei2008_fig3d_gamma10_simulation_digitized.csv
+    role: reference
