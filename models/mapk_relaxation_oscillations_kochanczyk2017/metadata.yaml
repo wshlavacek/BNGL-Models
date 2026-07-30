@@ -1,0 +1,72 @@
+# metadata.yaml — mapk_relaxation_oscillations_kochanczyk2017
+id: mapk_relaxation_oscillations_kochanczyk2017
+created: 2026-07-30
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, restructuration, ai_assisted]
+  description: >
+    Curated from Kochanczyk M, Kocieniewski P, Kozlowska E, Jaruszewicz-Blonska
+    J, Sparta B, Pargett M, Albeck JG, Hlavacek WS, Lipniacki T (2017),
+    Scientific Reports 7:38244, doi:10.1038/srep38244. Adapted from the
+    deterministic BioNetGen model supplied in Supplementary Data S1. The
+    original reaction network was reorganized into house-style parameters,
+    molecule types, seed species, observables, unidirectional reaction rules,
+    and a reproducible actions block without changing its dynamics. The active
+    protocol uses 20 pg/ml EGF and reproduces the 24-hour ERK activity trace in
+    Fig. 4B. The separate noisy-EGFR extension in Supplementary Data S3 was
+    retained as reference context but excluded from this curation because it
+    adds discontinuous forcing and a substantially longer stochastic protocol.
+
+files:
+  - name: mapk_relaxation_oscillations_kochanczyk2017.bngl
+    role: primary
+    description: >
+      Population-based EGFR-RAS-RAF-MEK-ERK model with nested RAS-SOS positive
+      and ERK-SOS negative feedback, plus ERK feedback to RAF and MEK. The
+      finite network contains 34 species and 65 unidirectional reactions. The
+      active ODE protocol runs the Fig. 4B condition (20 pg/ml EGF, 24 hours);
+      a tested one-hour partitioned-leaping protocol is included as a
+      commented stochastic alternative.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_kochanczyk2017.ipynb
+    role: verification
+    description: >
+      Runs BioNetGen afresh, checks the committed reference trajectory,
+      reconstructs and integrates the generated mass-action network
+      independently in SciPy, verifies nine conserved molecular pools, and
+      compares ERK activity with a digitized Fig. 4B trace. The model matches
+      all 17 reported pulses, with 4.44% median-period error, 0.90% full-scale
+      peak-amplitude error, and 3.0-minute median residual timing error after
+      phase registration.
+  - name: verify_kochanczyk2017.png
+    role: figure
+    description: >
+      Verification summary showing the BioNetGen/SciPy agreement, conserved
+      pools, reported-data overlay, and pulse timing.
+  - name: reference/kochanczyk2017_fig4b_erkpp_digitized.csv
+    role: reference
+    description: >
+      ERK activity digitized from the left panel of Fig. 4B in the open-access
+      article PDF rendered at 400 dpi. Axes were calibrated to 0-24 hours and
+      normalized activity 0-1; the upper boundary of the green filled curve
+      was color-segmented and resampled at ten-minute intervals.
+  - name: reference/mapk_relaxation_oscillations_kochanczyk2017.net
+    role: reference
+    description: BioNetGen-generated reaction network.
+  - name: reference/mapk_relaxation_oscillations_kochanczyk2017_ode.net
+    role: reference
+    description: Reaction network emitted for the active ODE simulation.
+  - name: reference/mapk_relaxation_oscillations_kochanczyk2017_ode.gdat
+    role: reference
+    description: Observable trajectory for the active 24-hour ODE protocol.
+  - name: reference/mapk_relaxation_oscillations_kochanczyk2017_ode.cdat
+    role: reference
+    description: Species trajectory for the active 24-hour ODE protocol.
