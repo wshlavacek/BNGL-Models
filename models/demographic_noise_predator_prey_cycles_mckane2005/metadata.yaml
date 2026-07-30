@@ -1,0 +1,47 @@
+# metadata.yaml — demographic_noise_predator_prey_cycles_mckane2005
+id: demographic_noise_predator_prey_cycles_mckane2005
+created: 2026-07-28
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_bngl, originally_rule_based, ai_assisted]
+  description: >
+    Curated from McKane and Newman (2005), Physical Review Letters 94:218102,
+    and the accompanying volterra.bngl reference file. The primary model is a
+    finite-capacity individual-level predator-prey process in which demographic
+    noise resonantly amplifies stochastic cycles around a stable mean-field
+    coexistence point. Verification preserves the supplied reaction
+    propensities and explicitly documents the factor-of-two frequency-axis
+    normalization needed to align the model spectrum with the published Fig. 2.
+
+files:
+  - name: demographic_noise_predator_prey_cycles_mckane2005.bngl
+    role: primary
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_mckane2005.ipynb
+    role: verification
+  - name: verify_mckane2005.png
+    role: figure
+  - name: reference/demographic_noise_predator_prey_cycles_mckane2005.net
+    role: reference
+  - name: reference/demographic_noise_predator_prey_cycles_mckane2005_ode.net
+    role: reference
+  - name: reference/demographic_noise_predator_prey_cycles_mckane2005_ode.gdat
+    role: reference
+  - name: reference/demographic_noise_predator_prey_cycles_mckane2005_ode.cdat
+    role: reference
+  - name: reference/demographic_noise_predator_prey_cycles_mckane2005_ssa.net
+    role: reference
+  - name: reference/demographic_noise_predator_prey_cycles_mckane2005_ssa.gdat
+    role: reference
+  - name: reference/demographic_noise_predator_prey_cycles_mckane2005_ssa.cdat
+    role: reference
+  - name: reference/mckane2005_fig2_predator_spectrum_digitized.csv
+    role: reference
