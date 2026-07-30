@@ -16,8 +16,15 @@ source:
     finite-capacity individual-level predator-prey process in which demographic
     noise resonantly amplifies stochastic cycles around a stable mean-field
     coexistence point. Verification preserves the supplied reaction
-    propensities and explicitly documents the factor-of-two frequency-axis
-    normalization needed to align the model spectrum with the published Fig. 2.
+    propensities. The paper never states the Fig. 1 initial populations, and
+    the supplied file assumed 800 predators and 800 prey; that assumption has
+    been confirmed against the digitized Fig. 1, whose prey transient dip
+    floor of 0.1456 matches the mean-field 0.1461 for 800/800 and excludes
+    anything more than about 25 individuals away. The published time axis runs
+    a uniform factor of about two slower than the model's, seen both in the
+    Fig. 1 transient timing and in the 0.4937 frequency scale fitted for
+    Fig. 2; it is a pure rescaling of time and leaves the Eq. 5 fixed point and
+    every transient amplitude unchanged.
 
 files:
   - name: demographic_noise_predator_prey_cycles_mckane2005.bngl
