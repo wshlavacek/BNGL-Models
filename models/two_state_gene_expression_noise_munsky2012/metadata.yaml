@@ -1,0 +1,36 @@
+# metadata.yaml — two_state_gene_expression_noise_munsky2012
+id: two_state_gene_expression_noise_munsky2012
+created: 2026-07-30
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_bngl, originally_rule_based, ai_assisted]
+  description: >
+    Curated from Supplementary File S5 of Chylek et al. (2015), which adapts
+    the constitutive and two-state regulated gene-expression models and
+    parameter sets presented by Munsky et al. (2012).
+
+files:
+  - name: two_state_gene_expression_noise_munsky2012.bngl
+    role: primary
+    documentation_target: standard
+    min_bionetgen_version: "2.9.3"
+  - name: verify_munsky2012.ipynb
+    role: verification
+  - name: verify_munsky2012.png
+    role: figure
+  - name: reference/munsky2012_fig2b_distributions_digitized.csv
+    role: reference
+  - name: reference/two_state_gene_expression_noise_munsky2012.net
+    role: reference
+  - name: reference/two_state_gene_expression_noise_munsky2012_ssa.cdat
+    role: reference
+  - name: reference/two_state_gene_expression_noise_munsky2012_ssa.gdat
+    role: reference
+  - name: reference/two_state_gene_expression_noise_munsky2012_ssa.net
+    role: reference
