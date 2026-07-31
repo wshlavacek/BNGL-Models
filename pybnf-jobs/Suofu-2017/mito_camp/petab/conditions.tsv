@@ -1,0 +1,7 @@
+conditionId	targetId	targetValue
+cond_basal	MT1_isActive	0
+cond_basal	OR_isActive	0
+cond_damgo	MT1_isActive	0
+cond_damgo	OR_isActive	1
+cond_melatonin	MT1_isActive	1
+cond_melatonin	OR_isActive	0

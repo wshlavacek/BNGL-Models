@@ -1,0 +1,418 @@
+begin model
+
+#@title: Mitochondrial MT1 cAMP signaling (Suofu et al., 2017)
+
+#@description: |
+#  Compartmental model of Gi-coupled receptor control of cAMP in a neuron that
+#  carries the melatonin type-1 receptor (MT1) on BOTH the plasma membrane (PM)
+#  and the outer mitochondrial membrane (OMM). Forskolin-activated adenylyl
+#  cyclase (AC) on each membrane converts adenine nucleotide in the adjacent
+#  aqueous compartment -- cytosol (CY) or mitochondrial lumen (ML) -- to cAMP;
+#  phosphodiesterase (PDE) converts cAMP to AMP and AMP is recycled to ATP, so
+#  each compartment runs a closed ATP -> cAMP -> AMP -> ATP cycle whose
+#  steady state is set by AC and PDE activity. Nucleotides, and only
+#  nucleotides, cross the OMM. Agonist-occupied receptor catalytically converts
+#  Gi to Gi*, and Gi* sequesters AC in an inactive AC.Gi* complex that cannot
+#  bind ATP. All steps are mass action; the network is finite (26 species), so
+#  this is a deterministic ODE model.
+#
+#  Two stimulations are simulated from the same equilibrated basal state.
+#  Melatonin switches on MT1 at the PM *and* at the OMM (the paper's "model 2");
+#  DAMGO switches on the mu-opioid receptor, which is present only at the PM
+#  ("model 1"). The behavior of interest is a reversal of compartmental
+#  efficacy. Under melatonin, luminal cAMP falls further and faster than
+#  cytosolic cAMP (to 0.21 vs 0.41 of basal at 600 s) because the two membranes
+#  carry comparable MT1 per unit area (113 vs 170 /um^2) but the OMM encloses so
+#  little volume that this is ~14x the cytosolic MT1 concentration.
+#  Under DAMGO the order reverses (cytosol 0.01, lumen 0.38): the mitochondrion
+#  has no receptor, and its cAMP falls only as far as diffusive exchange with
+#  the emptying cytosol drags it, while ongoing luminal AC activity holds it up.
+#  Because the cytosol is ~88x the luminal volume, that exchange is one-sided:
+#  it props the mitochondrion up under melatonin and drains it under DAMGO.
+#  The corresponding curves of Fig. 4J in Suofu et al. (2017) end at 0.44/0.18
+#  and 0.03/0.30; that fit and this one are two parameterizations of the same
+#  sloppy model, and this one scores slightly better on the Fig. 4H/4I data both
+#  target (see verify_suofu2017.ipynb).
+
+#@keyword: |
+#  signaling, G protein-coupled receptor, melatonin, MT1 receptor, mu-opioid
+#  receptor, mitochondria, outer mitochondrial membrane, cyclic AMP, adenylyl
+#  cyclase, phosphodiesterase, Gi, compartmental model, mass action,
+#  monostable, Mus musculus
+
+#@reference: |
+#  Suofu Y, Li W, Jean-Alphonse FG, Jia J, Khattar NK, Li J, et al. (2017).
+#  Dual role of mitochondria in producing melatonin and driving GPCR signaling
+#  to block cytochrome c release. Proc Natl Acad Sci USA 114:E7997-E8006.
+#  doi:10.1073/pnas.1705768114 -- SI Appendix "Model constructions and
+#  analysis", Supplementary Data Table 1 (reactions), Supplementary Data
+#  Table 2 (initial quantities), Supplementary Data Fig. S7 (posteriors),
+#  Fig. 4H/4I (data) and Fig. 4J (simulated curves reproduced here).
+
+#@note: |
+#  PROVENANCE OF THE PARAMETER VALUES. Suofu et al. (2017) list the eight
+#  reaction types and name their twelve rate constants (Supplementary Data
+#  Table 1) and give the initial quantities (Supplementary Data Table 2), but
+#  they report the fitted rate constants only as replica-exchange MCMC
+#  posterior histograms on a log10 axis (Supplementary Data Fig. S7) whose unit
+#  convention is not stated. The values below are therefore NOT transcribed
+#  from the paper: they are a redetermination against the paper's own fit
+#  targets -- the averaged cAMP time courses of Fig. 4H (melatonin) and Fig. 4I
+#  (DAMGO) -- carried out with PyBioNetFit in
+#  pybnf-jobs/Suofu-2017/mito_camp/, which also documents the digitization.
+#  Everything else (geometry, species, reactions, initial quantities) is the
+#  paper's.
+#
+#  WHERE THE PARAMETERIZATION STRAINS. The refit reaches a basal free cytosolic
+#  cAMP of 7.61e6, 24% below the 1.0e7 that Supplementary Data Table 2 lists,
+#  and five of its fourteen free parameters (k1r, k3r, k5, k7, k8r) are not
+#  identified by the Fig. 4H/4I data -- each is a step that only has to be fast
+#  enough, so the objective is flat above a threshold and those values are lower
+#  bounds rather than estimates. VALIDATION.md in the fitting job quantifies
+#  both.
+#
+#  COMPARTMENTS AND UNITS. Compartment sizes are physical: volumes in um^3 per
+#  cell and areas in um^2 per cell, from the paper's geometry (a 1 pL spherical
+#  cell holding 100 spherical mitochondria of radius 0.3 um). Species amounts
+#  are molecule counts, so BioNetGen's compartmental scaling divides every
+#  bimolecular rate by the volume of the adjacent aqueous compartment (V_cy for
+#  a PM/CY reaction, V_ml for an OMM/ML reaction) and second-order rate
+#  constants carry units of um^3 per molecule per second. That scaling is what
+#  makes the paper's construction work: luminal amounts are cytosolic amounts
+#  times V_ml/V_cy, so the two compartments have identical concentrations and
+#  identical intrinsic kinetics, and every difference between them comes from
+#  receptor density and from diffusive exchange.
+#
+#  NUCLEOTIDES AS ONE MOLECULE TYPE. ATP, cAMP and AMP are the three states of
+#  a single molecule type Nuc, which keeps the adenine-nucleotide pool
+#  conserved by construction and lets one transport rule move all three species
+#  across the OMM. The paper lists them as separate species; the generated
+#  networks are equivalent.
+#
+#  SPECIES COUNT. Network generation gives 26 species where Suofu et al. (2017)
+#  report 30 ODEs. The four not represented here are the mu-opioid receptor and
+#  its Gi complex on the OMM, which the paper's model carries at zero and which
+#  the compartment-explicit rules below never create, and the two agonists,
+#  which are applied here as a switch on receptor activity rather than as
+#  bound ligand (the paper likewise adds "active copies" of receptor rather
+#  than simulating ligand binding).
+#
+#  COMPETITIVE INHIBITION OF AC. Rule 1 requires the Gi* site of AC to be free
+#  and rule 8 requires its substrate site to be free, so AC.ATP.Gi* is never
+#  formed. This reproduces Supplementary Data Table 1, which lists AC.ATP and
+#  AC.Gi* as the only AC complexes.
+
+begin parameters
+
+  # === Physical constants and unit-conversion parameters (house style 1.3) ===
+  # Avogadro constant
+  NA 6.02214076e23 # molecules/mol
+  PI 3.141592653589793 # dimensionless
+  # Effective membrane-adjacent layer used to map surface densities to volumes
+  h_mem 0.01 # um
+  # Subvolume scaling factor: one whole cell is simulated
+  f 1 # dimensionless
+
+  # === Cell geometry; see SI Appendix "Model constructions and analysis" in
+  # Suofu et al. (2017): a spherical 1 pL cell holding 100 spherical
+  # mitochondria of radius 0.3 um. Parameters are ordered so that no expression
+  # refers forward; run_network resolves the parameters block in file order. ===
+  V_cy f*1000 # um^3/cell
+  R_cell (3*V_cy/(4*PI))^(1/3) # um
+  A_pm 4*PI*R_cell^2 # um^2/cell
+  n_mito f*100 # mitochondria/cell
+  r_mito 0.3 # um
+  V_ml n_mito*(4/3)*PI*r_mito^3 # um^3/cell
+  A_omm n_mito*4*PI*r_mito^2 # um^2/cell
+  # Luminal fraction of the cell volume; every luminal amount is phi x cytosolic
+  phi V_ml/V_cy # dimensionless
+  # Extracellular fluid; no species live here, but BioNetGen needs a 3D root
+  V_ec f*1e5 # um^3/cell
+  # Reference volume: the whole cell, modeled as a 1 pL sphere
+  V_ref 1e-15*V_cy # L/cell
+
+  # === Initial quantities; Supplementary Data Table 2 in Suofu et al. (2017) ===
+  Gi_CY_0 f*3.0e6 # molecules
+  AC_CY_0 f*3.0e5 # molecules
+  PDE_CY_0 f*2.4e5 # molecules
+  ATP_CY_0 f*1.0e9 # molecules
+  cAMP_CY_0 f*1.0e7 # molecules
+  Gi_ML_0 Gi_CY_0*phi # molecules
+  AC_ML_0 AC_CY_0*phi # molecules
+  PDE_ML_0 PDE_CY_0*phi # molecules
+  ATP_ML_0 ATP_CY_0*phi # molecules
+  cAMP_ML_0 cAMP_CY_0*phi # molecules
+
+  # Receptor densities. mu-OR sits at 1e6 copies on the PM (2068/um^2) and is
+  # absent from the OMM; the PM/OMM MT1 concentration ratio ratio_MT1 <= 1 is
+  # the paper's one free non-kinetic parameter. How much MT1 the OMM carries is
+  # reported two ways that disagree by A_omm/(A_pm*phi) = 20.7-fold:
+  # Supplementary Data Table 2 lists 1.13e4 copies, i.e. 1e6*phi (same
+  # CONCENTRATION as a PM loaded with 1e6), while the SI Appendix text specifies
+  # "2068 MT1 per square um of OMM", i.e. the same AREAL DENSITY as that PM,
+  # which is 2.34e5 copies. MT1_OMM_amp selects between them: 1 is Table 2,
+  # 20.68 is the text. It is fitted in pybnf-jobs/Suofu-2017/mito_camp.
+  R_ref f*1.0e6 # molecules
+  ratio_MT1 0.0822213 # dimensionless
+  MT1_OMM_amp 1.13002 # dimensionless
+  MT1_OMM_0 R_ref*phi*MT1_OMM_amp # molecules
+  MT1_PM_0 R_ref*ratio_MT1 # molecules
+  OR_PM_0 R_ref # molecules
+
+  # === Agonist switches (0 = silent receptor, 1 = saturating agonist) ===
+  # A saturating agonist is modeled, as in Suofu et al. (2017), by turning on
+  # the receptor's ability to load Gi rather than by simulating ligand binding.
+  MT1_isActive 0 # dimensionless
+  OR_isActive 0 # dimensionless
+
+  # === Rate constants; Supplementary Data Table 1 in Suofu et al. (2017),
+  # redetermined in pybnf-jobs/Suofu-2017/mito_camp (see the note above) ===
+  # 1. ATP binding to adenylyl cyclase
+  k1f 1.14394e-05 # um^3/molecule/s
+  k1r 0.00304797 # /s
+  # 2. cAMP production
+  k2 0.25137 # /s
+  # 3. cAMP binding to phosphodiesterase
+  k3f 4.45701e-05 # um^3/molecule/s
+  k3r 0.00183852 # /s
+  # 4. cAMP hydrolysis to AMP
+  k4 3.30566 # /s
+  # 5. AMP recycling to ATP
+  k5 32.2976 # /s
+  # 6. Gi loading onto an agonist-occupied receptor
+  k6 1.12318e-06 # um^3/molecule/s
+  # 7. Gi activation and release
+  k7 4147.7 # /s
+  # 8. Sequestration of adenylyl cyclase by active Gi
+  k8f 0.029857 # um^3/molecule/s
+  k8r 0.000220863 # /s
+  # Nucleotide permeation of the OMM, written as the efflux (ML -> CY) rate
+  # constant; the influx constant is phi times smaller so that the two
+  # compartments equilibrate at equal concentration, not at equal count.
+  kdiff 0.00963586 # /s
+  kdiff_out kdiff # /s
+  kdiff_in kdiff*phi # /s
+
+  # Gated Gi-loading constants, one per receptor population
+  k6_MT1_PM k6*MT1_isActive # um^3/molecule/s
+  k6_MT1_OMM k6*MT1_isActive # um^3/molecule/s
+  k6_OR_PM k6*OR_isActive # um^3/molecule/s
+
+  # Basal (pre-agonist) free-cAMP steady states reached by the equilibration
+  # protocol below; used only to report cAMP as a fraction of basal, the
+  # quantity plotted in Fig. 4J of Suofu et al. (2017). Recomputed in
+  # verify_suofu2017.ipynb.
+  cAMP_CY_eq 7.60808e+06 # molecules
+  cAMP_ML_eq 86045.4 # molecules
+
+end parameters
+
+begin compartments
+
+  # Extracellular fluid (empty; present only so that PM has a 3D parent)
+  EC 3 V_ec
+  # Plasma membrane
+  PM 2 A_pm EC
+  # Cytosol
+  CY 3 V_cy PM
+  # Outer mitochondrial membrane, pooled over the 100 mitochondria
+  OMM 2 A_omm CY
+  # Mitochondrial lumen, pooled over the 100 mitochondria
+  ML 3 V_ml OMM
+
+end compartments
+
+begin molecule types
+
+  # Adenylyl cyclase; sub = substrate (ATP) site, gi = active-Gi site
+  AC(sub,gi)
+  # Heterotrimeric Gi alpha subunit; r = receptor site, ac = cyclase site,
+  # act = nucleotide-exchange state (0 = Gi, 1 = Gi*)
+  Gi(r,ac,act~0~1)
+  # Melatonin type-1 receptor; g = G protein site
+  MT1(g)
+  # Adenine nucleotide, one molecule type in three interconverting states
+  Nuc(b,s~ATP~cAMP~AMP)
+  # mu-opioid receptor; g = G protein site
+  OR(g)
+  # Phosphodiesterase; sub = substrate (cAMP) site
+  PDE(sub)
+
+end molecule types
+
+begin seed species
+
+  # Cytosol / plasma membrane
+  Nuc(b,s~ATP)@CY ATP_CY_0 # molecules
+  Nuc(b,s~cAMP)@CY cAMP_CY_0 # molecules
+  Nuc(b,s~AMP)@CY 0 # molecules
+  Gi(r,ac,act~0)@CY Gi_CY_0 # molecules
+  PDE(sub)@CY PDE_CY_0 # molecules
+  AC(sub,gi)@PM AC_CY_0 # molecules
+  MT1(g)@PM MT1_PM_0 # molecules
+  OR(g)@PM OR_PM_0 # molecules
+
+  # Mitochondrial lumen / outer mitochondrial membrane
+  Nuc(b,s~ATP)@ML ATP_ML_0 # molecules
+  Nuc(b,s~cAMP)@ML cAMP_ML_0 # molecules
+  Nuc(b,s~AMP)@ML 0 # molecules
+  Gi(r,ac,act~0)@ML Gi_ML_0 # molecules
+  PDE(sub)@ML PDE_ML_0 # molecules
+  AC(sub,gi)@OMM AC_ML_0 # molecules
+  MT1(g)@OMM MT1_OMM_0 # molecules
+
+end seed species
+
+begin observables
+
+  # Free cAMP -- what the compartment-targeted FRET sensors report and what
+  # Fig. 4J of Suofu et al. (2017) plots
+  Molecules cAMP_CY Nuc(b,s~cAMP)@CY
+  Molecules cAMP_ML Nuc(b,s~cAMP)@ML
+  # Remaining nucleotide pools
+  Molecules ATP_CY Nuc(b,s~ATP)@CY
+  Molecules ATP_ML Nuc(b,s~ATP)@ML
+  Molecules AMP_CY Nuc(b,s~AMP)@CY
+  Molecules AMP_ML Nuc(b,s~AMP)@ML
+  # Active G protein and the fraction of cyclase it has sequestered
+  Molecules GiA_CY Gi(act~1)@CY
+  Molecules GiA_ML Gi(act~1)@ML
+  Molecules ACfree_PM AC(sub,gi)@PM
+  Molecules ACfree_OMM AC(sub,gi)@OMM
+  Molecules ACGi_PM AC(gi!1)@PM.Gi(ac!1)@CY
+  Molecules ACGi_OMM AC(gi!1)@OMM.Gi(ac!1)@ML
+  # Conserved totals (constant; useful as an integration check)
+  Molecules Nuc_CY Nuc(b!?)@CY
+  Molecules Nuc_ML Nuc(b!?)@ML
+
+end observables
+
+begin functions
+
+  # cAMP as a fraction of its pre-agonist steady state -- the ordinate of
+  # Fig. 4J in Suofu et al. (2017). Valid only for the parameterization above;
+  # the equilibration protocol drives both to 1 before the agonist is applied.
+  cAMP_CY_frac() cAMP_CY/cAMP_CY_eq
+  cAMP_ML_frac() cAMP_ML/cAMP_ML_eq
+
+  # cAMP as a percentage of the Supplementary Data Table 2 basal quantity --
+  # the fit observable of pybnf-jobs/Suofu-2017/mito_camp, kept here so the
+  # library model and the fitting model report the same quantity
+  camp_CY_pct() 100*cAMP_CY/cAMP_CY_0
+  camp_ML_pct() 100*cAMP_ML/cAMP_ML_0
+
+  # Dimensional conversions (uncomment for concentration output)
+# cAMP_CY_conc() cAMP_CY/(NA*1e-15*V_cy) # M
+# cAMP_ML_conc() cAMP_ML/(NA*1e-15*V_ml) # M
+# ACfree_PM_dens() ACfree_PM/A_pm # molecules/um^2
+# ACfree_OMM_dens() ACfree_OMM/A_omm # molecules/um^2
+
+end functions
+
+begin reaction rules
+
+  # --- Cytosolic ATP/cAMP/AMP cycle, driven by adenylyl cyclase on the PM ---
+  # 1. ATP binds the substrate site of a cyclase that is free of active Gi
+  AC(sub,gi)@PM+Nuc(b,s~ATP)@CY<->AC(sub!1,gi)@PM.Nuc(b!1,s~ATP)@CY k1f,k1r
+  # 2. Cyclization: bound ATP leaves as cAMP
+  AC(sub!1,gi)@PM.Nuc(b!1,s~ATP)@CY->AC(sub,gi)@PM+Nuc(b,s~cAMP)@CY k2
+  # 3. cAMP binds phosphodiesterase
+  PDE(sub)@CY+Nuc(b,s~cAMP)@CY<->PDE(sub!1)@CY.Nuc(b!1,s~cAMP)@CY k3f,k3r
+  # 4. Hydrolysis: bound cAMP leaves as AMP
+  PDE(sub!1)@CY.Nuc(b!1,s~cAMP)@CY->PDE(sub)@CY+Nuc(b,s~AMP)@CY k4
+  # 5. AMP is recycled to ATP
+  Nuc(b,s~AMP)@CY->Nuc(b,s~ATP)@CY k5
+
+  # --- Luminal ATP/cAMP/AMP cycle, driven by adenylyl cyclase on the OMM ---
+  AC(sub,gi)@OMM+Nuc(b,s~ATP)@ML<->AC(sub!1,gi)@OMM.Nuc(b!1,s~ATP)@ML k1f,k1r
+  AC(sub!1,gi)@OMM.Nuc(b!1,s~ATP)@ML->AC(sub,gi)@OMM+Nuc(b,s~cAMP)@ML k2
+  PDE(sub)@ML+Nuc(b,s~cAMP)@ML<->PDE(sub!1)@ML.Nuc(b!1,s~cAMP)@ML k3f,k3r
+  PDE(sub!1)@ML.Nuc(b!1,s~cAMP)@ML->PDE(sub)@ML+Nuc(b,s~AMP)@ML k4
+  Nuc(b,s~AMP)@ML->Nuc(b,s~ATP)@ML k5
+
+  # --- Nucleotide permeation of the outer mitochondrial membrane ---
+  # Only free nucleotide crosses; proteins stay in their compartments
+  Nuc(b)@CY<->Nuc(b)@ML kdiff_in,kdiff_out
+
+  # --- Receptor/G protein coupling and G protein activation (rules 6 and 7) ---
+  # MT1 on the plasma membrane loads cytosolic Gi
+  MT1(g)@PM+Gi(r,ac,act~0)@CY->MT1(g!1)@PM.Gi(r!1,ac,act~0)@CY k6_MT1_PM
+  MT1(g!1)@PM.Gi(r!1,ac,act~0)@CY->MT1(g)@PM+Gi(r,ac,act~1)@CY k7
+  # MT1 on the outer mitochondrial membrane loads luminal Gi
+  MT1(g)@OMM+Gi(r,ac,act~0)@ML->MT1(g!1)@OMM.Gi(r!1,ac,act~0)@ML k6_MT1_OMM
+  MT1(g!1)@OMM.Gi(r!1,ac,act~0)@ML->MT1(g)@OMM+Gi(r,ac,act~1)@ML k7
+  # mu-OR is confined to the plasma membrane
+  OR(g)@PM+Gi(r,ac,act~0)@CY->OR(g!1)@PM.Gi(r!1,ac,act~0)@CY k6_OR_PM
+  OR(g!1)@PM.Gi(r!1,ac,act~0)@CY->OR(g)@PM+Gi(r,ac,act~1)@CY k7
+
+  # --- Inhibition of adenylyl cyclase by active Gi (rule 8) ---
+  # Requires a free substrate site, so AC.ATP.Gi* is never formed
+  AC(sub,gi)@PM+Gi(r,ac,act~1)@CY<->AC(sub,gi!1)@PM.Gi(r,ac!1,act~1)@CY k8f,k8r
+  AC(sub,gi)@OMM+Gi(r,ac,act~1)@ML<->AC(sub,gi!1)@OMM.Gi(r,ac!1,act~1)@ML k8f,k8r
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1})  # 26 species, 30 reactions
+  saveParameters("p0")
+  saveConcentrations("c0")
+
+  #@note: |
+  #  ODE is the only feasible method. The model uses compartments, so NFsim is
+  #  excluded (house style 1.1); SSA and PSA are excluded by the nucleotide
+  #  pool, which holds ~1e9 molecules cycling at ~1e4 events/s -- a single 600 s
+  #  trajectory would need ~1e7 reaction events for no gain over the ODE that
+  #  Suofu et al. (2017) integrate.
+
+  # Basal equilibration
+
+  #@protocol: |
+  #  Relax from the Supplementary Data Table 2 initial quantities to the
+  #  pre-agonist steady state with both receptors silent, as described in the
+  #  SI Appendix ("the model was executed in the absence of MT1 and mu-OR until
+  #  steady state was reached"). At the end of this protocol cAMP_CY_frac and
+  #  cAMP_ML_frac are both 1, which is the check that the two parameters
+  #  cAMP_CY_eq and cAMP_ML_eq are current.
+
+  simulate({method=>"ode",suffix=>"equil",t_start=>0,t_end=>2e5,n_steps=>400,\
+    print_functions=>1})
+  saveConcentrations("ceq")
+
+  # Melatonin: MT1 on both the plasma and outer mitochondrial membranes
+
+  #@protocol: |
+  #  From the equilibrated basal state, apply a saturating concentration of
+  #  melatonin by switching on MT1 at both membranes, and follow free cAMP for
+  #  600 s. Expected behavior: luminal cAMP falls to about 0.2 of basal and
+  #  cytosolic cAMP only to about 0.45, because the OMM carries the full MT1
+  #  density and the PM only ratio_MT1 of it.
+
+  #@figure: Fig. 4J (Model MT1) in Suofu et al. (2017)
+
+  resetConcentrations("ceq")
+  setParameter("MT1_isActive",1)
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>600,n_steps=>600,\
+    print_functions=>1})
+
+  # DAMGO: mu-opioid receptor on the plasma membrane only
+
+  #@protocol: |
+  #  From the same equilibrated basal state, apply a saturating concentration
+  #  of DAMGO by switching on mu-OR, which is present only at the plasma
+  #  membrane. Expected behavior: the compartmental order reverses -- cytosolic
+  #  cAMP falls to about 0.03 of basal while luminal cAMP, with no receptor of
+  #  its own, falls only to about 0.30 under diffusive drain by the emptying
+  #  cytosol.
+
+  #@figure: Fig. 4J (Model uOR) in Suofu et al. (2017)
+
+  resetParameters("p0")
+  resetConcentrations("ceq")
+  setParameter("OR_isActive",1)
+  simulate({method=>"ode",suffix=>"damgo",t_start=>0,t_end=>600,n_steps=>600,\
+    print_functions=>1})
+
+end actions

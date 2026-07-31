@@ -1,0 +1,70 @@
+# metadata.yaml — mitochondrial_mt1_camp_signaling_suofu2017
+id: mitochondrial_mt1_camp_signaling_suofu2017
+created: 2026-07-31
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_ode, ai_assisted]
+  description: >
+    Built from Suofu Y, Li W, Jean-Alphonse FG, Jia J, Khattar NK, Li J, et al.
+    (2017), Proc Natl Acad Sci USA 114:E7997-E8006, doi:10.1073/pnas.1705768114.
+    The species, reactions, geometry and initial quantities are the authors'
+    compartmental BioNetGen model as specified in the SI Appendix section "Model
+    constructions and analysis" and Supplementary Data Tables 1 and 2. The
+    authors' model file is not deposited and their fitted rate constants are
+    reported only as log10 posterior histograms with an unstated unit convention
+    (Supplementary Data Fig. S7), so the rate constants here were redetermined
+    against the paper's own fit targets — the averaged cAMP time courses of
+    Fig. 4H and Fig. 4I — in pybnf-jobs/Suofu-2017/mito_camp.
+
+files:
+  - name: mitochondrial_mt1_camp_signaling_suofu2017.bngl
+    role: primary
+    description: >
+      Compartmental (EC/PM/CY/OMM/ML) mass-action model of Gi-coupled inhibition
+      of adenylyl cyclase at the plasma membrane and the outer mitochondrial
+      membrane; three protocols reproduce the basal state and both panels of
+      Fig. 4J.
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_suofu2017.ipynb
+    role: verification
+    description: >
+      Runs the model, re-derives the 26-state ODE system by hand from
+      Supplementary Data Table 1 and compares, re-runs the Fig. 4H/4I/4J
+      digitization from the article PDF when it is present, and scores the model
+      against both the authors' Fig. 4J curves and the Fig. 4H/4I measurements.
+  - name: verify_suofu2017.png
+    role: figure
+  # Reference simulation data
+  - name: reference/mitochondrial_mt1_camp_signaling_suofu2017.net
+    role: reference
+  - name: reference/mitochondrial_mt1_camp_signaling_suofu2017_equil.gdat
+    role: reference
+    description: Basal relaxation with both receptors silent.
+  - name: reference/mitochondrial_mt1_camp_signaling_suofu2017_ode.gdat
+    role: reference
+    description: Melatonin stimulation; reproduces Fig. 4J (Model MT1).
+  - name: reference/mitochondrial_mt1_camp_signaling_suofu2017_damgo.gdat
+    role: reference
+    description: DAMGO stimulation; reproduces Fig. 4J (Model uOR).
+  # Reported simulation data used for verification
+  - name: reference/suofu2017_fig4HI_camp_timecourses_digitized.csv
+    role: reference
+    description: >
+      77 plotted means digitized from Fig. 4H (melatonin) and Fig. 4I (DAMGO):
+      cAMP in percent of the pre-agonist maximum for the plasma-membrane and
+      outer-mitochondrial-membrane FRET sensors. The fit target of both the
+      authors' fit and this curation.
+  - name: reference/suofu2017_fig4J_model_curves_digitized.csv
+    role: reference
+    description: >
+      The four simulated curves of Fig. 4J (the authors' own fit of this model),
+      resampled every 10 s over 0-600 s as a fraction of the pre-agonist basal
+      value.

@@ -1,0 +1,3 @@
+observableId	observableFormula	noiseFormula	noiseDistribution	noisePlaceholders
+func_camp_CY_pct	camp_CY_pct	1	normal
+func_camp_ML_pct	camp_ML_pct	1	normal

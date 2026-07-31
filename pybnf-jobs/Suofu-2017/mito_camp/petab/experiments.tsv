@@ -1,0 +1,5 @@
+experimentId	time	conditionId
+melatonin	-inf	cond_basal
+melatonin	0	cond_melatonin
+damgo	-inf	cond_basal
+damgo	0	cond_damgo
