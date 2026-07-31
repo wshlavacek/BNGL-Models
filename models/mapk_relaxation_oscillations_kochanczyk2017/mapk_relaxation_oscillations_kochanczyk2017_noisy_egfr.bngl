@@ -1,0 +1,420 @@
+begin model
+
+#@title: MAPK relaxation oscillations with bursty EGFR expression (Kochanczyk et al., 2017)
+
+#@description: |
+#  Single-cell variant of the EGFR-RAS-RAF-MEK-ERK relaxation oscillator in
+#  which surface EGFR is no longer a conserved pool but is produced in
+#  randomly timed bursts and removed by first-order turnover. Fifty burst
+#  windows drawn from the paper's extrinsic-noise process are hard-coded as
+#  time-gated production rules, so over the five-day protocol the receptor
+#  level wanders from about 5700 to about 855000 molecules, a factor of 150,
+#  on a timescale of hours. Because ERK pulse frequency
+#  rises with receptor abundance, this slow extrinsic drive converts the
+#  regular oscillator of the primary model into the irregular, bursty ERK
+#  activity seen in single cells: long quiescent stretches punctuated by
+#  trains of sharp pulses. A low 2 pg/ml EGF dose keeps the cell near the
+#  excitability threshold, where receptor fluctuations gate the response.
+
+#@keyword: |
+#  MAPK signaling, ERK, EGFR, RAS, SOS, relaxation oscillations, extrinsic
+#  noise, bursty gene expression, single cell, stochastic, time-dependent rate,
+#  positive feedback, negative feedback, mass action, Homo sapiens
+
+#@reference: |
+#  Kochanczyk M, Kocieniewski P, Kozlowska E, Jaruszewicz-Blonska J, Sparta B,
+#  Pargett M, Albeck JG, Hlavacek WS, Lipniacki T (2017). Relaxation
+#  oscillations and hierarchy of feedbacks in MAPK signaling. Scientific
+#  Reports 7:38244. doi:10.1038/srep38244
+
+#@note: |
+#  Adapted from Supplementary Data S3 (MAPK_noisy_EGFR.bngl), the extrinsic-
+#  noise companion of the Supplementary Data S1 file behind the primary model
+#  in this folder. Relative to the primary model this file changes the EGF
+#  dose to 2 pg/ml, lowers the initial receptor count to the cell-specific
+#  168950, adds EGFR production and turnover, and follows Supplementary Data
+#  S3 in naming the FRET reporter EKAREV rather than EKAR3 and in exchanging
+#  the two reporter deactivation rate constants. The reporters are read-only
+#  and feed nothing back, so those choices do not affect any other trajectory.
+#  The source scaling parameter BIMOL is normalized to the reserved name f;
+#  the burst amplitude is scaled by f as well, which the source file does not
+#  do, so that a subvolume simulation stays self-consistent. At the shipped
+#  f = 1 the two are identical.
+
+#@note: |
+#  Supplementary Table S3 reports an EGFR half-life of 12 hours, and the
+#  comment on this rate constant in Supplementary Data S3 reads "T_1/2 =
+#  2*6 h", but the expression shipped in that file, ln(2)/(6*60*60), is a
+#  half-life of 6 hours. The shipped value is retained here because it is the
+#  value that generates the published single-cell trajectory; the mean
+#  receptor level it predicts from the burst schedule, near 230000 molecules,
+#  is also the one consistent with the shipped initial condition. Doubling
+#  the half-life would roughly double the mean receptor level.
+
+begin parameters
+  # Exact Avogadro constant and an assumed reference volume for unit conversion
+  NA      6.02214076e23  # molecules/mol
+  V_ref   1e-12          # L/cell
+
+  # Low EGF dose of Supplementary Data S3 and the three ERK-mediated feedbacks
+  EGF             2    # pg/ml
+  ERKpp_SOS1_FB   1.0  # dimensionless
+  ERKpp_MEK_FB    1.0  # dimensionless
+  ERKpp_RAF1_FB   1.0  # dimensionless
+
+  # Fraction of the full cell represented and initial active-RAS fraction
+  f               1.0  # dimensionless
+  RAS_t0_active   0    # dimensionless
+
+  # Protein abundances; EGFR_tot is this cell's receptor count at t=0 only,
+  # because the receptor pool is open in this variant
+  EGFR_tot    168950*f  # molecules/cell
+  RAS_tot     6e4*f     # molecules/cell
+  SOS_tot     1e5*f     # molecules/cell
+  RasGAP_tot  6e3*f     # molecules/cell
+  RAF_tot     5e5*f     # molecules/cell
+  MEK_tot     2e5*f     # molecules/cell
+  ERK_tot     3e6*f     # molecules/cell
+  EKAREV_tot  1e6*f     # molecules/cell
+  ERKTR_tot   1e6*f     # molecules/cell
+
+  # Receptor production rate while a burst window is open. The source value is
+  # the cell-specific product A_burst*alpha_cell of Supplementary Table S3,
+  # with A_burst = 60/s and this cell's log-normal draw alpha_cell = 0.563.
+  A_burst     33.79*f  # molecules/s
+
+  # First-order EGFR turnover; see the second header note on the half-life
+  EGFR_decay  0.693147/(6*60*60)  # /s
+
+  # EGF-dependent EGFR activation and spontaneous deactivation
+  a1   5e-5*EGF  # /s
+  d1   1e-2      # /s
+
+  # EGFR-SOS and allosteric SOS-RAS interactions
+  b1   1e-5/f  # /molecule/s
+  u1a  1e-2    # /s
+  u1b  1e2     # /s
+  b2a  1e-6/f  # /molecule/s
+  u2a  1       # /s
+  b2b  1e-7/f  # /molecule/s
+  u2b  1       # /s
+  k2a  1e-4/f  # /molecule/s
+  k2b  1e-5/f  # /molecule/s
+
+  # RasGAP-assisted RAS inactivation
+  b3   1e-5/f  # /molecule/s
+  u3   1e-2    # /s
+  k3   1e2     # /s
+
+  # RAF, MEK, and ERK activation and deactivation
+  a2   1e-7/f  # /molecule/s
+  d2   1e-2    # /s
+  p1   1e-7/f  # /molecule/s
+  q1   1e-2    # /s
+  p2   3e-6/f  # /molecule/s
+  q2   1e-2    # /s
+
+  # ERK-mediated feedback phosphorylation and dephosphorylation
+  p3   3e-9*ERKpp_SOS1_FB/f   # /molecule/s
+  q3   3e-4                   # /s
+  p4   6e-10*ERKpp_MEK_FB/f   # /molecule/s
+  q4   3e-4                   # /s
+  q5   1e2                    # /s
+  p6   6e-10*ERKpp_RAF1_FB/f  # /molecule/s
+  q6   3e-4                   # /s
+
+  # Activation and deactivation of the ERK activity reporters
+  a0_ekarev  3e-9/f  # /molecule/s
+  d0_ekarev  2e-3    # /s
+  a0_erktr   1e-9/f  # /molecule/s
+  d0_erktr   1e-3    # /s
+end parameters
+
+begin molecule types
+  # Epidermal growth factor receptor with ligand-activity and SOS-binding sites
+  EGFR(egf~I~A,sos)
+
+  # Son of sevenless with allosteric RAS binding, EGFR binding, and four sites
+  SOS(rem,egfr,S~U~P~PP~PPP~PPPP)
+
+  # Lumped RAS isoforms with SOS binding and guanine nucleotide state
+  RAS(sos,g~GDP~GTP)
+
+  # Lumped RAS GTPase-activating protein
+  RasGAP(ras)
+
+  # Lumped RAF kinases in inactive, active, or feedback-inhibited states
+  RAF(S~I~A~P)
+
+  # Lumped MEK kinases with Thr292 feedback and activation-loop states
+  MEK(T292~U~P,S~U~P~PP)
+
+  # Lumped ERK1/2 activation-loop states
+  ERK(S~U~P~PP)
+
+  # ERK activity reporters
+  EKAREV(act~I~A)
+  ERKTR(act~I~A)
+end molecule types
+
+begin seed species
+  EGFR(egf~I,sos)    EGFR_tot                   # molecules
+  RAS(sos,g~GDP)     RAS_tot*(1-RAS_t0_active)  # molecules
+  RAS(sos,g~GTP)     RAS_tot*RAS_t0_active      # molecules
+  SOS(rem,egfr,S~U)  SOS_tot                    # molecules
+  RasGAP(ras)        RasGAP_tot                 # molecules
+  RAF(S~I)           RAF_tot                    # molecules
+  MEK(T292~U,S~U)    MEK_tot                    # molecules
+  ERK(S~U)           ERK_tot                    # molecules
+  EKAREV(act~I)      EKAREV_tot                 # molecules
+  ERKTR(act~I)       ERKTR_tot                  # molecules
+end seed species
+
+begin observables
+  # Total receptor pool, which is open and fluctuates in this variant
+  Molecules  Obs_EGFR_Total    EGFR()
+
+  # Activated receptor and successive active signaling layers
+  Molecules  Obs_EGFR_Active   EGFR(egf~A)
+  Molecules  Obs_RAS_GTP       RAS(g~GTP)
+  Molecules  Obs_RAF_Active    RAF(S~A)
+  Molecules  Obs_MEK_PP        MEK(S~PP)
+  Molecules  Obs_ERK_PP        ERK(S~PP)
+
+  # Active reporter populations used in Supplementary Figure S3
+  Molecules  Obs_EKAREV_Active  EKAREV(act~A)
+  Molecules  Obs_ERKTR_Active   ERKTR(act~A)
+end observables
+
+begin functions
+  # Fifty EGFR expression bursts for this cell, each a rectangular window that
+  # opens and closes at the times drawn in Supplementary Data S3. Windows may
+  # overlap, and overlapping windows add, so the production rate is a
+  # staircase rather than a two-level switch. The schedule extends to 10.2
+  # days; 21 of the windows open within the five-day protocol below.
+  EGFR_burst_00() = A_burst*(time() > 5553)*(time() < 17353)
+  EGFR_burst_01() = A_burst*(time() > 8470)*(time() < 12863)
+  EGFR_burst_02() = A_burst*(time() > 10393)*(time() < 11416)
+  EGFR_burst_03() = A_burst*(time() > 162572)*(time() < 163418)
+  EGFR_burst_04() = A_burst*(time() > 184752)*(time() < 186965)
+  EGFR_burst_05() = A_burst*(time() > 197789)*(time() < 200248)
+  EGFR_burst_06() = A_burst*(time() > 202400)*(time() < 208790)
+  EGFR_burst_07() = A_burst*(time() > 204427)*(time() < 205388)
+  EGFR_burst_08() = A_burst*(time() > 204863)*(time() < 205980)
+  EGFR_burst_09() = A_burst*(time() > 216175)*(time() < 224539)
+  EGFR_burst_10() = A_burst*(time() > 226468)*(time() < 226903)
+  EGFR_burst_11() = A_burst*(time() > 232924)*(time() < 250131)
+  EGFR_burst_12() = A_burst*(time() > 234332)*(time() < 237817)
+  EGFR_burst_13() = A_burst*(time() > 244560)*(time() < 248453)
+  EGFR_burst_14() = A_burst*(time() > 253484)*(time() < 257716)
+  EGFR_burst_15() = A_burst*(time() > 268352)*(time() < 272128)
+  EGFR_burst_16() = A_burst*(time() > 318387)*(time() < 321523)
+  EGFR_burst_17() = A_burst*(time() > 321698)*(time() < 321938)
+  EGFR_burst_18() = A_burst*(time() > 384764)*(time() < 387179)
+  EGFR_burst_19() = A_burst*(time() > 389419)*(time() < 399930)
+  EGFR_burst_20() = A_burst*(time() > 408104)*(time() < 412803)
+  EGFR_burst_21() = A_burst*(time() > 454075)*(time() < 455286)
+  EGFR_burst_22() = A_burst*(time() > 463603)*(time() < 471179)
+  EGFR_burst_23() = A_burst*(time() > 466735)*(time() < 471938)
+  EGFR_burst_24() = A_burst*(time() > 468954)*(time() < 473172)
+  EGFR_burst_25() = A_burst*(time() > 495115)*(time() < 505899)
+  EGFR_burst_26() = A_burst*(time() > 535175)*(time() < 537697)
+  EGFR_burst_27() = A_burst*(time() > 539932)*(time() < 540518)
+  EGFR_burst_28() = A_burst*(time() > 556182)*(time() < 558748)
+  EGFR_burst_29() = A_burst*(time() > 557782)*(time() < 566189)
+  EGFR_burst_30() = A_burst*(time() > 573077)*(time() < 577427)
+  EGFR_burst_31() = A_burst*(time() > 578443)*(time() < 579449)
+  EGFR_burst_32() = A_burst*(time() > 578701)*(time() < 580215)
+  EGFR_burst_33() = A_burst*(time() > 585406)*(time() < 587388)
+  EGFR_burst_34() = A_burst*(time() > 595625)*(time() < 602096)
+  EGFR_burst_35() = A_burst*(time() > 643592)*(time() < 644286)
+  EGFR_burst_36() = A_burst*(time() > 654492)*(time() < 655146)
+  EGFR_burst_37() = A_burst*(time() > 677996)*(time() < 691254)
+  EGFR_burst_38() = A_burst*(time() > 682865)*(time() < 688101)
+  EGFR_burst_39() = A_burst*(time() > 690571)*(time() < 690619)
+  EGFR_burst_40() = A_burst*(time() > 721787)*(time() < 723293)
+  EGFR_burst_41() = A_burst*(time() > 725816)*(time() < 727875)
+  EGFR_burst_42() = A_burst*(time() > 731509)*(time() < 733410)
+  EGFR_burst_43() = A_burst*(time() > 744268)*(time() < 746217)
+  EGFR_burst_44() = A_burst*(time() > 763448)*(time() < 764675)
+  EGFR_burst_45() = A_burst*(time() > 765607)*(time() < 765928)
+  EGFR_burst_46() = A_burst*(time() > 768040)*(time() < 770689)
+  EGFR_burst_47() = A_burst*(time() > 777685)*(time() < 783621)
+  EGFR_burst_48() = A_burst*(time() > 792871)*(time() < 797305)
+  EGFR_burst_49() = A_burst*(time() > 877448)*(time() < 877682)
+
+  EGFR_release() = EGFR_burst_00() + EGFR_burst_01() + EGFR_burst_02() + EGFR_burst_03() + \
+    EGFR_burst_04() + EGFR_burst_05() + EGFR_burst_06() + EGFR_burst_07() + EGFR_burst_08() + \
+    EGFR_burst_09() + EGFR_burst_10() + EGFR_burst_11() + EGFR_burst_12() + EGFR_burst_13() + \
+    EGFR_burst_14() + EGFR_burst_15() + EGFR_burst_16() + EGFR_burst_17() + EGFR_burst_18() + \
+    EGFR_burst_19() + EGFR_burst_20() + EGFR_burst_21() + EGFR_burst_22() + EGFR_burst_23() + \
+    EGFR_burst_24() + EGFR_burst_25() + EGFR_burst_26() + EGFR_burst_27() + EGFR_burst_28() + \
+    EGFR_burst_29() + EGFR_burst_30() + EGFR_burst_31() + EGFR_burst_32() + EGFR_burst_33() + \
+    EGFR_burst_34() + EGFR_burst_35() + EGFR_burst_36() + EGFR_burst_37() + EGFR_burst_38() + \
+    EGFR_burst_39() + EGFR_burst_40() + EGFR_burst_41() + EGFR_burst_42() + EGFR_burst_43() + \
+    EGFR_burst_44() + EGFR_burst_45() + EGFR_burst_46() + EGFR_burst_47() + EGFR_burst_48() + \
+    EGFR_burst_49()
+end functions
+
+begin reaction rules
+  # EGF-dependent EGFR activation and spontaneous deactivation
+  R_EGFR_activation:  EGFR(egf~I) <-> EGFR(egf~A)  a1,d1
+
+  # Active EGFR recruits unphosphorylated SOS
+  R_EGFR_SOS_binding:  EGFR(egf~A,sos) + SOS(rem,egfr,S~U) <-> \
+    EGFR(egf~A,sos!1).SOS(rem,egfr!1,S~U)  b1,u1a
+
+  # Receptor deactivation triggers fast release of SOS
+  R_inactive_EGFR_SOS_release:  EGFR(egf~I,sos!1).SOS(rem,egfr!1) -> \
+    EGFR(egf~I,sos) + SOS(rem,egfr)  u1b
+
+  # Active RAS binds the allosteric REM site of receptor-bound SOS
+  R_SOS_RAS_GTP_binding:  SOS(rem,egfr!+) + RAS(sos,g~GTP) <-> \
+    SOS(rem!1,egfr!+).RAS(sos!1,g~GTP)  b2a,u2a
+
+  # Inactive RAS binds the allosteric REM site of receptor-bound SOS
+  R_SOS_RAS_GDP_binding:  SOS(rem,egfr!+) + RAS(sos,g~GDP) <-> \
+    SOS(rem!1,egfr!+).RAS(sos!1,g~GDP)  b2b,u2b
+
+  # RAS-GTP-bound SOS strongly activates a second RAS molecule
+  R_RAS_activation_strong:  SOS(rem!1,egfr!+).RAS(sos!1,g~GTP) + \
+    RAS(sos,g~GDP) -> SOS(rem!1,egfr!+).RAS(sos!1,g~GTP) + \
+    RAS(sos,g~GTP)  k2a
+
+  # RAS-GDP-bound SOS moderately activates a second RAS molecule
+  R_RAS_activation_moderate:  SOS(rem!1,egfr!+).RAS(sos!1,g~GDP) + \
+    RAS(sos,g~GDP) -> SOS(rem!1,egfr!+).RAS(sos!1,g~GDP) + \
+    RAS(sos,g~GTP)  k2b
+
+  # RasGAP captures active RAS, catalyzes hydrolysis, and releases inactive RAS
+  R_RasGAP_capture:  RasGAP(ras) + RAS(sos,g~GTP) -> \
+    RasGAP(ras!1).RAS(sos,g~GTP!1)  b3
+  R_RasGAP_hydrolysis:  RasGAP(ras!1).RAS(sos,g~GTP!1) -> \
+    RasGAP(ras!1).RAS(sos,g~GDP!1)  k3
+  R_RasGAP_release:  RasGAP(ras!1).RAS(sos,g~GDP!1) -> \
+    RasGAP(ras) + RAS(sos,g~GDP)  u3
+
+  # Active RAS catalytically activates RAF, which spontaneously deactivates
+  R_RAF_activation:  RAS(sos,g~GTP) + RAF(S~I) -> \
+    RAS(sos,g~GTP) + RAF(S~A)  a2
+  R_RAF_deactivation:  RAF(S~A) -> RAF(S~I)  d2
+
+  # Active RAF sequentially phosphorylates two MEK activation sites
+  R_MEK_phosphorylation_1:  RAF(S~A) + MEK(S~U) -> \
+    RAF(S~A) + MEK(S~P)  p1*2
+  R_MEK_phosphorylation_2:  RAF(S~A) + MEK(S~P) -> \
+    RAF(S~A) + MEK(S~PP)  p1
+
+  # MEK activation sites dephosphorylate independently
+  R_MEK_dephosphorylation_1:  MEK(S~PP) -> MEK(S~P)  q1*2
+  R_MEK_dephosphorylation_2:  MEK(S~P) -> MEK(S~U)  q1
+
+  # Active MEK sequentially phosphorylates two ERK activation sites
+  R_ERK_phosphorylation_1:  MEK(S~PP) + ERK(S~U) -> \
+    MEK(S~PP) + ERK(S~P)  p2*2
+  R_ERK_phosphorylation_2:  MEK(S~PP) + ERK(S~P) -> \
+    MEK(S~PP) + ERK(S~PP)  p2
+
+  # ERK activation sites dephosphorylate independently
+  R_ERK_dephosphorylation_1:  ERK(S~PP) -> ERK(S~P)  q2*2
+  R_ERK_dephosphorylation_2:  ERK(S~P) -> ERK(S~U)  q2
+
+  # Active ERK sequentially phosphorylates four inhibitory SOS sites
+  R_SOS_feedback_phosphorylation_1:  ERK(S~PP) + SOS(egfr,S~U) -> \
+    ERK(S~PP) + SOS(egfr,S~P)  p3*4
+  R_SOS_feedback_phosphorylation_2:  ERK(S~PP) + SOS(egfr,S~P) -> \
+    ERK(S~PP) + SOS(egfr,S~PP)  p3*3
+  R_SOS_feedback_phosphorylation_3:  ERK(S~PP) + SOS(egfr,S~PP) -> \
+    ERK(S~PP) + SOS(egfr,S~PPP)  p3*2
+  R_SOS_feedback_phosphorylation_4:  ERK(S~PP) + SOS(egfr,S~PPP) -> \
+    ERK(S~PP) + SOS(egfr,S~PPPP)  p3
+
+  # Each inhibitory SOS phosphosite dephosphorylates independently
+  R_SOS_feedback_dephosphorylation_1:  SOS(egfr,S~P) -> SOS(egfr,S~U)  q3
+  R_SOS_feedback_dephosphorylation_2:  SOS(egfr,S~PP) -> SOS(egfr,S~P)  q3*2
+  R_SOS_feedback_dephosphorylation_3:  SOS(egfr,S~PPP) -> SOS(egfr,S~PP)  q3*3
+  R_SOS_feedback_dephosphorylation_4:  SOS(egfr,S~PPPP) -> SOS(egfr,S~PPP)  q3*4
+
+  # Active ERK phosphorylates MEK Thr292, which accelerates MEK inactivation
+  R_MEK_feedback_phosphorylation:  ERK(S~PP) + MEK(T292~U) -> \
+    ERK(S~PP) + MEK(T292~P)  p4
+  R_MEK_feedback_dephosphorylation:  MEK(T292~P) -> MEK(T292~U)  q4
+  R_MEK_feedback_inactivation_1:  MEK(T292~P,S~PP) -> \
+    MEK(T292~P,S~P)  q5*2
+  R_MEK_feedback_inactivation_2:  MEK(T292~P,S~P) -> \
+    MEK(T292~P,S~U)  q5
+
+  # Active ERK hyperphosphorylates active or inactive RAF
+  R_RAF_feedback_inhibition_active:  ERK(S~PP) + RAF(S~A) -> \
+    ERK(S~PP) + RAF(S~P)  p6
+  R_RAF_feedback_inhibition_inactive:  ERK(S~PP) + RAF(S~I) -> \
+    ERK(S~PP) + RAF(S~P)  p6
+  R_RAF_feedback_recovery:  RAF(S~P) -> RAF(S~I)  q6
+
+  # Active ERK activates the EKAREV and ERKTR reporters
+  R_EKAREV_activation:  ERK(S~PP) + EKAREV(act~I) -> \
+    ERK(S~PP) + EKAREV(act~A)  a0_ekarev
+  R_EKAREV_deactivation:  EKAREV(act~A) -> EKAREV(act~I)  d0_ekarev
+  R_ERKTR_activation:  ERK(S~PP) + ERKTR(act~I) -> \
+    ERK(S~PP) + ERKTR(act~A)  a0_erktr
+  R_ERKTR_deactivation:  ERKTR(act~A) -> ERKTR(act~I)  d0_erktr
+
+  # Bursty EGFR production and first-order turnover of free inactive receptor
+  R_EGFR_synthesis:  0 -> EGFR(egf~I,sos)  EGFR_release()
+  R_EGFR_degradation:  EGFR(egf~I,sos) -> 0  EGFR_decay
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 34 species, 67 reactions
+  saveConcentrations()
+
+  # Five-day single-cell response to bursty EGFR expression
+
+  #@protocol: |
+  #  Hold the cell at a low 2 pg/ml EGF dose and let the hard-coded burst
+  #  schedule drive receptor expression for five days, sampling every minute.
+  #  Twenty-one of the fifty windows open in that span. Expect the receptor
+  #  pool to wander between roughly 6000 and 850000 molecules, and expect ERK
+  #  activity to appear as irregular trains of sharp pulses separated by long
+  #  quiescent stretches, rather than as the regular oscillation of the
+  #  primary model. Time-averaged ERK activity is only a few percent of the
+  #  ERK pool even though individual pulses reach about 85 percent of it.
+
+  #@figure: Fig. 8A and Fig. 8B, cell 8, in Kochanczyk et al. (2017)
+
+  #@note: |
+  #  Fig. 8 is drawn on a 72-hour axis while this protocol runs the five days
+  #  shipped in Supplementary Data S3, so the published panels correspond to
+  #  the first 60 percent of the output. Panel A plots this cell's total EGFR
+  #  as a line and is the quantitative target used in the verification
+  #  notebook; panel B renders its ERK activity as one row of a heat map,
+  #  which fixes pulse times but not amplitudes.
+
+  resetConcentrations()
+  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>432000,n_steps=>7200,\
+    seed=>38244,print_functions=>1})
+
+  #@runtime_expectation: |
+  #  The exact SSA protocol above takes about 1.6 hours, far longer than the
+  #  one-minute house guidance. Most of that is spent in the receptor-rich
+  #  stretches, where ERK cycles rapidly through three million molecules; the
+  #  long quiescent intervals cost almost nothing. It is nevertheless the only
+  #  protocol offered, because it is the only simulation mode this model
+  #  supports; see the note below.
+
+  #@note: |
+  #  No alternative simulation mode is feasible, so none is stubbed out.
+  #  Partial scaling aborts with "scaling factor of 0 th reaction < 1": the
+  #  burst rule creates receptors from nothing, and BioNetGen 2.9.3 cannot
+  #  scale a zeroth-order reaction. Deterministic integration is not merely
+  #  discouraged but fails outright, CVODE giving up partway through the
+  #  protocol; this is the concrete form of the warning carried in
+  #  Supplementary Data S3 that burst-edge discontinuities defeat ODE
+  #  integrators. The verification notebook instead integrates the generated
+  #  network piecewise between burst edges, which is the treatment the authors
+  #  used for Supplementary Figure S7. NFsim is omitted because the model
+  #  carries about 6,000,000 particles while the reaction network is small and
+  #  finite, so the generated-network method above is both exact and cheaper.
+end actions

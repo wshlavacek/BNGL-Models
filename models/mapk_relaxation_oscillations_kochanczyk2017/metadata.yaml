@@ -19,9 +19,10 @@ source:
     molecule types, seed species, observables, unidirectional reaction rules,
     and a reproducible actions block without changing its dynamics. The active
     protocol uses 20 pg/ml EGF and reproduces the 24-hour ERK activity trace in
-    Fig. 4B. The separate noisy-EGFR extension in Supplementary Data S3 was
-    retained as reference context but excluded from this curation because it
-    adds discontinuous forcing and a substantially longer stochastic protocol.
+    Fig. 4B. The extrinsic-noise companion supplied in Supplementary Data S3
+    (MAPK_noisy_EGFR.bngl) is curated alongside it as the _noisy_egfr variant,
+    which opens the receptor pool and drives it with that file's hard-coded
+    schedule of fifty EGFR expression bursts, reproducing cell 8 of Fig. 8.
 
 files:
   - name: mapk_relaxation_oscillations_kochanczyk2017.bngl
@@ -36,21 +37,54 @@ files:
     documentation_target: standard
     rating:
     min_bionetgen_version: "2.9.3"
+  - name: mapk_relaxation_oscillations_kochanczyk2017_noisy_egfr.bngl
+    role: variant
+    description: >
+      Extrinsic-noise variant curated from Supplementary Data S3. EGFR is no
+      longer conserved but is produced in fifty hard-coded expression bursts
+      and cleared by first-order turnover, so receptor abundance wanders over
+      two orders of magnitude and gates the response to a low 2 pg/ml EGF
+      dose; regular relaxation oscillation is replaced by irregular trains of
+      ERK pulses. The finite network contains 34 species and 67 unidirectional
+      reactions, two more than the primary model. Exact SSA is the only
+      feasible mode: partial scaling aborts on the zeroth-order burst rule and
+      CVODE steps over burst windows and then fails, both documented in the
+      file and demonstrated in the notebook.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
   - name: verify_kochanczyk2017.ipynb
     role: verification
     description: >
-      Runs BioNetGen afresh, checks the committed reference trajectory,
+      Covers both models in this folder. For the primary model it runs
+      BioNetGen afresh, checks the committed reference trajectory,
       reconstructs and integrates the generated mass-action network
       independently in SciPy, verifies nine conserved molecular pools, and
-      compares ERK activity with a digitized Fig. 4B trace. The model matches
+      compares ERK activity with a digitized Fig. 4B trace; the model matches
       all 17 reported pulses, with 4.44% median-period error, 0.90% full-scale
       peak-amplitude error, and 3.0-minute median residual timing error after
-      phase registration.
+      phase registration. For the noisy-EGFR variant it regenerates the
+      network and confirms it is identical to the network generated from the
+      original Supplementary Data S3 file in species, reactions, initial
+      conditions, and burst schedule over 13936 sampled times; integrates the
+      network independently and piecewise between burst edges, matching the
+      exact-SSA receptor trace with r = 1.00000 and 0.21% maximum difference;
+      confirms zero drift in all eight closed pools and the open EGFR mass
+      balance to 0.02%; and reproduces the cell-8 trace digitized from
+      Fig. 8A with 0.141% full-scale NRMSE, 0.098% peak-amplitude error, and
+      5.5-minute peak timing error.
   - name: verify_kochanczyk2017.png
     role: figure
     description: >
-      Verification summary showing the BioNetGen/SciPy agreement, conserved
-      pools, reported-data overlay, and pulse timing.
+      Verification summary for the primary model showing the BioNetGen/SciPy
+      agreement, conserved pools, reported-data overlay, and pulse timing.
+  - name: verify_kochanczyk2017_noisy_egfr.png
+    role: figure
+    description: >
+      Verification summary for the noisy-EGFR variant showing the receptor
+      pool against digitized Fig. 8A, ERK pulse trains against the independent
+      piecewise integration, the reported-data residual, and a zoom on the
+      first burst group.
   - name: reference/kochanczyk2017_fig4b_erkpp_digitized.csv
     role: reference
     description: >
@@ -70,3 +104,26 @@ files:
   - name: reference/mapk_relaxation_oscillations_kochanczyk2017_ode.cdat
     role: reference
     description: Species trajectory for the active 24-hour ODE protocol.
+  - name: reference/kochanczyk2017_fig8a_cell8_egfr_total_digitized.csv
+    role: reference
+    description: >
+      Total EGFR for cell 8 digitized from the crimson trace of Fig. 8A in the
+      open-access article PDF rendered at 400 dpi. Axes were calibrated to
+      0-72 hours and 0-2e6 molecules at the plot-box corners; the trace was
+      color-segmented and sampled once per pixel column. The first sample
+      reads 170029 molecules against the model's exact seed of 168950, an
+      independent 0.6% check on the calibration.
+  - name: reference/mapk_relaxation_oscillations_kochanczyk2017_noisy_egfr.net
+    role: reference
+    description: Reaction network generated by the noisy-EGFR variant.
+  - name: reference/mapk_relaxation_oscillations_kochanczyk2017_noisy_egfr_ssa.net
+    role: reference
+    description: Reaction network emitted for the variant's exact SSA simulation.
+  - name: reference/mapk_relaxation_oscillations_kochanczyk2017_noisy_egfr_ssa.gdat
+    role: reference
+    description: >
+      Observable trajectory for the variant's fixed-seed five-day exact SSA
+      protocol, including the fifty burst functions and their sum.
+  - name: reference/mapk_relaxation_oscillations_kochanczyk2017_noisy_egfr_ssa.cdat
+    role: reference
+    description: Species trajectory for the variant's five-day exact SSA protocol.
