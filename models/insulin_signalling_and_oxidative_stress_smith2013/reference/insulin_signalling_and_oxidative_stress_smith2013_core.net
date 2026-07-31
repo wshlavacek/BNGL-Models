@@ -1,0 +1,224 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA                    6.02214076e23  # Constant
+    2 V_ref                 1.65e-11  # Constant
+    3 h_mem                 2e-8  # Constant
+    4 v_extracellular       8.3e-12  # Constant
+    5 v_cellsurface         6.4e-14  # Constant
+    6 v_cytoplasm           1.65e-11  # Constant
+    7 v_nucleus             5e-13  # Constant
+    8 v_dnabound            1e-13  # Constant
+    9 membrane_area         6.5e-9  # Constant
+   10 sc_ros                1000  # Constant
+   11 sc_pip                1000  # Constant
+   12 k1                    2.0e-5  # Constant
+   13 kminus1               12072  # Constant
+   14 k2                    1.2e-5  # Constant
+   15 kminus2               9.0e4  # Constant
+   16 k3                    2500  # Constant
+   17 kminus3               2.0e-6  # Constant
+   18 k4                    3.33333e-4  # Constant
+   19 kminus4               3e-3  # Constant
+   20 k4prime               0.0021  # Constant
+   21 kminus4prime          2.1e-4  # Constant
+   22 k6                    4.61e-6  # Constant
+   23 k7                    5.8  # Constant
+   24 IRp                   9.0e4  # Constant
+   25 kminus7a              8.75e-5  # Constant
+   26 k2psp                 2.2e-4  # Constant
+   27 kminus7b              2.8e-6  # Constant
+   28 k8                    2.6e-6  # Constant
+   29 kminus8               1.55  # Constant
+   30 k_irs1_basal_syn      130  # Constant
+   31 k_irs1_basal_degr     1e-3  # Constant
+   32 k_irs1_polyserp_degr  1e-2  # Constant
+   33 k9_basal              0.13145  # Constant
+   34 k9                    0.0055  # Constant
+   35 kminus9_basal         2.7  # Constant
+   36 kminus9               0.0014  # Constant
+   37 k11                   2.5e-5  # Constant
+   38 pip3_basal            200  # Constant
+   39 kminus11              1.1878e-6  # Constant
+   40 k12                   3.5e-5  # Constant
+   41 kminus12              1.25e-6  # Constant
+   42 kr16a                 3.33e-4  # Constant
+   43 kminusr16a            1e-6  # Constant
+   44 k13_basal             0.015  # Constant
+   45 k13                   7.5e-6  # Constant
+   46 kminus13              0.167  # Constant
+   47 k30f                  0.08  # Constant
+   48 k30r                  5e-3  # Constant
+   49 k31f                  2.7e-4  # Constant
+   50 k31r                  2e-3  # Constant
+   51 k34f                  2e-5  # Constant
+   52 k34r1                 1e-3  # Constant
+   53 k34r2                 0.25  # Constant
+   54 k34r3                 1e-3  # Constant
+   55 k35f                  450  # Constant
+   56 k35r                  0.12  # Constant
+   57 k36f                  180  # Constant
+   58 ros_perm              7.4e8  # Constant
+   59 k_ros_perm            ros_perm*membrane_area  # ConstantExpression
+   60 k_ros_efflux          (k_ros_perm*v_extracellular)/v_cytoplasm  # ConstantExpression
+   61 k38f                  0.05  # Constant
+   62 k38r                  2.0  # Constant
+   63 Ins_conc              1e-7  # Constant
+   64 ROS_ext_conc          0  # Constant
+   65 Ins_dose              (Ins_conc*NA)*v_extracellular  # ConstantExpression
+   66 ROS_ext_dose          ((ROS_ext_conc*NA)*v_extracellular)/sc_ros  # ConstantExpression
+   67 InR_pm_0              9.0e4  # Constant
+   68 InR_cyt_0             1.0e4  # Constant
+   69 PTP1B_0               1.0e5  # Constant
+   70 IRS1_0                1.0e5  # Constant
+   71 PI3K_0                1.0e4  # Constant
+   72 PP2A_0                5.0e5  # Constant
+   73 PTEN_0                1.0e5  # Constant
+   74 GSH_0                 100  # Constant
+   75 NOX_0                 100  # Constant
+   76 SOD2_0                4.17e4  # Constant
+   77 Mt_0                  50  # Constant
+   78 Akt_0                 1.0e5  # Constant
+   79 AS160_0               2.0e4  # Constant
+   80 PKC_0                 1.0e5  # Constant
+   81 PIP2_0                2.0e5  # Constant
+   82 PIP3_0                1.0e3  # Constant
+   83 GLUT4_cyt_0           9.6e4  # Constant
+   84 GLUT4_pm_0            4.0e3  # Constant
+end parameters
+begin functions
+    1 fcn_irs_tyr_phos() (k7*Obs_State_InR_active)/IRp
+    2 fcn_pip3_syn() k9_basal+(k9*Obs_Cplx_IRS1_PI3K)
+    3 fcn_pip3_deg() kminus9_basal+(kminus9*Obs_State_PTEN_red)
+    4 fcn_akt_phos() k11*if((Obs_State_PIP3>pip3_basal),(Obs_State_PIP3-pip3_basal),0)
+    5 fcn_pkc_phos() k12*if((Obs_State_PIP3>pip3_basal),(Obs_State_PIP3-pip3_basal),0)
+    6 fcn_glut4_out() k13_basal+(k13*Obs_State_AS160_P)
+    7 fcn_nox_deact() k34r1*Obs_State_NOX_active
+    8 fcn_nox_recover() k34r3*Obs_State_NOX_deact
+    9 Frac_Akt_P() Obs_State_Akt_P/Obs_Tot_Akt
+   10 Frac_PKC_P() Obs_State_PKC_P/Obs_Tot_PKC
+   11 Frac_IRS1_TyrP() Obs_State_IRS1_TyrP/Obs_Tot_IRS1
+   12 Frac_GLUT4_pm() Obs_State_GLUT4_pm/Obs_Tot_GLUT4
+   13 Frac_PTP1B_active() Obs_State_PTP1B_red/Obs_Tot_PTP1B
+end functions
+begin species
+    1 $Ins() Ins_dose
+    2 $ROS(loc~ext) ROS_ext_dose
+    3 InR(ins~0,loc~pm,y~u) InR_pm_0
+    4 InR(ins~0,loc~cyt,y~u) InR_cyt_0
+    5 PTP1B(ox~0) PTP1B_0
+    6 PTEN(ox~0) PTEN_0
+    7 PP2A() PP2A_0
+    8 IRS1(pi3k,s~u,y~u) IRS1_0
+    9 PI3K(irs) PI3K_0
+   10 PIP(p~2) PIP2_0
+   11 PIP(p~3) PIP3_0
+   12 Akt(s~u) Akt_0
+   13 PKC(s~u) PKC_0
+   14 AS160(s~u) AS160_0
+   15 GLUT4(loc~cyt) GLUT4_cyt_0
+   16 GLUT4(loc~pm) GLUT4_pm_0
+   17 ROS(loc~cyt) 0
+   18 NOX(s~i) NOX_0
+   19 GSH(ox~0) GSH_0
+   20 Mt() Mt_0
+   21 SOD2() SOD2_0
+   22 InR(ins~1,loc~pm,y~u) 0
+   23 IRS1(pi3k,s~u,y~p) 0
+   24 Akt(s~p) 0
+   25 PKC(s~p) 0
+   26 NOX(s~a) 0
+   27 PTP1B(ox~1) 0
+   28 PTEN(ox~1) 0
+   29 GSH(ox~1) 0
+   30 InR(ins~1,loc~pm,y~p) 0
+   31 IRS1(pi3k,s~p,y~u) 0
+   32 IRS1(pi3k,s~p,y~p) 0
+   33 IRS1(pi3k!1,s~u,y~p).PI3K(irs!1) 0
+   34 AS160(s~p) 0
+   35 NOX(s~d) 0
+   36 InR(ins~2,loc~pm,y~p) 0
+   37 InR(ins~1,loc~cyt,y~p) 0
+   38 InR(ins~2,loc~cyt,y~p) 0
+end species
+begin reactions
+    1 1,3 22 k1 #R_bind_Ins_InR
+    2 3 4 k4 #R_internalize_InR
+    3 4 3 kminus4 #_reverse_R_internalize_InR
+    4 8 23 fcn_irs_tyr_phos #R_phos_IRS_Tyr
+    5 0 8 k_irs1_basal_syn #R_syn_IRS
+    6 8 0 k_irs1_basal_degr #R_degrade_IRS
+    7 10 11 fcn_pip3_syn #R_syn_PIP3
+    8 11 10 fcn_pip3_deg #R_degrade_PIP3
+    9 12 24 fcn_akt_phos #R_phos_Akt
+   10 13 25 fcn_pkc_phos #R_phos_PKC
+   11 15 16 fcn_glut4_out #R_translocate_GLUT4_out
+   12 16 15 kminus13 #R_translocate_GLUT4_in
+   13 1,18 1,26 k34f #R_activate_NOX
+   14 20 17,20 k36f #R_produce_ROS_Mt
+   15 17,21 21 k35r #R_remove_ROS_SOD2
+   16 2 17 k_ros_perm #R_import_ROS
+   17 17 2 k_ros_efflux #R_export_ROS
+   18 5,17 17,27 k30f #R_oxidize_PTP1B
+   19 6,17 17,28 k31f #R_oxidize_PTEN
+   20 17,19 17,29 k38f #R_oxidize_GSH
+   21 22 1,3 kminus1 #R_unbind_Ins_InR
+   22 22 30 k3 #R_phos_InR
+   23 5,23 5,8 kminus7a #R_dephos_IRS_Tyr
+   24 8,25 25,31 k2psp #R_phos_IRS_Ser_PKC
+   25 23,25 25,32 k2psp #R_phos_IRS_Ser_PKC
+   26 9,23 33 k8 #R_bind_IRS_PI3K
+   27 23 0 k_irs1_basal_degr #R_degrade_IRS
+   28 7,24 7,12 kminus11 #R_dephos_Akt
+   29 7,25 7,13 kminus12 #R_dephos_PKC
+   30 14,24 24,34 kr16a #R_phos_AS160
+   31 26 35 fcn_nox_deact #R_deactivate_NOX
+   32 26 18 k34r2 #R_inactivate_NOX
+   33 26 17,26 k35f #R_produce_ROS_NOX
+   34 19,27 5,19 k30r #R_reduce_PTP1B
+   35 19,28 6,19 k31r #R_reduce_PTEN
+   36 29 19 k38r #R_reduce_GSH
+   37 1,30 36 k2 #R_bind_Ins_InR_P
+   38 5,30 3,5 kminus3 #R_dephos_InR_pm
+   39 30 37 k4prime #R_internalize_InR_P
+   40 7,31 7,8 kminus7b #R_dephos_IRS_Ser
+   41 7,32 7,23 kminus7b #R_dephos_IRS_Ser
+   42 33 9,23 kminus8 #_reverse_R_bind_IRS_PI3K
+   43 31 0 k_irs1_polyserp_degr #R_degrade_IRS_SerP
+   44 32 0 k_irs1_polyserp_degr #R_degrade_IRS_SerP
+   45 7,34 7,14 kminusr16a #R_dephos_AS160
+   46 35 18 fcn_nox_recover #R_recover_NOX
+   47 36 1,30 kminus2 #R_unbind_Ins_InR_P
+   48 36 38 k4prime #R_internalize_InR_P
+   49 37 30 kminus4prime #_reverse_R_internalize_InR_P
+   50 5,37 4,5 k6 #R_dephos_InR_cyt
+   51 38 36 kminus4prime #_reverse_R_internalize_InR_P
+   52 5,38 4,5 k6 #R_dephos_InR_cyt
+end reactions
+begin groups
+    1 Obs_Tot_Ins          1
+    2 Obs_Tot_InR          3,4,22,30,36,37,38
+    3 Obs_State_InR_bound  22,30,36
+    4 Obs_State_InR_active 30,36
+    5 Obs_Tot_IRS1         8,23,31,32,33
+    6 Obs_State_IRS1_TyrP  23
+    7 Obs_State_IRS1_unmod 8
+    8 Obs_Cplx_IRS1_PI3K   33
+    9 Obs_State_PIP3       11
+   10 Obs_Tot_Akt          12,24
+   11 Obs_State_Akt_P      24
+   12 Obs_Tot_PKC          13,25
+   13 Obs_State_PKC_P      25
+   14 Obs_State_AS160_P    34
+   15 Obs_Tot_GLUT4        15,16
+   16 Obs_State_GLUT4_pm   16
+   17 Obs_Tot_PTP1B        5,27
+   18 Obs_State_PTP1B_red  5
+   19 Obs_Tot_PTEN         6,28
+   20 Obs_State_PTEN_red   6
+   21 Obs_State_ROS_cyt    17
+   22 Obs_State_ROS_ext    2
+   23 Obs_State_NOX_active 26
+   24 Obs_State_NOX_deact  35
+   25 Obs_Tot_SOD2         21
+   26 Obs_State_GSH_red    19
+end groups

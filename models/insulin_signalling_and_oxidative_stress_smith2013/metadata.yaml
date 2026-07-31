@@ -1,0 +1,138 @@
+# metadata.yaml — insulin_signalling_and_oxidative_stress_smith2013
+id: insulin_signalling_and_oxidative_stress_smith2013
+created: 2026-07-31
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags:
+    - literature
+    - adapted_from_sbml
+    - adapted_from_ode
+    - restructuration
+    - biomodels_database
+    - benchmark_collection
+    - ai_assisted
+  description: >
+    House-style curation of the integrated insulin-signalling and oxidative-stress
+    model of Smith and Shanley (2013), BMC Systems Biology 7:41, built from the
+    reaction network, Table 1 initial particle numbers and Tables 2-4 rate constants
+    of the paper and cross-checked against the authors' SBML model (BioModels
+    MODEL1212210000) as distributed in the Benchmark-Models-PEtab collection. The
+    source model declares five compartments but writes every rate law in molecule
+    counts with no volume scaling, so subcellular location is carried by a molecule
+    component rather than a BNGL compartments block, which would make BioNetGen
+    rescale rate constants by volume and change the published dynamics. The 48
+    explicit FOXO1 species and roughly 270 FOXO1 reactions of the source model are
+    recovered from one molecule type with four modification sites and a location
+    component, using the Table 3 base transport rates and multiplicative factors.
+    SGK, CDK2, AMPK, CBPP300, SIRT1, E3 and USP7 are omitted; every reaction they
+    carry has identically zero flux in the source model. Four parameter values differ
+    from the published tables (k4, kminus4 and k_irs1_basal_syn from Table 2, E2F1
+    from Table 1); all four are the values carried by the authors' own simulation
+    conditions, and for the first three the verification notebook shows that they,
+    not the tabulated values, reproduce the digitized published curves.
+
+files:
+  - name: insulin_signalling_and_oxidative_stress_smith2013.bngl
+    role: primary
+    description: >
+      The complete integrated model: insulin receptor binding and trafficking, IRS1
+      and PI3K, PI(3,4,5)P3, Akt, PKC-zeta, AS160 and GLUT4 translocation, NOX- and
+      mitochondria-derived ROS with SOD2 and glutathione, reversible oxidation of
+      PTP1B, PTEN and DUSP, JNK and IKK activation, a sixteen-state combinatorial
+      FOXO1 molecule shuttling between cytoplasm, nucleoplasm and DNA, and
+      FOXO1-driven transcription of InR and SOD2. Generates 99 species and 313
+      reactions. The active protocol scans external H2O2 over five decades at 1 nM
+      insulin and reads FOXO1 localization at one hour, reproducing Fig. 2H.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: insulin_signalling_and_oxidative_stress_smith2013_core.bngl
+    role: variant
+    description: >
+      The core insulin-signalling and ROS module, without the stress-activated
+      kinases and without FOXO1 and its transcriptional feedback, which is exactly
+      the authors' indicator_jnk = 0, indicator_foxo = 0 configuration and the one in
+      which the published short-term insulin panels were computed. Generates 38
+      species and 52 reactions. The active protocol is a 100 nM insulin pulse washed
+      out at fifteen minutes, reproducing Fig. 2A, Fig. 2C and Fig. 2D.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_smith2013.ipynb
+    role: verification
+    description: >
+      Runs BioNetGen afresh and checks all committed reference output; independently
+      re-implements the semantics of the generated .net files in SciPy (parameter
+      expressions, seed amounts, observable groups, functional rate laws and
+      mass-action fluxes) and reproduces BioNetGen to 3.1e-7 on the core network and
+      4.5e-9 on the full network; confirms equivalence to the authors' SBML model
+      under libRoadRunner; and compares the curated simulations with nine curves
+      digitized from Fig. 2A, 2C, 2D and 2H. It also recovers the unstated one-hour
+      readout time of Fig. 2H and shows that the curated parameter values fit Fig. 2A
+      three times better than the values printed in Tables 1 and 2.
+  - name: verify_smith2013.png
+    role: figure
+    description: >
+      Six-panel verification figure: the Fig. 2A, 2C, 2D and 2H overlays, a summary
+      of reported-data agreement against the one-percent digitization limit, and the
+      BioNetGen-versus-independent-solver residual.
+  # Digitized reported simulation data
+  - name: reference/smith2013_fig2a_akt_p_digitized.csv
+    role: reference
+    description: >
+      Akt phosphorylation trace digitized from Fig. 2A after rendering the source PDF
+      at 400 dpi and calibrating the published 0-60 min and 0.0-0.8 axes.
+  - name: reference/smith2013_fig2a_glut4_surface_digitized.csv
+    role: reference
+    description: Cell-surface GLUT4 fraction digitized from Fig. 2A.
+  - name: reference/smith2013_fig2c_irs1_tyrp_digitized.csv
+    role: reference
+    description: >
+      IRS1 tyrosine-phosphorylation trace digitized from Fig. 2C, restricted to
+      t >= 16 min because the experimental markers and error bars overdraw the
+      plotted curve at earlier times.
+  - name: reference/smith2013_fig2c_pkc_p_digitized.csv
+    role: reference
+    description: PKC-zeta phosphorylation trace digitized from Fig. 2C.
+  - name: reference/smith2013_fig2d_ros_digitized.csv
+    role: reference
+    description: Cytoplasmic ROS trace, as a fraction of its maximum, digitized from Fig. 2D.
+  - name: reference/smith2013_fig2d_ptp1b_active_digitized.csv
+    role: reference
+    description: Reduced (active) PTP1B fraction digitized from Fig. 2D.
+  - name: reference/smith2013_fig2h_foxo1_dna_ins3p2pM_digitized.csv
+    role: reference
+    description: >
+      DNA-bound FOXO1 fraction against external H2O2 at 3.2 pM insulin, digitized
+      from Fig. 2H with the horizontal axis calibrated on its decade ticks.
+  - name: reference/smith2013_fig2h_foxo1_dna_ins1nM_digitized.csv
+    role: reference
+    description: DNA-bound FOXO1 fraction against external H2O2 at 1 nM insulin, from Fig. 2H.
+  - name: reference/smith2013_fig2h_foxo1_dna_ins1uM_digitized.csv
+    role: reference
+    description: DNA-bound FOXO1 fraction against external H2O2 at 1 uM insulin, from Fig. 2H.
+  # BioNetGen reference output, primary model
+  - name: reference/insulin_signalling_and_oxidative_stress_smith2013.net
+    role: reference
+  - name: reference/insulin_signalling_and_oxidative_stress_smith2013_scan.scan
+    role: reference
+  - name: reference/insulin_signalling_and_oxidative_stress_smith2013_scan
+    role: reference
+    description: >
+      Per-scan-point .net, .gdat and .cdat output for the 26 external-H2O2 doses of
+      the active protocol.
+  # BioNetGen reference output, core variant
+  - name: reference/insulin_signalling_and_oxidative_stress_smith2013_core.net
+    role: reference
+  - name: reference/insulin_signalling_and_oxidative_stress_smith2013_core_ode.net
+    role: reference
+  - name: reference/insulin_signalling_and_oxidative_stress_smith2013_core_ode.gdat
+    role: reference
+  - name: reference/insulin_signalling_and_oxidative_stress_smith2013_core_ode.cdat
+    role: reference

@@ -1,0 +1,870 @@
+begin model
+
+#@title: Insulin signalling and oxidative stress (Smith and Shanley, 2013)
+
+#@description: |
+#  A population-based model of insulin signalling in rodent adipocytes coupled
+#  to reactive oxygen species (ROS) and to FOXO1-mediated transcriptional
+#  feedback. Insulin binding to InR drives IRS1 tyrosine phosphorylation,
+#  PI3K recruitment, PI(3,4,5)P3 production, Akt and PKC-zeta activation, and
+#  AS160-gated GLUT4 translocation, which proxies glucose uptake. Insulin also
+#  activates NOX, and the ROS it makes reversibly oxidizes the catalytic
+#  cysteines of PTP1B and PTEN, so that endogenous oxidative stress sensitizes
+#  the pathway. Externally applied ROS crosses the plasma membrane, is removed
+#  by SOD2, oxidizes DUSP and thereby activates JNK and IKK. The SAPKs feed
+#  back onto IRS1 by Michaelis-Menten serine phosphorylation and onto FOXO1,
+#  whose Akt, IKK and JNK phosphorylation sites and ubiquitin mark form a
+#  sixteen-state combinatorial molecule whose transport, degradation and
+#  DNA binding all depend on the modification pattern. DNA-bound FOXO1
+#  transcribes InR and SOD2, closing two slow feedback loops. Mass action is
+#  used throughout except for Akt and PKC activation, which respond only to
+#  PI(3,4,5)P3 above a basal offset, and the SAPK-driven IRS1 serine
+#  phosphorylation. Simulated from the Table 1 initial state, insulin produces
+#  a transient Akt peak near 10 percent of total at about four minutes and a
+#  GLUT4 surface fraction peaking near 0.46 at about twenty minutes. Raising
+#  external oxidative stress first leaves FOXO1 localization untouched while
+#  the antioxidant system holds cytoplasmic ROS down, then drives FOXO1 into
+#  the nucleus as JNK is activated, and finally expels and degrades it as IKK
+#  activation follows, so the transcriptionally active FOXO1 fraction is a
+#  non-monotonic function of applied oxidative stress.
+
+#@keyword: |
+#  insulin signalling, oxidative stress, FOXO, signal transduction, GLUT4
+#  translocation, negative feedback, transcriptional feedback, mass action,
+#  Michaelis-Menten, combinatorial post-translational modification, adipocyte,
+#  Rattus norvegicus
+
+#@reference: |
+#  Smith GR, Shanley DP (2013). Computational modelling of the regulation of
+#  Insulin signalling by oxidative stress. BMC Systems Biology 7:41.
+#  doi:10.1186/1752-0509-7-41
+#  Model files: BioModels MODEL1212210000;
+#  https://github.com/graham1034/Smith2012_insulin_signalling
+
+#@note: |
+#  Curated from the reaction network, Table 1 initial particle numbers and
+#  Tables 2-4 rate constants of Smith and Shanley (2013), cross-checked against
+#  the authors' SBML model as distributed in the Benchmark-Models-PEtab
+#  collection. Conversion decisions:
+#
+#  The source model declares five compartments but writes every rate law
+#  directly in molecule counts, with no volume scaling; compartment volumes
+#  enter only the two ROS concentration expressions and the membrane efflux
+#  term. That implicit treatment is preserved here: subcellular location is a
+#  molecule component (loc) rather than a BNGL compartment, because a
+#  compartments block would make BioNetGen rescale rate constants by volume and
+#  change the published dynamics.
+#
+#  The 48 explicit FOXO1 species and roughly 270 FOXO1 reactions of the source
+#  model are recovered from a single molecule type with four modification sites
+#  and a location component. Transport rate constants are the Table 3 base
+#  rates times the tabulated multiplicative factors, which reproduce the
+#  per-species constants of the source model exactly.
+#
+#  SGK, CDK2, AMPK, CBPP300, SIRT1, E3 and USP7 are omitted. SGK appears in the
+#  source model only in FOXO1 phosphorylation reactions whose enzyme is fixed at
+#  zero, and the other six appear in no reaction at all; every omitted reaction
+#  carries identically zero flux.
+#
+#  Table 2 lists ros_perm as 7.8e8, which is inconsistent with the reported
+#  k_ros_perm of about 4.8 per minute; 7.4e8 is used, matching the authors'
+#  SBML model.
+#
+#  Molecule names follow the notation of Smith and Shanley (2013) rather than a
+#  single species-specific gene-symbol convention, because the model is
+#  parameterized from rat, mouse, human and monkey cell data.
+#
+#  Four parameter values differ from the published tables and are documented
+#  where they are defined: k4 and kminus4 are one hundredth of the Table 2
+#  values, k_irs1_basal_syn is half the Table 2 value, and E2F1 is half the
+#  Table 1 value. All four are the values carried by the authors' own
+#  simulation conditions. For the first three the digitized published curves
+#  settle the choice: the root-mean-square error of the Fig. 2A surface-GLUT4
+#  trace falls from 0.0073 to 0.0025 of full scale when they are used. E2F1
+#  changes the panel reproduced here only weakly.
+#
+#  The published panel reproduced here does not state the time at which the
+#  dose response is read. One hour is the value recovered by fitting the
+#  digitized curves at three insulin doses, and it is a sharp optimum: the
+#  root-mean-square error rises from about 0.005 at one hour to about 0.035 at
+#  two hours and about 0.2 at sixteen hours.
+
+begin parameters
+  # Population-conversion constants. The model is written in molecule counts,
+  # so these are used only by the commented dimensional-conversion functions.
+  NA        6.02214076e23  # molecules/mol
+  V_ref     1.65e-11       # L/cell
+  h_mem     2e-8           # m
+
+  # Compartment volumes; see Table 2 in Smith and Shanley (2013). Reactions are
+  # written directly in molecule counts, so no volume scaling is applied to any
+  # rate law and no compartments block is used (see the header note).
+  v_extracellular  8.3e-12   # L/cell
+  v_cellsurface    6.4e-14   # L/cell
+  v_cytoplasm      1.65e-11  # L/cell
+  v_nucleus        5e-13     # L/cell
+  v_dnabound       1e-13     # L/cell
+  membrane_area    6.5e-9    # cm^2/cell
+
+  # Display scale factors. One ROS or phosphoinositide particle in the model
+  # stands for 1000 real molecules; see the ROS interactions section.
+  sc_ros    1000  # molecules/particle
+  sc_pip    1000  # molecules/particle
+
+  # Insulin-InR association and dissociation, fitted to bound insulin in rat
+  # adipocytes; see Fig. 1 in Stagsted et al. (1993) and Table 2 in Smith and
+  # Shanley (2013)
+  k1        2.0e-5  # /molecule/min
+  kminus1   12072   # /min
+
+  # Insulin binding to the phosphorylated receptor
+  k2        1.2e-5  # /molecule/min
+  kminus2   9.0e4   # /min
+
+  # InR autophosphorylation and PTP1B-mediated dephosphorylation at the surface
+  k3        2500    # /min
+  kminus3   2.0e-6  # /molecule/min
+
+  # Internalization and recycling of unliganded and of phosphorylated receptor.
+  # Table 2 in Smith and Shanley (2013) lists k4 = 0.0333 and kminus4 = 0.3;
+  # the values below are one hundred times smaller, preserving the tabulated
+  # ratio of ten and therefore the resting receptor distribution, and are the
+  # ones that reproduce the published figures (see the header note).
+  k4          3.33333e-4 # /min
+  kminus4     3e-3       # /min
+  k4prime     0.0021     # /min
+  kminus4prime 2.1e-4    # /min
+
+  # PTP1B-mediated dephosphorylation of internalized receptor
+  k6        4.61e-6  # /molecule/min
+
+  # IRS1 tyrosine phosphorylation by active InR; the receptor term is
+  # normalized by IRp, the surface receptor number of the reference state
+  k7        5.8      # /min
+  IRp       9.0e4    # molecules
+  kminus7a  8.75e-5  # /molecule/min
+
+  # IRS1 composite serine phosphorylation by active PKC and its reversal
+  k2psp     2.2e-4  # /molecule/min
+  kminus7b  2.8e-6  # /molecule/min
+
+  # IRS1-PI3K complex formation; see Fig. 3 in Stagsted et al. (1993)
+  k8        2.6e-6  # /molecule/min
+  kminus8   1.55    # /min
+
+  # IRS1 synthesis and turnover; serine phosphorylation accelerates degradation
+  # about tenfold. Table 2 in Smith and Shanley (2013) lists 260 for the
+  # synthesis rate; 130 is the value that reproduces the published figures.
+  k_irs1_basal_syn      130    # molecules/min
+  k_irs1_basal_degr     1e-3   # /min
+  k_irs1_polyserp_degr  1e-2   # /min
+
+  # Michaelis-Menten serine phosphorylation of IRS1 by active IKK and JNK
+  kcat51    0.87  # /min
+  Km51      100   # molecules
+  kcat52    6.95  # /min
+  Km52      100   # molecules
+
+  # PIP2 to PI(3,4,5)P3 conversion, basal and by the IRS1-PI3K complex
+  k9_basal       0.13145  # /min
+  k9             0.0055   # /molecule/min
+
+  # PI(3,4,5)P3 breakdown, basal and by reduced PTEN
+  kminus9_basal  2.7      # /min
+  kminus9        0.0014   # /molecule/min
+
+  # Akt activation above the basal PI(3,4,5)P3 offset, and PP2A reversal
+  k11        2.5e-5     # /molecule/min
+  pip3_basal 200        # molecules
+  kminus11   1.1878e-6  # /molecule/min
+
+  # PKC-zeta activation with the same PI(3,4,5)P3 offset, and PP2A reversal
+  k12        3.5e-5   # /molecule/min
+  kminus12   1.25e-6  # /molecule/min
+
+  # AS160 activation by active Akt and PP2A reversal
+  kr16a       3.33e-4  # /molecule/min
+  kminusr16a  1e-6     # /molecule/min
+
+  # GLUT4 translocation to the cell surface, basal and by active AS160, and
+  # the reverse internalization
+  k13_basal  0.015    # /min
+  k13        7.5e-6   # /molecule/min
+  kminus13   0.167    # /min
+
+  # Reversible oxidation of the catalytic cysteine of PTP1B, and reduction by
+  # glutathione
+  k30f      0.08     # /molecule/min
+  k30r      5e-3     # /molecule/min
+
+  # The same cycle for PTEN, which is oxidized far more slowly
+  k31f      2.7e-4   # /molecule/min
+  k31r      2e-3     # /molecule/min
+
+  # Insulin-driven NOX activation, spontaneous deactivation and slow recovery.
+  # k34r1 and k34r3 are second order in the NOX species itself.
+  k34f      2e-5   # /molecule/min
+  k34r1     1e-3   # /molecule/min
+  k34r2     0.25   # /min
+  k34r3     1e-3   # /molecule/min
+
+  # ROS production by active NOX and by mitochondria, and removal by SOD2
+  k35f      450    # /min
+  k35r      0.12   # /molecule/min
+  k36f      180    # /min
+
+  # ROS permeation across the plasma membrane; see Adimora et al. (2010).
+  # Table 2 in Smith and Shanley (2013) lists ros_perm as 7.8e8, but 7.4e8 is
+  # the value that gives the reported k_ros_perm of about 4.8 per minute and is
+  # the value in the authors' SBML model.
+  ros_perm      7.4e8  # thousands/cm^2/min
+  k_ros_perm    ros_perm*membrane_area                 # /min
+  k_ros_efflux  k_ros_perm*v_extracellular/v_cytoplasm # /min
+
+  # Glutathione oxidation by ROS and spontaneous reduction
+  k38f      0.05  # /molecule/min
+  k38r      2.0   # /min
+
+  # Reversible oxidation of the SAPK phosphatase DUSP
+  k32f      6e-4  # /molecule/min
+  k32r      4e-4  # /molecule/min
+
+  # JNK activation by ROS; Table 2 in Smith and Shanley (2013) writes the rate
+  # constant as alpha_ox times k42f
+  k42f      5e-5   # /molecule/min
+  alpha_ox  5      # dimensionless
+  k42f_eff  alpha_ox*k42f  # /molecule/min
+  k42r      5e-7   # /molecule/min
+
+  # IKK activation by ROS and deactivation by reduced DUSP
+  k43f      5e-5   # /molecule/min
+  k43r      5e-7   # /molecule/min
+
+  # FOXO1 synthesis driven by E2F1; see Table 3 in Smith and Shanley (2013)
+  k_foxo_syn  0.0055  # /molecule/min
+
+  # Base transport rate constants between cytoplasm, nucleoplasm and DNA
+  ktr_cn   0.181818181818  # /min
+  ktr_nc   0.055           # /min
+  ktr_nd   0.25            # /min
+  ktr_dn   0.125           # /min
+
+  # Multiplicative factors applied to a transport rate when the corresponding
+  # PTM is present; see the Rate MF column of Table 3 in Smith and Shanley
+  # (2013). Akt-phosphorylation (pa) retains FOXO1 in the cytoplasm, IKK
+  # phosphorylation (pd) does the same more weakly, and JNK phosphorylation
+  # (pe) drives it into the nucleus.
+  mf_cn_pa  0.1   # dimensionless
+  mf_cn_pd  0.5   # dimensionless
+  mf_cn_pe  10    # dimensionless
+  mf_nc_pa  10    # dimensionless
+  mf_nc_pd  10    # dimensionless
+  mf_nc_pe  0.1   # dimensionless
+  mf_nd_pa  0.5   # dimensionless
+
+  # Cytoplasm to nucleoplasm transport, one constant per (pa,pd,pe) state
+  ktr_cn_000  ktr_cn                          # /min
+  ktr_cn_001  ktr_cn*mf_cn_pe                 # /min
+  ktr_cn_010  ktr_cn*mf_cn_pd                 # /min
+  ktr_cn_011  ktr_cn*mf_cn_pd*mf_cn_pe        # /min
+  ktr_cn_100  ktr_cn*mf_cn_pa                 # /min
+  ktr_cn_101  ktr_cn*mf_cn_pa*mf_cn_pe        # /min
+  ktr_cn_110  ktr_cn*mf_cn_pa*mf_cn_pd        # /min
+  ktr_cn_111  ktr_cn*mf_cn_pa*mf_cn_pd*mf_cn_pe  # /min
+
+  # Nucleoplasm to cytoplasm transport
+  ktr_nc_000  ktr_nc                          # /min
+  ktr_nc_001  ktr_nc*mf_nc_pe                 # /min
+  ktr_nc_010  ktr_nc*mf_nc_pd                 # /min
+  ktr_nc_011  ktr_nc*mf_nc_pd*mf_nc_pe        # /min
+  ktr_nc_100  ktr_nc*mf_nc_pa                 # /min
+  ktr_nc_101  ktr_nc*mf_nc_pa*mf_nc_pe        # /min
+  ktr_nc_110  ktr_nc*mf_nc_pa*mf_nc_pd        # /min
+  ktr_nc_111  ktr_nc*mf_nc_pa*mf_nc_pd*mf_nc_pe  # /min
+
+  # Nucleoplasm to DNA-bound transport, and the DNA-bound release
+  ktr_nd_0    ktr_nd                          # /min
+  ktr_nd_1    ktr_nd*mf_nd_pa                 # /min
+
+  # Basal FOXO1 phosphorylation and dephosphorylation, with the kinase-specific
+  # factors of Table 3 in Smith and Shanley (2013)
+  k_foxo_phos_basal    5e-5   # /molecule/min
+  k_foxo_dephos        1e-6   # /molecule/min
+  akt_phos_factor      6      # dimensionless
+  by_ikk_phos_factor   3      # dimensionless
+  by_jnk_phos_factor   2      # dimensionless
+  k_foxo_phos_akt      akt_phos_factor*k_foxo_phos_basal     # /molecule/min
+  k_foxo_phos_ikk      by_ikk_phos_factor*k_foxo_phos_basal  # /molecule/min
+  k_foxo_phos_jnk      by_jnk_phos_factor*k_foxo_phos_basal  # /molecule/min
+
+  # FOXO1 ubiquitination by SCF, accelerated by the Akt and IKK PTMs, and
+  # proteasomal degradation of the ubiquitinated cytoplasmic pool
+  k_foxo_ub        1e-6  # /molecule/min
+  mf_ub_pa         3     # dimensionless
+  mf_ub_pd         22    # dimensionless
+  k_foxo_ub_00     k_foxo_ub                    # /molecule/min
+  k_foxo_ub_01     k_foxo_ub*mf_ub_pd           # /molecule/min
+  k_foxo_ub_10     k_foxo_ub*mf_ub_pa           # /molecule/min
+  k_foxo_ub_11     k_foxo_ub*mf_ub_pa*mf_ub_pd  # /molecule/min
+  k_foxo_deg       1e-4  # /molecule/min
+
+  # FOXO1-driven and basal transcription, nuclear export, mRNA turnover,
+  # translation and protein turnover for InR and SOD2; see Table 4 in Smith and
+  # Shanley (2013)
+  ktranscr_inr        0.24    # /molecule/min
+  kbasal_transcr_inr  5.0     # molecules/min
+  kexp_inr            0.22    # /min
+  kmdeg_inr           5.622   # /min
+  ktransl_inr         2.46    # /min
+  kpdeg_inr           0.0044  # /min
+
+  ktranscr_sod2       0.95    # /molecule/min
+  kbasal_transcr_sod2 15.0    # molecules/min
+  kexp_sod2           0.22    # /min
+  kmdeg_sod2          5.622   # /min
+  ktransl_sod2        1.23    # /min
+  kpdeg_sod2          0.0019  # /min
+
+  # Protocol doses, given as extracellular concentrations and converted to the
+  # clamped particle numbers of the seed species.
+  # Insulin is held at 1 nM throughout and the external H2O2
+  # concentration is set by the scan.
+  Ins_conc      1e-9  # M
+  ROS_ext_conc  1e-9  # M
+  Ins_dose      Ins_conc*NA*v_extracellular          # molecules
+  ROS_ext_dose  ROS_ext_conc*NA*v_extracellular/sc_ros  # molecules
+
+  # Initial particle numbers; see Table 1 in Smith and Shanley (2013)
+  InR_pm_0      9.0e4    # molecules
+  InR_cyt_0     1.0e4    # molecules
+  PTP1B_0       1.0e5    # molecules
+  IRS1_0        1.0e5    # molecules
+  PI3K_0        1.0e4    # molecules
+  PP2A_0        5.0e5    # molecules
+  PTEN_0        1.0e5    # molecules
+  GSH_0         100      # molecules
+  NOX_0         100      # molecules
+  SOD2_0        4.17e4   # molecules
+  Mt_0          50       # molecules
+  Akt_0         1.0e5    # molecules
+  AS160_0       2.0e4    # molecules
+  PKC_0         1.0e5    # molecules
+  PIP2_0        2.0e5    # molecules
+  PIP3_0        1.0e3    # molecules
+  GLUT4_cyt_0   9.6e4    # molecules
+  GLUT4_pm_0    4.0e3    # molecules
+
+  JNK_0         16000    # molecules
+  IKK_0         2000     # molecules
+  DUSP_0        1.0e5    # molecules
+
+  # Table 1 in Smith and Shanley (2013) lists E2F1 as 300; 150 is the value
+  # used for the figures that exercise the FOXO1 module
+  E2F1_0        150      # molecules
+  Foxo1_0       1000     # molecules
+  SCF_0         1000     # molecules
+  Proteasome_0  1000     # molecules
+end parameters
+
+begin molecule types
+  # Insulin, held at a fixed extracellular level during a dosing interval
+  Ins()
+
+  # Insulin receptor. ins counts bound insulin, y is the autophosphorylation
+  # state, and loc distinguishes the cell surface from the internalized pool.
+  InR(ins~0~1~2,y~u~p,loc~pm~cyt)
+
+  # Protein tyrosine phosphatase 1B; ox is the reversibly oxidized catalytic
+  # cysteine
+  PTP1B(ox~0~1)
+
+  # Lipid phosphatase PTEN, oxidized on the same catalytic cysteine
+  PTEN(ox~0~1)
+
+  # Protein phosphatase 2A, the serine/threonine phosphatase of the pathway
+  PP2A()
+
+  # Insulin receptor substrate 1. y is the tyrosine site, s is the composite
+  # poly-serine modification, and pi3k is the PI3K docking site.
+  IRS1(y~u~p,s~u~p,pi3k)
+
+  # Phosphoinositide 3-kinase
+  PI3K(irs)
+
+  # Plasma-membrane phosphoinositide; p~2 is PI(4,5)P2 and p~3 is PI(3,4,5)P3
+  PIP(p~2~3)
+
+  # Akt/PKB
+  Akt(s~u~p)
+
+  # PKC-zeta, the isoform activated by insulin signalling
+  PKC(s~u~p)
+
+  # Akt substrate of 160 kDa, which gates GLUT4 translocation
+  AS160(s~u~p)
+
+  # GLUT4 glucose transporter; cell-surface GLUT4 proxies glucose uptake
+  GLUT4(loc~cyt~pm)
+
+  # Generic reactive oxygen species; one particle stands for 1000 molecules
+  ROS(loc~ext~cyt)
+
+  # NADPH oxidase, cycling between inactive, active and deactivated states
+  NOX(s~i~a~d)
+
+  # Superoxide dismutase 2, the lumped antioxidant enzyme
+  SOD2()
+
+  # Glutathione; ox~1 is the oxidized GSSG form
+  GSH(ox~0~1)
+
+  # Mitochondria, the source of basal ROS production
+  Mt()
+
+  # Stress-activated protein kinases and their phosphatase
+  JNK(s~u~p)
+  IKK(s~u~p)
+  DUSP(ox~0~1)
+
+  # FOXO1 transcription factor. pa, pd and pe are the phosphorylation sites
+  # written by Akt, IKK and JNK, pub is the ubiquitin mark, and loc is the
+  # cytoplasmic, nucleoplasmic or DNA-bound location.
+  Foxo1(pa~0~1,pd~0~1,pe~0~1,pub~0~1,loc~cyt~nuc~dna)
+
+  # Transcription factor driving FOXO1 synthesis
+  E2F1()
+
+  # SCF ubiquitin ligase and the proteasome
+  SCF()
+  Proteasome()
+
+  # FOXO1-regulated transcripts for InR and SOD2
+  RNA(g~inr~sod2,loc~nuc~cyt)
+end molecule types
+
+begin seed species
+  # Insulin is clamped at the protocol dose; the actions block sets it to zero
+  # at the end of the dosing interval
+  $Ins()  Ins_dose  # molecules
+
+  # External ROS is clamped at the protocol dose
+  $ROS(loc~ext)  ROS_ext_dose  # molecules
+
+  # Unliganded receptor is split between the cell surface and the cytoplasm
+  InR(ins~0,y~u,loc~pm)   InR_pm_0   # molecules
+  InR(ins~0,y~u,loc~cyt)  InR_cyt_0  # molecules
+
+  PTP1B(ox~0)  PTP1B_0  # molecules
+  PTEN(ox~0)   PTEN_0   # molecules
+  PP2A()       PP2A_0   # molecules
+
+  IRS1(y~u,s~u,pi3k)  IRS1_0  # molecules
+  PI3K(irs)           PI3K_0  # molecules
+
+  PIP(p~2)  PIP2_0  # molecules
+  PIP(p~3)  PIP3_0  # molecules
+
+  Akt(s~u)    Akt_0    # molecules
+  PKC(s~u)    PKC_0    # molecules
+  AS160(s~u)  AS160_0  # molecules
+
+  GLUT4(loc~cyt)  GLUT4_cyt_0  # molecules
+  GLUT4(loc~pm)   GLUT4_pm_0   # molecules
+
+  ROS(loc~cyt)  0       # molecules
+  NOX(s~i)      NOX_0   # molecules
+  GSH(ox~0)     GSH_0   # molecules
+  Mt()          Mt_0    # molecules
+
+  # SOD2 is turned over by the transcription module
+  SOD2()  SOD2_0  # molecules
+
+  JNK(s~u)   JNK_0   # molecules
+  IKK(s~u)   IKK_0   # molecules
+  DUSP(ox~0) DUSP_0  # molecules
+
+  # All FOXO1 starts unmodified in the cytoplasm
+  Foxo1(pa~0,pd~0,pe~0,pub~0,loc~cyt)  Foxo1_0  # molecules
+
+  E2F1()       E2F1_0        # molecules
+  SCF()        SCF_0         # molecules
+  Proteasome() Proteasome_0  # molecules
+
+  RNA(g~inr,loc~nuc)   0  # molecules
+  RNA(g~sod2,loc~nuc)  0  # molecules
+end seed species
+
+begin observables
+  # Extracellular insulin, clamped at the protocol dose; this traces the pulse
+  Molecules Obs_Tot_Ins Ins()
+
+  # Receptor pools: total, surface-bound and catalytically active
+  Molecules Obs_Tot_InR         InR()
+  Molecules Obs_State_InR_bound InR(ins~1,loc~pm) InR(ins~2,loc~pm)
+  Molecules Obs_State_InR_active InR(y~p,loc~pm)
+
+  # IRS1 pools. Obs_State_IRS1_TyrP is the free tyrosine-phosphorylated form
+  # plotted as IRS-Yp, and Obs_State_IRS1_unmod enters the Michaelis-Menten
+  # denominators of the SAPK serine-phosphorylation rate laws.
+  Molecules Obs_Tot_IRS1         IRS1()
+  Molecules Obs_State_IRS1_TyrP  IRS1(y~p,s~u,pi3k)
+  Molecules Obs_State_IRS1_unmod IRS1(y~u,s~u,pi3k)
+  Molecules Obs_Cplx_IRS1_PI3K   IRS1(pi3k!1).PI3K(irs!1)
+
+  # Phosphoinositide and kinase activation states
+  Molecules Obs_State_PIP3     PIP(p~3)
+  Molecules Obs_Tot_Akt        Akt()
+  Molecules Obs_State_Akt_P    Akt(s~p)
+  Molecules Obs_Tot_PKC        PKC()
+  Molecules Obs_State_PKC_P    PKC(s~p)
+  Molecules Obs_State_AS160_P  AS160(s~p)
+
+  # GLUT4 at the cell surface proxies glucose uptake
+  Molecules Obs_Tot_GLUT4       GLUT4()
+  Molecules Obs_State_GLUT4_pm  GLUT4(loc~pm)
+
+  # Reduced (catalytically competent) phosphatase pools
+  Molecules Obs_Tot_PTP1B       PTP1B()
+  Molecules Obs_State_PTP1B_red PTP1B(ox~0)
+  Molecules Obs_Tot_PTEN        PTEN()
+  Molecules Obs_State_PTEN_red  PTEN(ox~0)
+
+  # ROS, its sources and the antioxidant pools
+  Molecules Obs_State_ROS_cyt    ROS(loc~cyt)
+  Molecules Obs_State_ROS_ext    ROS(loc~ext)
+  Molecules Obs_State_NOX_active NOX(s~a)
+  Molecules Obs_State_NOX_deact  NOX(s~d)
+  Molecules Obs_Tot_SOD2         SOD2()
+  Molecules Obs_State_GSH_red    GSH(ox~0)
+
+  # SAPK activation and the reduced DUSP pool that reverses it
+  Molecules Obs_Tot_JNK        JNK()
+  Molecules Obs_State_JNK_P    JNK(s~p)
+  Molecules Obs_Tot_IKK        IKK()
+  Molecules Obs_State_IKK_P    IKK(s~p)
+  Molecules Obs_Tot_DUSP       DUSP()
+  Molecules Obs_State_DUSP_red DUSP(ox~0)
+
+  # FOXO1 abundance and subcellular distribution; the DNA-bound pool is the
+  # transcriptionally active one
+  Molecules Obs_Tot_Foxo1       Foxo1()
+  Molecules Obs_State_Foxo1_cyt Foxo1(loc~cyt)
+  Molecules Obs_State_Foxo1_nuc Foxo1(loc~nuc)
+  Molecules Obs_State_Foxo1_dna Foxo1(loc~dna)
+
+  # FOXO1-regulated transcripts
+  Molecules Obs_Tot_RNA_InR  RNA(g~inr)
+  Molecules Obs_Tot_RNA_SOD2 RNA(g~sod2)
+end observables
+
+begin functions
+  # IRS1 tyrosine phosphorylation is driven by the active surface receptor pool
+  # normalized by IRp; see R12f in Table 2 of Smith and Shanley (2013)
+  fcn_irs_tyr_phos() = k7*Obs_State_InR_active/IRp
+
+  # PI(3,4,5)P3 synthesis, basal plus IRS1-PI3K driven, and its breakdown,
+  # basal plus by reduced PTEN
+  fcn_pip3_syn() = k9_basal + k9*Obs_Cplx_IRS1_PI3K
+  fcn_pip3_deg() = kminus9_basal + kminus9*Obs_State_PTEN_red
+
+  # Akt and PKC activation respond only to PI(3,4,5)P3 above the basal offset,
+  # so that both are inactive at the resting phosphoinositide level
+  fcn_akt_phos() = k11*if(Obs_State_PIP3>pip3_basal,Obs_State_PIP3-pip3_basal,0)
+  fcn_pkc_phos() = k12*if(Obs_State_PIP3>pip3_basal,Obs_State_PIP3-pip3_basal,0)
+
+  # GLUT4 translocation to the cell surface, basal plus AS160 driven
+  fcn_glut4_out() = k13_basal + k13*Obs_State_AS160_P
+
+  # NOX deactivation and recovery are second order in the NOX species itself,
+  # so the reactant factor supplied by BioNetGen is multiplied by one more
+  # copy of the same observable
+  fcn_nox_deact() = k34r1*Obs_State_NOX_active
+  fcn_nox_recover() = k34r3*Obs_State_NOX_deact
+
+  # Michaelis-Menten serine phosphorylation of IRS1 by the two SAPKs. The
+  # reactant factor is supplied by BioNetGen, so only the enzyme and the
+  # saturation term appear here.
+  fcn_irs_serp_ikk() = kcat51*Obs_State_IKK_P/(Km51 + Obs_State_IRS1_unmod)
+  fcn_irs_serp_jnk() = kcat52*Obs_State_JNK_P/(Km52 + Obs_State_IRS1_unmod)
+
+  # FOXO1-driven transcription of the InR and SOD2 genes; the rate is set by
+  # the DNA-bound FOXO1 pool
+  fcn_transcr_inr() = ktranscr_inr*Obs_State_Foxo1_dna
+  fcn_transcr_sod2() = ktranscr_sod2*Obs_State_Foxo1_dna
+
+  # Fractional activations plotted in Fig. 2 of Smith and Shanley (2013)
+  Frac_Akt_P() = Obs_State_Akt_P/Obs_Tot_Akt
+  Frac_PKC_P() = Obs_State_PKC_P/Obs_Tot_PKC
+  Frac_IRS1_TyrP() = Obs_State_IRS1_TyrP/Obs_Tot_IRS1
+  Frac_GLUT4_pm() = Obs_State_GLUT4_pm/Obs_Tot_GLUT4
+  Frac_PTP1B_active() = Obs_State_PTP1B_red/Obs_Tot_PTP1B
+
+  Frac_JNK_P() = Obs_State_JNK_P/Obs_Tot_JNK
+  Frac_IKK_P() = Obs_State_IKK_P/Obs_Tot_IKK
+  Frac_DUSP_active() = Obs_State_DUSP_red/Obs_Tot_DUSP
+
+  # Transcriptionally active FOXO1 fraction, and the fold changes in SOD2 and
+  # total FOXO1 relative to their initial values
+  Frac_Foxo1_dna() = Obs_State_Foxo1_dna/Obs_Tot_Foxo1
+  Fold_SOD2() = Obs_Tot_SOD2/SOD2_0
+  Fold_Foxo1() = Obs_Tot_Foxo1/Foxo1_0
+
+  # Dimensional conversions (uncomment for concentration output). The names end
+  # in _M because Ins_conc and ROS_ext_conc are already the dose parameters.
+# Ins_conc_M() = Obs_Tot_Ins/(NA*v_extracellular)  # M
+# ROS_cyt_conc_M() = sc_ros*Obs_State_ROS_cyt/(NA*v_cytoplasm)  # M
+# ROS_ext_conc_M() = sc_ros*Obs_State_ROS_ext/(NA*v_extracellular)  # M
+# PIP3_conc_M() = sc_pip*Obs_State_PIP3/(NA*v_cytoplasm)  # M
+end functions
+
+begin reaction rules
+  # Insulin binds the unliganded surface receptor, which then autophosphorylates
+  # and can bind a second insulin
+  R_bind_Ins_InR: Ins() + InR(ins~0,y~u,loc~pm) -> InR(ins~1,y~u,loc~pm) k1
+  R_unbind_Ins_InR: InR(ins~1,y~u,loc~pm) -> Ins() + InR(ins~0,y~u,loc~pm) kminus1
+  R_phos_InR: InR(ins~1,y~u,loc~pm) -> InR(ins~1,y~p,loc~pm) k3
+  R_bind_Ins_InR_P: Ins() + InR(ins~1,y~p,loc~pm) -> InR(ins~2,y~p,loc~pm) k2
+  R_unbind_Ins_InR_P: InR(ins~2,y~p,loc~pm) -> Ins() + InR(ins~1,y~p,loc~pm) kminus2
+
+  # Reduced PTP1B dephosphorylates the singly liganded surface receptor,
+  # releasing its insulin
+  R_dephos_InR_pm: PTP1B(ox~0) + InR(ins~1,y~p,loc~pm) -> \
+    PTP1B(ox~0) + InR(ins~0,y~u,loc~pm) kminus3
+
+  # Unliganded receptor cycles between the surface and the cytoplasm; the
+  # phosphorylated forms internalize far more slowly
+  R_internalize_InR: InR(ins~0,y~u,loc~pm) <-> InR(ins~0,y~u,loc~cyt) k4, kminus4
+  R_internalize_InR_P: InR(y~p,loc~pm) <-> InR(y~p,loc~cyt) k4prime, kminus4prime
+
+  # Reduced PTP1B also resets the internalized phosphorylated receptor
+  R_dephos_InR_cyt: PTP1B(ox~0) + InR(y~p,loc~cyt) -> \
+    PTP1B(ox~0) + InR(ins~0,y~u,loc~cyt) k6
+
+  # Active surface receptor phosphorylates IRS1 on tyrosine; reduced PTP1B
+  # reverses it
+  R_phos_IRS_Tyr: IRS1(y~u,s~u,pi3k) -> IRS1(y~p,s~u,pi3k) fcn_irs_tyr_phos()
+  R_dephos_IRS_Tyr: PTP1B(ox~0) + IRS1(y~p,s~u,pi3k) -> \
+    PTP1B(ox~0) + IRS1(y~u,s~u,pi3k) kminus7a
+
+  # Active PKC writes the composite serine modification on either tyrosine
+  # state; PP2A removes it
+  R_phos_IRS_Ser_PKC: PKC(s~p) + IRS1(s~u,pi3k) -> PKC(s~p) + IRS1(s~p,pi3k) k2psp
+  R_dephos_IRS_Ser: PP2A() + IRS1(s~p,pi3k) -> PP2A() + IRS1(s~u,pi3k) kminus7b
+
+  # Only tyrosine-phosphorylated, serine-unmodified IRS1 recruits PI3K
+  R_bind_IRS_PI3K: PI3K(irs) + IRS1(y~p,s~u,pi3k) <-> \
+    PI3K(irs!1).IRS1(y~p,s~u,pi3k!1) k8, kminus8
+
+  # IRS1 synthesis and turnover; the serine-modified forms are degraded about
+  # ten times faster
+  R_syn_IRS: 0 -> IRS1(y~u,s~u,pi3k) k_irs1_basal_syn
+  R_degrade_IRS: IRS1(s~u,pi3k) -> 0 k_irs1_basal_degr
+  R_degrade_IRS_SerP: IRS1(s~p,pi3k) -> 0 k_irs1_polyserp_degr
+
+  # Active IKK and JNK also serine-phosphorylate IRS1, with Michaelis-Menten
+  # kinetics; this is the feedback that degrades IRS1 under oxidative stress
+  R_phos_IRS_Ser_IKK: IRS1(y~u,s~u,pi3k) -> IRS1(y~u,s~p,pi3k) fcn_irs_serp_ikk()
+  R_phos_IRS_Ser_JNK: IRS1(y~u,s~u,pi3k) -> IRS1(y~u,s~p,pi3k) fcn_irs_serp_jnk()
+
+  # PI(4,5)P2 to PI(3,4,5)P3 interconversion by the IRS1-PI3K complex and PTEN
+  R_syn_PIP3: PIP(p~2) -> PIP(p~3) fcn_pip3_syn()
+  R_degrade_PIP3: PIP(p~3) -> PIP(p~2) fcn_pip3_deg()
+
+  # Akt and PKC activation by PI(3,4,5)P3 above the basal offset, reversed by
+  # PP2A
+  R_phos_Akt: Akt(s~u) -> Akt(s~p) fcn_akt_phos()
+  R_dephos_Akt: PP2A() + Akt(s~p) -> PP2A() + Akt(s~u) kminus11
+  R_phos_PKC: PKC(s~u) -> PKC(s~p) fcn_pkc_phos()
+  R_dephos_PKC: PP2A() + PKC(s~p) -> PP2A() + PKC(s~u) kminus12
+
+  # AS160 relays Akt activation to GLUT4 and saturates well below full Akt
+  # activation
+  R_phos_AS160: Akt(s~p) + AS160(s~u) -> Akt(s~p) + AS160(s~p) kr16a
+  R_dephos_AS160: PP2A() + AS160(s~p) -> PP2A() + AS160(s~u) kminusr16a
+
+  # GLUT4 translocation to and from the cell surface
+  R_translocate_GLUT4_out: GLUT4(loc~cyt) -> GLUT4(loc~pm) fcn_glut4_out()
+  R_translocate_GLUT4_in: GLUT4(loc~pm) -> GLUT4(loc~cyt) kminus13
+
+  # Insulin activates NOX directly; active NOX then deactivates and only slowly
+  # returns to the inactive state
+  R_activate_NOX: Ins() + NOX(s~i) -> Ins() + NOX(s~a) k34f
+  R_deactivate_NOX: NOX(s~a) -> NOX(s~d) fcn_nox_deact()
+  R_inactivate_NOX: NOX(s~a) -> NOX(s~i) k34r2
+  R_recover_NOX: NOX(s~d) -> NOX(s~i) fcn_nox_recover()
+
+  # ROS production by active NOX and by mitochondria, and its removal by SOD2
+  R_produce_ROS_NOX: NOX(s~a) -> NOX(s~a) + ROS(loc~cyt) k35f
+  R_produce_ROS_Mt: Mt() -> Mt() + ROS(loc~cyt) k36f
+  R_remove_ROS_SOD2: SOD2() + ROS(loc~cyt) -> SOD2() k35r
+
+  # ROS permeates the plasma membrane in both directions
+  R_import_ROS: ROS(loc~ext) -> ROS(loc~cyt) k_ros_perm
+  R_export_ROS: ROS(loc~cyt) -> ROS(loc~ext) k_ros_efflux
+
+  # ROS reversibly oxidizes the catalytic cysteines of PTP1B and PTEN,
+  # inactivating them; glutathione restores them
+  R_oxidize_PTP1B: ROS(loc~cyt) + PTP1B(ox~0) -> ROS(loc~cyt) + PTP1B(ox~1) k30f
+  R_reduce_PTP1B: GSH(ox~0) + PTP1B(ox~1) -> GSH(ox~0) + PTP1B(ox~0) k30r
+  R_oxidize_PTEN: ROS(loc~cyt) + PTEN(ox~0) -> ROS(loc~cyt) + PTEN(ox~1) k31f
+  R_reduce_PTEN: GSH(ox~0) + PTEN(ox~1) -> GSH(ox~0) + PTEN(ox~0) k31r
+
+  # Glutathione is itself oxidized by ROS at high oxidative stress
+  R_oxidize_GSH: ROS(loc~cyt) + GSH(ox~0) -> ROS(loc~cyt) + GSH(ox~1) k38f
+  R_reduce_GSH: GSH(ox~1) -> GSH(ox~0) k38r
+
+  # ROS oxidizes DUSP, removing the phosphatase that reverses SAPK activation
+  R_oxidize_DUSP: ROS(loc~cyt) + DUSP(ox~0) -> ROS(loc~cyt) + DUSP(ox~1) k32f
+  R_reduce_DUSP: GSH(ox~0) + DUSP(ox~1) -> GSH(ox~0) + DUSP(ox~0) k32r
+
+  # ROS activates JNK and IKK; reduced DUSP deactivates both. IKK responds at
+  # higher oxidative stress than JNK.
+  R_phos_JNK: ROS(loc~cyt) + JNK(s~u) -> ROS(loc~cyt) + JNK(s~p) k42f_eff
+  R_dephos_JNK: DUSP(ox~0) + JNK(s~p) -> DUSP(ox~0) + JNK(s~u) k42r
+  R_phos_IKK: ROS(loc~cyt) + IKK(s~u) -> ROS(loc~cyt) + IKK(s~p) k43f
+  R_dephos_IKK: DUSP(ox~0) + IKK(s~p) -> DUSP(ox~0) + IKK(s~u) k43r
+
+  # FOXO1 shuttles between cytoplasm and nucleoplasm at a rate set by its
+  # phosphorylation state; the ubiquitin mark does not affect transport
+  R_import_Foxo1_000: Foxo1(pa~0,pd~0,pe~0,loc~cyt) -> \
+    Foxo1(pa~0,pd~0,pe~0,loc~nuc) ktr_cn_000
+  R_import_Foxo1_001: Foxo1(pa~0,pd~0,pe~1,loc~cyt) -> \
+    Foxo1(pa~0,pd~0,pe~1,loc~nuc) ktr_cn_001
+  R_import_Foxo1_010: Foxo1(pa~0,pd~1,pe~0,loc~cyt) -> \
+    Foxo1(pa~0,pd~1,pe~0,loc~nuc) ktr_cn_010
+  R_import_Foxo1_011: Foxo1(pa~0,pd~1,pe~1,loc~cyt) -> \
+    Foxo1(pa~0,pd~1,pe~1,loc~nuc) ktr_cn_011
+  R_import_Foxo1_100: Foxo1(pa~1,pd~0,pe~0,loc~cyt) -> \
+    Foxo1(pa~1,pd~0,pe~0,loc~nuc) ktr_cn_100
+  R_import_Foxo1_101: Foxo1(pa~1,pd~0,pe~1,loc~cyt) -> \
+    Foxo1(pa~1,pd~0,pe~1,loc~nuc) ktr_cn_101
+  R_import_Foxo1_110: Foxo1(pa~1,pd~1,pe~0,loc~cyt) -> \
+    Foxo1(pa~1,pd~1,pe~0,loc~nuc) ktr_cn_110
+  R_import_Foxo1_111: Foxo1(pa~1,pd~1,pe~1,loc~cyt) -> \
+    Foxo1(pa~1,pd~1,pe~1,loc~nuc) ktr_cn_111
+
+  R_export_Foxo1_000: Foxo1(pa~0,pd~0,pe~0,loc~nuc) -> \
+    Foxo1(pa~0,pd~0,pe~0,loc~cyt) ktr_nc_000
+  R_export_Foxo1_001: Foxo1(pa~0,pd~0,pe~1,loc~nuc) -> \
+    Foxo1(pa~0,pd~0,pe~1,loc~cyt) ktr_nc_001
+  R_export_Foxo1_010: Foxo1(pa~0,pd~1,pe~0,loc~nuc) -> \
+    Foxo1(pa~0,pd~1,pe~0,loc~cyt) ktr_nc_010
+  R_export_Foxo1_011: Foxo1(pa~0,pd~1,pe~1,loc~nuc) -> \
+    Foxo1(pa~0,pd~1,pe~1,loc~cyt) ktr_nc_011
+  R_export_Foxo1_100: Foxo1(pa~1,pd~0,pe~0,loc~nuc) -> \
+    Foxo1(pa~1,pd~0,pe~0,loc~cyt) ktr_nc_100
+  R_export_Foxo1_101: Foxo1(pa~1,pd~0,pe~1,loc~nuc) -> \
+    Foxo1(pa~1,pd~0,pe~1,loc~cyt) ktr_nc_101
+  R_export_Foxo1_110: Foxo1(pa~1,pd~1,pe~0,loc~nuc) -> \
+    Foxo1(pa~1,pd~1,pe~0,loc~cyt) ktr_nc_110
+  R_export_Foxo1_111: Foxo1(pa~1,pd~1,pe~1,loc~nuc) -> \
+    Foxo1(pa~1,pd~1,pe~1,loc~cyt) ktr_nc_111
+
+  # Nuclear FOXO1 binds DNA; Akt phosphorylation halves the on rate
+  R_bind_DNA_Foxo1_0: Foxo1(pa~0,loc~nuc) -> Foxo1(pa~0,loc~dna) ktr_nd_0
+  R_bind_DNA_Foxo1_1: Foxo1(pa~1,loc~nuc) -> Foxo1(pa~1,loc~dna) ktr_nd_1
+  R_release_DNA_Foxo1: Foxo1(loc~dna) -> Foxo1(loc~nuc) ktr_dn
+
+  # E2F1 drives FOXO1 synthesis into the cytoplasm
+  R_syn_Foxo1: E2F1() -> E2F1() + Foxo1(pa~0,pd~0,pe~0,pub~0,loc~cyt) k_foxo_syn
+
+  # Akt, IKK and JNK phosphorylate distinct FOXO1 sites; PP2A reverses all
+  # three, in every subcellular location
+  R_phos_Foxo1_Akt: Akt(s~p) + Foxo1(pa~0) -> Akt(s~p) + Foxo1(pa~1) k_foxo_phos_akt
+  R_dephos_Foxo1_Pa: PP2A() + Foxo1(pa~1) -> PP2A() + Foxo1(pa~0) k_foxo_dephos
+  R_phos_Foxo1_IKK: IKK(s~p) + Foxo1(pd~0) -> IKK(s~p) + Foxo1(pd~1) k_foxo_phos_ikk
+  R_dephos_Foxo1_Pd: PP2A() + Foxo1(pd~1) -> PP2A() + Foxo1(pd~0) k_foxo_dephos
+  R_phos_Foxo1_JNK: JNK(s~p) + Foxo1(pe~0) -> JNK(s~p) + Foxo1(pe~1) k_foxo_phos_jnk
+  R_dephos_Foxo1_Pe: PP2A() + Foxo1(pe~1) -> PP2A() + Foxo1(pe~0) k_foxo_dephos
+
+  # SCF ubiquitinates FOXO1; the Akt and IKK marks accelerate it three- and
+  # twenty-two-fold
+  R_ubiquitinate_Foxo1_00: SCF() + Foxo1(pa~0,pd~0,pub~0) -> \
+    SCF() + Foxo1(pa~0,pd~0,pub~1) k_foxo_ub_00
+  R_ubiquitinate_Foxo1_01: SCF() + Foxo1(pa~0,pd~1,pub~0) -> \
+    SCF() + Foxo1(pa~0,pd~1,pub~1) k_foxo_ub_01
+  R_ubiquitinate_Foxo1_10: SCF() + Foxo1(pa~1,pd~0,pub~0) -> \
+    SCF() + Foxo1(pa~1,pd~0,pub~1) k_foxo_ub_10
+  R_ubiquitinate_Foxo1_11: SCF() + Foxo1(pa~1,pd~1,pub~0) -> \
+    SCF() + Foxo1(pa~1,pd~1,pub~1) k_foxo_ub_11
+
+  # Only ubiquitinated cytoplasmic FOXO1 is degraded by the proteasome
+  R_degrade_Foxo1: Proteasome() + Foxo1(pub~1,loc~cyt) -> Proteasome() k_foxo_deg
+
+  # DNA-bound FOXO1 drives InR and SOD2 transcription on top of a basal rate
+  R_transcribe_InR_Foxo1: 0 -> RNA(g~inr,loc~nuc) fcn_transcr_inr()
+  R_transcribe_InR_basal: 0 -> RNA(g~inr,loc~nuc) kbasal_transcr_inr
+  R_transcribe_SOD2_Foxo1: 0 -> RNA(g~sod2,loc~nuc) fcn_transcr_sod2()
+  R_transcribe_SOD2_basal: 0 -> RNA(g~sod2,loc~nuc) kbasal_transcr_sod2
+
+  # Nuclear export and cytoplasmic turnover of both transcripts
+  R_export_RNA_InR: RNA(g~inr,loc~nuc) -> RNA(g~inr,loc~cyt) kexp_inr
+  R_degrade_RNA_InR: RNA(g~inr,loc~cyt) -> 0 kmdeg_inr
+  R_export_RNA_SOD2: RNA(g~sod2,loc~nuc) -> RNA(g~sod2,loc~cyt) kexp_sod2
+  R_degrade_RNA_SOD2: RNA(g~sod2,loc~cyt) -> 0 kmdeg_sod2
+
+  # Translation into the cytoplasmic receptor pool and into SOD2, with
+  # first-order protein turnover
+  R_translate_InR: RNA(g~inr,loc~cyt) -> RNA(g~inr,loc~cyt) + InR(ins~0,y~u,loc~cyt) ktransl_inr
+  R_degrade_InR: InR(ins~0,y~u,loc~cyt) -> 0 kpdeg_inr
+  R_translate_SOD2: RNA(g~sod2,loc~cyt) -> RNA(g~sod2,loc~cyt) + SOD2() ktransl_sod2
+  R_degrade_SOD2: SOD2() -> 0 kpdeg_sod2
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 99 species, 313 reactions
+  saveConcentrations()
+
+  # Oxidative-stress dose response of FOXO1 subcellular localization
+
+  #@protocol: |
+  #  Hold insulin at 1 nM and expose the cell to a fixed external H2O2
+  #  concentration for one hour, scanning the applied dose logarithmically from
+  #  1e-9 to 1e-4 M in 26 points. Frac_Foxo1_dna is the transcriptionally
+  #  active FOXO1 fraction. It is flat while the antioxidant system holds
+  #  cytoplasmic ROS down, rises as JNK activation drives FOXO1 into the
+  #  nucleus once external ROS passes the threshold, and falls again at the
+  #  highest doses as IKK activation expels FOXO1 and marks it for degradation.
+  #  The published panel plots this scan for twelve insulin doses; the
+  #  commented protocols below give the two extremes.
+
+  #@figure: Fig. 2H in Smith and Shanley (2013)
+
+  resetConcentrations()
+  parameter_scan({method=>"ode",parameter=>"ROS_ext_conc",par_min=>1e-9,\
+    par_max=>1e-4,n_scan_pts=>26,log_scale=>1,t_start=>0,t_end=>60,\
+    n_steps=>60,suffix=>"scan",print_functions=>1,atol=>1e-10,rtol=>1e-10})
+
+  # Same scan at the lowest and highest insulin doses of the published panel
+
+  #@protocol: |
+  #  Repeat the scan at 3.2 pM insulin, the effectively unstimulated top curve
+  #  of the published panel, and at 1 microMolar insulin, the fully suppressed
+  #  bottom curve. Set Ins_conc before running.
+
+#  resetConcentrations()
+#  setParameter("Ins_conc",3.2e-12)
+#  parameter_scan({method=>"ode",parameter=>"ROS_ext_conc",par_min=>1e-9,\
+#    par_max=>1e-4,n_scan_pts=>26,log_scale=>1,t_start=>0,t_end=>60,\
+#    n_steps=>60,suffix=>"scan",print_functions=>1,atol=>1e-10,rtol=>1e-10})
+
+  # Unstressed reference timecourse
+
+  #@protocol: |
+  #  Sixteen-hour timecourse at 1 nM insulin and the lowest applied oxidative
+  #  stress, showing the slow FOXO1 and SOD2 adjustment behind the one-hour
+  #  scan above.
+
+#  resetConcentrations()
+#  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>960,n_steps=>960,\
+#    print_functions=>1,atol=>1e-8,rtol=>1e-8})
+
+  #@note: |
+  #  Exact SSA and partitioned leaping are omitted: the model holds more than a
+  #  million molecules and contains zeroth-order synthesis reactions, so a
+  #  stochastic run of this protocol is impractical and partial scaling fails.
+  #  NFsim is not applicable either, because the rate laws reference global
+  #  observables in Michaelis-Menten and offset forms.
+end actions

@@ -1,0 +1,645 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA                    6.02214076e23  # Constant
+    2 V_ref                 1.65e-11  # Constant
+    3 h_mem                 2e-8  # Constant
+    4 v_extracellular       8.3e-12  # Constant
+    5 v_cellsurface         6.4e-14  # Constant
+    6 v_cytoplasm           1.65e-11  # Constant
+    7 v_nucleus             5e-13  # Constant
+    8 v_dnabound            1e-13  # Constant
+    9 membrane_area         6.5e-9  # Constant
+   10 sc_ros                1000  # Constant
+   11 sc_pip                1000  # Constant
+   12 k1                    2.0e-5  # Constant
+   13 kminus1               12072  # Constant
+   14 k2                    1.2e-5  # Constant
+   15 kminus2               9.0e4  # Constant
+   16 k3                    2500  # Constant
+   17 kminus3               2.0e-6  # Constant
+   18 k4                    3.33333e-4  # Constant
+   19 kminus4               3e-3  # Constant
+   20 k4prime               0.0021  # Constant
+   21 kminus4prime          2.1e-4  # Constant
+   22 k6                    4.61e-6  # Constant
+   23 k7                    5.8  # Constant
+   24 IRp                   9.0e4  # Constant
+   25 kminus7a              8.75e-5  # Constant
+   26 k2psp                 2.2e-4  # Constant
+   27 kminus7b              2.8e-6  # Constant
+   28 k8                    2.6e-6  # Constant
+   29 kminus8               1.55  # Constant
+   30 k_irs1_basal_syn      130  # Constant
+   31 k_irs1_basal_degr     1e-3  # Constant
+   32 k_irs1_polyserp_degr  1e-2  # Constant
+   33 kcat51                0.87  # Constant
+   34 Km51                  100  # Constant
+   35 kcat52                6.95  # Constant
+   36 Km52                  100  # Constant
+   37 k9_basal              0.13145  # Constant
+   38 k9                    0.0055  # Constant
+   39 kminus9_basal         2.7  # Constant
+   40 kminus9               0.0014  # Constant
+   41 k11                   2.5e-5  # Constant
+   42 pip3_basal            200  # Constant
+   43 kminus11              1.1878e-6  # Constant
+   44 k12                   3.5e-5  # Constant
+   45 kminus12              1.25e-6  # Constant
+   46 kr16a                 3.33e-4  # Constant
+   47 kminusr16a            1e-6  # Constant
+   48 k13_basal             0.015  # Constant
+   49 k13                   7.5e-6  # Constant
+   50 kminus13              0.167  # Constant
+   51 k30f                  0.08  # Constant
+   52 k30r                  5e-3  # Constant
+   53 k31f                  2.7e-4  # Constant
+   54 k31r                  2e-3  # Constant
+   55 k34f                  2e-5  # Constant
+   56 k34r1                 1e-3  # Constant
+   57 k34r2                 0.25  # Constant
+   58 k34r3                 1e-3  # Constant
+   59 k35f                  450  # Constant
+   60 k35r                  0.12  # Constant
+   61 k36f                  180  # Constant
+   62 ros_perm              7.4e8  # Constant
+   63 k_ros_perm            ros_perm*membrane_area  # ConstantExpression
+   64 k_ros_efflux          (k_ros_perm*v_extracellular)/v_cytoplasm  # ConstantExpression
+   65 k38f                  0.05  # Constant
+   66 k38r                  2.0  # Constant
+   67 k32f                  6e-4  # Constant
+   68 k32r                  4e-4  # Constant
+   69 k42f                  5e-5  # Constant
+   70 alpha_ox              5  # Constant
+   71 k42f_eff              alpha_ox*k42f  # ConstantExpression
+   72 k42r                  5e-7  # Constant
+   73 k43f                  5e-5  # Constant
+   74 k43r                  5e-7  # Constant
+   75 k_foxo_syn            0.0055  # Constant
+   76 ktr_cn                0.181818181818  # Constant
+   77 ktr_nc                0.055  # Constant
+   78 ktr_nd                0.25  # Constant
+   79 ktr_dn                0.125  # Constant
+   80 mf_cn_pa              0.1  # Constant
+   81 mf_cn_pd              0.5  # Constant
+   82 mf_cn_pe              10  # Constant
+   83 mf_nc_pa              10  # Constant
+   84 mf_nc_pd              10  # Constant
+   85 mf_nc_pe              0.1  # Constant
+   86 mf_nd_pa              0.5  # Constant
+   87 ktr_cn_000            ktr_cn  # ConstantExpression
+   88 ktr_cn_001            ktr_cn*mf_cn_pe  # ConstantExpression
+   89 ktr_cn_010            ktr_cn*mf_cn_pd  # ConstantExpression
+   90 ktr_cn_011            (ktr_cn*mf_cn_pd)*mf_cn_pe  # ConstantExpression
+   91 ktr_cn_100            ktr_cn*mf_cn_pa  # ConstantExpression
+   92 ktr_cn_101            (ktr_cn*mf_cn_pa)*mf_cn_pe  # ConstantExpression
+   93 ktr_cn_110            (ktr_cn*mf_cn_pa)*mf_cn_pd  # ConstantExpression
+   94 ktr_cn_111            ((ktr_cn*mf_cn_pa)*mf_cn_pd)*mf_cn_pe  # ConstantExpression
+   95 ktr_nc_000            ktr_nc  # ConstantExpression
+   96 ktr_nc_001            ktr_nc*mf_nc_pe  # ConstantExpression
+   97 ktr_nc_010            ktr_nc*mf_nc_pd  # ConstantExpression
+   98 ktr_nc_011            (ktr_nc*mf_nc_pd)*mf_nc_pe  # ConstantExpression
+   99 ktr_nc_100            ktr_nc*mf_nc_pa  # ConstantExpression
+  100 ktr_nc_101            (ktr_nc*mf_nc_pa)*mf_nc_pe  # ConstantExpression
+  101 ktr_nc_110            (ktr_nc*mf_nc_pa)*mf_nc_pd  # ConstantExpression
+  102 ktr_nc_111            ((ktr_nc*mf_nc_pa)*mf_nc_pd)*mf_nc_pe  # ConstantExpression
+  103 ktr_nd_0              ktr_nd  # ConstantExpression
+  104 ktr_nd_1              ktr_nd*mf_nd_pa  # ConstantExpression
+  105 k_foxo_phos_basal     5e-5  # Constant
+  106 k_foxo_dephos         1e-6  # Constant
+  107 akt_phos_factor       6  # Constant
+  108 by_ikk_phos_factor    3  # Constant
+  109 by_jnk_phos_factor    2  # Constant
+  110 k_foxo_phos_akt       akt_phos_factor*k_foxo_phos_basal  # ConstantExpression
+  111 k_foxo_phos_ikk       by_ikk_phos_factor*k_foxo_phos_basal  # ConstantExpression
+  112 k_foxo_phos_jnk       by_jnk_phos_factor*k_foxo_phos_basal  # ConstantExpression
+  113 k_foxo_ub             1e-6  # Constant
+  114 mf_ub_pa              3  # Constant
+  115 mf_ub_pd              22  # Constant
+  116 k_foxo_ub_00          k_foxo_ub  # ConstantExpression
+  117 k_foxo_ub_01          k_foxo_ub*mf_ub_pd  # ConstantExpression
+  118 k_foxo_ub_10          k_foxo_ub*mf_ub_pa  # ConstantExpression
+  119 k_foxo_ub_11          (k_foxo_ub*mf_ub_pa)*mf_ub_pd  # ConstantExpression
+  120 k_foxo_deg            1e-4  # Constant
+  121 ktranscr_inr          0.24  # Constant
+  122 kbasal_transcr_inr    5.0  # Constant
+  123 kexp_inr              0.22  # Constant
+  124 kmdeg_inr             5.622  # Constant
+  125 ktransl_inr           2.46  # Constant
+  126 kpdeg_inr             0.0044  # Constant
+  127 ktranscr_sod2         0.95  # Constant
+  128 kbasal_transcr_sod2   15.0  # Constant
+  129 kexp_sod2             0.22  # Constant
+  130 kmdeg_sod2            5.622  # Constant
+  131 ktransl_sod2          1.23  # Constant
+  132 kpdeg_sod2            0.0019  # Constant
+  133 Ins_conc              1e-9  # Constant
+  134 ROS_ext_conc          2.51188643150958e-07  # Constant
+  135 Ins_dose              (Ins_conc*NA)*v_extracellular  # ConstantExpression
+  136 ROS_ext_dose          ((ROS_ext_conc*NA)*v_extracellular)/sc_ros  # ConstantExpression
+  137 InR_pm_0              9.0e4  # Constant
+  138 InR_cyt_0             1.0e4  # Constant
+  139 PTP1B_0               1.0e5  # Constant
+  140 IRS1_0                1.0e5  # Constant
+  141 PI3K_0                1.0e4  # Constant
+  142 PP2A_0                5.0e5  # Constant
+  143 PTEN_0                1.0e5  # Constant
+  144 GSH_0                 100  # Constant
+  145 NOX_0                 100  # Constant
+  146 SOD2_0                4.17e4  # Constant
+  147 Mt_0                  50  # Constant
+  148 Akt_0                 1.0e5  # Constant
+  149 AS160_0               2.0e4  # Constant
+  150 PKC_0                 1.0e5  # Constant
+  151 PIP2_0                2.0e5  # Constant
+  152 PIP3_0                1.0e3  # Constant
+  153 GLUT4_cyt_0           9.6e4  # Constant
+  154 GLUT4_pm_0            4.0e3  # Constant
+  155 JNK_0                 16000  # Constant
+  156 IKK_0                 2000  # Constant
+  157 DUSP_0                1.0e5  # Constant
+  158 E2F1_0                150  # Constant
+  159 Foxo1_0               1000  # Constant
+  160 SCF_0                 1000  # Constant
+  161 Proteasome_0          1000  # Constant
+end parameters
+begin functions
+    1 fcn_irs_tyr_phos() (k7*Obs_State_InR_active)/IRp
+    2 fcn_pip3_syn() k9_basal+(k9*Obs_Cplx_IRS1_PI3K)
+    3 fcn_pip3_deg() kminus9_basal+(kminus9*Obs_State_PTEN_red)
+    4 fcn_akt_phos() k11*if((Obs_State_PIP3>pip3_basal),(Obs_State_PIP3-pip3_basal),0)
+    5 fcn_pkc_phos() k12*if((Obs_State_PIP3>pip3_basal),(Obs_State_PIP3-pip3_basal),0)
+    6 fcn_glut4_out() k13_basal+(k13*Obs_State_AS160_P)
+    7 fcn_nox_deact() k34r1*Obs_State_NOX_active
+    8 fcn_nox_recover() k34r3*Obs_State_NOX_deact
+    9 fcn_irs_serp_ikk() (kcat51*Obs_State_IKK_P)/(Km51+Obs_State_IRS1_unmod)
+   10 fcn_irs_serp_jnk() (kcat52*Obs_State_JNK_P)/(Km52+Obs_State_IRS1_unmod)
+   11 fcn_transcr_inr() ktranscr_inr*Obs_State_Foxo1_dna
+   12 fcn_transcr_sod2() ktranscr_sod2*Obs_State_Foxo1_dna
+   13 Frac_Akt_P() Obs_State_Akt_P/Obs_Tot_Akt
+   14 Frac_PKC_P() Obs_State_PKC_P/Obs_Tot_PKC
+   15 Frac_IRS1_TyrP() Obs_State_IRS1_TyrP/Obs_Tot_IRS1
+   16 Frac_GLUT4_pm() Obs_State_GLUT4_pm/Obs_Tot_GLUT4
+   17 Frac_PTP1B_active() Obs_State_PTP1B_red/Obs_Tot_PTP1B
+   18 Frac_JNK_P() Obs_State_JNK_P/Obs_Tot_JNK
+   19 Frac_IKK_P() Obs_State_IKK_P/Obs_Tot_IKK
+   20 Frac_DUSP_active() Obs_State_DUSP_red/Obs_Tot_DUSP
+   21 Frac_Foxo1_dna() Obs_State_Foxo1_dna/Obs_Tot_Foxo1
+   22 Fold_SOD2() Obs_Tot_SOD2/SOD2_0
+   23 Fold_Foxo1() Obs_Tot_Foxo1/Foxo1_0
+end functions
+begin species
+    1 $Ins() Ins_dose
+    2 $ROS(loc~ext) ROS_ext_dose
+    3 InR(ins~0,loc~pm,y~u) InR_pm_0
+    4 InR(ins~0,loc~cyt,y~u) InR_cyt_0
+    5 PTP1B(ox~0) PTP1B_0
+    6 PTEN(ox~0) PTEN_0
+    7 PP2A() PP2A_0
+    8 IRS1(pi3k,s~u,y~u) IRS1_0
+    9 PI3K(irs) PI3K_0
+   10 PIP(p~2) PIP2_0
+   11 PIP(p~3) PIP3_0
+   12 Akt(s~u) Akt_0
+   13 PKC(s~u) PKC_0
+   14 AS160(s~u) AS160_0
+   15 GLUT4(loc~cyt) GLUT4_cyt_0
+   16 GLUT4(loc~pm) GLUT4_pm_0
+   17 ROS(loc~cyt) 0
+   18 NOX(s~i) NOX_0
+   19 GSH(ox~0) GSH_0
+   20 Mt() Mt_0
+   21 SOD2() SOD2_0
+   22 JNK(s~u) JNK_0
+   23 IKK(s~u) IKK_0
+   24 DUSP(ox~0) DUSP_0
+   25 Foxo1(loc~cyt,pa~0,pd~0,pe~0,pub~0) Foxo1_0
+   26 E2F1() E2F1_0
+   27 SCF() SCF_0
+   28 Proteasome() Proteasome_0
+   29 RNA(g~inr,loc~nuc) 0
+   30 RNA(g~sod2,loc~nuc) 0
+   31 InR(ins~1,loc~pm,y~u) 0
+   32 IRS1(pi3k,s~u,y~p) 0
+   33 IRS1(pi3k,s~p,y~u) 0
+   34 Akt(s~p) 0
+   35 PKC(s~p) 0
+   36 NOX(s~a) 0
+   37 PTP1B(ox~1) 0
+   38 PTEN(ox~1) 0
+   39 GSH(ox~1) 0
+   40 DUSP(ox~1) 0
+   41 JNK(s~p) 0
+   42 IKK(s~p) 0
+   43 Foxo1(loc~nuc,pa~0,pd~0,pe~0,pub~0) 0
+   44 Foxo1(loc~cyt,pa~0,pd~0,pe~0,pub~1) 0
+   45 RNA(g~inr,loc~cyt) 0
+   46 RNA(g~sod2,loc~cyt) 0
+   47 InR(ins~1,loc~pm,y~p) 0
+   48 IRS1(pi3k,s~p,y~p) 0
+   49 IRS1(pi3k!1,s~u,y~p).PI3K(irs!1) 0
+   50 AS160(s~p) 0
+   51 NOX(s~d) 0
+   52 Foxo1(loc~nuc,pa~0,pd~0,pe~0,pub~1) 0
+   53 Foxo1(loc~dna,pa~0,pd~0,pe~0,pub~0) 0
+   54 Foxo1(loc~cyt,pa~1,pd~0,pe~0,pub~0) 0
+   55 Foxo1(loc~nuc,pa~1,pd~0,pe~0,pub~0) 0
+   56 Foxo1(loc~cyt,pa~1,pd~0,pe~0,pub~1) 0
+   57 Foxo1(loc~cyt,pa~0,pd~1,pe~0,pub~0) 0
+   58 Foxo1(loc~nuc,pa~0,pd~1,pe~0,pub~0) 0
+   59 Foxo1(loc~cyt,pa~0,pd~1,pe~0,pub~1) 0
+   60 Foxo1(loc~cyt,pa~0,pd~0,pe~1,pub~0) 0
+   61 Foxo1(loc~nuc,pa~0,pd~0,pe~1,pub~0) 0
+   62 Foxo1(loc~cyt,pa~0,pd~0,pe~1,pub~1) 0
+   63 InR(ins~2,loc~pm,y~p) 0
+   64 InR(ins~1,loc~cyt,y~p) 0
+   65 Foxo1(loc~nuc,pa~0,pd~0,pe~1,pub~1) 0
+   66 Foxo1(loc~nuc,pa~0,pd~1,pe~0,pub~1) 0
+   67 Foxo1(loc~nuc,pa~1,pd~0,pe~0,pub~1) 0
+   68 Foxo1(loc~dna,pa~0,pd~0,pe~0,pub~1) 0
+   69 Foxo1(loc~dna,pa~0,pd~1,pe~0,pub~0) 0
+   70 Foxo1(loc~dna,pa~0,pd~0,pe~1,pub~0) 0
+   71 Foxo1(loc~dna,pa~1,pd~0,pe~0,pub~0) 0
+   72 Foxo1(loc~cyt,pa~1,pd~1,pe~0,pub~0) 0
+   73 Foxo1(loc~nuc,pa~1,pd~1,pe~0,pub~0) 0
+   74 Foxo1(loc~cyt,pa~1,pd~1,pe~0,pub~1) 0
+   75 Foxo1(loc~cyt,pa~1,pd~0,pe~1,pub~0) 0
+   76 Foxo1(loc~nuc,pa~1,pd~0,pe~1,pub~0) 0
+   77 Foxo1(loc~cyt,pa~1,pd~0,pe~1,pub~1) 0
+   78 Foxo1(loc~cyt,pa~0,pd~1,pe~1,pub~0) 0
+   79 Foxo1(loc~nuc,pa~0,pd~1,pe~1,pub~0) 0
+   80 Foxo1(loc~cyt,pa~0,pd~1,pe~1,pub~1) 0
+   81 InR(ins~2,loc~cyt,y~p) 0
+   82 Foxo1(loc~nuc,pa~0,pd~1,pe~1,pub~1) 0
+   83 Foxo1(loc~nuc,pa~1,pd~0,pe~1,pub~1) 0
+   84 Foxo1(loc~nuc,pa~1,pd~1,pe~0,pub~1) 0
+   85 Foxo1(loc~dna,pa~0,pd~0,pe~1,pub~1) 0
+   86 Foxo1(loc~dna,pa~0,pd~1,pe~0,pub~1) 0
+   87 Foxo1(loc~dna,pa~0,pd~1,pe~1,pub~0) 0
+   88 Foxo1(loc~dna,pa~1,pd~0,pe~0,pub~1) 0
+   89 Foxo1(loc~dna,pa~1,pd~1,pe~0,pub~0) 0
+   90 Foxo1(loc~dna,pa~1,pd~0,pe~1,pub~0) 0
+   91 Foxo1(loc~cyt,pa~1,pd~1,pe~1,pub~0) 0
+   92 Foxo1(loc~nuc,pa~1,pd~1,pe~1,pub~0) 0
+   93 Foxo1(loc~cyt,pa~1,pd~1,pe~1,pub~1) 0
+   94 Foxo1(loc~nuc,pa~1,pd~1,pe~1,pub~1) 0
+   95 Foxo1(loc~dna,pa~0,pd~1,pe~1,pub~1) 0
+   96 Foxo1(loc~dna,pa~1,pd~0,pe~1,pub~1) 0
+   97 Foxo1(loc~dna,pa~1,pd~1,pe~0,pub~1) 0
+   98 Foxo1(loc~dna,pa~1,pd~1,pe~1,pub~0) 0
+   99 Foxo1(loc~dna,pa~1,pd~1,pe~1,pub~1) 0
+end species
+begin reactions
+    1 1,3 31 k1 #R_bind_Ins_InR
+    2 3 4 k4 #R_internalize_InR
+    3 4 3 kminus4 #_reverse_R_internalize_InR
+    4 8 32 fcn_irs_tyr_phos #R_phos_IRS_Tyr
+    5 0 8 k_irs1_basal_syn #R_syn_IRS
+    6 8 0 k_irs1_basal_degr #R_degrade_IRS
+    7 8 33 fcn_irs_serp_ikk #R_phos_IRS_Ser_IKK
+    8 8 33 fcn_irs_serp_jnk #R_phos_IRS_Ser_JNK
+    9 10 11 fcn_pip3_syn #R_syn_PIP3
+   10 11 10 fcn_pip3_deg #R_degrade_PIP3
+   11 12 34 fcn_akt_phos #R_phos_Akt
+   12 13 35 fcn_pkc_phos #R_phos_PKC
+   13 15 16 fcn_glut4_out #R_translocate_GLUT4_out
+   14 16 15 kminus13 #R_translocate_GLUT4_in
+   15 1,18 1,36 k34f #R_activate_NOX
+   16 20 17,20 k36f #R_produce_ROS_Mt
+   17 17,21 21 k35r #R_remove_ROS_SOD2
+   18 2 17 k_ros_perm #R_import_ROS
+   19 17 2 k_ros_efflux #R_export_ROS
+   20 5,17 17,37 k30f #R_oxidize_PTP1B
+   21 6,17 17,38 k31f #R_oxidize_PTEN
+   22 17,19 17,39 k38f #R_oxidize_GSH
+   23 17,24 17,40 k32f #R_oxidize_DUSP
+   24 17,22 17,41 k42f_eff #R_phos_JNK
+   25 17,23 17,42 k43f #R_phos_IKK
+   26 25 43 ktr_cn_000 #R_import_Foxo1_000
+   27 26 25,26 k_foxo_syn #R_syn_Foxo1
+   28 25,27 27,44 k_foxo_ub_00 #R_ubiquitinate_Foxo1_00
+   29 0 29 fcn_transcr_inr #R_transcribe_InR_Foxo1
+   30 0 29 kbasal_transcr_inr #R_transcribe_InR_basal
+   31 0 30 fcn_transcr_sod2 #R_transcribe_SOD2_Foxo1
+   32 0 30 kbasal_transcr_sod2 #R_transcribe_SOD2_basal
+   33 29 45 kexp_inr #R_export_RNA_InR
+   34 30 46 kexp_sod2 #R_export_RNA_SOD2
+   35 4 0 kpdeg_inr #R_degrade_InR
+   36 21 0 kpdeg_sod2 #R_degrade_SOD2
+   37 31 1,3 kminus1 #R_unbind_Ins_InR
+   38 31 47 k3 #R_phos_InR
+   39 5,32 5,8 kminus7a #R_dephos_IRS_Tyr
+   40 8,35 33,35 k2psp #R_phos_IRS_Ser_PKC
+   41 32,35 35,48 k2psp #R_phos_IRS_Ser_PKC
+   42 7,33 7,8 kminus7b #R_dephos_IRS_Ser
+   43 9,32 49 k8 #R_bind_IRS_PI3K
+   44 32 0 k_irs1_basal_degr #R_degrade_IRS
+   45 33 0 k_irs1_polyserp_degr #R_degrade_IRS_SerP
+   46 7,34 7,12 kminus11 #R_dephos_Akt
+   47 7,35 7,13 kminus12 #R_dephos_PKC
+   48 14,34 34,50 kr16a #R_phos_AS160
+   49 36 51 fcn_nox_deact #R_deactivate_NOX
+   50 36 18 k34r2 #R_inactivate_NOX
+   51 36 17,36 k35f #R_produce_ROS_NOX
+   52 19,37 5,19 k30r #R_reduce_PTP1B
+   53 19,38 6,19 k31r #R_reduce_PTEN
+   54 39 19 k38r #R_reduce_GSH
+   55 19,40 19,24 k32r #R_reduce_DUSP
+   56 24,41 22,24 k42r #R_dephos_JNK
+   57 24,42 23,24 k43r #R_dephos_IKK
+   58 44 52 ktr_cn_000 #R_import_Foxo1_000
+   59 43 25 ktr_nc_000 #R_export_Foxo1_000
+   60 43 53 ktr_nd_0 #R_bind_DNA_Foxo1_0
+   61 25,34 34,54 k_foxo_phos_akt #R_phos_Foxo1_Akt
+   62 34,43 34,55 k_foxo_phos_akt #R_phos_Foxo1_Akt
+   63 34,44 34,56 k_foxo_phos_akt #R_phos_Foxo1_Akt
+   64 25,42 42,57 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+   65 42,43 42,58 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+   66 42,44 42,59 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+   67 25,41 41,60 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+   68 41,43 41,61 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+   69 41,44 41,62 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+   70 27,43 27,52 k_foxo_ub_00 #R_ubiquitinate_Foxo1_00
+   71 28,44 28 k_foxo_deg #R_degrade_Foxo1
+   72 45 0 kmdeg_inr #R_degrade_RNA_InR
+   73 46 0 kmdeg_sod2 #R_degrade_RNA_SOD2
+   74 45 4,45 ktransl_inr #R_translate_InR
+   75 46 21,46 ktransl_sod2 #R_translate_SOD2
+   76 1,47 63 k2 #R_bind_Ins_InR_P
+   77 5,47 3,5 kminus3 #R_dephos_InR_pm
+   78 47 64 k4prime #R_internalize_InR_P
+   79 7,48 7,32 kminus7b #R_dephos_IRS_Ser
+   80 49 9,32 kminus8 #_reverse_R_bind_IRS_PI3K
+   81 48 0 k_irs1_polyserp_degr #R_degrade_IRS_SerP
+   82 7,50 7,14 kminusr16a #R_dephos_AS160
+   83 51 18 fcn_nox_recover #R_recover_NOX
+   84 60 61 ktr_cn_001 #R_import_Foxo1_001
+   85 62 65 ktr_cn_001 #R_import_Foxo1_001
+   86 57 58 ktr_cn_010 #R_import_Foxo1_010
+   87 59 66 ktr_cn_010 #R_import_Foxo1_010
+   88 54 55 ktr_cn_100 #R_import_Foxo1_100
+   89 56 67 ktr_cn_100 #R_import_Foxo1_100
+   90 52 44 ktr_nc_000 #R_export_Foxo1_000
+   91 61 60 ktr_nc_001 #R_export_Foxo1_001
+   92 58 57 ktr_nc_010 #R_export_Foxo1_010
+   93 55 54 ktr_nc_100 #R_export_Foxo1_100
+   94 52 68 ktr_nd_0 #R_bind_DNA_Foxo1_0
+   95 58 69 ktr_nd_0 #R_bind_DNA_Foxo1_0
+   96 61 70 ktr_nd_0 #R_bind_DNA_Foxo1_0
+   97 55 71 ktr_nd_1 #R_bind_DNA_Foxo1_1
+   98 53 43 ktr_dn #R_release_DNA_Foxo1
+   99 34,52 34,67 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  100 34,53 34,71 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  101 34,57 34,72 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  102 34,58 34,73 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  103 34,59 34,74 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  104 34,60 34,75 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  105 34,61 34,76 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  106 34,62 34,77 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  107 7,54 7,25 k_foxo_dephos #R_dephos_Foxo1_Pa
+  108 7,55 7,43 k_foxo_dephos #R_dephos_Foxo1_Pa
+  109 7,56 7,44 k_foxo_dephos #R_dephos_Foxo1_Pa
+  110 42,52 42,66 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  111 42,53 42,69 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  112 42,54 42,72 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  113 42,55 42,73 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  114 42,56 42,74 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  115 42,60 42,78 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  116 42,61 42,79 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  117 42,62 42,80 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  118 7,57 7,25 k_foxo_dephos #R_dephos_Foxo1_Pd
+  119 7,58 7,43 k_foxo_dephos #R_dephos_Foxo1_Pd
+  120 7,59 7,44 k_foxo_dephos #R_dephos_Foxo1_Pd
+  121 41,52 41,65 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  122 41,53 41,70 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  123 41,54 41,75 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  124 41,55 41,76 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  125 41,56 41,77 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  126 41,57 41,78 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  127 41,58 41,79 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  128 41,59 41,80 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  129 7,60 7,25 k_foxo_dephos #R_dephos_Foxo1_Pe
+  130 7,61 7,43 k_foxo_dephos #R_dephos_Foxo1_Pe
+  131 7,62 7,44 k_foxo_dephos #R_dephos_Foxo1_Pe
+  132 27,53 27,68 k_foxo_ub_00 #R_ubiquitinate_Foxo1_00
+  133 27,60 27,62 k_foxo_ub_00 #R_ubiquitinate_Foxo1_00
+  134 27,61 27,65 k_foxo_ub_00 #R_ubiquitinate_Foxo1_00
+  135 27,57 27,59 k_foxo_ub_01 #R_ubiquitinate_Foxo1_01
+  136 27,58 27,66 k_foxo_ub_01 #R_ubiquitinate_Foxo1_01
+  137 27,54 27,56 k_foxo_ub_10 #R_ubiquitinate_Foxo1_10
+  138 27,55 27,67 k_foxo_ub_10 #R_ubiquitinate_Foxo1_10
+  139 28,56 28 k_foxo_deg #R_degrade_Foxo1
+  140 28,59 28 k_foxo_deg #R_degrade_Foxo1
+  141 28,62 28 k_foxo_deg #R_degrade_Foxo1
+  142 63 1,47 kminus2 #R_unbind_Ins_InR_P
+  143 63 81 k4prime #R_internalize_InR_P
+  144 64 47 kminus4prime #_reverse_R_internalize_InR_P
+  145 5,64 4,5 k6 #R_dephos_InR_cyt
+  146 78 79 ktr_cn_011 #R_import_Foxo1_011
+  147 80 82 ktr_cn_011 #R_import_Foxo1_011
+  148 75 76 ktr_cn_101 #R_import_Foxo1_101
+  149 77 83 ktr_cn_101 #R_import_Foxo1_101
+  150 72 73 ktr_cn_110 #R_import_Foxo1_110
+  151 74 84 ktr_cn_110 #R_import_Foxo1_110
+  152 65 62 ktr_nc_001 #R_export_Foxo1_001
+  153 66 59 ktr_nc_010 #R_export_Foxo1_010
+  154 79 78 ktr_nc_011 #R_export_Foxo1_011
+  155 67 56 ktr_nc_100 #R_export_Foxo1_100
+  156 76 75 ktr_nc_101 #R_export_Foxo1_101
+  157 73 72 ktr_nc_110 #R_export_Foxo1_110
+  158 65 85 ktr_nd_0 #R_bind_DNA_Foxo1_0
+  159 66 86 ktr_nd_0 #R_bind_DNA_Foxo1_0
+  160 79 87 ktr_nd_0 #R_bind_DNA_Foxo1_0
+  161 67 88 ktr_nd_1 #R_bind_DNA_Foxo1_1
+  162 73 89 ktr_nd_1 #R_bind_DNA_Foxo1_1
+  163 76 90 ktr_nd_1 #R_bind_DNA_Foxo1_1
+  164 68 52 ktr_dn #R_release_DNA_Foxo1
+  165 69 58 ktr_dn #R_release_DNA_Foxo1
+  166 70 61 ktr_dn #R_release_DNA_Foxo1
+  167 71 55 ktr_dn #R_release_DNA_Foxo1
+  168 34,65 34,83 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  169 34,66 34,84 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  170 34,68 34,88 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  171 34,69 34,89 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  172 34,70 34,90 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  173 34,78 34,91 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  174 34,79 34,92 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  175 34,80 34,93 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  176 7,67 7,52 k_foxo_dephos #R_dephos_Foxo1_Pa
+  177 7,71 7,53 k_foxo_dephos #R_dephos_Foxo1_Pa
+  178 7,72 7,57 k_foxo_dephos #R_dephos_Foxo1_Pa
+  179 7,73 7,58 k_foxo_dephos #R_dephos_Foxo1_Pa
+  180 7,74 7,59 k_foxo_dephos #R_dephos_Foxo1_Pa
+  181 7,75 7,60 k_foxo_dephos #R_dephos_Foxo1_Pa
+  182 7,76 7,61 k_foxo_dephos #R_dephos_Foxo1_Pa
+  183 7,77 7,62 k_foxo_dephos #R_dephos_Foxo1_Pa
+  184 42,65 42,82 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  185 42,67 42,84 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  186 42,68 42,86 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  187 42,70 42,87 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  188 42,71 42,89 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  189 42,75 42,91 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  190 42,76 42,92 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  191 42,77 42,93 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  192 7,66 7,52 k_foxo_dephos #R_dephos_Foxo1_Pd
+  193 7,69 7,53 k_foxo_dephos #R_dephos_Foxo1_Pd
+  194 7,72 7,54 k_foxo_dephos #R_dephos_Foxo1_Pd
+  195 7,73 7,55 k_foxo_dephos #R_dephos_Foxo1_Pd
+  196 7,74 7,56 k_foxo_dephos #R_dephos_Foxo1_Pd
+  197 7,78 7,60 k_foxo_dephos #R_dephos_Foxo1_Pd
+  198 7,79 7,61 k_foxo_dephos #R_dephos_Foxo1_Pd
+  199 7,80 7,62 k_foxo_dephos #R_dephos_Foxo1_Pd
+  200 41,66 41,82 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  201 41,67 41,83 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  202 41,68 41,85 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  203 41,69 41,87 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  204 41,71 41,90 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  205 41,72 41,91 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  206 41,73 41,92 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  207 41,74 41,93 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  208 7,65 7,52 k_foxo_dephos #R_dephos_Foxo1_Pe
+  209 7,70 7,53 k_foxo_dephos #R_dephos_Foxo1_Pe
+  210 7,75 7,54 k_foxo_dephos #R_dephos_Foxo1_Pe
+  211 7,76 7,55 k_foxo_dephos #R_dephos_Foxo1_Pe
+  212 7,77 7,56 k_foxo_dephos #R_dephos_Foxo1_Pe
+  213 7,78 7,57 k_foxo_dephos #R_dephos_Foxo1_Pe
+  214 7,79 7,58 k_foxo_dephos #R_dephos_Foxo1_Pe
+  215 7,80 7,59 k_foxo_dephos #R_dephos_Foxo1_Pe
+  216 27,70 27,85 k_foxo_ub_00 #R_ubiquitinate_Foxo1_00
+  217 27,69 27,86 k_foxo_ub_01 #R_ubiquitinate_Foxo1_01
+  218 27,78 27,80 k_foxo_ub_01 #R_ubiquitinate_Foxo1_01
+  219 27,79 27,82 k_foxo_ub_01 #R_ubiquitinate_Foxo1_01
+  220 27,71 27,88 k_foxo_ub_10 #R_ubiquitinate_Foxo1_10
+  221 27,75 27,77 k_foxo_ub_10 #R_ubiquitinate_Foxo1_10
+  222 27,76 27,83 k_foxo_ub_10 #R_ubiquitinate_Foxo1_10
+  223 27,72 27,74 k_foxo_ub_11 #R_ubiquitinate_Foxo1_11
+  224 27,73 27,84 k_foxo_ub_11 #R_ubiquitinate_Foxo1_11
+  225 28,74 28 k_foxo_deg #R_degrade_Foxo1
+  226 28,77 28 k_foxo_deg #R_degrade_Foxo1
+  227 28,80 28 k_foxo_deg #R_degrade_Foxo1
+  228 81 63 kminus4prime #_reverse_R_internalize_InR_P
+  229 5,81 4,5 k6 #R_dephos_InR_cyt
+  230 91 92 ktr_cn_111 #R_import_Foxo1_111
+  231 93 94 ktr_cn_111 #R_import_Foxo1_111
+  232 82 80 ktr_nc_011 #R_export_Foxo1_011
+  233 83 77 ktr_nc_101 #R_export_Foxo1_101
+  234 84 74 ktr_nc_110 #R_export_Foxo1_110
+  235 92 91 ktr_nc_111 #R_export_Foxo1_111
+  236 82 95 ktr_nd_0 #R_bind_DNA_Foxo1_0
+  237 83 96 ktr_nd_1 #R_bind_DNA_Foxo1_1
+  238 84 97 ktr_nd_1 #R_bind_DNA_Foxo1_1
+  239 92 98 ktr_nd_1 #R_bind_DNA_Foxo1_1
+  240 85 65 ktr_dn #R_release_DNA_Foxo1
+  241 86 66 ktr_dn #R_release_DNA_Foxo1
+  242 87 79 ktr_dn #R_release_DNA_Foxo1
+  243 88 67 ktr_dn #R_release_DNA_Foxo1
+  244 89 73 ktr_dn #R_release_DNA_Foxo1
+  245 90 76 ktr_dn #R_release_DNA_Foxo1
+  246 34,82 34,94 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  247 34,85 34,96 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  248 34,86 34,97 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  249 34,87 34,98 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  250 7,83 7,65 k_foxo_dephos #R_dephos_Foxo1_Pa
+  251 7,84 7,66 k_foxo_dephos #R_dephos_Foxo1_Pa
+  252 7,88 7,68 k_foxo_dephos #R_dephos_Foxo1_Pa
+  253 7,89 7,69 k_foxo_dephos #R_dephos_Foxo1_Pa
+  254 7,90 7,70 k_foxo_dephos #R_dephos_Foxo1_Pa
+  255 7,91 7,78 k_foxo_dephos #R_dephos_Foxo1_Pa
+  256 7,92 7,79 k_foxo_dephos #R_dephos_Foxo1_Pa
+  257 7,93 7,80 k_foxo_dephos #R_dephos_Foxo1_Pa
+  258 42,83 42,94 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  259 42,85 42,95 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  260 42,88 42,97 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  261 42,90 42,98 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  262 7,82 7,65 k_foxo_dephos #R_dephos_Foxo1_Pd
+  263 7,84 7,67 k_foxo_dephos #R_dephos_Foxo1_Pd
+  264 7,86 7,68 k_foxo_dephos #R_dephos_Foxo1_Pd
+  265 7,87 7,70 k_foxo_dephos #R_dephos_Foxo1_Pd
+  266 7,89 7,71 k_foxo_dephos #R_dephos_Foxo1_Pd
+  267 7,91 7,75 k_foxo_dephos #R_dephos_Foxo1_Pd
+  268 7,92 7,76 k_foxo_dephos #R_dephos_Foxo1_Pd
+  269 7,93 7,77 k_foxo_dephos #R_dephos_Foxo1_Pd
+  270 41,84 41,94 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  271 41,86 41,95 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  272 41,88 41,96 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  273 41,89 41,98 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  274 7,82 7,66 k_foxo_dephos #R_dephos_Foxo1_Pe
+  275 7,83 7,67 k_foxo_dephos #R_dephos_Foxo1_Pe
+  276 7,85 7,68 k_foxo_dephos #R_dephos_Foxo1_Pe
+  277 7,87 7,69 k_foxo_dephos #R_dephos_Foxo1_Pe
+  278 7,90 7,71 k_foxo_dephos #R_dephos_Foxo1_Pe
+  279 7,91 7,72 k_foxo_dephos #R_dephos_Foxo1_Pe
+  280 7,92 7,73 k_foxo_dephos #R_dephos_Foxo1_Pe
+  281 7,93 7,74 k_foxo_dephos #R_dephos_Foxo1_Pe
+  282 27,87 27,95 k_foxo_ub_01 #R_ubiquitinate_Foxo1_01
+  283 27,90 27,96 k_foxo_ub_10 #R_ubiquitinate_Foxo1_10
+  284 27,89 27,97 k_foxo_ub_11 #R_ubiquitinate_Foxo1_11
+  285 27,91 27,93 k_foxo_ub_11 #R_ubiquitinate_Foxo1_11
+  286 27,92 27,94 k_foxo_ub_11 #R_ubiquitinate_Foxo1_11
+  287 28,93 28 k_foxo_deg #R_degrade_Foxo1
+  288 94 93 ktr_nc_111 #R_export_Foxo1_111
+  289 94 99 ktr_nd_1 #R_bind_DNA_Foxo1_1
+  290 95 82 ktr_dn #R_release_DNA_Foxo1
+  291 96 83 ktr_dn #R_release_DNA_Foxo1
+  292 97 84 ktr_dn #R_release_DNA_Foxo1
+  293 98 92 ktr_dn #R_release_DNA_Foxo1
+  294 34,95 34,99 k_foxo_phos_akt #R_phos_Foxo1_Akt
+  295 7,94 7,82 k_foxo_dephos #R_dephos_Foxo1_Pa
+  296 7,96 7,85 k_foxo_dephos #R_dephos_Foxo1_Pa
+  297 7,97 7,86 k_foxo_dephos #R_dephos_Foxo1_Pa
+  298 7,98 7,87 k_foxo_dephos #R_dephos_Foxo1_Pa
+  299 42,96 42,99 k_foxo_phos_ikk #R_phos_Foxo1_IKK
+  300 7,94 7,83 k_foxo_dephos #R_dephos_Foxo1_Pd
+  301 7,95 7,85 k_foxo_dephos #R_dephos_Foxo1_Pd
+  302 7,97 7,88 k_foxo_dephos #R_dephos_Foxo1_Pd
+  303 7,98 7,90 k_foxo_dephos #R_dephos_Foxo1_Pd
+  304 41,97 41,99 k_foxo_phos_jnk #R_phos_Foxo1_JNK
+  305 7,94 7,84 k_foxo_dephos #R_dephos_Foxo1_Pe
+  306 7,95 7,86 k_foxo_dephos #R_dephos_Foxo1_Pe
+  307 7,96 7,88 k_foxo_dephos #R_dephos_Foxo1_Pe
+  308 7,98 7,89 k_foxo_dephos #R_dephos_Foxo1_Pe
+  309 27,98 27,99 k_foxo_ub_11 #R_ubiquitinate_Foxo1_11
+  310 99 94 ktr_dn #R_release_DNA_Foxo1
+  311 7,99 7,95 k_foxo_dephos #R_dephos_Foxo1_Pa
+  312 7,99 7,96 k_foxo_dephos #R_dephos_Foxo1_Pd
+  313 7,99 7,97 k_foxo_dephos #R_dephos_Foxo1_Pe
+end reactions
+begin groups
+    1 Obs_Tot_Ins          1
+    2 Obs_Tot_InR          3,4,31,47,63,64,81
+    3 Obs_State_InR_bound  31,47,63
+    4 Obs_State_InR_active 47,63
+    5 Obs_Tot_IRS1         8,32,33,48,49
+    6 Obs_State_IRS1_TyrP  32
+    7 Obs_State_IRS1_unmod 8
+    8 Obs_Cplx_IRS1_PI3K   49
+    9 Obs_State_PIP3       11
+   10 Obs_Tot_Akt          12,34
+   11 Obs_State_Akt_P      34
+   12 Obs_Tot_PKC          13,35
+   13 Obs_State_PKC_P      35
+   14 Obs_State_AS160_P    50
+   15 Obs_Tot_GLUT4        15,16
+   16 Obs_State_GLUT4_pm   16
+   17 Obs_Tot_PTP1B        5,37
+   18 Obs_State_PTP1B_red  5
+   19 Obs_Tot_PTEN         6,38
+   20 Obs_State_PTEN_red   6
+   21 Obs_State_ROS_cyt    17
+   22 Obs_State_ROS_ext    2
+   23 Obs_State_NOX_active 36
+   24 Obs_State_NOX_deact  51
+   25 Obs_Tot_SOD2         21
+   26 Obs_State_GSH_red    19
+   27 Obs_Tot_JNK          22,41
+   28 Obs_State_JNK_P      41
+   29 Obs_Tot_IKK          23,42
+   30 Obs_State_IKK_P      42
+   31 Obs_Tot_DUSP         24,40
+   32 Obs_State_DUSP_red   24
+   33 Obs_Tot_Foxo1        25,43,44,52,53,54,55,56,57,58,59,60,61,62,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99
+   34 Obs_State_Foxo1_cyt  25,44,54,56,57,59,60,62,72,74,75,77,78,80,91,93
+   35 Obs_State_Foxo1_nuc  43,52,55,58,61,65,66,67,73,76,79,82,83,84,92,94
+   36 Obs_State_Foxo1_dna  53,68,69,70,71,85,86,87,88,89,90,95,96,97,98,99
+   37 Obs_Tot_RNA_InR      29,45
+   38 Obs_Tot_RNA_SOD2     30,46
+end groups
