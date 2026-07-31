@@ -1,0 +1,12 @@
+# Bar heights of Fig. 4B (endothelial pERK1/2) and Fig. 4C (endothelial ppAKT) in Zhang
+# et al. (2023), normalized to the untreated arm. "sim" = the orange simulation bars,
+# "data" = the blue Bridgeman et al. (2016) bars (panel B only). Digitized from page 7 at
+# 1200 dpi: each bar top is the highest row whose column is filled continuously down to
+# the axis; heights are divided by the control bar height, which is 1 by definition.
+# The pERK1/2 "sim" column supplies the Erk input and the ppAKT column the Akt input of
+# the tumor growth model, one pair per treatment arm.
+arm,pERK12_sim,pERK12_data,ppAKT_sim
+control,1.000,1.000,1.000
+sunitinib,0.736,0.711,0.793
+trametinib,0.580,0.522,1.000
+combo,0.355,0.193,0.793

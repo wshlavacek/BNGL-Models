@@ -1,0 +1,36 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 Erk        1  # Constant
+    2 Akt        1  # Constant
+    3 S6b        0  # Constant
+    4 S6t        1  # Constant
+    5 w_OR       0.950956148  # Constant
+    6 tau6       0.691711647  # Constant
+    7 k6         2.983714946  # Constant
+    8 r5         1.787624334  # Constant
+    9 kTD        2.999985128  # Constant
+   10 EC50TD     0.000278233  # Constant
+   11 kg         0.146  # Constant
+   12 klinear    0.3  # Constant
+   13 psi        20  # Constant
+   14 kkill      0  # Constant
+   15 TD_0       0  # Constant
+   16 Cells_0    1  # Constant
+end parameters
+begin functions
+    1 d_TD() r5*((S6b+(((S6t-S6b)*(((w_OR*Erk)+((1-w_OR)*Akt))^k6))/((((w_OR*Erk)+((1-w_OR)*Akt))^k6)+(tau6^k6))))-Obs_TD)
+    2 g_Cells() (((kg*Obs_Cells)/((1+(((kg*Obs_Cells)/klinear)^psi))^(1/psi)))*((Obs_TD^kTD)/((Obs_TD^kTD)+(EC50TD^kTD))))-(kkill*Obs_Cells)
+end functions
+begin species
+    1 I() 1
+    2 TD() TD_0
+    3 Cells() Cells_0
+end species
+begin reactions
+    1 1 1,2 d_TD #_R1
+    2 2 2,3 g_Cells #_R2
+end reactions
+begin groups
+    1 Obs_TD               2
+    2 Obs_Cells            3
+end groups
