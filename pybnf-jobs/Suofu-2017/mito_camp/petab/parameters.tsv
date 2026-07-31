@@ -1,0 +1,15 @@
+parameterId	estimate	lowerBound	upperBound	priorDistribution	priorParameters
+k1f	true	1e-11	0.0001	log-uniform	1e-11;0.0001
+k1r	true	0.0001	1000	log-uniform	0.0001;1000
+k2	true	0.0001	1000	log-uniform	0.0001;1000
+k3f	true	1e-10	0.01	log-uniform	1e-10;0.01
+k3r	true	0.0001	1000	log-uniform	0.0001;1000
+k4	true	0.001	10000	log-uniform	0.001;10000
+k5	true	1e-05	100	log-uniform	1e-05;100
+k6	true	1e-11	0.01	log-uniform	1e-11;0.01
+k7	true	0.001	10000	log-uniform	0.001;10000
+k8f	true	1e-09	1	log-uniform	1e-09;1
+k8r	true	0.0001	10000	log-uniform	0.0001;10000
+kdiff	true	1e-05	10	log-uniform	1e-05;10
+ratio_MT1	true	0.001	1	log-uniform	0.001;1
+MT1_OMM_amp	true	1	20.68	log-uniform	1;20.68
