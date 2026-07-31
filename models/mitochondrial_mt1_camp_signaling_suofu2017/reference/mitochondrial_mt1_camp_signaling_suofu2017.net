@@ -1,0 +1,136 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA            6.02214076e23  # Constant
+    2 PI            3.141592653589793  # Constant
+    3 h_mem         0.01  # Constant
+    4 f             1  # Constant
+    5 V_cy          f*1000  # ConstantExpression
+    6 R_cell        ((3*V_cy)/(4*PI))^(1/3)  # ConstantExpression
+    7 A_pm          (4*PI)*(R_cell^2)  # ConstantExpression
+    8 n_mito        f*100  # ConstantExpression
+    9 r_mito        0.3  # Constant
+   10 V_ml          ((n_mito*(4/3))*PI)*(r_mito^3)  # ConstantExpression
+   11 A_omm         ((n_mito*4)*PI)*(r_mito^2)  # ConstantExpression
+   12 phi           V_ml/V_cy  # ConstantExpression
+   13 V_ec          f*1e5  # ConstantExpression
+   14 V_ref         1e-15*V_cy  # ConstantExpression
+   15 Gi_CY_0       f*3.0e6  # ConstantExpression
+   16 AC_CY_0       f*3.0e5  # ConstantExpression
+   17 PDE_CY_0      f*2.4e5  # ConstantExpression
+   18 ATP_CY_0      f*1.0e9  # ConstantExpression
+   19 cAMP_CY_0     f*1.0e7  # ConstantExpression
+   20 Gi_ML_0       Gi_CY_0*phi  # ConstantExpression
+   21 AC_ML_0       AC_CY_0*phi  # ConstantExpression
+   22 PDE_ML_0      PDE_CY_0*phi  # ConstantExpression
+   23 ATP_ML_0      ATP_CY_0*phi  # ConstantExpression
+   24 cAMP_ML_0     cAMP_CY_0*phi  # ConstantExpression
+   25 R_ref         f*1.0e6  # ConstantExpression
+   26 ratio_MT1     0.0822213  # Constant
+   27 MT1_OMM_amp   1.13002  # Constant
+   28 MT1_OMM_0     (R_ref*phi)*MT1_OMM_amp  # ConstantExpression
+   29 MT1_PM_0      R_ref*ratio_MT1  # ConstantExpression
+   30 OR_PM_0       R_ref  # ConstantExpression
+   31 MT1_isActive  0  # Constant
+   32 OR_isActive   0  # Constant
+   33 k1f           1.14394e-05  # Constant
+   34 k1r           0.00304797  # Constant
+   35 k2            0.25137  # Constant
+   36 k3f           4.45701e-05  # Constant
+   37 k3r           0.00183852  # Constant
+   38 k4            3.30566  # Constant
+   39 k5            32.2976  # Constant
+   40 k6            1.12318e-06  # Constant
+   41 k7            4147.7  # Constant
+   42 k8f           0.029857  # Constant
+   43 k8r           0.000220863  # Constant
+   44 kdiff         0.00963586  # Constant
+   45 kdiff_out     kdiff  # ConstantExpression
+   46 kdiff_in      kdiff*phi  # ConstantExpression
+   47 k6_MT1_PM     k6*MT1_isActive  # ConstantExpression
+   48 k6_MT1_OMM    k6*MT1_isActive  # ConstantExpression
+   49 k6_OR_PM      k6*OR_isActive  # ConstantExpression
+   50 cAMP_CY_eq    7.60808e+06  # Constant
+   51 cAMP_ML_eq    86045.4  # Constant
+end parameters
+begin functions
+    1 cAMP_CY_frac() cAMP_CY/cAMP_CY_eq
+    2 cAMP_ML_frac() cAMP_ML/cAMP_ML_eq
+    3 camp_CY_pct() (100*cAMP_CY)/cAMP_CY_0
+    4 camp_ML_pct() (100*cAMP_ML)/cAMP_ML_0
+end functions
+begin species
+    1 @CY::Nuc(b,s~ATP) ATP_CY_0
+    2 @CY::Nuc(b,s~cAMP) cAMP_CY_0
+    3 @CY::Nuc(b,s~AMP) 0
+    4 @CY::Gi(ac,act~0,r) Gi_CY_0
+    5 @CY::PDE(sub) PDE_CY_0
+    6 @PM::AC(gi,sub) AC_CY_0
+    7 @PM::MT1(g) MT1_PM_0
+    8 @PM::OR(g) OR_PM_0
+    9 @ML::Nuc(b,s~ATP) ATP_ML_0
+   10 @ML::Nuc(b,s~cAMP) cAMP_ML_0
+   11 @ML::Nuc(b,s~AMP) 0
+   12 @ML::Gi(ac,act~0,r) Gi_ML_0
+   13 @ML::PDE(sub) PDE_ML_0
+   14 @OMM::AC(gi,sub) AC_ML_0
+   15 @OMM::MT1(g) MT1_OMM_0
+   16 @PM::AC(gi,sub!1).Nuc(b!1,s~ATP)@CY 0
+   17 @CY::Nuc(b!1,s~cAMP).PDE(sub!1) 0
+   18 @OMM::AC(gi,sub!1).Nuc(b!1,s~ATP)@ML 0
+   19 @ML::Nuc(b!1,s~cAMP).PDE(sub!1) 0
+   20 @PM::Gi(ac,act~0,r!1)@CY.MT1(g!1) 0
+   21 @OMM::Gi(ac,act~0,r!1)@ML.MT1(g!1) 0
+   22 @PM::Gi(ac,act~0,r!1)@CY.OR(g!1) 0
+   23 @CY::Gi(ac,act~1,r) 0
+   24 @ML::Gi(ac,act~1,r) 0
+   25 @PM::AC(gi!1,sub).Gi(ac!1,act~1,r)@CY 0
+   26 @OMM::AC(gi!1,sub).Gi(ac!1,act~1,r)@ML 0
+end species
+begin reactions
+    1 1,6 16 0.001*k1f #_R1 unit_conversion=1/V_cy
+    2 2,5 17 0.001*k3f #_R3 unit_conversion=1/V_cy
+    3 3 1 k5 #_R5
+    4 9,14 18 0.088419413*k1f #_R6 unit_conversion=1/V_ml
+    5 10,13 19 0.088419413*k3f #_R8 unit_conversion=1/V_ml
+    6 11 9 k5 #_R10
+    7 1 9 kdiff_in #_R11
+    8 2 10 kdiff_in #_R11
+    9 3 11 kdiff_in #_R11
+   10 9 1 kdiff_out #_reverse__R11
+   11 10 2 kdiff_out #_reverse__R11
+   12 11 3 kdiff_out #_reverse__R11
+   13 4,7 20 0.001*k6_MT1_PM #_R12 unit_conversion=1/V_cy
+   14 12,15 21 0.088419413*k6_MT1_OMM #_R14 unit_conversion=1/V_ml
+   15 4,8 22 0.001*k6_OR_PM #_R16 unit_conversion=1/V_cy
+   16 16 1,6 k1r #_reverse__R1
+   17 16 2,6 k2 #_R2
+   18 17 2,5 k3r #_reverse__R3
+   19 17 3,5 k4 #_R4
+   20 18 9,14 k1r #_reverse__R6
+   21 18 10,14 k2 #_R7
+   22 19 10,13 k3r #_reverse__R8
+   23 19 11,13 k4 #_R9
+   24 20 7,23 k7 #_R13
+   25 21 15,24 k7 #_R15
+   26 22 8,23 k7 #_R17
+   27 6,23 25 0.001*k8f #_R18 unit_conversion=1/V_cy
+   28 14,24 26 0.088419413*k8f #_R19 unit_conversion=1/V_ml
+   29 25 6,23 k8r #_reverse__R18
+   30 26 14,24 k8r #_reverse__R19
+end reactions
+begin groups
+    1 cAMP_CY              2
+    2 cAMP_ML              10
+    3 ATP_CY               1
+    4 ATP_ML               9
+    5 AMP_CY               3
+    6 AMP_ML               11
+    7 GiA_CY               23,25
+    8 GiA_ML               24,26
+    9 ACfree_PM            6
+   10 ACfree_OMM           14
+   11 ACGi_PM              25
+   12 ACGi_OMM             26
+   13 Nuc_CY               1,2,3,16,17
+   14 Nuc_ML               9,10,11,18,19
+end groups
