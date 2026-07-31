@@ -1,0 +1,631 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA              6.02214076e23  # Constant
+    2 V_ref           1e-15  # Constant
+    3 N_sub           3  # Constant
+    4 kon_ca0         2.5  # Constant
+    5 koff_ca0        50.0  # Constant
+    6 kon_ca1         88.25  # Constant
+    7 koff_ca1        50.0  # Constant
+    8 kon_ca2         12.5  # Constant
+    9 koff_ca2        1250.0  # Constant
+   10 kon_ca3         250.0  # Constant
+   11 koff_ca3        1250.0  # Constant
+   12 kon_u           30.0  # Constant
+   13 koff_u          2.0  # Constant
+   14 koff_u2         4.3  # Constant
+   15 KCa_u           0.94  # Constant
+   16 kon_p           10.0  # Constant
+   17 koff_p          0.001  # Constant
+   18 koff_p2         0.08  # Constant
+   19 KCa_p           0.19  # Constant
+   20 r1              1.0  # Constant
+   21 r2              r1  # ConstantExpression
+   22 r3              0.8*r1  # ConstantExpression
+   23 r305            10.0  # Constant
+   24 rbasal          5e-4  # Constant
+   25 kcat            1.72  # Constant
+   26 Km_PP1          11.0  # Constant
+   27 PP1_tot         0.0  # Constant
+   28 CaMKII_tot      0.005  # Constant
+   29 CaM_tot         1.0  # Constant
+   30 Ca_uM           1.0  # Constant
+   31 _InitialConc1   CaMKII_tot/N_sub  # ConstantExpression
+end parameters
+begin functions
+    1 koff_u_Ca() koff_u2/(1+((Obs_Ca/KCa_u)^2))
+    2 koff_p_Ca() koff_p2/(1+((Obs_Ca/KCa_p)^2))
+    3 k_dephos() kcat/((Km_PP1+Obs_pT286)+Obs_pT305)
+    4 Frac_pT286() Obs_pT286/CaMKII_tot
+    5 Frac_pT305() Obs_pT305/CaMKII_tot
+    6 Frac_active() Obs_Active/CaMKII_tot
+end functions
+begin species
+    1 CaMKII(T286~U,T305~U,cam,ccw!1,cw!2).CaMKII(T286~U,T305~U,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam,ccw!3,cw!1) _InitialConc1
+    2 CaM(ca~0,k) CaM_tot
+    3 $Ca() Ca_uM
+    4 $PP1() PP1_tot
+    5 CaM(ca~1,k) 0
+    6 CaMKII(T286~U,T305~P,cam,ccw!1,cw!2).CaMKII(T286~U,T305~U,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam,ccw!3,cw!1) 0
+    7 CaM(ca~2,k) 0
+    8 CaMKII(T286~U,T305~P,cam,ccw!1,cw!2).CaMKII(T286~U,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam,ccw!3,cw!1) 0
+    9 CaM(ca~3,k) 0
+   10 CaMKII(T286~U,T305~P,cam,ccw!1,cw!2).CaMKII(T286~U,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!3,cw!1) 0
+   11 CaM(ca~4,k) 0
+   12 CaM(ca~4,k!1).CaMKII(T286~U,T305~U,cam!1,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam,ccw!4,cw!2) 0
+   13 CaM(ca~4,k!1).CaMKII(T286~U,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam,ccw!4,cw!2) 0
+   14 CaM(ca~4,k!1).CaMKII(T286~U,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam!1,ccw!4,cw!2).CaMKII(T286~U,T305~U,cam,ccw!3,cw!4) 0
+   15 CaM(ca~4,k!1).CaMKII(T286~U,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam!1,ccw!4,cw!2) 0
+   16 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~U,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam!2,ccw!4,cw!5).CaMKII(T286~U,T305~U,cam,ccw!5,cw!3) 0
+   17 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~U,T305~P,cam,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam!1,ccw!4,cw!5).CaMKII(T286~U,T305~U,cam!2,ccw!5,cw!3) 0
+   18 CaM(ca~4,k!1).CaM(ca~4,k!2).CaM(ca~4,k!3).CaMKII(T286~U,T305~U,cam!1,ccw!4,cw!5).CaMKII(T286~U,T305~U,cam!2,ccw!5,cw!6).CaMKII(T286~U,T305~U,cam!3,ccw!6,cw!4) 0
+   19 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~U,cam!2,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam!1,ccw!5,cw!3).CaMKII(T286~U,T305~U,cam,ccw!4,cw!5) 0
+   20 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~U,cam!2,ccw!3,cw!4).CaMKII(T286~U,T305~P,cam,ccw!4,cw!5).CaMKII(T286~U,T305~U,cam!1,ccw!5,cw!3) 0
+   21 CaM(ca~4,k!1).CaM(ca~4,k!2).CaM(ca~4,k!3).CaMKII(T286~P,T305~U,cam!2,ccw!4,cw!5).CaMKII(T286~U,T305~U,cam!1,ccw!6,cw!4).CaMKII(T286~U,T305~U,cam!3,ccw!5,cw!6) 0
+   22 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam!1,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam,ccw!4,cw!2).CaMKII(T286~U,T305~U,cam,ccw!3,cw!4) 0
+   23 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam!1,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam,ccw!4,cw!2) 0
+   24 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam!1,ccw!4,cw!2).CaMKII(T286~U,T305~U,cam,ccw!3,cw!4) 0
+   25 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam!1,ccw!4,cw!2) 0
+   26 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam!2,ccw!4,cw!5).CaMKII(T286~U,T305~U,cam,ccw!5,cw!3) 0
+   27 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~U,cam,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam!1,ccw!5,cw!3).CaMKII(T286~U,T305~U,cam!2,ccw!4,cw!5) 0
+   28 CaMKII(T286~P,T305~U,cam,ccw!1,cw!2).CaMKII(T286~U,T305~U,cam,ccw!3,cw!1).CaMKII(T286~U,T305~U,cam,ccw!2,cw!3) 0
+   29 CaMKII(T286~P,T305~U,cam,ccw!1,cw!2).CaMKII(T286~U,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam,ccw!3,cw!1) 0
+   30 CaM(ca~4,k!1).CaM(ca~4,k!2).CaM(ca~4,k!3).CaMKII(T286~P,T305~U,cam!2,ccw!4,cw!5).CaMKII(T286~P,T305~U,cam!1,ccw!6,cw!4).CaMKII(T286~U,T305~U,cam!3,ccw!5,cw!6) 0
+   31 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam!1,ccw!4,cw!2).CaMKII(T286~U,T305~U,cam,ccw!3,cw!4) 0
+   32 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam!1,ccw!4,cw!2) 0
+   33 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam!1,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!4,cw!2).CaMKII(T286~U,T305~U,cam,ccw!3,cw!4) 0
+   34 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam!1,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!3,cw!4).CaMKII(T286~U,T305~P,cam,ccw!4,cw!2) 0
+   35 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam,ccw!4,cw!2) 0
+   36 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~P,cam,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam!1,ccw!5,cw!3).CaMKII(T286~U,T305~U,cam!2,ccw!4,cw!5) 0
+   37 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~U,T305~P,cam,ccw!5,cw!3).CaMKII(T286~U,T305~U,cam!2,ccw!4,cw!5) 0
+   38 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~U,cam!2,ccw!3,cw!4).CaMKII(T286~P,T305~U,cam!1,ccw!5,cw!3).CaMKII(T286~U,T305~U,cam,ccw!4,cw!5) 0
+   39 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~U,T305~U,cam,ccw!3,cw!1).CaMKII(T286~U,T305~U,cam,ccw!2,cw!3) 0
+   40 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~U,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam,ccw!3,cw!1) 0
+   41 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~P,T305~U,cam,ccw!4,cw!5).CaMKII(T286~U,T305~U,cam!2,ccw!5,cw!3) 0
+   42 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~P,T305~U,cam,ccw!5,cw!3).CaMKII(T286~U,T305~U,cam!2,ccw!4,cw!5) 0
+   43 CaMKII(T286~P,T305~U,cam,ccw!1,cw!2).CaMKII(T286~U,T305~P,cam,ccw!3,cw!1).CaMKII(T286~U,T305~U,cam,ccw!2,cw!3) 0
+   44 CaMKII(T286~P,T305~U,cam,ccw!1,cw!2).CaMKII(T286~U,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!3,cw!1) 0
+   45 CaM(ca~4,k!1).CaM(ca~4,k!2).CaM(ca~4,k!3).CaMKII(T286~P,T305~U,cam!2,ccw!4,cw!5).CaMKII(T286~P,T305~U,cam!1,ccw!6,cw!4).CaMKII(T286~P,T305~U,cam!3,ccw!5,cw!6) 0
+   46 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam,ccw!4,cw!2) 0
+   47 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!4,cw!2).CaMKII(T286~U,T305~U,cam!1,ccw!3,cw!4) 0
+   48 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam!1,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam,ccw!4,cw!2) 0
+   49 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam!1,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam,ccw!4,cw!2).CaMKII(T286~U,T305~U,cam,ccw!3,cw!4) 0
+   50 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam!1,ccw!4,cw!2) 0
+   51 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~P,T305~U,cam!2,ccw!5,cw!3).CaMKII(T286~P,T305~U,cam,ccw!4,cw!5) 0
+   52 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~P,cam,ccw!3,cw!4).CaMKII(T286~P,T305~U,cam!1,ccw!5,cw!3).CaMKII(T286~U,T305~U,cam!2,ccw!4,cw!5) 0
+   53 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~P,T305~U,cam!2,ccw!4,cw!5).CaMKII(T286~U,T305~P,cam,ccw!5,cw!3) 0
+   54 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~P,cam,ccw!3,cw!4).CaMKII(T286~P,T305~U,cam!2,ccw!4,cw!5).CaMKII(T286~U,T305~U,cam!1,ccw!5,cw!3) 0
+   55 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~U,T305~P,cam,ccw!3,cw!1).CaMKII(T286~U,T305~U,cam,ccw!2,cw!3) 0
+   56 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~U,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!3,cw!1) 0
+   57 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!4,cw!2).CaMKII(T286~U,T305~U,cam!1,ccw!3,cw!4) 0
+   58 CaMKII(T286~P,T305~U,cam,ccw!1,cw!2).CaMKII(T286~P,T305~U,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam,ccw!3,cw!1) 0
+   59 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam!1,ccw!4,cw!2).CaMKII(T286~U,T305~U,cam,ccw!3,cw!4) 0
+   60 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam,ccw!4,cw!2) 0
+   61 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam!1,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam,ccw!3,cw!4).CaMKII(T286~P,T305~U,cam,ccw!4,cw!2) 0
+   62 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam,ccw!4,cw!2).CaMKII(T286~U,T305~U,cam!1,ccw!3,cw!4) 0
+   63 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam!1,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam,ccw!4,cw!2).CaMKII(T286~U,T305~P,cam,ccw!3,cw!4) 0
+   64 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam!1,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam,ccw!3,cw!4).CaMKII(T286~U,T305~P,cam,ccw!4,cw!2) 0
+   65 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam,ccw!3,cw!4).CaMKII(T286~U,T305~U,cam!1,ccw!4,cw!2) 0
+   66 CaM(ca~4,k!1).CaM(ca~4,k!2).CaMKII(T286~P,T305~P,cam,ccw!3,cw!4).CaMKII(T286~P,T305~U,cam!2,ccw!4,cw!5).CaMKII(T286~P,T305~U,cam!1,ccw!5,cw!3) 0
+   67 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~P,T305~U,cam,ccw!3,cw!1).CaMKII(T286~U,T305~U,cam,ccw!2,cw!3) 0
+   68 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~P,T305~U,cam,ccw!2,cw!3).CaMKII(T286~U,T305~U,cam,ccw!3,cw!1) 0
+   69 CaMKII(T286~P,T305~U,cam,ccw!1,cw!2).CaMKII(T286~P,T305~U,cam,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam,ccw!3,cw!1) 0
+   70 CaMKII(T286~P,T305~U,cam,ccw!1,cw!2).CaMKII(T286~P,T305~U,cam,ccw!3,cw!1).CaMKII(T286~U,T305~P,cam,ccw!2,cw!3) 0
+   71 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam!1,ccw!4,cw!2).CaMKII(T286~P,T305~U,cam,ccw!3,cw!4) 0
+   72 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~P,T305~U,cam,ccw!4,cw!2) 0
+   73 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam!1,ccw!3,cw!4).CaMKII(T286~U,T305~P,cam,ccw!4,cw!2) 0
+   74 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~P,T305~P,cam,ccw!4,cw!2).CaMKII(T286~U,T305~U,cam!1,ccw!3,cw!4) 0
+   75 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~P,T305~U,cam!1,ccw!4,cw!2).CaMKII(T286~U,T305~P,cam,ccw!3,cw!4) 0
+   76 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~P,T305~P,cam,ccw!3,cw!1).CaMKII(T286~U,T305~U,cam,ccw!2,cw!3) 0
+   77 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~P,T305~U,cam,ccw!3,cw!1).CaMKII(T286~P,T305~U,cam,ccw!2,cw!3) 0
+   78 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~P,T305~U,cam,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!3,cw!1) 0
+   79 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~P,T305~U,cam,ccw!3,cw!1).CaMKII(T286~U,T305~P,cam,ccw!2,cw!3) 0
+   80 CaM(ca~4,k!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~P,T305~P,cam,ccw!4,cw!2).CaMKII(T286~P,T305~U,cam!1,ccw!3,cw!4) 0
+   81 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~P,T305~P,cam,ccw!3,cw!1).CaMKII(T286~P,T305~U,cam,ccw!2,cw!3) 0
+   82 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3).CaMKII(T286~U,T305~P,cam,ccw!3,cw!1) 0
+   83 CaMKII(T286~P,T305~P,cam,ccw!1,cw!2).CaMKII(T286~P,T305~P,cam,ccw!3,cw!1).CaMKII(T286~P,T305~P,cam,ccw!2,cw!3) 0
+end species
+begin reactions
+    1 2,3 5 kon_ca0 #R_bind_Ca_0
+    2 1 6 3*rbasal #R_phos_T305_basal
+    3 5 2,3 koff_ca0 #_reverse_R_bind_Ca_0
+    4 3,5 7 kon_ca1 #R_bind_Ca_1
+    5 6 8 2*rbasal #R_phos_T305_basal
+    6 6,4 1,4 k_dephos #R_dephos_T305
+    7 7 3,5 koff_ca1 #_reverse_R_bind_Ca_1
+    8 3,7 9 kon_ca2 #R_bind_Ca_2
+    9 8 10 rbasal #R_phos_T305_basal
+   10 8,4 6,4 2*k_dephos #R_dephos_T305
+   11 9 3,7 koff_ca2 #_reverse_R_bind_Ca_2
+   12 3,9 11 kon_ca3 #R_bind_Ca_3
+   13 10,4 8,4 3*k_dephos #R_dephos_T305
+   14 11 3,9 koff_ca3 #_reverse_R_bind_Ca_3
+   15 1,11 12 3*kon_u #R_bind_CaM4_u
+   16 6,11 13 kon_u #R_bind_CaM4_u
+   17 6,11 14 kon_u #R_bind_CaM4_u
+   18 8,11 15 kon_u #R_bind_CaM4_u
+   19 11,12 16 2*kon_u #R_bind_CaM4_u
+   20 11,13 17 kon_u #R_bind_CaM4_u
+   21 11,14 17 kon_u #R_bind_CaM4_u
+   22 12 1,11 koff_u #_reverse_R_bind_CaM4_u
+   23 13 6,11 koff_u #_reverse_R_bind_CaM4_u
+   24 14 6,11 koff_u #_reverse_R_bind_CaM4_u
+   25 15 8,11 koff_u #_reverse_R_bind_CaM4_u
+   26 12 1,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   27 13 6,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   28 14 6,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   29 15 8,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   30 12 14 rbasal #R_phos_T305_basal
+   31 12 13 rbasal #R_phos_T305_basal
+   32 13 15 rbasal #R_phos_T305_basal
+   33 14 15 rbasal #R_phos_T305_basal
+   34 13,4 12,4 k_dephos #R_dephos_T305
+   35 14,4 12,4 k_dephos #R_dephos_T305
+   36 15,4 13,4 k_dephos #R_dephos_T305
+   37 15,4 14,4 k_dephos #R_dephos_T305
+   38 11,16 18 kon_u #R_bind_CaM4_u
+   39 16 11,12 2*koff_u #_reverse_R_bind_CaM4_u
+   40 17 11,14 koff_u #_reverse_R_bind_CaM4_u
+   41 17 11,13 koff_u #_reverse_R_bind_CaM4_u
+   42 16 12,7,3,3 2*koff_u_Ca #R_release_CaM_Ca_u
+   43 17 14,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   44 17 13,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   45 16 19 r1 #R_autophos_T286_by_Cu
+   46 17 20 r1 #R_autophos_T286_by_Cu
+   47 16 17 rbasal #R_phos_T305_basal
+   48 17,4 16,4 k_dephos #R_dephos_T305
+   49 11,19 21 kon_u #R_bind_CaM4_u
+   50 18 11,16 3*koff_u #_reverse_R_bind_CaM4_u
+   51 19 11,22 koff_u #_reverse_R_bind_CaM4_u
+   52 20 11,23 koff_u #_reverse_R_bind_CaM4_u
+   53 19 11,24 koff_p #_reverse_R_bind_CaM4_p
+   54 20 11,25 koff_p #_reverse_R_bind_CaM4_p
+   55 18 16,7,3,3 3*koff_u_Ca #R_release_CaM_Ca_u
+   56 19 22,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   57 20 23,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   58 19 24,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+   59 20 25,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+   60 18 21 3*r1 #R_autophos_T286_by_Cu
+   61 19 20 rbasal #R_phos_T305_basal
+   62 19,4 16,4 k_dephos #R_dephos_T286
+   63 20,4 17,4 k_dephos #R_dephos_T286
+   64 20,4 19,4 k_dephos #R_dephos_T305
+   65 11,22 19 kon_u #R_bind_CaM4_u
+   66 11,22 26 kon_u #R_bind_CaM4_u
+   67 11,23 20 kon_u #R_bind_CaM4_u
+   68 11,24 27 kon_u #R_bind_CaM4_u
+   69 21 11,26 koff_u #_reverse_R_bind_CaM4_u
+   70 21 11,19 koff_u #_reverse_R_bind_CaM4_u
+   71 24 11,28 koff_u #_reverse_R_bind_CaM4_u
+   72 25 11,29 koff_u #_reverse_R_bind_CaM4_u
+   73 11,24 19 kon_p #R_bind_CaM4_p
+   74 11,25 20 kon_p #R_bind_CaM4_p
+   75 21 11,27 koff_p #_reverse_R_bind_CaM4_p
+   76 22 11,28 koff_p #_reverse_R_bind_CaM4_p
+   77 23 11,29 koff_p #_reverse_R_bind_CaM4_p
+   78 21 26,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   79 21 19,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   80 24 28,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   81 25 29,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   82 21 27,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+   83 22 28,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+   84 23 29,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+   85 21 30 r1 #R_autophos_T286_by_Cu
+   86 21 30 r2 #R_autophos_T286_by_Cp
+   87 24 31 r305 #R_phos_T305
+   88 25 32 r305 #R_phos_T305
+   89 22 33 rbasal #R_phos_T305_basal
+   90 22 23 rbasal #R_phos_T305_basal
+   91 23 34 rbasal #R_phos_T305_basal
+   92 24 25 rbasal #R_phos_T305_basal
+   93 21,4 18,4 k_dephos #R_dephos_T286
+   94 22,4 12,4 k_dephos #R_dephos_T286
+   95 23,4 14,4 k_dephos #R_dephos_T286
+   96 24,4 12,4 k_dephos #R_dephos_T286
+   97 25,4 13,4 k_dephos #R_dephos_T286
+   98 23,4 22,4 k_dephos #R_dephos_T305
+   99 25,4 24,4 k_dephos #R_dephos_T305
+  100 11,26 21 kon_u #R_bind_CaM4_u
+  101 11,28 24 kon_u #R_bind_CaM4_u
+  102 11,28 35 kon_u #R_bind_CaM4_u
+  103 11,29 25 kon_u #R_bind_CaM4_u
+  104 11,31 36 kon_u #R_bind_CaM4_u
+  105 11,33 37 kon_u #R_bind_CaM4_u
+  106 26 11,22 koff_u #_reverse_R_bind_CaM4_u
+  107 27 11,35 koff_u #_reverse_R_bind_CaM4_u
+  108 27 11,24 koff_u #_reverse_R_bind_CaM4_u
+  109 30 11,38 koff_u #_reverse_R_bind_CaM4_u
+  110 31 11,39 koff_u #_reverse_R_bind_CaM4_u
+  111 32 11,40 koff_u #_reverse_R_bind_CaM4_u
+  112 11,27 21 kon_p #R_bind_CaM4_p
+  113 11,28 22 kon_p #R_bind_CaM4_p
+  114 11,29 23 kon_p #R_bind_CaM4_p
+  115 26 11,35 koff_p #_reverse_R_bind_CaM4_p
+  116 30 11,41 koff_p #_reverse_R_bind_CaM4_p
+  117 30 11,42 koff_p #_reverse_R_bind_CaM4_p
+  118 33 11,43 koff_p #_reverse_R_bind_CaM4_p
+  119 34 11,44 koff_p #_reverse_R_bind_CaM4_p
+  120 26 22,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  121 27 35,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  122 27 24,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  123 30 38,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  124 31 39,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  125 32 40,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  126 26 35,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  127 30 41,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  128 30 42,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  129 33 43,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  130 34 44,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  131 27 41 r1 #R_autophos_T286_by_Cu
+  132 26 38 r2 #R_autophos_T286_by_Cp
+  133 30 45 r2 #R_autophos_T286_by_Cp
+  134 27 42 r3 #R_autophos_T286_by_D
+  135 27 36 r305 #R_phos_T305
+  136 28 39 r305 #R_phos_T305
+  137 29 40 r305 #R_phos_T305
+  138 26 37 rbasal #R_phos_T305_basal
+  139 28 43 rbasal #R_phos_T305_basal
+  140 28 29 rbasal #R_phos_T305_basal
+  141 29 44 rbasal #R_phos_T305_basal
+  142 31 32 rbasal #R_phos_T305_basal
+  143 33 34 rbasal #R_phos_T305_basal
+  144 26,4 16,4 k_dephos #R_dephos_T286
+  145 27,4 16,4 k_dephos #R_dephos_T286
+  146 28,4 1,4 k_dephos #R_dephos_T286
+  147 29,4 6,4 k_dephos #R_dephos_T286
+  148 30,4 21,4 2*k_dephos #R_dephos_T286
+  149 31,4 14,4 k_dephos #R_dephos_T286
+  150 32,4 15,4 k_dephos #R_dephos_T286
+  151 33,4 13,4 k_dephos #R_dephos_T286
+  152 34,4 15,4 k_dephos #R_dephos_T286
+  153 29,4 28,4 k_dephos #R_dephos_T305
+  154 31,4 24,4 k_dephos #R_dephos_T305
+  155 32,4 25,4 k_dephos #R_dephos_T305
+  156 32,4 31,4 k_dephos #R_dephos_T305
+  157 33,4 22,4 k_dephos #R_dephos_T305
+  158 34,4 33,4 k_dephos #R_dephos_T305
+  159 34,4 23,4 k_dephos #R_dephos_T305
+  160 11,35 27 kon_u #R_bind_CaM4_u
+  161 11,38 30 kon_u #R_bind_CaM4_u
+  162 11,39 31 kon_u #R_bind_CaM4_u
+  163 11,39 46 kon_u #R_bind_CaM4_u
+  164 11,40 32 kon_u #R_bind_CaM4_u
+  165 11,43 47 kon_u #R_bind_CaM4_u
+  166 35 11,28 koff_u #_reverse_R_bind_CaM4_u
+  167 36 11,46 koff_u #_reverse_R_bind_CaM4_u
+  168 36 11,31 koff_u #_reverse_R_bind_CaM4_u
+  169 37 11,33 koff_u #_reverse_R_bind_CaM4_u
+  170 41 11,48 koff_u #_reverse_R_bind_CaM4_u
+  171 42 11,49 koff_u #_reverse_R_bind_CaM4_u
+  172 11,35 26 kon_p #R_bind_CaM4_p
+  173 11,41 30 kon_p #R_bind_CaM4_p
+  174 11,42 30 kon_p #R_bind_CaM4_p
+  175 11,43 33 kon_p #R_bind_CaM4_p
+  176 11,44 34 kon_p #R_bind_CaM4_p
+  177 37 11,47 koff_p #_reverse_R_bind_CaM4_p
+  178 38 11,48 koff_p #_reverse_R_bind_CaM4_p
+  179 38 11,49 koff_p #_reverse_R_bind_CaM4_p
+  180 41 11,50 koff_p #_reverse_R_bind_CaM4_p
+  181 42 11,50 koff_p #_reverse_R_bind_CaM4_p
+  182 45 11,51 3*koff_p #_reverse_R_bind_CaM4_p
+  183 35 28,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  184 36 46,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  185 36 31,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  186 37 33,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  187 41 48,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  188 42 49,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  189 37 47,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  190 38 48,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  191 38 49,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  192 41 50,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  193 42 50,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  194 45 51,7,3,3 3*koff_p_Ca #R_release_CaM_Ca_p
+  195 36 52 r1 #R_autophos_T286_by_Cu
+  196 37 53 r2 #R_autophos_T286_by_Cp
+  197 42 51 r2 #R_autophos_T286_by_Cp
+  198 35 49 r3 #R_autophos_T286_by_D
+  199 36 54 r3 #R_autophos_T286_by_D
+  200 41 51 r3 #R_autophos_T286_by_D
+  201 35 46 r305 #R_phos_T305
+  202 41 52 r305 #R_phos_T305
+  203 42 54 r305 #R_phos_T305
+  204 43 55 r305 #R_phos_T305
+  205 44 56 r305 #R_phos_T305
+  206 35 47 rbasal #R_phos_T305_basal
+  207 38 53 rbasal #R_phos_T305_basal
+  208 39 55 rbasal #R_phos_T305_basal
+  209 39 40 rbasal #R_phos_T305_basal
+  210 40 56 rbasal #R_phos_T305_basal
+  211 43 44 rbasal #R_phos_T305_basal
+  212 35,4 12,4 k_dephos #R_dephos_T286
+  213 36,4 17,4 k_dephos #R_dephos_T286
+  214 37,4 17,4 k_dephos #R_dephos_T286
+  215 38,4 26,4 k_dephos #R_dephos_T286
+  216 38,4 19,4 k_dephos #R_dephos_T286
+  217 39,4 6,4 k_dephos #R_dephos_T286
+  218 40,4 8,4 k_dephos #R_dephos_T286
+  219 41,4 27,4 k_dephos #R_dephos_T286
+  220 41,4 19,4 k_dephos #R_dephos_T286
+  221 42,4 27,4 k_dephos #R_dephos_T286
+  222 42,4 26,4 k_dephos #R_dephos_T286
+  223 43,4 6,4 k_dephos #R_dephos_T286
+  224 44,4 8,4 k_dephos #R_dephos_T286
+  225 45,4 30,4 3*k_dephos #R_dephos_T286
+  226 36,4 27,4 k_dephos #R_dephos_T305
+  227 37,4 26,4 k_dephos #R_dephos_T305
+  228 39,4 28,4 k_dephos #R_dephos_T305
+  229 40,4 29,4 k_dephos #R_dephos_T305
+  230 40,4 39,4 k_dephos #R_dephos_T305
+  231 43,4 28,4 k_dephos #R_dephos_T305
+  232 44,4 43,4 k_dephos #R_dephos_T305
+  233 44,4 29,4 k_dephos #R_dephos_T305
+  234 11,46 36 kon_u #R_bind_CaM4_u
+  235 11,48 41 kon_u #R_bind_CaM4_u
+  236 11,49 42 kon_u #R_bind_CaM4_u
+  237 11,55 57 kon_u #R_bind_CaM4_u
+  238 46 11,39 koff_u #_reverse_R_bind_CaM4_u
+  239 47 11,43 koff_u #_reverse_R_bind_CaM4_u
+  240 50 11,58 koff_u #_reverse_R_bind_CaM4_u
+  241 52 11,59 koff_u #_reverse_R_bind_CaM4_u
+  242 54 11,60 koff_u #_reverse_R_bind_CaM4_u
+  243 11,47 37 kon_p #R_bind_CaM4_p
+  244 11,48 38 kon_p #R_bind_CaM4_p
+  245 11,49 38 kon_p #R_bind_CaM4_p
+  246 11,50 41 kon_p #R_bind_CaM4_p
+  247 11,50 42 kon_p #R_bind_CaM4_p
+  248 11,51 45 kon_p #R_bind_CaM4_p
+  249 48 11,58 koff_p #_reverse_R_bind_CaM4_p
+  250 49 11,58 koff_p #_reverse_R_bind_CaM4_p
+  251 51 11,61 2*koff_p #_reverse_R_bind_CaM4_p
+  252 52 11,62 koff_p #_reverse_R_bind_CaM4_p
+  253 53 11,63 koff_p #_reverse_R_bind_CaM4_p
+  254 53 11,64 koff_p #_reverse_R_bind_CaM4_p
+  255 54 11,65 koff_p #_reverse_R_bind_CaM4_p
+  256 46 39,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  257 47 43,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  258 50 58,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  259 52 59,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  260 54 60,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  261 48 58,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  262 49 58,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  263 51 61,7,3,3 2*koff_p_Ca #R_release_CaM_Ca_p
+  264 52 62,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  265 53 63,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  266 53 64,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  267 54 65,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  268 54 66 r2 #R_autophos_T286_by_Cp
+  269 46 60 r3 #R_autophos_T286_by_D
+  270 47 63 r3 #R_autophos_T286_by_D
+  271 50 61 r3 #R_autophos_T286_by_D
+  272 52 66 r3 #R_autophos_T286_by_D
+  273 47 57 r305 #R_phos_T305
+  274 48 59 r305 #R_phos_T305
+  275 49 60 r305 #R_phos_T305
+  276 50 65 r305 #R_phos_T305
+  277 50 62 r305 #R_phos_T305
+  278 51 66 r305 #R_phos_T305
+  279 46 57 rbasal #R_phos_T305_basal
+  280 48 64 rbasal #R_phos_T305_basal
+  281 49 63 rbasal #R_phos_T305_basal
+  282 55 56 rbasal #R_phos_T305_basal
+  283 46,4 13,4 k_dephos #R_dephos_T286
+  284 47,4 14,4 k_dephos #R_dephos_T286
+  285 48,4 24,4 k_dephos #R_dephos_T286
+  286 48,4 22,4 k_dephos #R_dephos_T286
+  287 49,4 35,4 k_dephos #R_dephos_T286
+  288 49,4 22,4 k_dephos #R_dephos_T286
+  289 50,4 35,4 k_dephos #R_dephos_T286
+  290 50,4 24,4 k_dephos #R_dephos_T286
+  291 51,4 42,4 k_dephos #R_dephos_T286
+  292 51,4 41,4 k_dephos #R_dephos_T286
+  293 51,4 38,4 k_dephos #R_dephos_T286
+  294 52,4 20,4 k_dephos #R_dephos_T286
+  295 52,4 36,4 k_dephos #R_dephos_T286
+  296 53,4 20,4 k_dephos #R_dephos_T286
+  297 53,4 37,4 k_dephos #R_dephos_T286
+  298 54,4 37,4 k_dephos #R_dephos_T286
+  299 54,4 36,4 k_dephos #R_dephos_T286
+  300 55,4 8,4 k_dephos #R_dephos_T286
+  301 56,4 10,4 k_dephos #R_dephos_T286
+  302 46,4 35,4 k_dephos #R_dephos_T305
+  303 47,4 35,4 k_dephos #R_dephos_T305
+  304 52,4 41,4 k_dephos #R_dephos_T305
+  305 53,4 38,4 k_dephos #R_dephos_T305
+  306 54,4 42,4 k_dephos #R_dephos_T305
+  307 55,4 43,4 k_dephos #R_dephos_T305
+  308 55,4 39,4 k_dephos #R_dephos_T305
+  309 56,4 44,4 k_dephos #R_dephos_T305
+  310 56,4 55,4 k_dephos #R_dephos_T305
+  311 56,4 40,4 k_dephos #R_dephos_T305
+  312 11,58 50 kon_u #R_bind_CaM4_u
+  313 11,59 52 kon_u #R_bind_CaM4_u
+  314 11,60 54 kon_u #R_bind_CaM4_u
+  315 57 11,55 koff_u #_reverse_R_bind_CaM4_u
+  316 62 11,67 koff_u #_reverse_R_bind_CaM4_u
+  317 65 11,68 koff_u #_reverse_R_bind_CaM4_u
+  318 11,58 48 kon_p #R_bind_CaM4_p
+  319 11,58 49 kon_p #R_bind_CaM4_p
+  320 11,61 51 2*kon_p #R_bind_CaM4_p
+  321 11,62 52 kon_p #R_bind_CaM4_p
+  322 11,63 53 kon_p #R_bind_CaM4_p
+  323 11,64 53 kon_p #R_bind_CaM4_p
+  324 11,65 54 kon_p #R_bind_CaM4_p
+  325 59 11,67 koff_p #_reverse_R_bind_CaM4_p
+  326 60 11,68 koff_p #_reverse_R_bind_CaM4_p
+  327 61 11,69 koff_p #_reverse_R_bind_CaM4_p
+  328 63 11,70 koff_p #_reverse_R_bind_CaM4_p
+  329 64 11,70 koff_p #_reverse_R_bind_CaM4_p
+  330 66 11,71 koff_p #_reverse_R_bind_CaM4_p
+  331 66 11,72 koff_p #_reverse_R_bind_CaM4_p
+  332 57 55,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  333 62 67,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  334 65 68,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  335 59 67,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  336 60 68,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  337 61 69,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  338 63 70,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  339 64 70,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  340 66 71,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  341 66 72,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  342 57 73 r3 #R_autophos_T286_by_D
+  343 62 72 r3 #R_autophos_T286_by_D
+  344 65 71 r3 #R_autophos_T286_by_D
+  345 58 68 r305 #R_phos_T305
+  346 58 67 r305 #R_phos_T305
+  347 61 71 r305 #R_phos_T305
+  348 61 72 r305 #R_phos_T305
+  349 62 74 r305 #R_phos_T305
+  350 63 73 r305 #R_phos_T305
+  351 64 75 r305 #R_phos_T305
+  352 65 74 r305 #R_phos_T305
+  353 58 70 rbasal #R_phos_T305_basal
+  354 59 75 rbasal #R_phos_T305_basal
+  355 60 73 rbasal #R_phos_T305_basal
+  356 57,4 15,4 k_dephos #R_dephos_T286
+  357 58,4 28,4 2*k_dephos #R_dephos_T286
+  358 59,4 23,4 k_dephos #R_dephos_T286
+  359 59,4 31,4 k_dephos #R_dephos_T286
+  360 60,4 33,4 k_dephos #R_dephos_T286
+  361 60,4 46,4 k_dephos #R_dephos_T286
+  362 61,4 50,4 k_dephos #R_dephos_T286
+  363 61,4 49,4 k_dephos #R_dephos_T286
+  364 61,4 48,4 k_dephos #R_dephos_T286
+  365 62,4 25,4 k_dephos #R_dephos_T286
+  366 62,4 46,4 k_dephos #R_dephos_T286
+  367 63,4 47,4 k_dephos #R_dephos_T286
+  368 63,4 23,4 k_dephos #R_dephos_T286
+  369 64,4 25,4 k_dephos #R_dephos_T286
+  370 64,4 33,4 k_dephos #R_dephos_T286
+  371 65,4 47,4 k_dephos #R_dephos_T286
+  372 65,4 31,4 k_dephos #R_dephos_T286
+  373 66,4 53,4 k_dephos #R_dephos_T286
+  374 66,4 52,4 k_dephos #R_dephos_T286
+  375 66,4 54,4 k_dephos #R_dephos_T286
+  376 57,4 47,4 k_dephos #R_dephos_T305
+  377 57,4 46,4 k_dephos #R_dephos_T305
+  378 59,4 48,4 k_dephos #R_dephos_T305
+  379 60,4 49,4 k_dephos #R_dephos_T305
+  380 62,4 50,4 k_dephos #R_dephos_T305
+  381 63,4 49,4 k_dephos #R_dephos_T305
+  382 64,4 48,4 k_dephos #R_dephos_T305
+  383 65,4 50,4 k_dephos #R_dephos_T305
+  384 66,4 51,4 k_dephos #R_dephos_T305
+  385 11,67 62 kon_u #R_bind_CaM4_u
+  386 11,68 65 kon_u #R_bind_CaM4_u
+  387 74 11,76 koff_u #_reverse_R_bind_CaM4_u
+  388 11,67 59 kon_p #R_bind_CaM4_p
+  389 11,68 60 kon_p #R_bind_CaM4_p
+  390 11,69 61 3*kon_p #R_bind_CaM4_p
+  391 11,70 63 kon_p #R_bind_CaM4_p
+  392 11,70 64 kon_p #R_bind_CaM4_p
+  393 11,71 66 kon_p #R_bind_CaM4_p
+  394 11,72 66 kon_p #R_bind_CaM4_p
+  395 71 11,77 koff_p #_reverse_R_bind_CaM4_p
+  396 72 11,77 koff_p #_reverse_R_bind_CaM4_p
+  397 73 11,78 koff_p #_reverse_R_bind_CaM4_p
+  398 75 11,79 koff_p #_reverse_R_bind_CaM4_p
+  399 74 76,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+  400 71 77,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  401 72 77,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  402 73 78,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  403 75 79,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  404 74 80 r3 #R_autophos_T286_by_D
+  405 67 76 r305 #R_phos_T305
+  406 68 76 r305 #R_phos_T305
+  407 69 77 3*r305 #R_phos_T305
+  408 70 79 r305 #R_phos_T305
+  409 70 78 r305 #R_phos_T305
+  410 71 80 r305 #R_phos_T305
+  411 72 80 r305 #R_phos_T305
+  412 67 79 rbasal #R_phos_T305_basal
+  413 68 78 rbasal #R_phos_T305_basal
+  414 67,4 29,4 k_dephos #R_dephos_T286
+  415 67,4 39,4 k_dephos #R_dephos_T286
+  416 68,4 43,4 k_dephos #R_dephos_T286
+  417 68,4 39,4 k_dephos #R_dephos_T286
+  418 69,4 58,4 3*k_dephos #R_dephos_T286
+  419 70,4 43,4 k_dephos #R_dephos_T286
+  420 70,4 29,4 k_dephos #R_dephos_T286
+  421 71,4 63,4 k_dephos #R_dephos_T286
+  422 71,4 65,4 k_dephos #R_dephos_T286
+  423 71,4 59,4 k_dephos #R_dephos_T286
+  424 72,4 64,4 k_dephos #R_dephos_T286
+  425 72,4 62,4 k_dephos #R_dephos_T286
+  426 72,4 60,4 k_dephos #R_dephos_T286
+  427 73,4 34,4 k_dephos #R_dephos_T286
+  428 73,4 57,4 k_dephos #R_dephos_T286
+  429 74,4 32,4 k_dephos #R_dephos_T286
+  430 74,4 57,4 k_dephos #R_dephos_T286
+  431 75,4 34,4 k_dephos #R_dephos_T286
+  432 75,4 32,4 k_dephos #R_dephos_T286
+  433 67,4 58,4 k_dephos #R_dephos_T305
+  434 68,4 58,4 k_dephos #R_dephos_T305
+  435 70,4 58,4 k_dephos #R_dephos_T305
+  436 71,4 61,4 k_dephos #R_dephos_T305
+  437 72,4 61,4 k_dephos #R_dephos_T305
+  438 73,4 63,4 k_dephos #R_dephos_T305
+  439 73,4 60,4 k_dephos #R_dephos_T305
+  440 74,4 65,4 k_dephos #R_dephos_T305
+  441 74,4 62,4 k_dephos #R_dephos_T305
+  442 75,4 64,4 k_dephos #R_dephos_T305
+  443 75,4 59,4 k_dephos #R_dephos_T305
+  444 11,76 74 kon_u #R_bind_CaM4_u
+  445 11,77 71 kon_p #R_bind_CaM4_p
+  446 11,77 72 kon_p #R_bind_CaM4_p
+  447 11,78 73 kon_p #R_bind_CaM4_p
+  448 11,79 75 kon_p #R_bind_CaM4_p
+  449 80 11,81 koff_p #_reverse_R_bind_CaM4_p
+  450 80 81,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+  451 77 81 2*r305 #R_phos_T305
+  452 78 82 r305 #R_phos_T305
+  453 79 82 r305 #R_phos_T305
+  454 76 82 rbasal #R_phos_T305_basal
+  455 76,4 40,4 k_dephos #R_dephos_T286
+  456 76,4 55,4 k_dephos #R_dephos_T286
+  457 77,4 70,4 k_dephos #R_dephos_T286
+  458 77,4 68,4 k_dephos #R_dephos_T286
+  459 77,4 67,4 k_dephos #R_dephos_T286
+  460 78,4 44,4 k_dephos #R_dephos_T286
+  461 78,4 55,4 k_dephos #R_dephos_T286
+  462 79,4 44,4 k_dephos #R_dephos_T286
+  463 79,4 40,4 k_dephos #R_dephos_T286
+  464 80,4 75,4 k_dephos #R_dephos_T286
+  465 80,4 73,4 k_dephos #R_dephos_T286
+  466 80,4 74,4 k_dephos #R_dephos_T286
+  467 76,4 68,4 k_dephos #R_dephos_T305
+  468 76,4 67,4 k_dephos #R_dephos_T305
+  469 77,4 69,4 k_dephos #R_dephos_T305
+  470 78,4 70,4 k_dephos #R_dephos_T305
+  471 78,4 68,4 k_dephos #R_dephos_T305
+  472 79,4 70,4 k_dephos #R_dephos_T305
+  473 79,4 67,4 k_dephos #R_dephos_T305
+  474 80,4 71,4 k_dephos #R_dephos_T305
+  475 80,4 72,4 k_dephos #R_dephos_T305
+  476 11,81 80 kon_p #R_bind_CaM4_p
+  477 81 83 r305 #R_phos_T305
+  478 81,4 79,4 k_dephos #R_dephos_T286
+  479 81,4 78,4 k_dephos #R_dephos_T286
+  480 81,4 76,4 k_dephos #R_dephos_T286
+  481 82,4 56,4 2*k_dephos #R_dephos_T286
+  482 81,4 77,4 2*k_dephos #R_dephos_T305
+  483 82,4 79,4 k_dephos #R_dephos_T305
+  484 82,4 78,4 k_dephos #R_dephos_T305
+  485 82,4 76,4 k_dephos #R_dephos_T305
+  486 83,4 82,4 3*k_dephos #R_dephos_T286
+  487 83,4 81,4 3*k_dephos #R_dephos_T305
+end reactions
+begin groups
+    1 Obs_Tot_CaMKII       3*1,3*6,3*8,3*10,3*12,3*13,3*14,3*15,3*16,3*17,3*18,3*19,3*20,3*21,3*22,3*23,3*24,3*25,3*26,3*27,3*28,3*29,3*30,3*31,3*32,3*33,3*34,3*35,3*36,3*37,3*38,3*39,3*40,3*41,3*42,3*43,3*44,3*45,3*46,3*47,3*48,3*49,3*50,3*51,3*52,3*53,3*54,3*55,3*56,3*57,3*58,3*59,3*60,3*61,3*62,3*63,3*64,3*65,3*66,3*67,3*68,3*69,3*70,3*71,3*72,3*73,3*74,3*75,3*76,3*77,3*78,3*79,3*80,3*81,3*82,3*83
+    2 Obs_pT286            19,20,21,22,23,24,25,26,27,28,29,2*30,31,32,33,34,35,36,37,2*38,39,40,2*41,2*42,43,44,3*45,46,47,2*48,2*49,2*50,3*51,2*52,2*53,2*54,55,56,57,2*58,2*59,2*60,3*61,2*62,2*63,2*64,2*65,3*66,2*67,2*68,3*69,2*70,3*71,3*72,2*73,2*74,2*75,2*76,3*77,2*78,2*79,3*80,3*81,2*82,3*83
+    3 Obs_pT305            6,2*8,3*10,13,14,2*15,17,20,23,25,29,31,2*32,33,2*34,36,37,39,2*40,43,2*44,46,47,52,53,54,2*55,3*56,2*57,59,60,62,63,64,65,66,67,68,70,71,72,2*73,2*74,2*75,2*76,77,2*78,2*79,2*80,2*81,3*82,3*83
+    4 Obs_Active           12,13,14,15,2*16,2*17,3*18,2*19,2*20,3*21,22,23,2*24,2*25,2*26,3*27,28,29,3*30,2*31,2*32,33,34,2*35,3*36,2*37,2*38,39,40,3*41,3*42,43,44,3*45,2*46,2*47,2*48,2*49,3*50,3*51,3*52,2*53,3*54,55,56,2*57,2*58,2*59,2*60,3*61,3*62,2*63,2*64,3*65,3*66,2*67,2*68,3*69,2*70,3*71,3*72,2*73,3*74,2*75,2*76,3*77,2*78,2*79,3*80,3*81,2*82,3*83
+    5 Obs_Duu              3*1,2*6,8,2*12,13,14,16,19,2*22,23,24,26,2*28,29,31,33,35,38,2*39,40,43,46,48,49,55,58,59,60,67,68,76
+    6 Obs_Cu               12,13,14,15,2*16,2*17,3*18,19,20,2*21,24,25,26,2*27,30,31,32,35,2*36,37,41,42,46,47,50,52,54,57,62,65,74
+    7 Obs_Cp               19,20,21,22,23,26,2*30,33,34,37,2*38,41,42,3*45,48,49,2*51,52,2*53,54,59,60,61,63,64,2*66,71,72,73,75,80
+    8 Obs_Dpu              24,25,27,28,29,35,41,42,43,44,47,48,49,2*50,51,2*58,2*61,62,63,64,65,67,68,3*69,2*70,71,72,2*77,78,79,81
+    9 Obs_Dpp              31,32,36,39,40,46,52,54,55,56,57,59,60,62,65,66,67,68,71,72,73,2*74,75,2*76,77,78,79,2*80,2*81,2*82,3*83
+   10 Obs_Dup              6,2*8,3*10,13,14,2*15,17,20,23,25,29,32,33,2*34,37,40,43,2*44,47,53,55,2*56,57,63,64,70,73,75,78,79,82
+   11 Obs_Free_CaM4        11
+   12 Obs_Ca               3
+   13 Obs_PP1              4
+end groups

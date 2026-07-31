@@ -1,0 +1,284 @@
+begin model
+
+#@title: CaMKII six-state infinite subunit holoenzyme approximation (Michalski and Loew, 2012)
+
+#@description: |
+#  Infinite subunit holoenzyme approximation (ISHA) of the six-state CaMKII
+#  model. The chemistry is identical to the six-state trimer file - sequential
+#  calcium binding to calmodulin, CaM4 binding with calmodulin trapping on
+#  phospho-T286, a calcium-dependent CaM release route that returns CaM2 to the
+#  pool, intrasubunit and basal T305 phosphorylation, and a shared
+#  Michaelis-Menten phosphatase - but the holoenzyme is taken to be infinitely
+#  large, so a subunit has no identifiable neighbor. Intersubunit T286
+#  autophosphorylation is instead driven by the probability that the neighbor
+#  is an active kinase, (r1*Cu + r2*Cp + r3*(Dpu + Dpp))/CaMKII_tot, and the
+#  subunit carries no association-domain bonds at all.
+#
+#  Thirteen rules generate thirteen species, replacing the 83 of the trimer
+#  and the astronomically larger network a realistic twelve-subunit six-state
+#  holoenzyme would need; Michalski and Loew (2012) estimate that generating a
+#  ten-subunit six-state network would take centuries. The approximation is
+#  excellent without phosphatase and slightly overestimates equilibrium
+#  phosphorylation with 1 uM PP1, and it reproduces the non-monotonic
+#  dependence of phospho-T305 on calcium, which is the qualitative signature
+#  of calmodulin trapping shielding T305.
+
+#@keyword: |
+#  signaling, synaptic plasticity, CaMKII, calmodulin, calcium, holoenzyme,
+#  mean-field approximation, calmodulin trapping, protein phosphatase 1,
+#  Michaelis-Menten, model reduction, non-monotonic, Rattus norvegicus
+
+#@reference: |
+#  Michalski PJ, Loew LM (2012). CaMKII activation and dynamics are independent
+#  of the holoenzyme structure: an infinite subunit holoenzyme approximation.
+#  Phys Biol 9:036010. doi:10.1088/1478-3975/9/3/036010
+
+#@note: |
+#  Corresponds to the public VCell model "CaMKII - Infinite Lattice - 6 states"
+#  (username pjmichal, biomodel key 61680876). All rate constants are from
+#  Table S1 of the supplementary material.
+#
+#  The r3 kinase set here is Dpu and Dpp, as stated in Sec. 2.2 of Michalski
+#  and Loew (2012) and as encoded in the public VCell ISHA model. The public
+#  VCell six-state trimer omits Dpp from that set; the verification notebook
+#  quantifies the difference and the six-state trimer file follows the paper
+#  text.
+#
+#  Units are micromolar and seconds and ODE is the only simulation mode
+#  provided; see the primary file for the unit and simulation-mode rationale.
+
+begin parameters
+  # Avogadro constant, retained for house-style population-conversion context.
+  NA          6.02214076e23  # molecules/mol
+
+  # Nominal reactor volume; not used by the concentration-based ODE protocol.
+  V_ref       1e-15          # L/reactor
+
+  # Sequential calcium binding to calmodulin, kon_i and koff_i of Eq. 1, from
+  # Table S1 (originally Chiba et al. (2008)).
+  kon_ca0     2.5            # /uM/s
+  koff_ca0    50.0           # /s
+  kon_ca1     88.25          # /uM/s
+  koff_ca1    50.0           # /s
+  kon_ca2     12.5           # /uM/s
+  koff_ca2    1250.0         # /s
+  kon_ca3     250.0          # /uM/s
+  koff_ca3    1250.0         # /s
+
+  # CaM4 binding to a subunit whose T286 is unphosphorylated. kon_u follows
+  # from koff_u and the 66.7 nM dissociation constant of De Koninck and
+  # Schulman (1998); koff_u2 and KCa_u are the amplitude and half-maximal
+  # calcium of the two-step dissociation route of Eq. 4.
+  kon_u       30.0           # /uM/s
+  koff_u      2.0            # /s
+  koff_u2     4.3            # /s
+  KCa_u       0.94           # uM
+
+  # The same constants for a subunit phosphorylated on T286. The 2000-fold
+  # slower koff_p is calmodulin trapping.
+  kon_p       10.0           # /uM/s
+  koff_p      0.001          # /s
+  koff_p2     0.08           # /s
+  KCa_p       0.19           # uM
+
+  # Intersubunit T286 autophosphorylation rates by a Cu, a Cp, and a CaM-free
+  # phospho-T286 kinase.
+  r1          1.0            # /s
+  r2          r1             # /s
+  r3          0.8*r1         # /s
+
+  # Intrasubunit T305 phosphorylation once CaM has left a phospho-T286 subunit,
+  # and the slow basal T305 reaction of Colbran (1993).
+  r305        10.0           # /s
+  rbasal      5e-4           # /s
+
+  # Michaelis-Menten constants for PP1 acting on phospho-T286 and phospho-T305,
+  # measured by Bradshaw et al. (2003).
+  kcat        1.72           # /s
+  Km_PP1      11.0           # uM
+
+  # Active phosphatase; zero for Figs. 8a and 8c, reset by the Fig. 8b/8d
+  # protocol.
+  PP1_tot     0.0            # uM
+
+  # Protein concentrations used throughout Fig. 8.
+  CaMKII_tot  0.005          # uM
+  CaM_tot     1.0            # uM
+
+  # Buffered calcium; scanned by the active protocols.
+  Ca_uM       1.0            # uM
+end parameters
+
+begin molecule types
+  # CaMKII subunit with no association-domain bonds: in the infinite-holoenzyme
+  # limit the neighbor is represented by a probability, not by a bond.
+  CaMKII(cam,T286~U~P,T305~U~P)
+  # Calmodulin; ca counts bound calcium ions and k is the CaMKII-binding site.
+  CaM(ca~0~1~2~3~4,k)
+  # Buffered calcium.
+  Ca()
+  # Protein phosphatase 1; acts through a Michaelis-Menten rate law and is
+  # never covalently modified, so it carries no components.
+  PP1()
+end molecule types
+
+begin seed species
+  # All subunits start autoinhibited.
+  CaMKII(cam,T286~U,T305~U)  CaMKII_tot  # uM
+
+  # All calmodulin starts calcium free and equilibrates with the buffered
+  # calcium pool within milliseconds.
+  CaM(ca~0,k)  CaM_tot  # uM
+
+  # Buffered calcium and active phosphatase.
+  $Ca()   Ca_uM    # uM
+  $PP1()  PP1_tot  # uM
+end seed species
+
+begin observables
+  # Total subunits; conserved and equal to CaMKII_tot.
+  Molecules  Obs_Tot_CaMKII  CaMKII()
+
+  # Phosphorylated subunits, the two ordinates of Fig. 8.
+  Molecules  Obs_pT286       CaMKII(T286~P)
+  Molecules  Obs_pT305       CaMKII(T305~P)
+
+  # Active subunits: CaM bound, or phospho-T286 and therefore autonomous.
+  Molecules  Obs_Active      CaMKII(cam!+,T286~U),CaMKII(T286~P)
+
+  # The six subunit states of Fig. 1b, in the order Duu, Cu, Cp, Dpu, Dpp, Dup.
+  Molecules  Obs_Duu         CaMKII(cam,T286~U,T305~U)
+  Molecules  Obs_Cu          CaMKII(cam!+,T286~U)
+  Molecules  Obs_Cp          CaMKII(cam!+,T286~P)
+  Molecules  Obs_Dpu         CaMKII(cam,T286~P,T305~U)
+  Molecules  Obs_Dpp         CaMKII(cam,T286~P,T305~P)
+  Molecules  Obs_Dup         CaMKII(cam,T286~U,T305~P)
+
+  # Free calmodulin pools and the buffered calcium and phosphatase levels.
+  Molecules  Obs_Free_CaM4   CaM(ca~4,k)
+  Molecules  Obs_Ca          Ca()
+  Molecules  Obs_PP1         PP1()
+end observables
+
+begin functions
+  # Mean-field intersubunit T286 autophosphorylation rate: the neighbor of a
+  # CaM-bound unphosphorylated subunit is an active kinase with a probability
+  # given by the state fractions, weighted by that state's activity. BioNetGen
+  # supplies the substrate factor.
+  k_autophos_T286() = (r1*Obs_Cu + r2*Obs_Cp + r3*(Obs_Dpu + Obs_Dpp))/CaMKII_tot
+
+  # Calcium-dependent CaM dissociation from a subunit whose T286 is
+  # unphosphorylated; the Hill term of Eq. 4 in Michalski and Loew (2012).
+  koff_u_Ca() = koff_u2/(1 + (Obs_Ca/KCa_u)^2)
+
+  # The same route for a phospho-T286 subunit.
+  koff_p_Ca() = koff_p2/(1 + (Obs_Ca/KCa_p)^2)
+
+  # Michaelis-Menten dephosphorylation. BioNetGen supplies the phospho-subunit
+  # and PP1 factors, so only kcat/(Km + P) appears here; T286 and T305 share
+  # one phosphatase pool, so the denominator carries both site totals.
+  k_dephos() = kcat/(Km_PP1 + Obs_pT286 + Obs_pT305)
+
+  # Fractions of total CaMKII, the ordinates of Figs. 8 and 9.
+  Frac_pT286() = Obs_pT286/CaMKII_tot
+  Frac_pT305() = Obs_pT305/CaMKII_tot
+  Frac_active() = Obs_Active/CaMKII_tot
+end functions
+
+begin reaction rules
+  # Sequential calcium binding to free calmodulin; CaM bound to CaMKII does not
+  # exchange calcium, so these rules require an unbound k site.
+  R_bind_Ca_0: CaM(ca~0,k) + Ca() <-> CaM(ca~1,k)  kon_ca0, koff_ca0
+  R_bind_Ca_1: CaM(ca~1,k) + Ca() <-> CaM(ca~2,k)  kon_ca1, koff_ca1
+  R_bind_Ca_2: CaM(ca~2,k) + Ca() <-> CaM(ca~3,k)  kon_ca2, koff_ca2
+  R_bind_Ca_3: CaM(ca~3,k) + Ca() <-> CaM(ca~4,k)  kon_ca3, koff_ca3
+
+  # Calcium-saturated CaM binds the regulatory domain of an autoinhibited
+  # subunit. T305~U is required because phospho-T305 blocks CaM rebinding.
+  R_bind_CaM4_u: \
+    CaMKII(cam,T286~U,T305~U) + CaM(ca~4,k) <-> \
+    CaMKII(cam!1,T286~U,T305~U).CaM(ca~4,k!1) \
+    kon_u, koff_u
+
+  # The same step for a phospho-T286 subunit; koff_p is 2000-fold slower.
+  R_bind_CaM4_p: \
+    CaMKII(cam,T286~P,T305~U) + CaM(ca~4,k) <-> \
+    CaMKII(cam!1,T286~P,T305~U).CaM(ca~4,k!1) \
+    kon_p, koff_p
+
+  # Calcium-dependent CaM release: CaM4 loses two calcium ions and the
+  # resulting CaM2 dissociates rapidly, so the pool receives CaM2 and 2 Ca.
+  R_release_CaM_Ca_u: \
+    CaMKII(cam!1,T286~U).CaM(ca~4,k!1) -> \
+    CaMKII(cam,T286~U) + CaM(ca~2,k) + Ca() + Ca() \
+    koff_u_Ca()
+
+  R_release_CaM_Ca_p: \
+    CaMKII(cam!1,T286~P).CaM(ca~4,k!1) -> \
+    CaMKII(cam,T286~P) + CaM(ca~2,k) + Ca() + Ca() \
+    koff_p_Ca()
+
+  # Mean-field intersubunit T286 autophosphorylation of a CaM-bound subunit.
+  R_autophos_T286: \
+    CaMKII(cam!+,T286~U) -> CaMKII(cam!+,T286~P) \
+    k_autophos_T286()
+
+  # Intrasubunit T305 phosphorylation, possible only once CaM has vacated the
+  # CaM-binding domain of a phospho-T286 subunit.
+  R_phos_T305: \
+    CaMKII(cam,T286~P,T305~U) -> CaMKII(cam,T286~P,T305~P) \
+    r305
+
+  # Slow basal T305 autophosphorylation of the autoinhibited state, which
+  # produces the inert Dup state.
+  R_phos_T305_basal: \
+    CaMKII(cam,T286~U,T305~U) -> CaMKII(cam,T286~U,T305~P) \
+    rbasal
+
+  # PP1 removes either phosphate with equal activity and no order preference.
+  R_dephos_T286: \
+    CaMKII(T286~P) + PP1() -> CaMKII(T286~U) + PP1() \
+    k_dephos()
+
+  R_dephos_T305: \
+    CaMKII(T305~P) + PP1() -> CaMKII(T305~U) + PP1() \
+    k_dephos()
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 13 species, 22 reactions
+  saveConcentrations()
+
+  # Ten-second phosphorylation reaction without phosphatase
+
+  #@protocol: |
+  #  Buffered calcium is scanned logarithmically from 0.3 to 100 uM with 5 nM
+  #  total CaMKII and 1 uM total CaM and no phosphatase, and each point is
+  #  integrated for 10 s. The ISHA curves lie on top of the exact trimer
+  #  curves, including the non-monotonic phospho-T305 peak near 3 uM calcium.
+
+  #@figure: Figs. 8a and 8c in Michalski and Loew (2012)
+
+  resetConcentrations()
+  parameter_scan({method=>"ode",parameter=>"Ca_uM",par_min=>0.3,par_max=>100,\
+    n_scan_pts=>61,log_scale=>1,t_start=>0,t_end=>10,n_steps=>10,\
+    suffix=>"scan",atol=>1e-14,rtol=>1e-10,print_functions=>1})
+
+  # Equilibrium with 1 uM phosphatase
+
+  #@protocol: |
+  #  The same calcium scan with 1 uM PP1, integrated to 200 s so that every
+  #  point reaches equilibrium. Here the approximation overestimates both
+  #  phospho-site fractions, but only slightly at this phosphatase level.
+  #  Setting PP1_tot here is permanent for the remainder of the actions block.
+
+  #@figure: Figs. 8b and 8d in Michalski and Loew (2012)
+
+  resetConcentrations()
+  setParameter("PP1_tot",1.0)
+  parameter_scan({method=>"ode",parameter=>"Ca_uM",par_min=>0.3,par_max=>100,\
+    n_scan_pts=>61,log_scale=>1,t_start=>0,t_end=>200,n_steps=>20,\
+    suffix=>"scan_pp1",atol=>1e-14,rtol=>1e-10,print_functions=>1})
+end actions

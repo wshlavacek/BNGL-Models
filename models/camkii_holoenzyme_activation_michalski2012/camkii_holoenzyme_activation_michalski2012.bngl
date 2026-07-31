@@ -1,0 +1,199 @@
+begin model
+
+#@title: CaMKII holoenzyme activation (Michalski and Loew, 2012)
+
+#@description: |
+#  Exact rule-based model of calcium/calmodulin-dependent protein kinase II
+#  (CaMKII) holoenzyme activation, written for a six-subunit holoenzyme. Each
+#  subunit occupies one of the three states of the minimal model of Michalski
+#  and Loew (2012): autoinhibited and calmodulin-free (U), calmodulin-bound
+#  (C), and calmodulin-bound and autophosphorylated on T286 (P). Subunits are
+#  joined through their association domains into a closed ring; the ring bonds
+#  are never made or broken, so the holoenzyme is a permanent cyclic complex.
+#  Calcium-saturated calmodulin (CaM4) binds and dissociates from
+#  unphosphorylated subunits with single-site constants kon_u and koff_u, and
+#  cannot dissociate once T286 is phosphorylated ("calmodulin trapping").
+#  T286 autophosphorylation is intersubunit and unidirectional: every subunit
+#  phosphorylates only the neighbor it holds through its cw component, and only
+#  if both kinase and substrate are calmodulin-bound. A calmodulin-bound
+#  unphosphorylated kinase acts with first-order rate r1 and a phosphorylated
+#  kinase with rate r2.
+#
+#  The three rules generate the exact 131-species, 632-reaction network of the
+#  hexamer without phosphatase (131 species and 396 reversible-pair reactions
+#  in Table 1 of Michalski and Loew (2012)). Because CaM4 is buffered and there
+#  is no phosphatase, the system cannot reach equilibrium: the fraction of
+#  phosphorylated subunits FP rises monotonically toward one on a timescale set
+#  by r1 and by the CaM4 occupancy. FP after fixed 1 s and 6 s reactions is a
+#  sigmoid in CaM4 that is nearly independent of the number of subunits per
+#  holoenzyme, which is the central result the infinite subunit holoenzyme
+#  approximation rests on.
+
+#@keyword: |
+#  signaling, synaptic plasticity, CaMKII, calmodulin, holoenzyme,
+#  autophosphorylation, combinatorial complexity, cyclic complex, mass action,
+#  monostable, long-term potentiation, Rattus norvegicus
+
+#@reference: |
+#  Michalski PJ, Loew LM (2012). CaMKII activation and dynamics are independent
+#  of the holoenzyme structure: an infinite subunit holoenzyme approximation.
+#  Phys Biol 9:036010. doi:10.1088/1478-3975/9/3/036010
+
+#@note: |
+#  Units are micromolar and seconds, matching the published VCell models
+#  (public username pjmichal; "BioNetGen CaMKII - Hexamer - 3 states - no
+#  phosphatase", biomodel key 76048156). The kinetics are concentration based
+#  and the phosphatase variant uses a Michaelis-Menten rate law, so amounts are
+#  not molecule counts and ODE is the only simulation mode provided: SSA and
+#  NFsim would require re-dimensionalizing the model, and at the published
+#  5 nM CaMKII a spine-sized volume holds less than one subunit. NA and V_ref
+#  are retained for house-style population-conversion context but are not used. The companion file
+#  camkii_holoenzyme_activation_michalski2012_nfsim.bngl is the population
+#  based, network-free version used for holoenzymes too large to enumerate.
+#
+#  Section 3.1 of Michalski and Loew (2012) rescales the three-state analysis
+#  so that kon_u = 1 /uM/s and r1 = 1 /s; the CaM4 axis of Figs. 2, 4, 5 and 7
+#  is therefore the dimensionless group kon_u*CaM4/r1 expressed in uM.
+
+begin parameters
+  # Avogadro constant, retained for house-style population-conversion context.
+  NA          6.02214076e23  # molecules/mol
+
+  # Nominal reactor volume; not used by the concentration-based ODE protocol.
+  V_ref       1e-15          # L/reactor
+
+  # Number of subunits per holoenzyme; must match the ring in seed species.
+  N_sub       6              # dimensionless
+
+  # CaM4 association to an unphosphorylated subunit; Sec. 3.1 in Michalski and
+  # Loew (2012) sets the timescale by taking kon_u = 1 /uM/s.
+  kon_u       1.0            # /uM/s
+
+  # Single-site dissociation constant KD = 66.7 nM measured by De Koninck and
+  # Schulman (1998); koff_u follows from KD_u and kon_u.
+  KD_u        0.06667        # uM
+  koff_u      KD_u*kon_u     # /s
+
+  # Intersubunit T286 autophosphorylation rates; r1 is the order-of-magnitude
+  # estimate of Table S1 and r2 = r1 is the default of Fig. 2.
+  r1          1.0            # /s
+  r2          r1             # /s
+
+  # Total CaMKII subunit concentration used throughout Figs. 2-7.
+  CaMKII_tot  0.005          # uM
+
+  # Buffered calcium-saturated calmodulin; scanned by the Fig. 2 protocol.
+  CaM4_tot    1.0            # uM
+end parameters
+
+begin molecule types
+  # CaMKII subunit: cam is the regulatory-domain CaM4 site, T286 is the
+  # intersubunit autophosphorylation site, and cw/ccw are association-domain
+  # bonds to the clockwise and counterclockwise neighbors in the ring.
+  CaMKII(cam,T286~U~P,cw,ccw)
+  # Calcium-saturated calmodulin; k is the CaMKII-binding site.
+  CaM4(k)
+end molecule types
+
+begin seed species
+  # Fully autoinhibited hexamer. Subunit i holds subunit i+1 through cw, so a
+  # kinase phosphorylates the neighbor bound to its cw component. Continuation
+  # lines of a species graph cannot be indented, as the inserted whitespace
+  # would split the graph.
+  CaMKII(cam,T286~U,cw!1,ccw!6).CaMKII(cam,T286~U,cw!2,ccw!1).\
+CaMKII(cam,T286~U,cw!3,ccw!2).CaMKII(cam,T286~U,cw!4,ccw!3).\
+CaMKII(cam,T286~U,cw!5,ccw!4).CaMKII(cam,T286~U,cw!6,ccw!5) \
+    CaMKII_tot/N_sub  # uM
+
+  # Calcium-saturated CaM is buffered, as in the "CaM buffered" VCell
+  # application and in the experiments of De Koninck and Schulman (1998).
+  $CaM4(k)  CaM4_tot  # uM
+end seed species
+
+begin observables
+  # Total subunits; conserved and equal to CaMKII_tot.
+  Molecules  Obs_Tot_CaMKII  CaMKII()
+
+  # The three subunit states of Sec. 2.3 in Michalski and Loew (2012).
+  Molecules  Obs_U           CaMKII(cam,T286~U)
+  Molecules  Obs_C           CaMKII(cam!+,T286~U)
+  Molecules  Obs_P           CaMKII(T286~P)
+
+  # Calmodulin not bound to CaMKII; constant because CaM4 is buffered.
+  Molecules  Obs_Free_CaM4   CaM4(k)
+end observables
+
+begin functions
+  # Fraction of subunits phosphorylated on T286; Eq. 5 in Michalski and Loew
+  # (2012). This is the ordinate of Figs. 2-7.
+  FP() = Obs_P/CaMKII_tot
+
+  # Fraction of CaM-bound, unphosphorylated subunits; Eq. 5 in Michalski and
+  # Loew (2012).
+  FC() = Obs_C/CaMKII_tot
+
+  # Dimensional conversions (uncomment for population output)
+# CaMKII_num() = Obs_Tot_CaMKII*NA*V_ref*1e-6  # molecules
+end functions
+
+begin reaction rules
+  # Calcium-saturated CaM binds the regulatory domain of an unphosphorylated
+  # subunit. The reverse step is restricted to T286~U because the three-state
+  # model of Sec. 2.3 in Michalski and Loew (2012) does not let CaM dissociate
+  # from a T286-phosphorylated subunit.
+  R_bind_CaM4: \
+    CaMKII(cam,T286~U) + CaM4(k) <-> CaMKII(cam!1,T286~U).CaM4(k!1) \
+    kon_u, koff_u
+
+  # Intersubunit T286 autophosphorylation by a CaM-bound, unphosphorylated
+  # kinase acting on the CaM-bound neighbor held by its cw component.
+  R_autophos_T286_by_C: \
+    CaMKII(cam!+,T286~U,cw!1).CaMKII(ccw!1,cam!+,T286~U) -> \
+    CaMKII(cam!+,T286~U,cw!1).CaMKII(ccw!1,cam!+,T286~P) \
+    r1
+
+  # The same reaction driven by a CaM-bound kinase that is already
+  # phosphorylated on T286.
+  R_autophos_T286_by_P: \
+    CaMKII(cam!+,T286~P,cw!1).CaMKII(ccw!1,cam!+,T286~U) -> \
+    CaMKII(cam!+,T286~P,cw!1).CaMKII(ccw!1,cam!+,T286~P) \
+    r2
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 131 species, 632 reactions
+  saveConcentrations()
+
+  # Reference autophosphorylation time course at 1 uM CaM4
+
+  #@protocol: |
+  #  Six seconds of autophosphorylation from the fully autoinhibited hexamer
+  #  with buffered 1 uM CaM4 and r2 = r1. FP passes through 0.1244 at 1 s and
+  #  reaches 0.9572 at 6 s, the two values plotted at 1 uM CaM4 in Fig. 2
+  #  (the 1 s value is the number resolved by the Fig. 2 inset).
+
+  #@figure: Fig. 2 in Michalski and Loew (2012)
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>6,n_steps=>60,\
+    atol=>1e-14,rtol=>1e-10,print_functions=>1})
+
+  # Time-dependent autophosphorylation versus CaM4
+
+  #@protocol: |
+  #  Buffered CaM4 is scanned logarithmically over six decades, from 1 nM to
+  #  1 mM, with r2 = r1. Each scan point integrates 6 s of autophosphorylation
+  #  from the fully autoinhibited hexamer and reports FP and FC at 1 s
+  #  intervals, so the per-point .gdat files carry both the 1 s and the 6 s
+  #  curves of Fig. 2 while the .scan file carries the 6 s curve. FP rises
+  #  from about 2e-5 at 1 nM CaM4 to about 0.997 above 10 uM.
+
+  #@figure: Fig. 2 in Michalski and Loew (2012)
+
+  resetConcentrations()
+  parameter_scan({method=>"ode",parameter=>"CaM4_tot",par_min=>0.001,\
+    par_max=>1000,n_scan_pts=>25,log_scale=>1,t_start=>0,t_end=>6,n_steps=>6,\
+    suffix=>"scan",atol=>1e-14,rtol=>1e-10,print_functions=>1})
+end actions

@@ -1,0 +1,95 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA               6.02214076e23  # Constant
+    2 V_ref            1e-15  # Constant
+    3 kon_ca0          2.5  # Constant
+    4 koff_ca0         50.0  # Constant
+    5 kon_ca1          88.25  # Constant
+    6 koff_ca1         50.0  # Constant
+    7 kon_ca2          12.5  # Constant
+    8 koff_ca2         1250.0  # Constant
+    9 kon_ca3          250.0  # Constant
+   10 koff_ca3         1250.0  # Constant
+   11 kon_u            30.0  # Constant
+   12 koff_u           2.0  # Constant
+   13 koff_u2          4.3  # Constant
+   14 KCa_u            0.94  # Constant
+   15 kon_p            10.0  # Constant
+   16 koff_p           0.001  # Constant
+   17 koff_p2          0.08  # Constant
+   18 KCa_p            0.19  # Constant
+   19 r1               1.0  # Constant
+   20 r2               r1  # ConstantExpression
+   21 r3               0.8*r1  # ConstantExpression
+   22 r305             10.0  # Constant
+   23 rbasal           5e-4  # Constant
+   24 kcat             1.72  # Constant
+   25 Km_PP1           11.0  # Constant
+   26 PP1_tot          0.0  # Constant
+   27 CaMKII_tot       0.005  # Constant
+   28 CaM_tot          1.0  # Constant
+   29 Ca_uM            1.0  # Constant
+end parameters
+begin functions
+    1 k_autophos_T286() (((r1*Obs_Cu)+(r2*Obs_Cp))+(r3*(Obs_Dpu+Obs_Dpp)))/CaMKII_tot
+    2 koff_u_Ca() koff_u2/(1+((Obs_Ca/KCa_u)^2))
+    3 koff_p_Ca() koff_p2/(1+((Obs_Ca/KCa_p)^2))
+    4 k_dephos() kcat/((Km_PP1+Obs_pT286)+Obs_pT305)
+    5 Frac_pT286() Obs_pT286/CaMKII_tot
+    6 Frac_pT305() Obs_pT305/CaMKII_tot
+    7 Frac_active() Obs_Active/CaMKII_tot
+end functions
+begin species
+    1 CaMKII(T286~U,T305~U,cam) CaMKII_tot
+    2 CaM(ca~0,k) CaM_tot
+    3 $Ca() Ca_uM
+    4 $PP1() PP1_tot
+    5 CaM(ca~1,k) 0
+    6 CaMKII(T286~U,T305~P,cam) 0
+    7 CaM(ca~2,k) 0
+    8 CaM(ca~3,k) 0
+    9 CaM(ca~4,k) 0
+   10 CaM(ca~4,k!1).CaMKII(T286~U,T305~U,cam!1) 0
+   11 CaM(ca~4,k!1).CaMKII(T286~P,T305~U,cam!1) 0
+   12 CaMKII(T286~P,T305~U,cam) 0
+   13 CaMKII(T286~P,T305~P,cam) 0
+end species
+begin reactions
+    1 2,3 5 kon_ca0 #R_bind_Ca_0
+    2 1 6 rbasal #R_phos_T305_basal
+    3 5 2,3 koff_ca0 #_reverse_R_bind_Ca_0
+    4 3,5 7 kon_ca1 #R_bind_Ca_1
+    5 6,4 1,4 k_dephos #R_dephos_T305
+    6 7 3,5 koff_ca1 #_reverse_R_bind_Ca_1
+    7 3,7 8 kon_ca2 #R_bind_Ca_2
+    8 8 3,7 koff_ca2 #_reverse_R_bind_Ca_2
+    9 3,8 9 kon_ca3 #R_bind_Ca_3
+   10 9 3,8 koff_ca3 #_reverse_R_bind_Ca_3
+   11 1,9 10 kon_u #R_bind_CaM4_u
+   12 10 1,9 koff_u #_reverse_R_bind_CaM4_u
+   13 10 1,7,3,3 koff_u_Ca #R_release_CaM_Ca_u
+   14 10 11 k_autophos_T286 #R_autophos_T286
+   15 11 9,12 koff_p #_reverse_R_bind_CaM4_p
+   16 11 12,7,3,3 koff_p_Ca #R_release_CaM_Ca_p
+   17 11,4 10,4 k_dephos #R_dephos_T286
+   18 9,12 11 kon_p #R_bind_CaM4_p
+   19 12 13 r305 #R_phos_T305
+   20 12,4 1,4 k_dephos #R_dephos_T286
+   21 13,4 6,4 k_dephos #R_dephos_T286
+   22 13,4 12,4 k_dephos #R_dephos_T305
+end reactions
+begin groups
+    1 Obs_Tot_CaMKII       1,6,10,11,12,13
+    2 Obs_pT286            11,12,13
+    3 Obs_pT305            6,13
+    4 Obs_Active           10,11,12,13
+    5 Obs_Duu              1
+    6 Obs_Cu               10
+    7 Obs_Cp               11
+    8 Obs_Dpu              12
+    9 Obs_Dpp              13
+   10 Obs_Dup              6
+   11 Obs_Free_CaM4        9
+   12 Obs_Ca               3
+   13 Obs_PP1              4
+end groups

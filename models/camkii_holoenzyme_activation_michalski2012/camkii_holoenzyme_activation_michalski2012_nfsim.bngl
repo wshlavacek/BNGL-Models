@@ -1,0 +1,189 @@
+begin model
+
+#@title: CaMKII dodecamer holoenzyme activation, network free (Michalski and Loew, 2012)
+
+#@description: |
+#  Population-based, NETWORK-FREE (NFsim) version of the exact three-state
+#  CaMKII holoenzyme model, written for the twelve-subunit holoenzyme that
+#  CaMKII actually forms. The mechanism is that of the primary file -
+#  calmodulin binding an unphosphorylated subunit, calmodulin trapping on
+#  phospho-T286, and unidirectional intersubunit T286 autophosphorylation
+#  around a closed ring of association-domain bonds - with two changes that
+#  suit network-free simulation. Amounts are molecule counts in a reactor of
+#  volume V_ref rather than micromolar concentrations, and calcium-saturated
+#  calmodulin is carried by a subunit state rather than by an explicit
+#  molecule, so that binding is the pseudo-first-order step kon_u*CaM4_uM. The
+#  second change is exact, not an approximation, because CaM4 is buffered in
+#  every protocol of Michalski and Loew (2012); it also avoids instantiating
+#  the hundreds of thousands of calmodulin particles a buffered pool would
+#  otherwise require.
+#
+#  Network generation is not feasible here. The number of distinct dodecamer
+#  configurations is the number of three-colored necklaces of length twelve,
+#  44368, and the reaction network is correspondingly larger; Michalski and
+#  Loew (2012) report that generating the six-state pentamer network alone took
+#  six hours and that a ten-subunit six-state model would take centuries. NFsim
+#  tracks the state of each subunit instead of enumerating holoenzyme species,
+#  which is exactly the particle-based route the authors took with custom Java
+#  code, so this file reaches holoenzyme sizes the generate-first files cannot.
+#  At 0.1 uM calmodulin the fraction of phosphorylated subunits after a 6 s
+#  autophosphorylation reaction is about 0.13 and the CaM-bound unphosphorylated
+#  fraction about 0.26, independent of holoenzyme size, reproducing Fig. 6a.
+
+#@keyword: |
+#  signaling, synaptic plasticity, CaMKII, calmodulin, holoenzyme, dodecamer,
+#  network-free simulation, NFsim, autophosphorylation, cyclic complex,
+#  combinatorial complexity, stochastic, Rattus norvegicus
+
+#@reference: |
+#  Michalski PJ, Loew LM (2012). CaMKII activation and dynamics are independent
+#  of the holoenzyme structure: an infinite subunit holoenzyme approximation.
+#  Phys Biol 9:036010. doi:10.1088/1478-3975/9/3/036010
+
+#@note: |
+#  The published particle-based results (Fig. 6) came from a custom Java
+#  simulator, not from NFsim; this file is a network-free reformulation of the
+#  same model rather than a transcription of published input. The reactor
+#  volume V_ref = 10 pL is a modeling choice: it puts about 30000 subunits, or
+#  2509 dodecamers, at the published 5 nM CaMKII, which keeps the sampling
+#  spread on FP near 0.2% of full scale while the run stays well under a
+#  second. Because calmodulin is buffered and there is no phosphatase, all
+#  fractional observables are independent of CaMKII_uM, so this choice does not
+#  change the reproduced curve.
+#
+#  get_final_state=>0 suppresses NFsim's end-of-run species dump. Canonically
+#  labeling thousands of distinct twelve-molecule ring complexes costs minutes,
+#  far more than the simulation itself, and nothing downstream continues the
+#  trajectory.
+#
+#  Only the network-free protocol is provided: with 44368 holoenzyme
+#  configurations, generate_network is impractical, and ODE and generate-first
+#  SSA both depend on it. The verification notebook varies N_sub to reproduce
+#  the holoenzyme-size sweep of Fig. 6a and checks the N = 6 result against the
+#  exact ODE network of the primary file.
+
+begin parameters
+  # Avogadro constant.
+  NA          6.02214076e23  # molecules/mol
+
+  # Reactor volume; see the header note for why 10 pL was chosen.
+  V_ref       1e-11          # L/reactor
+
+  # Molecules per micromolar in the reactor; the concentration-to-population
+  # conversion factor used throughout this file.
+  uM_to_num   NA*V_ref*1e-6  # molecules/uM
+
+  # Number of subunits per holoenzyme; must match the ring in seed species.
+  N_sub       12             # dimensionless
+
+  # CaM4 association to an unphosphorylated subunit. Sec. 3.1 in Michalski and
+  # Loew (2012) sets the timescale by taking kon_u = 1 /uM/s.
+  kon_u       1.0            # /uM/s
+
+  # Single-site dissociation constant KD = 66.7 nM measured by De Koninck and
+  # Schulman (1998); koff_u follows from KD_u and kon_u.
+  KD_u        0.06667        # uM
+  koff_u      KD_u*kon_u     # /s
+
+  # Buffered calcium-saturated calmodulin; 0.1 uM is the value used in Fig. 6a.
+  CaM4_uM     0.1            # uM
+
+  # Pseudo-first-order CaM4 association rate for the buffered pool.
+  kon_u_eff   kon_u*CaM4_uM  # /s
+
+  # Intersubunit T286 autophosphorylation rates.
+  r1          1.0            # /s
+  r2          r1             # /s
+
+  # Total CaMKII subunits, from the published 5 nM used throughout Figs. 2-7.
+  CaMKII_uM   0.005          # uM
+  CaMKII_tot  CaMKII_uM*uM_to_num  # molecules
+end parameters
+
+begin molecule types
+  # CaMKII subunit: cam records whether calcium-saturated calmodulin occupies
+  # the regulatory domain, T286 is the intersubunit autophosphorylation site,
+  # and cw/ccw are association-domain bonds to the clockwise and
+  # counterclockwise neighbors in the ring.
+  CaMKII(cam~free~cam4,T286~U~P,cw,ccw)
+end molecule types
+
+begin seed species
+  # Fully autoinhibited dodecamer. Subunit i holds subunit i+1 through cw, so a
+  # kinase phosphorylates the neighbor bound to its cw component. Continuation
+  # lines of a species graph cannot be indented, as the inserted whitespace
+  # would split the graph.
+  CaMKII(cam~free,T286~U,cw!1,ccw!12).CaMKII(cam~free,T286~U,cw!2,ccw!1).\
+CaMKII(cam~free,T286~U,cw!3,ccw!2).CaMKII(cam~free,T286~U,cw!4,ccw!3).\
+CaMKII(cam~free,T286~U,cw!5,ccw!4).CaMKII(cam~free,T286~U,cw!6,ccw!5).\
+CaMKII(cam~free,T286~U,cw!7,ccw!6).CaMKII(cam~free,T286~U,cw!8,ccw!7).\
+CaMKII(cam~free,T286~U,cw!9,ccw!8).CaMKII(cam~free,T286~U,cw!10,ccw!9).\
+CaMKII(cam~free,T286~U,cw!11,ccw!10).CaMKII(cam~free,T286~U,cw!12,ccw!11) \
+    CaMKII_tot/N_sub  # molecules
+end seed species
+
+begin observables
+  # Total subunits; conserved and equal to CaMKII_tot.
+  Molecules  Obs_Tot_CaMKII  CaMKII()
+
+  # The three subunit states of Sec. 2.3 in Michalski and Loew (2012).
+  Molecules  Obs_U           CaMKII(cam~free,T286~U)
+  Molecules  Obs_C           CaMKII(cam~cam4,T286~U)
+  Molecules  Obs_P           CaMKII(T286~P)
+end observables
+
+begin functions
+  # Fraction of subunits phosphorylated on T286; Eq. 5 in Michalski and Loew
+  # (2012). This is the blue series of Fig. 6a.
+  FP() = Obs_P/CaMKII_tot
+
+  # Fraction of CaM-bound, unphosphorylated subunits; the red series of
+  # Fig. 6a.
+  FC() = Obs_C/CaMKII_tot
+
+  # Dimensional conversions (uncomment for concentration output)
+# P_conc() = Obs_P/uM_to_num  # uM
+# C_conc() = Obs_C/uM_to_num  # uM
+end functions
+
+begin reaction rules
+  # Buffered calcium-saturated CaM occupies the regulatory domain of an
+  # unphosphorylated subunit and cannot leave once T286 is phosphorylated. The
+  # forward step is pseudo first order because the CaM4 pool is clamped.
+  R_bind_CaM4: \
+    CaMKII(cam~free,T286~U) <-> CaMKII(cam~cam4,T286~U) \
+    kon_u_eff, koff_u
+
+  # Intersubunit T286 autophosphorylation by a CaM-bound, unphosphorylated
+  # kinase acting on the CaM-bound neighbor held by its cw component.
+  R_autophos_T286_by_C: \
+    CaMKII(cam~cam4,T286~U,cw!1).CaMKII(ccw!1,cam~cam4,T286~U) -> \
+    CaMKII(cam~cam4,T286~U,cw!1).CaMKII(ccw!1,cam~cam4,T286~P) \
+    r1
+
+  # The same reaction driven by a CaM-bound kinase that is already
+  # phosphorylated on T286.
+  R_autophos_T286_by_P: \
+    CaMKII(cam~cam4,T286~P,cw!1).CaMKII(ccw!1,cam~cam4,T286~U) -> \
+    CaMKII(cam~cam4,T286~P,cw!1).CaMKII(ccw!1,cam~cam4,T286~P) \
+    r2
+end reaction rules
+
+end model
+
+begin actions
+  # Autophosphorylation of a twelve-subunit holoenzyme
+
+  #@protocol: |
+  #  Six seconds of autophosphorylation from the fully autoinhibited dodecamer
+  #  at buffered 0.1 uM CaM4 with r2 = r1 and no phosphatase, simulated
+  #  network free from a fixed seed. FP reaches about 0.13 and FC about 0.26,
+  #  the plateau values Fig. 6a reports for every holoenzyme size from the
+  #  dimer to the 100-mer, and both agree with the exact hexamer ODE solution
+  #  of the primary file to within the sampling spread.
+
+  #@figure: Fig. 6a in Michalski and Loew (2012)
+
+  simulate({method=>"nf",suffix=>"nfr",t_start=>0,t_end=>6,n_steps=>60,\
+    seed=>1234,print_functions=>1,get_final_state=>0})
+end actions

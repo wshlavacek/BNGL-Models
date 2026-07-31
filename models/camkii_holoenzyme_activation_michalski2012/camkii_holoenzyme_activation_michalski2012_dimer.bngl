@@ -1,0 +1,171 @@
+begin model
+
+#@title: CaMKII dimer holoenzyme activation (Michalski and Loew, 2012)
+
+#@description: |
+#  Two-subunit (dimer) version of the exact three-state CaMKII holoenzyme
+#  model. The rules are identical to the primary hexamer file; only the ring in
+#  seed species is shorter, so the same three rules generate the 7-species,
+#  8-reaction dimer network (7 species and 5 reversible-pair reactions in
+#  Table 1 of Michalski and Loew (2012)) whose six holoenzyme species are the
+#  MUU, MCU, MCC, MPU, MPC and MPP of Eq. 6.
+#
+#  The dimer is the smallest holoenzyme that supports intersubunit
+#  autophosphorylation and the one that departs most from larger holoenzymes.
+#  With r2 = r1 it tracks the hexamer to within 2% over six decades of CaM4,
+#  which is the observation that motivates the infinite subunit holoenzyme
+#  approximation. In the opposite limit r2 = 0 a phosphorylated subunit has no
+#  activity toward its neighbor, so each dimer can undergo at most one
+#  phosphorylation event and FP saturates at 1/2 at high CaM4, against 2/3 for
+#  the trimer and 1 - 1/e = 0.63 for large holoenzymes.
+
+#@keyword: |
+#  signaling, synaptic plasticity, CaMKII, calmodulin, holoenzyme, dimer,
+#  autophosphorylation, cyclic complex, mass action, monostable,
+#  Rattus norvegicus
+
+#@reference: |
+#  Michalski PJ, Loew LM (2012). CaMKII activation and dynamics are independent
+#  of the holoenzyme structure: an infinite subunit holoenzyme approximation.
+#  Phys Biol 9:036010. doi:10.1088/1478-3975/9/3/036010
+
+#@note: |
+#  Corresponds to the public VCell model "BioNetGen CaMKII - Dimer - 3 states -
+#  no phosphatase" (username pjmichal, biomodel key 76037475). Units are
+#  micromolar and seconds and ODE is the only simulation mode provided; see the
+#  primary file for the unit and simulation-mode rationale.
+
+begin parameters
+  # Avogadro constant, retained for house-style population-conversion context.
+  NA          6.02214076e23  # molecules/mol
+
+  # Nominal reactor volume; not used by the concentration-based ODE protocol.
+  V_ref       1e-15          # L/reactor
+
+  # Number of subunits per holoenzyme; must match the ring in seed species.
+  N_sub       2              # dimensionless
+
+  # CaM4 association to an unphosphorylated subunit; Sec. 3.1 in Michalski and
+  # Loew (2012) sets the timescale by taking kon_u = 1 /uM/s.
+  kon_u       1.0            # /uM/s
+
+  # Single-site dissociation constant KD = 66.7 nM measured by De Koninck and
+  # Schulman (1998); koff_u follows from KD_u and kon_u.
+  KD_u        0.06667        # uM
+  koff_u      KD_u*kon_u     # /s
+
+  # Intersubunit T286 autophosphorylation rates; the Fig. 4 protocol resets r2
+  # to the limiting value 0.
+  r1          1.0            # /s
+  r2          r1             # /s
+
+  # Total CaMKII subunit concentration used throughout Figs. 2-7.
+  CaMKII_tot  0.005          # uM
+
+  # Buffered calcium-saturated calmodulin; scanned by the active protocols.
+  CaM4_tot    1.0            # uM
+end parameters
+
+begin molecule types
+  # CaMKII subunit: cam is the regulatory-domain CaM4 site, T286 is the
+  # intersubunit autophosphorylation site, and cw/ccw are association-domain
+  # bonds to the clockwise and counterclockwise neighbors in the ring.
+  CaMKII(cam,T286~U~P,cw,ccw)
+  # Calcium-saturated calmodulin; k is the CaMKII-binding site.
+  CaM4(k)
+end molecule types
+
+begin seed species
+  # Fully autoinhibited dimer. Each subunit holds the other through cw, so both
+  # subunits can act as kinase toward the other.
+  CaMKII(cam,T286~U,cw!1,ccw!2).CaMKII(cam,T286~U,cw!2,ccw!1) \
+    CaMKII_tot/N_sub  # uM
+
+  # Calcium-saturated CaM is buffered, as in the "CaM buffered" VCell
+  # application and in the experiments of De Koninck and Schulman (1998).
+  $CaM4(k)  CaM4_tot  # uM
+end seed species
+
+begin observables
+  # Total subunits; conserved and equal to CaMKII_tot.
+  Molecules  Obs_Tot_CaMKII  CaMKII()
+
+  # The three subunit states of Sec. 2.3 in Michalski and Loew (2012).
+  Molecules  Obs_U           CaMKII(cam,T286~U)
+  Molecules  Obs_C           CaMKII(cam!+,T286~U)
+  Molecules  Obs_P           CaMKII(T286~P)
+
+  # Doubly phosphorylated dimers (MPP of Eq. 6); the r2 = 0 limit forbids them.
+  Species    Obs_MPP         CaMKII(T286~P).CaMKII(T286~P)
+end observables
+
+begin functions
+  # Fraction of subunits phosphorylated on T286; Eq. 5 in Michalski and Loew
+  # (2012).
+  FP() = Obs_P/CaMKII_tot
+
+  # Fraction of CaM-bound, unphosphorylated subunits; Eq. 5 in Michalski and
+  # Loew (2012).
+  FC() = Obs_C/CaMKII_tot
+end functions
+
+begin reaction rules
+  # Calcium-saturated CaM binds the regulatory domain of an unphosphorylated
+  # subunit and cannot dissociate once T286 is phosphorylated.
+  R_bind_CaM4: \
+    CaMKII(cam,T286~U) + CaM4(k) <-> CaMKII(cam!1,T286~U).CaM4(k!1) \
+    kon_u, koff_u
+
+  # Intersubunit T286 autophosphorylation by a CaM-bound, unphosphorylated
+  # kinase acting on the CaM-bound neighbor held by its cw component.
+  R_autophos_T286_by_C: \
+    CaMKII(cam!+,T286~U,cw!1).CaMKII(ccw!1,cam!+,T286~U) -> \
+    CaMKII(cam!+,T286~U,cw!1).CaMKII(ccw!1,cam!+,T286~P) \
+    r1
+
+  # The same reaction driven by a CaM-bound kinase that is already
+  # phosphorylated on T286.
+  R_autophos_T286_by_P: \
+    CaMKII(cam!+,T286~P,cw!1).CaMKII(ccw!1,cam!+,T286~U) -> \
+    CaMKII(cam!+,T286~P,cw!1).CaMKII(ccw!1,cam!+,T286~P) \
+    r2
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 7 species, 8 reactions
+  saveConcentrations()
+
+  # Time-dependent autophosphorylation versus CaM4, r2 = r1
+
+  #@protocol: |
+  #  Buffered CaM4 is scanned logarithmically from 1 nM to 1 mM with r2 = r1.
+  #  Each scan point integrates 6 s of autophosphorylation and reports FP and
+  #  FC at 1 s intervals, so the per-point .gdat files carry both the 1 s and
+  #  the 6 s curves of Fig. 2. The dimer stays within 2% of the hexamer over
+  #  the whole range.
+
+  #@figure: Fig. 2 in Michalski and Loew (2012)
+
+  resetConcentrations()
+  parameter_scan({method=>"ode",parameter=>"CaM4_tot",par_min=>0.001,\
+    par_max=>1000,n_scan_pts=>25,log_scale=>1,t_start=>0,t_end=>6,n_steps=>6,\
+    suffix=>"scan",atol=>1e-14,rtol=>1e-10,print_functions=>1})
+
+  # Limiting case r2 = 0
+
+  #@protocol: |
+  #  The same 6 s scan with an inactive phosphorylated kinase, r2 = 0, over the
+  #  0.01 to 10 uM range of Fig. 4. Only one of the two subunits of a dimer can
+  #  ever be phosphorylated, so FP saturates at 1/2 instead of approaching 1.
+  #  Setting r2 here is permanent for the remainder of the actions block.
+
+  #@figure: Fig. 4 in Michalski and Loew (2012)
+
+  resetConcentrations()
+  setParameter("r2",0)
+  parameter_scan({method=>"ode",parameter=>"CaM4_tot",par_min=>0.01,\
+    par_max=>10,n_scan_pts=>25,log_scale=>1,t_start=>0,t_end=>6,n_steps=>6,\
+    suffix=>"scan_r2zero",atol=>1e-14,rtol=>1e-10,print_functions=>1})
+end actions
