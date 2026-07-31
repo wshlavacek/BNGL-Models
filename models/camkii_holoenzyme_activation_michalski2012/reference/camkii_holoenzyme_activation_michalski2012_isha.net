@@ -1,0 +1,42 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA               6.02214076e23  # Constant
+    2 V_ref            1e-15  # Constant
+    3 kon_u            1.0  # Constant
+    4 KD_u             0.06667  # Constant
+    5 koff_u           KD_u*kon_u  # ConstantExpression
+    6 r1               1.0  # Constant
+    7 r2               r1  # ConstantExpression
+    8 kcat             1.0  # Constant
+    9 Km_PP1           10.0  # Constant
+   10 PP1_tot          0.0  # Constant
+   11 CaMKII_tot       0.005  # Constant
+   12 CaM4_tot         1.0  # Constant
+end parameters
+begin functions
+    1 k_autophos_T286() ((r1*Obs_C)+(r2*Obs_P))/CaMKII_tot
+    2 k_dephos_T286() kcat/(Km_PP1+Obs_P)
+    3 FP() Obs_P/CaMKII_tot
+    4 FC() Obs_C/CaMKII_tot
+end functions
+begin species
+    1 CaMKII(T286~U,cam) CaMKII_tot
+    2 $CaM4(k) CaM4_tot
+    3 $PP1() PP1_tot
+    4 CaM4(k!1).CaMKII(T286~U,cam!1) 0
+    5 CaM4(k!1).CaMKII(T286~P,cam!1) 0
+end species
+begin reactions
+    1 1,2 4 kon_u #R_bind_CaM4
+    2 4 1,2 koff_u #_reverse_R_bind_CaM4
+    3 4 5 k_autophos_T286 #R_autophos_T286
+    4 5,3 4,3 k_dephos_T286 #R_dephos_T286
+end reactions
+begin groups
+    1 Obs_Tot_CaMKII       1,4,5
+    2 Obs_U                1
+    3 Obs_C                4
+    4 Obs_P                5
+    5 Obs_Free_CaM4        2
+    6 Obs_PP1              3
+end groups

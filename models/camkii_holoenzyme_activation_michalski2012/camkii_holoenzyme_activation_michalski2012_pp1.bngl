@@ -1,0 +1,194 @@
+begin model
+
+#@title: CaMKII holoenzyme activation with phosphatase (Michalski and Loew, 2012)
+
+#@description: |
+#  Exact three-state CaMKII hexamer holoenzyme model extended with protein
+#  phosphatase 1. The subunit states, ring topology, calmodulin trapping and
+#  unidirectional intersubunit T286 autophosphorylation are those of the
+#  primary file; the added rule dephosphorylates T286 with an irreversible
+#  Michaelis-Menten rate law whose denominator carries the total concentration
+#  of phosphorylated subunits, so all phospho-subunits in the system compete
+#  for the same phosphatase pool. PP1 is a buffered species that appears on
+#  both sides of the rule, which keeps the network counts equal to the "+
+#  phosphatase" column of Table 1 in Michalski and Loew (2012): 132 species and
+#  632 reversible-pair reactions (868 unidirectional reactions here).
+#
+#  Adding a phosphatase turns the runaway autophosphorylation of the primary
+#  file into a true equilibrium: FP relaxes to a stable steady state that is a
+#  sigmoid in CaM4 whose midpoint shifts to higher CaM4 as PP1 rises. This is
+#  also where the holoenzyme structure matters most. At low CaM4 and low PP1
+#  the rare doubly CaM-bound neighbor pair in a dimer phosphorylates both of
+#  its subunits and each dephosphorylation is immediately undone, whereas in a
+#  larger holoenzyme only one subunit of the pair is a substrate; the dimer
+#  therefore holds roughly ten times as many phosphorylated subunits as the
+#  hexamer at the lowest CaM4 concentrations.
+
+#@keyword: |
+#  signaling, synaptic plasticity, CaMKII, calmodulin, holoenzyme,
+#  protein phosphatase 1, autophosphorylation, Michaelis-Menten,
+#  cyclic complex, mass action, Rattus norvegicus
+
+#@reference: |
+#  Michalski PJ, Loew LM (2012). CaMKII activation and dynamics are independent
+#  of the holoenzyme structure: an infinite subunit holoenzyme approximation.
+#  Phys Biol 9:036010. doi:10.1088/1478-3975/9/3/036010
+
+#@note: |
+#  The VCell counterpart, "BioNetGen CaMKII - Hexamer - 3 states - with
+#  phosphatase", is listed in Table S2 of Michalski and Loew (2012) but is not
+#  among the models currently public under username pjmichal, so the
+#  phosphatase rule and its constants were taken from Eq. 6 of the paper and
+#  from the public "CaMKII - Infinite Lattice - 3 states" model (biomodel key
+#  74849752), which carries the three-state phosphatase parameters used for
+#  Figs. 5 and 7 (kcat = 1 /s, Km = 10 uM). These are round-number,
+#  scaled-analysis values; the measured PP1 constants of Bradshaw et al. (2003),
+#  kcat = 1.72 /s and Km = 11 uM, are used in the six-state files.
+#
+#  Units are micromolar and seconds and ODE is the only simulation mode
+#  provided; see the primary file for the unit and simulation-mode rationale.
+
+begin parameters
+  # Avogadro constant, retained for house-style population-conversion context.
+  NA          6.02214076e23  # molecules/mol
+
+  # Nominal reactor volume; not used by the concentration-based ODE protocol.
+  V_ref       1e-15          # L/reactor
+
+  # Number of subunits per holoenzyme; must match the ring in seed species.
+  N_sub       6              # dimensionless
+
+  # CaM4 association to an unphosphorylated subunit; Sec. 3.1 in Michalski and
+  # Loew (2012) sets the timescale by taking kon_u = 1 /uM/s.
+  kon_u       1.0            # /uM/s
+
+  # Single-site dissociation constant KD = 66.7 nM measured by De Koninck and
+  # Schulman (1998); koff_u follows from KD_u and kon_u.
+  KD_u        0.06667        # uM
+  koff_u      KD_u*kon_u     # /s
+
+  # Intersubunit T286 autophosphorylation rates.
+  r1          1.0            # /s
+  r2          r1             # /s
+
+  # Michaelis-Menten constants for PP1 acting on phospho-T286.
+  kcat        1.0            # /s
+  Km_PP1      10.0           # uM
+
+  # Active phosphatase concentration; Fig. 5 uses 0.1, 1.0 and 10 uM.
+  PP1_tot     1.0            # uM
+
+  # Total CaMKII subunit concentration used throughout Figs. 2-7.
+  CaMKII_tot  0.005          # uM
+
+  # Buffered calcium-saturated calmodulin; scanned by the active protocol.
+  CaM4_tot    1.0            # uM
+end parameters
+
+begin molecule types
+  # CaMKII subunit: cam is the regulatory-domain CaM4 site, T286 is the
+  # intersubunit autophosphorylation site, and cw/ccw are association-domain
+  # bonds to the clockwise and counterclockwise neighbors in the ring.
+  CaMKII(cam,T286~U~P,cw,ccw)
+  # Calcium-saturated calmodulin; k is the CaMKII-binding site.
+  CaM4(k)
+  # Protein phosphatase 1; acts through a Michaelis-Menten rate law and is
+  # never covalently modified, so it carries no components.
+  PP1()
+end molecule types
+
+begin seed species
+  # Fully autoinhibited hexamer. Subunit i holds subunit i+1 through cw, so a
+  # kinase phosphorylates the neighbor bound to its cw component. Continuation
+  # lines of a species graph cannot be indented, as the inserted whitespace
+  # would split the graph.
+  CaMKII(cam,T286~U,cw!1,ccw!6).CaMKII(cam,T286~U,cw!2,ccw!1).\
+CaMKII(cam,T286~U,cw!3,ccw!2).CaMKII(cam,T286~U,cw!4,ccw!3).\
+CaMKII(cam,T286~U,cw!5,ccw!4).CaMKII(cam,T286~U,cw!6,ccw!5) \
+    CaMKII_tot/N_sub  # uM
+
+  # Buffered pools of calcium-saturated calmodulin and active phosphatase.
+  $CaM4(k)  CaM4_tot  # uM
+  $PP1()    PP1_tot   # uM
+end seed species
+
+begin observables
+  # Total subunits; conserved and equal to CaMKII_tot.
+  Molecules  Obs_Tot_CaMKII  CaMKII()
+
+  # The three subunit states of Sec. 2.3 in Michalski and Loew (2012).
+  Molecules  Obs_U           CaMKII(cam,T286~U)
+  Molecules  Obs_C           CaMKII(cam!+,T286~U)
+  Molecules  Obs_P           CaMKII(T286~P)
+
+  # Buffered pools, reported to confirm that they stay clamped.
+  Molecules  Obs_Free_CaM4   CaM4(k)
+  Molecules  Obs_PP1         PP1()
+end observables
+
+begin functions
+  # Michaelis-Menten dephosphorylation of T286. BioNetGen supplies the
+  # phospho-subunit and PP1 factors, so only kcat/(Km + P) appears here; the
+  # denominator uses the total phospho-T286 concentration P of Eq. 6 in
+  # Michalski and Loew (2012).
+  k_dephos_T286() = kcat/(Km_PP1 + Obs_P)
+
+  # Fraction of subunits phosphorylated on T286; Eq. 5 in Michalski and Loew
+  # (2012).
+  FP() = Obs_P/CaMKII_tot
+
+  # Fraction of CaM-bound, unphosphorylated subunits; Eq. 5 in Michalski and
+  # Loew (2012).
+  FC() = Obs_C/CaMKII_tot
+end functions
+
+begin reaction rules
+  # Calcium-saturated CaM binds the regulatory domain of an unphosphorylated
+  # subunit and cannot dissociate once T286 is phosphorylated.
+  R_bind_CaM4: \
+    CaMKII(cam,T286~U) + CaM4(k) <-> CaMKII(cam!1,T286~U).CaM4(k!1) \
+    kon_u, koff_u
+
+  # Intersubunit T286 autophosphorylation by a CaM-bound, unphosphorylated
+  # kinase acting on the CaM-bound neighbor held by its cw component.
+  R_autophos_T286_by_C: \
+    CaMKII(cam!+,T286~U,cw!1).CaMKII(ccw!1,cam!+,T286~U) -> \
+    CaMKII(cam!+,T286~U,cw!1).CaMKII(ccw!1,cam!+,T286~P) \
+    r1
+
+  # The same reaction driven by a CaM-bound kinase that is already
+  # phosphorylated on T286.
+  R_autophos_T286_by_P: \
+    CaMKII(cam!+,T286~P,cw!1).CaMKII(ccw!1,cam!+,T286~U) -> \
+    CaMKII(cam!+,T286~P,cw!1).CaMKII(ccw!1,cam!+,T286~P) \
+    r2
+
+  # PP1 dephosphorylates T286. A phospho-T286 subunit still carries CaM, so
+  # the product is a CaM-bound unphosphorylated subunit (state C).
+  R_dephos_T286: \
+    CaMKII(T286~P) + PP1() -> CaMKII(T286~U) + PP1() \
+    k_dephos_T286()
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 132 species, 868 reactions
+  saveConcentrations()
+
+  # Equilibrium phosphorylation versus CaM4 at 1 uM PP1
+
+  #@protocol: |
+  #  Buffered CaM4 is scanned logarithmically from 0.1 nM to 1 uM at 1 uM PP1
+  #  and integrated to 20000 s, long enough for the slowest point to settle.
+  #  The equilibrium FP is the middle curve of Fig. 5a; the same curve on a
+  #  log-log axis is the comparison in Fig. 5b. The verification notebook
+  #  repeats the scan at 0.1 and 10 uM PP1 to complete Fig. 5a.
+
+  #@figure: Fig. 5a in Michalski and Loew (2012)
+
+  resetConcentrations()
+  parameter_scan({method=>"ode",parameter=>"CaM4_tot",par_min=>0.0001,\
+    par_max=>1,n_scan_pts=>25,log_scale=>1,t_start=>0,t_end=>20000,\
+    n_steps=>20,suffix=>"scan",atol=>1e-14,rtol=>1e-10,print_functions=>1})
+end actions

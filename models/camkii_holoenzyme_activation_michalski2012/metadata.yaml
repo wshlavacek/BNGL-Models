@@ -1,0 +1,333 @@
+# metadata.yaml — camkii_holoenzyme_activation_michalski2012
+id: camkii_holoenzyme_activation_michalski2012
+created: 2026-07-31
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, reformulation, ai_assisted]
+  description: >
+    Reconstructed from Michalski PJ and Loew LM (2012), Phys Biol 9:036010, and
+    from the seven CaMKII models the authors published under the Virtual Cell
+    username pjmichal, whose VCML was retrieved through the public VCell REST
+    API. Those VCell models are BioNetGen-generated reaction networks that were
+    exported after network generation, so the underlying rules are not
+    distributed; the rules here were re-derived from the paper's Sec. 2 and
+    Figs. 1b and 1d and then checked against the published networks, which they
+    reproduce species for species and reaction for reaction (Table 1 of the
+    paper for the three-state models, 83 species and 407 reactions for the
+    six-state trimer).
+
+files:
+  - name: camkii_holoenzyme_activation_michalski2012.bngl
+    role: primary
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: camkii_holoenzyme_activation_michalski2012_dimer.bngl
+    role: variant
+    description: >
+      Two-subunit ring, the smallest holoenzyme that supports intersubunit
+      autophosphorylation and the one Eq. 6 of the paper writes out
+      explicitly. Adds the r2 = 0 protocol of Fig. 4.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: camkii_holoenzyme_activation_michalski2012_pp1.bngl
+    role: variant
+    description: >
+      Hexamer ring with a Michaelis-Menten PP1, reaching a true equilibrium
+      (Fig. 5a). 132 species and 868 unidirectional reactions.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: camkii_holoenzyme_activation_michalski2012_isha.bngl
+    role: variant
+    description: >
+      Infinite subunit holoenzyme approximation of the three-state model,
+      Eq. 7 of the paper: five species with a mean-field
+      autophosphorylation rate law, with and without phosphatase
+      (Figs. 7a and 7b).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: camkii_holoenzyme_activation_michalski2012_nfsim.bngl
+    role: variant
+    description: >
+      Population-based, NETWORK-FREE (NFsim) twelve-subunit holoenzyme.
+      Buffered calmodulin is carried by a subunit state rather than an
+      explicit molecule, which is exact for a clamped pool and keeps
+      NFsim from instantiating hundreds of thousands of CaM particles.
+      Reaches the holoenzyme sizes of Fig. 6a, which generate_network
+      cannot (44368 dodecamer configurations).
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: camkii_holoenzyme_activation_michalski2012_six_state_trimer.bngl
+    role: related
+    description: >
+      Exact six-state trimer with resolved calcium-calmodulin binding,
+      calmodulin trapping, T305 phosphorylation and PP1 (83 species, 487
+      unidirectional reactions). Reproduces Figs. 8a-8d.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: camkii_holoenzyme_activation_michalski2012_six_state_isha.bngl
+    role: related
+    description: >
+      Infinite subunit holoenzyme approximation of the six-state model;
+      thirteen species replace the 83 of the trimer.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: verify_michalski2012.ipynb
+    role: verification
+    description: >
+      Three-state verification. Enumerates the ring network independently of
+      BioNetGen (necklaces of U/C/P subunits), reproduces both columns of
+      Table 1, checks the dimer against Eq. 6 and the ISHA against Eq. 7,
+      compares BioNetGen against those independent solutions, sweeps the
+      holoenzyme size from 2 to 100 subunits with NFsim for Fig. 6a, and
+      compares every curve with the digitized Figs. 2, 4, 5a and 7.
+  - name: verify_michalski2012.png
+    role: figure
+  - name: verify_michalski2012_six_state.ipynb
+    role: verification
+    description: >
+      Six-state verification. Independent necklace enumeration of the trimer
+      with the free calmodulin pool, independent transcription of the
+      eleven ISHA ODEs, the species and reaction counts of the published
+      VCell model, the size of the paper-text versus VCell r3 kinase-set
+      discrepancy, and comparison with the digitized Fig. 8.
+  - name: verify_michalski2012_six_state.png
+    role: figure
+  - name: digitize_michalski2012.py
+    role: verification
+    description: >
+      Regenerates every reference/michalski2012_fig*_digitized.csv from the
+      source PDF. The published figures are vector graphics, so each
+      plotted marker centre is recovered exactly and the axes are
+      calibrated on tick-mark positions rather than on the plot frame,
+      which in this paper is offset from the axis limits. Needs the
+      article PDF, which lives in the uncommitted dev/papers tree.
+  # BioNetGen reference output
+  - name: reference/camkii_holoenzyme_activation_michalski2012.net
+    role: reference
+    description: >
+      Hexamer network: 131 species, 632 unidirectional reactions.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_ode.gdat
+    role: reference
+    description: >
+      Six-second time course at 1 uM CaM4.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_scan.scan
+    role: reference
+    description: >
+      Fig. 2 CaM4 scan, values at 6 s.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_dimer.net
+    role: reference
+    description: >
+      Dimer network: 7 species, 8 unidirectional reactions.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_dimer_scan.scan
+    role: reference
+    description: >
+      Fig. 2 CaM4 scan for the dimer, values at 6 s.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_dimer_scan_r2zero.scan
+    role: reference
+    description: >
+      Fig. 4 CaM4 scan with r2 = 0.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_pp1.net
+    role: reference
+    description: >
+      Hexamer + PP1 network: 132 species, 868 reactions.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_pp1_scan.scan
+    role: reference
+    description: >
+      Fig. 5a equilibrium scan at 1 uM PP1.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_isha.net
+    role: reference
+    description: >
+      Three-state ISHA network: 5 species, 4 reactions.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_isha_scan.scan
+    role: reference
+    description: >
+      Fig. 7a CaM4 scan, values at 6 s.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_isha_scan_pp1.scan
+    role: reference
+    description: >
+      Fig. 7b equilibrium scan at 1 uM PP1.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_nfsim_nfr.gdat
+    role: reference
+    description: >
+      NFsim dodecamer time course, seed 1234.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_nfsim_nfr.xml
+    role: reference
+    description: >
+      NFsim input XML for the dodecamer model.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_six_state_isha.net
+    role: reference
+    description: >
+      Six-state ISHA network: 13 species, 22 reactions.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_six_state_isha_scan.scan
+    role: reference
+    description: >
+      Figs. 8a and 8c calcium scan, 10 s.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_six_state_isha_scan_pp1.scan
+    role: reference
+    description: >
+      Figs. 8b and 8d calcium scan at 1 uM PP1, 200 s.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_six_state_trimer.net
+    role: reference
+    description: >
+      Six-state trimer network: 83 species, 487 unidirectional reactions.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_six_state_trimer_scan.scan
+    role: reference
+    description: >
+      Figs. 8a and 8c calcium scan, 10 s.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_six_state_trimer_scan_pp1.scan
+    role: reference
+    description: >
+      Figs. 8b and 8d calcium scan at 1 uM PP1, 200 s.
+  # Per-point parameter_scan output. Only the .gdat files are committed:
+  # the per-point .net files differ from the committed base network only in
+  # the value of the scanned parameter.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_dimer_scan/
+    role: reference
+    description: >
+      25 per-point .gdat files.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_dimer_scan_r2zero/
+    role: reference
+    description: >
+      25 per-point .gdat files.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_isha_scan/
+    role: reference
+    description: >
+      61 per-point .gdat files.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_isha_scan_pp1/
+    role: reference
+    description: >
+      61 per-point .gdat files.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_pp1_scan/
+    role: reference
+    description: >
+      25 per-point .gdat files.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_scan/
+    role: reference
+    description: >
+      25 per-point .gdat files.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_six_state_isha_scan/
+    role: reference
+    description: >
+      61 per-point .gdat files.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_six_state_isha_scan_pp1/
+    role: reference
+    description: >
+      61 per-point .gdat files.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_six_state_trimer_scan/
+    role: reference
+    description: >
+      25 per-point .gdat files.
+  - name: reference/camkii_holoenzyme_activation_michalski2012_six_state_trimer_scan_pp1/
+    role: reference
+    description: >
+      25 per-point .gdat files.
+  # Data digitized from the published figures by digitize_michalski2012.py
+  - name: reference/michalski2012_fig2_1s_dimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig2_1s_hexamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig2_1s_pentamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig2_1s_tetramer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig2_1s_trimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig2_6s_dimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig2_6s_hexamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig2_6s_pentamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig2_6s_tetramer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig2_6s_trimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig4_dimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig4_hexamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig4_pentamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig4_tetramer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig4_trimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_0p1uM_dimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_0p1uM_hexamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_0p1uM_pentamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_0p1uM_tetramer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_0p1uM_trimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_10uM_dimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_10uM_hexamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_10uM_pentamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_10uM_tetramer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_10uM_trimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_1p0uM_dimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_1p0uM_hexamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_1p0uM_pentamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_1p0uM_tetramer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig5a_pp1_1p0uM_trimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig7a_hexamer_1s_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig7a_hexamer_6s_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig7a_isha_1s_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig7a_isha_6s_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig7b_pp1_0p1uM_hexamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig7b_pp1_0p1uM_isha_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig7b_pp1_10uM_hexamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig7b_pp1_10uM_isha_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig7b_pp1_1p0uM_hexamer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig7b_pp1_1p0uM_isha_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig8a_isha_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig8a_trimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig8b_isha_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig8b_trimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig8c_isha_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig8c_trimer_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig8d_isha_digitized.csv
+    role: reference
+  - name: reference/michalski2012_fig8d_trimer_digitized.csv
+    role: reference

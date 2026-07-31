@@ -1,0 +1,44 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA              6.02214076e23  # Constant
+    2 V_ref           1e-15  # Constant
+    3 N_sub           2  # Constant
+    4 kon_u           1.0  # Constant
+    5 KD_u            0.06667  # Constant
+    6 koff_u          KD_u*kon_u  # ConstantExpression
+    7 r1              1.0  # Constant
+    8 r2              r1  # ConstantExpression
+    9 CaMKII_tot      0.005  # Constant
+   10 CaM4_tot        1.0  # Constant
+   11 _InitialConc1   CaMKII_tot/N_sub  # ConstantExpression
+end parameters
+begin functions
+    1 FP() Obs_P/CaMKII_tot
+    2 FC() Obs_C/CaMKII_tot
+end functions
+begin species
+    1 CaMKII(T286~U,cam,ccw!1,cw!2).CaMKII(T286~U,cam,ccw!2,cw!1) _InitialConc1
+    2 $CaM4(k) CaM4_tot
+    3 CaM4(k!1).CaMKII(T286~U,cam!1,ccw!2,cw!3).CaMKII(T286~U,cam,ccw!3,cw!2) 0
+    4 CaM4(k!1).CaM4(k!2).CaMKII(T286~U,cam!1,ccw!3,cw!4).CaMKII(T286~U,cam!2,ccw!4,cw!3) 0
+    5 CaM4(k!1).CaM4(k!2).CaMKII(T286~P,cam!2,ccw!3,cw!4).CaMKII(T286~U,cam!1,ccw!4,cw!3) 0
+    6 CaM4(k!1).CaMKII(T286~P,cam!1,ccw!2,cw!3).CaMKII(T286~U,cam,ccw!3,cw!2) 0
+    7 CaM4(k!1).CaM4(k!2).CaMKII(T286~P,cam!2,ccw!3,cw!4).CaMKII(T286~P,cam!1,ccw!4,cw!3) 0
+end species
+begin reactions
+    1 1,2 3 2*kon_u #R_bind_CaM4
+    2 2,3 4 kon_u #R_bind_CaM4
+    3 3 1,2 koff_u #_reverse_R_bind_CaM4
+    4 4 2,3 2*koff_u #_reverse_R_bind_CaM4
+    5 4 5 2*r1 #R_autophos_T286_by_C
+    6 5 2,6 koff_u #_reverse_R_bind_CaM4
+    7 5 7 r2 #R_autophos_T286_by_P
+    8 2,6 5 kon_u #R_bind_CaM4
+end reactions
+begin groups
+    1 Obs_Tot_CaMKII       2*1,2*3,2*4,2*5,2*6,2*7
+    2 Obs_U                2*1,3,6
+    3 Obs_C                3,2*4,5
+    4 Obs_P                5,6,2*7
+    5 Obs_MPP              7
+end groups
