@@ -1,0 +1,148 @@
+# metadata.yaml — combinatorial_histone_h4_acetylation_blasi2016
+id: combinatorial_histone_h4_acetylation_blasi2016
+created: 2026-07-31
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_ode, adapted_from_sbml, ai_assisted]
+  description: >
+    Built from Blasi T, Feller C, Feigelman J, Hasenauer J, Imhof A, Theis FJ,
+    Becker PB, Marr C (2016), Cell Systems 2:49-58, together with its
+    Supplemental Information (Table S1, Table S2, and Supplemental
+    Experimental Procedures sections 2 and 3). The paper compares three
+    hypotheses for how the 16 combinatorial acetylation motifs of the histone
+    H4 tail acquire their measured abundances, and the three BNGL files here
+    are those three hypotheses: they differ only in how much modification
+    context a reaction rule is allowed to name. The rules were written from
+    the paper's description of the network and then checked edge for edge
+    against the rank-1 row of Table S2 and against the SBML encoding
+    distributed as the Blasi_CellSystems2016 problem of the
+    Benchmarking-Initiative Benchmark-Models-PEtab collection, whose
+    measurement table also supplies the Feller et al. (2015) LC-MS abundances
+    that Fig. 2 plots.
+
+files:
+  - name: combinatorial_histone_h4_acetylation_blasi2016.bngl
+    role: primary
+    description: >
+      Best motif-specific model of Blasi et al. (2016): 25 acetylation edges
+      at the basal rate and seven motif-specific rates, written as 18
+      context-resolved acetylation rules plus four unspecific deacetylation
+      rules. Reproduces Fig. 2C.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: combinatorial_histone_h4_acetylation_blasi2016_unspecific.bngl
+    role: variant
+    description: >
+      Unspecific scenario: one basal rate for all 32 acetylation edges, so no
+      rule names a neighboring lysine and every motif in a layer shares an
+      abundance. Reproduces Fig. 2A.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: combinatorial_histone_h4_acetylation_blasi2016_site_specific.bngl
+    role: variant
+    description: >
+      Best site-specific scenario: one rate per lysine, context-independent,
+      so the steady state factorizes over the four sites. Reproduces Fig. 2B.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: verify_blasi2016.ipynb
+    role: verification
+    description: >
+      Reruns all three BNGL files, parses each generated network back into
+      motif labels and confirms it is the 4-cube of Fig. 1B with the published
+      rate constant on every one of its 32 acetylation edges, compares
+      BioNetGen with an independent SciPy integration and stationary solve of
+      the 16 linear ODEs, and then compares the steady states with the
+      reported data: the PEtab benchmark reference simulation, the 252 LC-MS
+      replicate measurements, and the three published BIC values, which are
+      recovered from the paper's log-error likelihood.
+  - name: verify_blasi2016.png
+    role: figure
+  - name: extract_blasi2016.py
+    role: verification
+    description: >
+      Regenerates every reference/blasi2016_*.csv and
+      reference/feller2015_*.csv. All reported quantities used for
+      verification exist as tabular data, so nothing is digitized from a
+      plotted figure. Needs the supplemental files, which live in the
+      uncommitted dev/papers tree, and downloads the PEtab problem on demand.
+  # BioNetGen reference output
+  - name: reference/combinatorial_histone_h4_acetylation_blasi2016.net
+    role: reference
+    description: >
+      Motif-specific network: 16 species, 64 unidirectional reactions.
+  - name: reference/combinatorial_histone_h4_acetylation_blasi2016_ode.net
+    role: reference
+  - name: reference/combinatorial_histone_h4_acetylation_blasi2016_ode.gdat
+    role: reference
+    description: >
+      Relaxation to the steady-state motif distribution, 50 deacetylation
+      lifetimes.
+  - name: reference/combinatorial_histone_h4_acetylation_blasi2016_ode.cdat
+    role: reference
+  - name: reference/combinatorial_histone_h4_acetylation_blasi2016_unspecific.net
+    role: reference
+    description: >
+      Unspecific network: 16 species, 64 unidirectional reactions.
+  - name: reference/combinatorial_histone_h4_acetylation_blasi2016_unspecific_ode.net
+    role: reference
+  - name: reference/combinatorial_histone_h4_acetylation_blasi2016_unspecific_ode.gdat
+    role: reference
+  - name: reference/combinatorial_histone_h4_acetylation_blasi2016_unspecific_ode.cdat
+    role: reference
+  - name: reference/combinatorial_histone_h4_acetylation_blasi2016_site_specific.net
+    role: reference
+    description: >
+      Site-specific network: 16 species, 64 unidirectional reactions.
+  - name: reference/combinatorial_histone_h4_acetylation_blasi2016_site_specific_ode.net
+    role: reference
+  - name: reference/combinatorial_histone_h4_acetylation_blasi2016_site_specific_ode.gdat
+    role: reference
+  - name: reference/combinatorial_histone_h4_acetylation_blasi2016_site_specific_ode.cdat
+    role: reference
+  # Reported data used for verification, extracted by extract_blasi2016.py
+  - name: reference/blasi2016_tableS2_rank1_edge_rates.csv
+    role: reference
+    description: >
+      All 32 acetylation rate constants of the best motif-specific model, one
+      per edge of the 4-cube, from the rank-1 row of Table S2 in Blasi et al.
+      (2016). Table S2 reports four digits where Table S1 reports three, so
+      these are the values carried by the primary BNGL file.
+  - name: reference/blasi2016_reported_rate_constants.csv
+    role: reference
+    description: >
+      Maximum-likelihood estimates and 95% profile-likelihood confidence
+      intervals for all three scenarios, from Table S1 and from the Results of
+      Blasi et al. (2016).
+  - name: reference/blasi2016_reported_bic.csv
+    role: reference
+    description: >
+      Published Bayesian information criterion of the best model in each
+      scenario: 697.3, 644.5 and 67.1194.
+  - name: reference/feller2015_h4_motif_abundances.csv
+    role: reference
+    description: >
+      The 252 LC-MS measurements of H4 motif abundance plotted as x markers in
+      Fig. 2 of Blasi et al. (2016) — 18 biological replicates for most motifs,
+      12 for K5K12, K8K12 and K8K16, none for K5K16, which is below the
+      quantification limit. Originally from Feller et al. (2015), Mol Cell
+      57:559-571; redistributed in the measurement table of the
+      Blasi_CellSystems2016 PEtab problem. That this is the dataset the paper
+      fit is confirmed in verify_blasi2016.ipynb, which recovers all three
+      published BIC values from it.
+  - name: reference/blasi2016_petab_reference_abundances.csv
+    role: reference
+    description: >
+      Reference steady-state abundances of the best motif-specific model
+      shipped with the Blasi_CellSystems2016 PEtab problem; an independent
+      implementation of the same published model, agreeing with the curated
+      BNGL model to 2e-8.

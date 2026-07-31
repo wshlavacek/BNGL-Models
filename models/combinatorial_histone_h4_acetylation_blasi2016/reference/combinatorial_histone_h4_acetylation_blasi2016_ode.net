@@ -1,0 +1,116 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 d                  1.0  # Constant
+    2 a_b                0.0668  # Constant
+    3 a_0ac_K8           0.0273  # Constant
+    4 a_K5_K5K12         2.062  # Constant
+    5 a_K12_K5K12        0.5519  # Constant
+    6 a_K16_K12K16       0.6959  # Constant
+    7 a_K5K12_K5K8K12    0.3253  # Constant
+    8 a_K12K16_K8K12K16  2.2055  # Constant
+    9 a_K8K12K16_4ac     3.5917  # Constant
+end parameters
+begin species
+    1 H4(k12~0,k16~0,k5~0,k8~0) 1
+    2 H4(k12~0,k16~0,k5~ac,k8~0) 0
+    3 H4(k12~0,k16~0,k5~0,k8~ac) 0
+    4 H4(k12~ac,k16~0,k5~0,k8~0) 0
+    5 H4(k12~0,k16~ac,k5~0,k8~0) 0
+    6 H4(k12~0,k16~0,k5~ac,k8~ac) 0
+    7 H4(k12~0,k16~ac,k5~ac,k8~0) 0
+    8 H4(k12~ac,k16~0,k5~ac,k8~0) 0
+    9 H4(k12~ac,k16~0,k5~0,k8~ac) 0
+   10 H4(k12~0,k16~ac,k5~0,k8~ac) 0
+   11 H4(k12~ac,k16~ac,k5~0,k8~0) 0
+   12 H4(k12~0,k16~ac,k5~ac,k8~ac) 0
+   13 H4(k12~ac,k16~0,k5~ac,k8~ac) 0
+   14 H4(k12~ac,k16~ac,k5~ac,k8~0) 0
+   15 H4(k12~ac,k16~ac,k5~0,k8~ac) 0
+   16 H4(k12~ac,k16~ac,k5~ac,k8~ac) 0
+end species
+begin reactions
+    1 1 2 a_b #R_ac_k5_basal_k12u
+    2 1 3 a_0ac_K8 #R_ac_k8_0ac
+    3 1 4 a_b #R_ac_k12_basal_0ac
+    4 1 5 a_b #R_ac_k16_basal
+    5 3 6 a_b #R_ac_k5_basal_k12u
+    6 5 7 a_b #R_ac_k5_basal_k12u
+    7 4 8 a_K12_K5K12 #R_ac_k5_K12
+    8 2 6 a_b #R_ac_k8_basal_K5u
+    9 4 9 a_b #R_ac_k8_basal_K12
+   10 5 10 a_b #R_ac_k8_basal_K16
+   11 3 9 a_b #R_ac_k12_basal_K8ac
+   12 2 8 a_K5_K5K12 #R_ac_k12_K5
+   13 5 11 a_K16_K12K16 #R_ac_k12_K16
+   14 2 7 a_b #R_ac_k16_basal
+   15 3 10 a_b #R_ac_k16_basal
+   16 4 11 a_b #R_ac_k16_basal
+   17 2 1 d #R_deac_k5
+   18 3 1 d #R_deac_k8
+   19 4 1 d #R_deac_k12
+   20 5 1 d #R_deac_k16
+   21 10 12 a_b #R_ac_k5_basal_k12u
+   22 9 13 a_b #R_ac_k5_basal_K8K12
+   23 11 14 a_b #R_ac_k5_basal_K12K16
+   24 7 12 a_b #R_ac_k8_basal_K5u
+   25 8 13 a_K5K12_K5K8K12 #R_ac_k8_K5K12
+   26 11 15 a_K12K16_K8K12K16 #R_ac_k8_K12K16
+   27 6 13 a_b #R_ac_k12_basal_K8ac
+   28 10 15 a_b #R_ac_k12_basal_K8ac
+   29 7 14 a_b #R_ac_k12_basal_K5K16
+   30 6 12 a_b #R_ac_k16_basal
+   31 8 14 a_b #R_ac_k16_basal
+   32 9 15 a_b #R_ac_k16_basal
+   33 6 3 d #R_deac_k5
+   34 7 5 d #R_deac_k5
+   35 8 4 d #R_deac_k5
+   36 6 2 d #R_deac_k8
+   37 9 4 d #R_deac_k8
+   38 10 5 d #R_deac_k8
+   39 8 2 d #R_deac_k12
+   40 9 3 d #R_deac_k12
+   41 11 5 d #R_deac_k12
+   42 7 2 d #R_deac_k16
+   43 10 3 d #R_deac_k16
+   44 11 4 d #R_deac_k16
+   45 15 16 a_K8K12K16_4ac #R_ac_k5_K8K12K16
+   46 14 16 a_b #R_ac_k8_basal_K5K12K16
+   47 12 16 a_b #R_ac_k12_basal_K8ac
+   48 13 16 a_b #R_ac_k16_basal
+   49 12 10 d #R_deac_k5
+   50 13 9 d #R_deac_k5
+   51 14 11 d #R_deac_k5
+   52 12 7 d #R_deac_k8
+   53 13 8 d #R_deac_k8
+   54 15 11 d #R_deac_k8
+   55 13 6 d #R_deac_k12
+   56 14 7 d #R_deac_k12
+   57 15 10 d #R_deac_k12
+   58 12 6 d #R_deac_k16
+   59 14 8 d #R_deac_k16
+   60 15 9 d #R_deac_k16
+   61 16 15 d #R_deac_k5
+   62 16 14 d #R_deac_k8
+   63 16 12 d #R_deac_k12
+   64 16 13 d #R_deac_k16
+end reactions
+begin groups
+    1 Obs_0ac              1
+    2 Obs_K5               2
+    3 Obs_K8               3
+    4 Obs_K12              4
+    5 Obs_K16              5
+    6 Obs_K5K8             6
+    7 Obs_K5K12            8
+    8 Obs_K5K16            7
+    9 Obs_K8K12            9
+   10 Obs_K8K16            10
+   11 Obs_K12K16           11
+   12 Obs_K5K8K12          13
+   13 Obs_K5K8K16          12
+   14 Obs_K5K12K16         14
+   15 Obs_K8K12K16         15
+   16 Obs_4ac              16
+   17 Obs_Tot_H4           1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
+   18 Obs_Ac_Marks         2,3,4,5,2*6,2*7,2*8,2*9,2*10,2*11,3*12,3*13,3*14,3*15,4*16
+end groups
