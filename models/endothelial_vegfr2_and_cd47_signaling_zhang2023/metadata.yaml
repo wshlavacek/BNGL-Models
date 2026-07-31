@@ -1,0 +1,165 @@
+# metadata.yaml — endothelial_vegfr2_and_cd47_signaling_zhang2023
+id: endothelial_vegfr2_and_cd47_signaling_zhang2023
+created: 2026-07-31
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, bug_fix, refinement, ai_assisted]
+  description: >
+    House-styled from the authors' own Supporting Information files of Zhang Y,
+    Popel AS, Bazzazi H (2023), ACS Pharmacol Transl Sci 6:710-726
+    (doi:10.1021/acsptsci.3c00008): File S2 (S2.bngl, the endothelial VEGFR2/CD47
+    signaling model) and File S4 (S4.bngl, the angiogenesis-driven tumor growth
+    model), with parameter units and descriptions from Table S1 and initial values
+    from Table S2. Four observables of File S2 (SphK1, SphK1mempS, SphK1cytosol and
+    the CIB1-SphK1 pair) carry a dangling bond that BioNetGen 2.2.5 accepted and
+    2.9.3 rejects; the bond is closed here, which is what makes the file runnable on
+    a current release. The long inline rate laws are named functions in a functions
+    block; the generated network is unchanged (870 species, 5602 reactions, identical
+    seed values, verified species-multiset and reaction-multiset equality against the
+    corrected source). The fitting-job sibling is pybnf-jobs/Zhang-2023.
+
+files:
+  - name: endothelial_vegfr2_and_cd47_signaling_zhang2023.bngl
+    role: primary
+    description: >
+      The endothelial signaling model of File S2: VEGF165a binding to VEGFR2, VEGFR1
+      and neuropilin-1, ligand-dependent and ligand-independent receptor
+      dimerization, VEGFR2 Y1175 trans-autophosphorylation, CD47 preassociation with
+      VEGFR2 and its capture by thrombospondin-1, trafficking through two signaling
+      endosomes and a recycling endosome, and downstream PLCgamma/IP3/DAG with
+      store-operated calcium cycling, PKC-Raf-MEK-ERK with a sphingosine-1-phosphate
+      positive feedback through SphK1, Src-Axl-PI3K-AKT, and Ca/CaM- and
+      AKT-dependent eNOS. 870-species / 5602-reaction ODE. ODE-only: the
+      extracellular ligand pool, the calcium fluxes and the RasGTP balance are
+      written as I() -> I() + X rules whose rate laws take negative values, which no
+      stochastic method can interpret as a propensity. Actions block runs a 30 min
+      VEGF165a time course and a twelve-point kpr2 parameter scan
+      (#@figure Fig. 3A, 3B, 3G). Both protocols integrate at atol = 1e-12,
+      rtol = 1e-10 rather than the authors' atol = 1e-9, rtol = 1e-6, which
+      leaves about 0.7% discretization error on the calcium and eNOS
+      observables; the whole file takes about seven minutes.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: endothelial_vegfr2_and_cd47_signaling_zhang2023_tumor_growth.bngl
+    role: related
+    description: >
+      The angiogenesis-driven tumor growth model of File S4, which consumes the
+      primary model's output: the normalized peak endothelial pERK1/2 (Erk) and
+      ppAKT (Akt) drive a Hill-type activation of ribosomal protein S6, a delayed
+      driver TD relaxes toward it, and tumor size grows exponentially, softly capped
+      at a linear rate, gated by TD, and shrunk by first-order kill. 3-species /
+      2-reaction ODE; de-dimensionalized (tumor size is a fold change) and therefore
+      ODE-only. Parameter values are the deposited File S4 values, except that Erk
+      and Akt are raised from File S4's placeholder 0 to the untreated 1, which makes
+      the actions block reproduce the control arm of Fig. 4D
+      (#@figure Fig. 4D control arm). Two #@note tags record that Table S1 reports
+      different values for five of the parameters and that no published set
+      reproduces the treated arms; the recalibration is pybnf-jobs/Zhang-2023.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_zhang2023.ipynb
+    role: verification
+    description: >
+      Self-contained verification notebook covering both files. (1)
+      Model-specification: runs both .bngl files and checks all 15 committed
+      reference outputs to <1e-6 of each column's scale; then re-derives the ODE
+      system of the signaling model from the generated .net file independently in
+      NumPy/SciPy -- parameters, species, reactions, observable groups, the 27 global
+      functions and BioNetGen's rate-law semantics all rebuilt from scratch -- and
+      integrates it with LSODA, agreeing with BioNetGen to <1e-4 over all 129
+      observables and to <1e-3 on every scan maximum; the tumor growth model is
+      re-implemented directly from the paper's two Methods equations and agrees to
+      <1e-6. (2) Reported data: digitizes Fig. 3A, 3B and 3G and compares them with
+      the kpr2 scan maxima (median relative error a few per cent, inside a 5%
+      digitization band), confirms that the ERK activation threshold brackets the
+      reported 4.7% of baseline kpr2, and compares the tumor growth model with the
+      untreated arm of Fig. 4D against both the authors' plotted curve and the
+      Bridgeman et al. (2016) data points. It also quantifies why the three treated
+      arms of Fig. 4D are not reproducible from either published parameter set.
+      Regenerates verify_zhang2023.png. Requires BNG2.pl (BNGPATH or BNG2_PL) and
+      scipy/numpy/matplotlib; about ten minutes end to end.
+  - name: verify_zhang2023.png
+    role: figure
+    description: >
+      Verification figure, 2 rows x 3 columns. Top: the signaling time course
+      (BioNetGen lines, independent SciPy open markers), Fig. 3A and Fig. 3G with the
+      digitized curve behind the scan. Bottom: Fig. 3B, the untreated arm of Fig. 4D
+      against the digitized curve and the Bridgeman et al. (2016) points, and all
+      four Fig. 4D arms at the File S4 values showing that only the untreated one
+      agrees.
+  # BioNetGen reference outputs
+  - name: reference/endothelial_vegfr2_and_cd47_signaling_zhang2023.net
+    role: reference
+    description: Generated network for the signaling model (870 species, 5602 reactions).
+  - name: reference/endothelial_vegfr2_and_cd47_signaling_zhang2023_ode.gdat
+    role: reference
+    description: >
+      Committed ODE time course from the actions block (t = 0..1800 s, 5 s output
+      grid, atol = 1e-12, rtol = 1e-10): all 130 observables.
+  - name: reference/endothelial_vegfr2_and_cd47_signaling_zhang2023_scan.scan
+    role: reference
+    description: >
+      Committed kpr2 parameter scan, twelve points over the multiples 0, 0.03, 0.047,
+      0.05, 0.055, 0.06, 0.1, 0.2, 0.4, 0.6, 0.8 and 1 of the baseline 30 /s. The
+      .scan file holds only the t = 600 s values; the maxima the figures plot come
+      from the per-point .gdat files below.
+  - name: reference/endothelial_vegfr2_and_cd47_signaling_zhang2023_scan/
+    role: reference
+    description: >
+      Per-scan-point .gdat time courses (t = 0..600 s, 10 s output grid), twelve
+      files. The per-point .cdat and .net files that BioNetGen also writes are ~40 MB
+      and are not committed; re-running the actions block regenerates them.
+  - name: reference/endothelial_vegfr2_and_cd47_signaling_zhang2023_tumor_growth.net
+    role: reference
+    description: Generated network for the tumor growth model (3 species, 2 reactions).
+  - name: reference/endothelial_vegfr2_and_cd47_signaling_zhang2023_tumor_growth_ode.gdat
+    role: reference
+    description: >
+      Committed ODE time course for the untreated arm from the actions block
+      (t = 0..45 days, 0.1 day grid).
+  # Reported / digitized simulation data used for the reported-data verification
+  - name: reference/zhang2023_fig3A_digitized.csv
+    role: reference
+    description: >
+      Fig. 3A of Zhang et al. (2023): maximum pERK1/2 (uM) vs the multiple of the
+      baseline VEGFR2 phosphorylation rate kpr2. Digitized from the article at 600
+      dpi; the MATLAB axes box corners give the calibration directly.
+  - name: reference/zhang2023_fig3B_digitized.csv
+    role: reference
+    description: >
+      Fig. 3B: maximum pERK1/2 (uM) vs maximum phospho-VEGFR2 (molecules/um^2), same
+      extraction.
+  - name: reference/zhang2023_fig3G_digitized.csv
+    role: reference
+    description: >
+      Fig. 3G: maximum phospho-VEGFR2 (molecules/um^2) vs the kpr2 multiple, same
+      extraction.
+  - name: reference/zhang2023_fig4BC_normalized_signals_digitized.csv
+    role: reference
+    description: >
+      Bar heights of Fig. 4B (endothelial pERK1/2, simulation and Bridgeman et al.
+      (2016) data bars) and Fig. 4C (endothelial ppAKT), normalized to the untreated
+      arm. The simulation columns are the Erk and Akt inputs of the tumor growth
+      model, one pair per treatment arm.
+  - name: reference/zhang2023_fig4D_bridgeman_data_digitized.csv
+    role: reference
+    description: >
+      Open circles of Fig. 4D: mouse xenograft renal cell carcinoma volume as a fold
+      change, from Bridgeman VL et al. (2016), Mol Cancer Ther 15:172-183, for the
+      untreated, sunitinib, trametinib and combination arms. Digitized from the
+      article at 1200 dpi with circle centers located by annulus template matching;
+      34 of a possible 35 points (the combination arm's day-20 circle is crossed by
+      the day-20 axis tick). This is the fit target of pybnf-jobs/Zhang-2023.
+  - name: reference/zhang2023_fig4D_model_curves_digitized.csv
+    role: reference
+    description: >
+      Solid lines of Fig. 4D -- the authors' own tumor growth model output for each
+      arm, same render and calibration as the data file.

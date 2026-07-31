@@ -1,0 +1,43 @@
+# Open circles of Fig. 4D in Zhang et al. (2023) -- mouse xenograft renal cell carcinoma
+# tumor volume as a fold change, from Bridgeman et al. (2016), Mol Cancer Ther 15:172-183.
+# Digitized from page 7 of the article rendered at 1200 dpi (pdftoppm -r 1200). Axis
+# calibration from the plotted ticks: 30.90 px/day (col 674.5 = day 0), 126.0 px/fold
+# (row 1178.5 = 0 fold). Circle centers located by matching a 20-30 px annulus template
+# against each arm's color mask at the measurement days. The combination arm has no
+# day-20 row: its circle is crossed by the day-20 axis tick and the match falls below
+# threshold. Accuracy is about +/-0.05 fold (marker radius 30 px = 0.24 fold).
+arm,day,fold
+control,5,1.5675
+control,8,2.4960
+control,13,3.5913
+control,16,4.3135
+control,20,4.8929
+control,23,6.1786
+sunitinib,5,1.0198
+sunitinib,8,0.9722
+sunitinib,13,1.3135
+sunitinib,16,1.3770
+sunitinib,20,1.7421
+sunitinib,23,2.1468
+sunitinib,28,2.6151
+sunitinib,31,2.8929
+sunitinib,34,2.9802
+sunitinib,37,3.2659
+sunitinib,41,3.7262
+trametinib,8,1.6389
+trametinib,13,1.9484
+trametinib,16,2.3056
+trametinib,20,2.8373
+trametinib,23,4.6468
+trametinib,28,7.2421
+combo,0,0.9881
+combo,5,0.6706
+combo,8,0.5595
+combo,13,0.4802
+combo,16,0.2183
+combo,23,0.2817
+combo,28,0.2976
+combo,31,0.2659
+combo,34,0.2817
+combo,37,0.3056
+combo,41,0.3532

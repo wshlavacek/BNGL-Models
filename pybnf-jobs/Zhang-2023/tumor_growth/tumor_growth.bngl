@@ -1,0 +1,131 @@
+begin model
+
+#@title: Angiogenesis-driven tumor growth (Zhang et al., 2023)
+
+#@description: |
+#  Fitting form of the angiogenesis-driven tumor growth model of Zhang et al.
+#  (2023): the library model
+#  models/endothelial_vegfr2_and_cd47_signaling_zhang2023/
+#  endothelial_vegfr2_and_cd47_signaling_zhang2023_tumor_growth.bngl with its
+#  simulation actions removed, because PyBNF synthesizes the run from the conf.
+#  The normalized peak endothelial pERK1/2 (Erk) and ppAKT (Akt) enter as fixed
+#  inputs, are combined into an ERK-weighted signal, and drive a Hill-type
+#  activation of ribosomal protein S6 that stands for angiogenesis. A delayed
+#  driver TD relaxes toward that level at rate r5, and the tumor size Cells
+#  grows exponentially at rate kg, softly capped at the linear rate klinear,
+#  gated by a Hill function of TD, and opposed by first-order kill at kkill.
+#  Both rules are in the authors' catalytic form, so BioNetGen multiplies the
+#  growth law by TD as well. Erk and Akt are switched per treatment arm by the
+#  conf's condition: records; the six parameters the Methods of Zhang et al.
+#  (2023) report as fitted -- w_OR, kTD, EC50TD, kg, klinear, kkill -- are the
+#  free parameters. Nominals are the authors' deposited File S4 values, except
+#  Erk and Akt, which File S4 leaves at the placeholder 0.
+
+#@keyword: |
+#  cancer, tumor growth, angiogenesis, pharmacodynamics, ERK cascade,
+#  PI3K/AKT pathway, ribosomal protein S6, Hill kinetics, delay, logistic
+#  growth, dimensionless, tyrosine kinase inhibitor, sunitinib, trametinib,
+#  renal cell carcinoma, Mus musculus
+
+#@reference: |
+#  Zhang Y, Popel AS, Bazzazi H (2023). Combining multikinase tyrosine kinase
+#  inhibitors targeting the vascular endothelial growth factor and cluster of
+#  differentiation 47 signaling pathways is predicted to increase the efficacy
+#  of antiangiogenic combination therapies. ACS Pharmacol Transl Sci
+#  6:710-726. doi:10.1021/acsptsci.3c00008
+#  Bridgeman VL, Wan E, Foo S, Nathan MR, Welti JC, Frentzas S, Vermeulen PB,
+#  Preece N, Springer CJ, Powles T, Nathan PD, Larkin J, Gore M, Vasudev NS,
+#  Reynolds AR (2016). Preclinical evidence that trametinib enhances the
+#  response to antiangiogenic tyrosine kinase inhibitors in renal cell
+#  carcinoma. Mol Cancer Ther 15:172-183. doi:10.1158/1535-7163.MCT-15-0170
+
+begin parameters
+
+  # Normalized peak endothelial pERK1/2 and ppAKT; 1 is the untreated level.
+  # The conf's condition: records set these per treatment arm
+  Erk  1  # dimensionless
+  Akt  1  # dimensionless
+
+  # Baseline and total ribosomal protein S6
+  S6b   0  # dimensionless
+  S6t   1  # dimensionless
+
+  # Half-maximal signal and Hill coefficient for S6 activation
+  tau6  0.691711647  # dimensionless
+  k6    2.983714946  # dimensionless
+
+  # Relaxation rate of the delayed angiogenic growth driver TD toward S6
+  r5    1.787624334  # /day
+
+  # Exponent of the smooth minimum that switches exponential growth to linear
+  psi   20  # dimensionless
+
+  # FREE PARAMETERS (the six fitted in the Methods of Zhang et al. (2023)).
+  # Nominals are the File S4 values; the conf brackets each one
+  w_OR     0.950956148  # dimensionless
+  kTD      2.999985128  # dimensionless
+  EC50TD   0.000278233  # dimensionless
+  kg       0.146        # /day
+  klinear  0.3          # /day
+  kkill    0            # /day
+
+  # Initial conditions
+  TD_0     0  # dimensionless
+  Cells_0  1  # cell
+
+end parameters
+
+begin molecule types
+
+  # Delayed driver of tumor growth, representing angiogenesis signaling
+  TD()
+  # Tumor size, expressed as a fold change relative to its value at t = 0
+  Cells()
+  # Constant catalyst that carries the zero-reactant synthesis rule
+  I()
+
+end molecule types
+
+begin seed species
+
+  I()        1        # dimensionless
+  TD()       TD_0     # dimensionless
+  Cells()    Cells_0  # cell
+
+end seed species
+
+begin observables
+
+  # Delayed angiogenic growth driver
+  Molecules Obs_TD     TD()
+  # Tumor size as a fold change; the fit target, column of every .exp here
+  Molecules Obs_Cells  Cells()
+
+end observables
+
+begin functions
+
+  # Relaxation of TD toward the S6 activation level set by the weighted ERK1/2
+  # and AKT signal
+  d_TD() = r5*( S6b + (S6t-S6b)*(w_OR*Erk+(1-w_OR)*Akt)^k6 \
+    /((w_OR*Erk+(1-w_OR)*Akt)^k6 + tau6^k6) - Obs_TD )
+
+  # Per-TD tumor growth rate: exponential growth at kg, smoothly capped at the
+  # linear rate klinear, gated by TD, less first-order kill. BioNetGen supplies
+  # the TD factor because TD() is the reactant of the rule that uses this law
+  g_Cells() = kg*Obs_Cells/((1+(kg*Obs_Cells/klinear)^psi)^(1/psi)) \
+    *(Obs_TD^kTD/(Obs_TD^kTD+EC50TD^kTD)) - kkill*Obs_Cells
+
+end functions
+
+begin reaction rules
+
+  # Angiogenic signaling with a delay
+  I() -> I() + TD()  d_TD()
+
+  # Tumor expansion driven by TD
+  TD() -> TD() + Cells()  g_Cells()
+
+end reaction rules
+
+end model
