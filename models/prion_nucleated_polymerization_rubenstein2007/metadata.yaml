@@ -1,0 +1,87 @@
+# metadata.yaml — prion_nucleated_polymerization_rubenstein2007
+id: prion_nucleated_polymerization_rubenstein2007
+created: 2026-07-30
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_bngl, originally_rule_based, ai_assisted]
+  description: >
+    Built from a reading of Rubenstein et al. (2007), Biophys Chem 125:360-367,
+    which simulates the nucleated polymerization model of prion replication of
+    Masel et al. (1999) as explicit conversion reactions. The rule formulation
+    follows the prion_aggregation.bngl benchmark model of Lin et al. (2019),
+    with the aggregate-clearance rule rewritten to anchor on the free head of a
+    chain instead of using {MatchOnce}, which NFsim ignores. The primary file
+    uses the Table 1 parameterization of Rubenstein et al. (2007); the variant
+    uses the larger benchmark parameterization of Lin et al. (2019).
+
+files:
+  - name: prion_nucleated_polymerization_rubenstein2007.bngl
+    role: primary
+    description: >
+      Table 1 parameterization; seeded SSA over one year plus a scan of the
+      three aggregate clearance rates of Fig. 2. 41 species, 483 reactions.
+    documentation_target: standard
+    min_bionetgen_version: "2.9.3"
+  - name: prion_nucleated_polymerization_rubenstein2007_benchmark.bngl
+    role: variant
+    description: >
+      Stochastic-benchmark parameterization of Lin et al. (2019): 12.5-fold
+      higher PrPC production and a 120-subunit chain cap, run over ten days.
+      121 species, 3843 reactions.
+    documentation_target: standard
+    min_bionetgen_version: "2.9.3"
+  - name: verify_rubenstein2007.ipynb
+    role: verification
+  - name: verify_rubenstein2007.png
+    role: figure
+  # Digitized reported simulation data
+  - name: reference/rubenstein2007_fig2_digitized.csv
+    role: reference
+    description: >
+      All eleven curves of Fig. 2 in Rubenstein et al. (2007), read from a
+      600-dpi render of page 4 by colour separation, with axes calibrated on the
+      major tick marks rather than the plot frame.
+  # BioNetGen reference output, primary model
+  - name: reference/prion_nucleated_polymerization_rubenstein2007.net
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_ssa.net
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_ssa.gdat
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_ssa.cdat
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_scan.scan
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_scan/prion_nucleated_polymerization_rubenstein2007_scan_00001.net
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_scan/prion_nucleated_polymerization_rubenstein2007_scan_00001.gdat
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_scan/prion_nucleated_polymerization_rubenstein2007_scan_00001.cdat
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_scan/prion_nucleated_polymerization_rubenstein2007_scan_00002.net
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_scan/prion_nucleated_polymerization_rubenstein2007_scan_00002.gdat
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_scan/prion_nucleated_polymerization_rubenstein2007_scan_00002.cdat
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_scan/prion_nucleated_polymerization_rubenstein2007_scan_00003.net
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_scan/prion_nucleated_polymerization_rubenstein2007_scan_00003.gdat
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_scan/prion_nucleated_polymerization_rubenstein2007_scan_00003.cdat
+    role: reference
+  # BioNetGen reference output, benchmark variant
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_benchmark.net
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_benchmark_ssa.net
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_benchmark_ssa.gdat
+    role: reference
+  - name: reference/prion_nucleated_polymerization_rubenstein2007_benchmark_ssa.cdat
+    role: reference
