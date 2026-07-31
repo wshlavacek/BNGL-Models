@@ -44,11 +44,12 @@ check of the whole imported chain: SBML model → simulation → observable form
 objective. (For the log10 slugs the nominal check carries the change-of-variables Jacobian and is
 recorded but not asserted as a validation.)
 
-## Coverage: 22 of the 23 subset-I problems
+## Coverage: all 23 subset-I problems
 
 | slug | J\* | scale | k | n | optimizer | OG | status |
 |---|---|---|---|---|---|---|---|
 | `Armistead_CellDeathDis2024` | −301.9161878 | lin | 14 | 58 | gntr | 5.8e−06 † | 🟢 objective validated |
+| `Blasi_CellSystems2016` | −1090.5618246 | ln | 9 | 252 | gntr | −4.3e−07 | ✅ **solved** |
 | `Boehm_JProteomeRes2014` | 138.2219682 | lin | 9 | 48 | gntr | 0.0012 | ✅ **solved** |
 | `Bruno_JExpBot2016` | −46.6881979 | lin | 13 | 77 | cmaes | 3.2e−06 † | 🟢 objective validated |
 | `Crauste_CellSystems2017` | 190.4570655 | lin | 12 | 21 | gntr | 0.509 † | 🟢 objective validated |
@@ -72,7 +73,7 @@ recorded but not asserted as a validation.)
 | `Smith_BMCSystBiol2013` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † | ⚪ setup only |
 
 `k` = free parameters, `n` = scored data points.
-**† = optimality gap at the PEtab nominal point, not from a fit.** Only the three ✅ rows report an
+**† = optimality gap at the PEtab nominal point, not from a fit.** Only the four ✅ rows report an
 OG from an actual optimization run.
 
 Three status levels, and the difference matters:
@@ -84,17 +85,23 @@ Three status levels, and the difference matters:
 - ⚪ **setup only** — the job imports, simulates, and scores correctly, but its nominal point is not
   the published optimum, so nothing about optimality is claimed. These are ready-to-run jobs.
 
-### The 1 remaining subset-I problem
+### Coverage is now complete
 
-| problem | blocker |
-|---|---|
-| `Blasi_CellSystems2016` | **Steady-state (`t = inf`) measurements.** Every Blasi measurement is at `t = inf`; the natural-log noise fix (#509) lets it *import*, but config load then crashes in `TimeCourse` (`OverflowError: cannot convert float infinity to integer`). PyBNF has steady-state support (a `steady_state=>1` ParamScan, ADR-0046), but the PEtab importer does not yet emit it for `time = inf`, so the measurement is materialized as a time course. This is a **new blocker, distinct from #509** — filed as a follow-up. |
-
-The earlier import blockers — **lanl/PyBNF#492–#496**, then **#508 (Fiedler, replicate
+Every import blocker has landed: **lanl/PyBNF#492–#496**, then **#508 (Fiedler, replicate
 `observableParameters`), #509 (Laske, natural-log `lnnormal` noise), #510 (Schwen, `t=0`-only
-experiment)** — have all **landed**. That took importable coverage from 15/23 to **22/23** (all 22 of
-which also run). What blocked Fiedler/Laske/Schwen in the 2026-07-18 triage is now resolved; only the
-steady-state gap above (Blasi) remains.
+experiment)**, and finally **#521 (Blasi, steady-state `time = inf` measurements, ADR-0086)**. That
+took importable coverage from 15/23 to **23/23**, all of which also run.
+
+`Blasi_CellSystems2016` was the last to land and needed two fixes rather than one. All 252 of its
+measurements are stationary abundances at `t = inf` — no time axis, no dose axis — with observables
+log-transformed under normal noise. #509 (`lnnormal`) let it *import*; config load then still crashed
+in `TimeCourse` (`OverflowError: cannot convert float infinity to integer`), because the importer
+materialized `time = inf` as a time course instead of using PyBNF's steady-state support
+(`steady_state=>1` ParamScan, ADR-0046). #521 closed that gap, and the problem now fits in about 25 s
+and **solves** — recovering the published maximum-likelihood rate constants of Blasi et al. (2016) to
+four digits. It is also the one slug whose nominal point is *not* its optimum despite carrying the
+published parameter values, because PEtab's `nominalValue` for its noise scale is a placeholder; see
+its `VALIDATION.md`.
 
 ## Optimizer choice
 
@@ -118,7 +125,7 @@ Every shipped conf was verified to start and complete a tiny run.
 i.e. *worse* than that problem's own nominal point (`OG = 0.33`): 20 box-sampled starts were not
 enough to find the reference basin. Expect to tune `population_size` / `max_iterations`, or to switch
 to `cmaes` with IPOP restarts, before treating any ⚪ or 🟢 row as a statement about PyBNF's
-optimizers. The three ✅ rows are the only ones where a tuned fit was actually driven to `OG < 1.92`.
+optimizers. The four ✅ rows are the only ones where a fit was actually driven to `OG < 1.92`.
 
 ## Import + fit pipeline (reproduce)
 
@@ -143,5 +150,5 @@ if valid simulations on your machine are being marked as failures.
 `<id>.conf` (the runnable fit) · the SBML model (verbatim) · `experiment*.exp` (data) ·
 `*_measparams.tsv` (per-measurement observable/noise parameter tables, where the problem uses them) ·
 `jstar.txt` (the reference J\*) · `nominal_check.json` (the nominal-point evaluation) · `score.py` ·
-`README.md`. The three solved slugs additionally ship `best_fit_params.txt`,
+`README.md`. The four solved slugs additionally ship `best_fit_params.txt`,
 `information_criteria.txt`, and `VALIDATION.md` from their fits.

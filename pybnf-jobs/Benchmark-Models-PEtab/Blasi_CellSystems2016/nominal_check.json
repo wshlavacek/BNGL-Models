@@ -1,0 +1,24 @@
+{
+  "problem": "Blasi",
+  "slug": "Blasi_CellSystems2016",
+  "jstar": -1090.5618245715154,
+  "J_paper": -642.8268965824433,
+  "reduced_objective": 227.6033963235412,
+  "n_scored": 252,
+  "k": 9,
+  "OG_nominal": 447.7349279890721,
+  "optimizer": "gntr",
+  "interpretation": "The PEtab nominalValue point is NOT this problem's published optimum, so it validates nothing about optimality. Its eight acetylation rate constants ARE the published maximum-likelihood estimates of Table S1/S2 in Blasi et al. (2016), but nominalValue for the noise scale is a placeholder sigma = 0.1, whereas the published fit profiles sigma to its maximum-likelihood value 0.2532. That single parameter accounts for the whole OG_nominal = 447.7. Holding the eight published rate constants and profiling sigma gives J_paper = -1090.5611, i.e. OG = 0.00075 -- so the benchmark's J* IS the paper's published motif-specific fit, and PyBNF's objective reproduces it. This slug's status comes from an actual fit (OG = -4.3e-07), not from this point.",
+  "objective_at_published_fit": {
+    "sigma": 0.2532103147047143,
+    "J_paper": -1090.5610756506753,
+    "OG": 0.0007489208401239,
+    "note": "The same Gaussian-on-natural-log NLL evaluated at the eight published Table S2 rank-1 rate constants, with sigma at its profile maximum-likelihood value sqrt(sum(residual^2)/n). Confirms that the benchmark's J* is the paper's own published fit; the residual 7.5e-04 is the four-digit rounding of the published rate constants."
+  },
+  "independent_numpy_check": {
+    "reduced_objective": 227.60339632354192,
+    "J_paper": -642.8268965824425,
+    "max_abs_difference": 8.0e-13,
+    "note": "Gaussian-on-natural-log negative log-likelihood rebuilt in NumPy from the PEtab measurement table and a steady state solved as a null-space problem, evaluated at the same nominal point."
+  }
+}
