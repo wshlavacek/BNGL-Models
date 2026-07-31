@@ -1,0 +1,72 @@
+# metadata.yaml — tcr_signaling_bistability_lipniacki2008
+id: tcr_signaling_bistability_lipniacki2008
+created: 2026-07-30
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags:
+    - literature
+    - originally_rule_based
+    - adapted_from_bngl
+    - restructuration
+    - benchmark_collection
+    - ai_assisted
+  description: >
+    House-style curation of the population-based T-cell receptor signaling
+    model of Lipniacki et al. (2008), Journal of Theoretical Biology
+    254:110-122, from the BioNetGen benchmark file supplied with the B13
+    reference materials and attributed there to Lin et al. (2019). The source
+    rules are consolidated into wildcard-state families without changing the
+    generated 37-species, 97-reaction network or its kinetics. Integer-rounded
+    initial populations reproduce the paper's 10-hour ligand-free priming
+    protocol before stimulation with 30 agonist peptide-MHC molecules.
+
+files:
+  - name: tcr_signaling_bistability_lipniacki2008.bngl
+    role: primary
+    description: >
+      Population model of competing SHP1 negative feedback and ERK-mediated
+      positive feedback in early TCR signaling. The active, fixed-seed exact
+      SSA protocol simulates the three-hour Fig. 7B response to 30 agonists;
+      commented ODE and partitioned-leaping alternatives are also provided.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_lipniacki2008.ipynb
+    role: verification
+    description: >
+      Runs BioNetGen afresh, checks committed outputs, independently integrates
+      a hand-written 37-state SciPy model, verifies eight conserved pools, and
+      quantitatively compares the deterministic response with digitized Fig.
+      7B data (0.219% full-scale NRMSE).
+  - name: verify_lipniacki2008.png
+    role: figure
+    description: >
+      Four-panel verification figure showing ERK switching, feedback and
+      cascade dynamics, reported-curve errors, and independent-solver
+      residuals.
+  - name: reference/lipniacki2008_fig7b_deterministic_ppERK_digitized.csv
+    role: reference
+    description: >
+      Deterministic ppERK trajectory digitized from Fig. 7B of Lipniacki et
+      al. (2008) after rendering the source PDF at 400 dpi and calibrating the
+      published 0-12000 s and 0-300000 molecule axes.
+  - name: reference/tcr_signaling_bistability_lipniacki2008.net
+    role: reference
+  - name: reference/tcr_signaling_bistability_lipniacki2008_ssa.net
+    role: reference
+  - name: reference/tcr_signaling_bistability_lipniacki2008_ssa.gdat
+    role: reference
+  - name: reference/tcr_signaling_bistability_lipniacki2008_ssa.cdat
+    role: reference
+  - name: reference/tcr_signaling_bistability_lipniacki2008_ode.net
+    role: reference
+  - name: reference/tcr_signaling_bistability_lipniacki2008_ode.gdat
+    role: reference
+  - name: reference/tcr_signaling_bistability_lipniacki2008_ode.cdat
+    role: reference
