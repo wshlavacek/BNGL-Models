@@ -34,8 +34,8 @@ Counting every file inside the 23 slug directories:
 | SBML model, verbatim from upstream | 23 | 1,681,108 | **copied** — 80% of bytes, 7% of files |
 | `.exp` and `_measparams.tsv` — PyBNF-format *translations* of the upstream measurement tables, emitted by the importer | 185 | 141,974 | derived |
 | `jstar.txt` — one number, transcribed from the ICB-DCM suppl repository | 23 | 433 | derived |
-| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 104 | 276,073 | **written here** |
-| total | 335 | 2,099,588 | |
+| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 107 | 287,397 | **written here** |
+| total | 338 | 2,110,912 | |
 
 The SBML files dominate the byte count and nothing else, which is why the directory *looks* mostly
 vendored while being 93% non-copied by file count. **Editing this directory is normal**: the
@@ -74,9 +74,14 @@ negative log-likelihood (`data/best_fx_marvin.csv`, column `fx_best`). Each slug
 
 ## Objective fidelity
 
-Every subset-I problem estimates its measurement noise as a **free `sigma`/`sd_*` parameter**, so the
-objective is the *full* Gaussian NLL (Eq. 6, with the `log(2πσ²)` normalizer), not a bare
-sum-of-squares. PyBNF **minimizes a reduced objective** that drops the parameter-independent per-point
+Every subset-I problem *except* `Bruno_JExpBot2016` estimates its measurement noise as a **free
+`sigma`/`sd_*` parameter**, so the objective is the *full* Gaussian NLL (Eq. 6, with the `log(2πσ²)`
+normalizer), not a bare sum-of-squares. (Bruno's σ is **known and fixed per data point**, carried in
+the measurement table and imported as `_SD` columns; all 13 of its free parameters are model
+parameters. Its restored constant is correspondingly `Σ log σᵢ + (N/2)log(2π)` rather than the bare
+`(N/2)log(2π)` — verified to 4.9×10⁻⁷ in its `VALIDATION.md`.)
+
+PyBNF **minimizes a reduced objective** that drops the parameter-independent per-point
 constants — `½log(2π)`, and (for a log10 observable) the change-of-variables Jacobian
 `Σ log(y_obs·ln10)` — because they do not affect the argmin. It then **reports the full normalized
 log-likelihood** at the best fit in `information_criteria.txt` (matching `scipy.stats.norm.logpdf` /
@@ -101,7 +106,7 @@ recorded but not asserted as a validation.)
 | `Armistead_CellDeathDis2024` | −301.9161878 | lin | 14 | 58 | gntr | 5.8e−06 † | 🟢 objective validated |
 | `Blasi_CellSystems2016` | −1090.5618246 | ln | 9 | 252 | gntr | −4.3e−07 | ✅ **solved** |
 | `Boehm_JProteomeRes2014` | 138.2219682 | lin | 9 | 48 | gntr | 0.0012 | ✅ **solved** |
-| `Bruno_JExpBot2016` | −46.6881979 | lin | 13 | 77 | cmaes | 3.2e−06 † | 🟢 objective validated |
+| `Bruno_JExpBot2016` | −46.6881979 | lin | 13 | 77 | gntr | 1.1e−05 | ✅ **solved** |
 | `Crauste_CellSystems2017` | 190.4570655 | lin | 12 | 21 | gntr | 0.509 † | 🟢 objective validated |
 | `Fiedler_BMCSystBiol2016` | −58.5839553 | lin | 22 | 72 | gntr | −0.0022 † | 🟢 objective validated |
 | `Perelson_Science1996` | 222.2807689 | log10 | 3 | 16 | cmaes | 5e−7 | ✅ **solved** |
@@ -123,7 +128,7 @@ recorded but not asserted as a validation.)
 | `Smith_BMCSystBiol2013` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † | ⚪ setup only |
 
 `k` = free parameters, `n` = scored data points.
-**† = optimality gap at the PEtab nominal point, not from a fit.** Only the four ✅ rows report an
+**† = optimality gap at the PEtab nominal point, not from a fit.** Only the five ✅ rows report an
 OG from an actual optimization run.
 
 Three status levels, and the difference matters:
@@ -163,10 +168,21 @@ its `VALIDATION.md`.
   It is PyBNF's fides-analogue and the default here. It works on log10/`lognormal` objectives too —
   the EFIM Fisher block for noise scales landed in ADR-0079/0080/0081.
 - **`cmaes`** with IPOP restarts (ADR-0070, restart trigger fixed in ADR-0082) — used where the
-  gradient path genuinely refuses the problem (Bertozzi, Bruno: a per-condition estimated initial
-  condition the gradient path cannot yet route, ADR-0076; Smith), and for the three strongly
-  multimodal problems (Borghans, Elowitz, Okuonghae), where a local method from a few starts lands
-  in a local basin.
+  gradient path genuinely refuses the problem, and for the three strongly multimodal problems
+  (Borghans, Elowitz, Okuonghae), where a local method from a few starts lands in a local basin.
+
+The two remaining gradient-path refusals are **distinct**, and neither is the ADR-0076 condition
+routing that earlier revisions of this file attributed to both:
+
+| slug | refusal | fixable by |
+|---|---|---|
+| `Bertozzi_PNAS2020` | condition sets `I0_`, which seeds a species initial value whose `d(IC)/d(I0_)` is **not a plain 1** (a non-bare `initialAssignment`, an amount species needing a non-unit concentration factor, or a parameter seeding several species) — the honest-refusal boundary #511 deliberately left | extending the ADR-0076 routing to non-unit seed derivatives |
+| `Smith_BMCSystBiol2013` | the model contains **discrete events** (state-dependent jumps); forward output sensitivities go stale across a jump, so bngsim cannot supply a gradient there (`_require_differentiable_dynamics`, lanl/PyBNF #461) | nothing in the ADR-0076 line — this needs event-aware sensitivities |
+
+`Bruno_JExpBot2016` was in this list until **lanl/PyBNF #511** (merged #513, 2026-07-23) taught
+`route_experiment` to compose the chain rule for a free parameter that reaches the model only through
+a `condition:` parameter reference. It now fits on the gradient path and **solves** (`OG = 1.1×10⁻⁵`
+in 41 s); its conf carries `job_type = gntr`. Its `VALIDATION.md` records the history.
 
 Every shipped conf was verified to start and complete a tiny run.
 
@@ -175,7 +191,7 @@ Every shipped conf was verified to start and complete a tiny run.
 i.e. *worse* than that problem's own nominal point (`OG = 0.33`): 20 box-sampled starts were not
 enough to find the reference basin. Expect to tune `population_size` / `max_iterations`, or to switch
 to `cmaes` with IPOP restarts, before treating any ⚪ or 🟢 row as a statement about PyBNF's
-optimizers. The four ✅ rows are the only ones where a fit was actually driven to `OG < 1.92`.
+optimizers. The five ✅ rows are the only ones where a fit was actually driven to `OG < 1.92`.
 
 ## Import + fit pipeline (reproduce)
 
