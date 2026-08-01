@@ -1,0 +1,700 @@
+begin model
+
+#@title: NF-kB response to TNF-alpha (Korwek et al., 2023)
+
+#@description: |
+#  Variant of the primary model that applies the TNF-alpha stimulation protocol
+#  of Korwek et al. (2023), which the authors used to calibrate the kinetic
+#  rate constants of the NF-kB module against the earlier models of Lipniacki
+#  et al. (2004) and Tay et al. (2010). Model structure and parameters are
+#  identical to the primary file; only the actions block differs. TNF-alpha
+#  reaches the NF-kB module alone: it activates TAK1 and therefore IKK, while
+#  the poly(I:C), IRF3, IFN-beta, and STAT1/2 modules stay quiescent, so this
+#  protocol isolates the NF-kB module inside the full model. Expect a sharp
+#  p-IKK spike near 15 min, near-complete IkBa degradation by 45 min, a peak of
+#  nuclear NF-kB between 15 and 30 min, and then NF-kB-driven resynthesis of
+#  IkBa and slow accumulation of A20, which together push nuclear NF-kB back
+#  below its resting level by 6 h.
+
+#@keyword: |
+#  innate immunity, interferon signaling, antiviral response, NF-kB, IRF3,
+#  STAT1, STAT2, RIG-I, MAVS, PKR, OAS3, RNase L, eIF2alpha, IFNAR,
+#  poly(I:C), gene regulation, negative feedback, positive feedback,
+#  Michaelis-Menten, mass action, dimensionless, Homo sapiens
+
+#@reference: |
+#  Korwek Z, Czerkies M, Jaruszewicz-Blonska J, Prus W, Kosiuk I, Kochanczyk M,
+#  Lipniacki T (2023). Nonself RNA rewires IFN-beta signaling: A mathematical
+#  model of the innate immune response. Science Signaling 16:eabq1173.
+#  doi:10.1126/scisignal.abq1173
+#  Source model: data file S2, innate_immunity.bngl (authors' BioNetGen file).
+
+#@note: |
+#  Nondimensionalized in amount only. Korwek et al. (2023) reduced the model by
+#  nondimensionalization and coarse-graining, so every species amount is a
+#  relative level with resting or total pools set to 1 and no molecule-count or
+#  concentration interpretation. The reserved conversion parameters NA and
+#  V_ref are therefore omitted and only ODE actions are provided: fractional
+#  amounts cannot be read as discrete populations, so SSA, PSA, and NFsim are
+#  not feasible. Time is not rescaled and remains in seconds, so rate constants
+#  keep the unit /s, as reported in table S1 of Korwek et al. (2023).
+
+#@note: |
+#  Molecule names, component names, parameter names, and the module grouping
+#  are those of the authors' own BioNetGen file (data file S2), so that this
+#  file can be diffed against the primary source. Parameter-name prefixes: a_/d_
+#  activation/deactivation, b_/u_ binding/unbinding, i_/e_ import/export, p_/q_
+#  phosphorylation/dephosphorylation, g_ degradation, t_ transcription, s_
+#  translation, m_ Michaelis-Menten-type constant, k_ other kinetic rate, tg_
+#  shared transcription and transcript-degradation rate, sg_ shared translation
+#  and protein-degradation rate, h_ gene present (1) or knocked out (0), n_
+#  initial amount. Parameters marked FITTED were estimated by the authors with
+#  PyBioNetFit against 2915 data points (table 1 and table S1).
+
+begin parameters
+
+  # Ratio of cytoplasmic to nuclear volume; used to scale nuclear association
+  k_v            5      # dimensionless
+
+  # Gene-presence switches; set a switch to 0 to simulate the knockout cell line.
+  # Korwek et al. (2023) ship h_Mavs, h_Pkr_gene, and h_Rnasel_gene in data file
+  # S2; h_A20_gene is added here in the same idiom, gating TNFAIP3 transcription,
+  # because the paper also simulates A20 KO cells (fig. S12B).
+  h_Mavs         1      # dimensionless
+  h_Pkr_gene     1      # dimensionless
+  h_Rnasel_gene  1      # dimensionless
+  h_A20_gene     1      # dimensionless
+
+  # Resting pools, normalized to 1
+  n_Tak1_i_initial           1  # dimensionless
+  n_NFkB_IkBa_cyt_initial    1  # dimensionless
+  n_Ikk_n_initial            1  # dimensionless
+  n_Irf3_i_initial           1  # dimensionless
+  n_Tbk1_i_initial           1  # dimensionless
+  n_eIF2a_dephospho_initial  1  # dimensionless
+
+  # Stimulus doses applied by the actions block
+  n_TNFa_stimulation    1  # dimensionless
+  n_IFNb_stimulation    1  # dimensionless
+
+  # Poly(I:C) dose: 1 for the Western blot protocols, 10 for the RT-qPCR protocols
+  n_polyIC_stimulation  1  # dimensionless
+
+  # Regularizer that keeps competitive gene-activation rates finite at zero input
+  EPSILON  1.0e-6  # dimensionless
+
+  # Common rate assigned to all processes that the data constrain only from above
+  k_FAST  1.0  # /s
+
+  # Common rates shared by whole classes of processes; see table S1
+  k_POLYIC       0.00024390060510912293  # /s
+  tg_TRANSCRIPT  7.259610076954435e-05   # /s
+  sg_PROTEIN     1.532955086663982e-05   # /s
+
+  # Inverse Michaelis constant of RNase L-driven transcript degradation
+  m_Rnasel  0.031164323577208185  # dimensionless
+
+  # Michaelis constant of phospho-eIF2alpha-driven translation arrest
+  m_Eif2a   0.015830114342212334  # dimensionless
+
+  # Poly(I:C) module: internalization, RIG-I and MAVS binding, sensor switching
+  i_Polyic          k_POLYIC  # /s
+  b_Rigi_Polyic     k_POLYIC  # /s
+  b_RigiPolyic_Mavs k_POLYIC  # /s
+  a_Pkr_by_Polyic   k_POLYIC  # /s
+  d_Pkr             k_POLYIC  # /s
+  a_Oas3_by_Polyic  k_POLYIC  # /s
+  d_Oas3            k_POLYIC  # /s
+  a_Rnasel_by_Oas3  k_POLYIC  # /s
+  d_Rnasel          k_POLYIC  # /s
+
+  # eIF2alpha phosphorylation by active PKR, basal phosphorylation, and reversal
+  p_Eif2a_by_Pkr  k_POLYIC                # /s
+  p_Eif2a_basal   7.723454616604743e-06   # /s
+  q_Eif2a         k_POLYIC                # /s
+
+  # Basal-to-maximal transcription ratios of the ISGs; STAT1/2 dimers relieve them
+  ma_Rigi_gene_basal      0.05930147549419551  # dimensionless
+  ma_Pkr_Oas3_gene_basal  0.7245345686782008   # dimensionless
+  ma_Rnasel_gene_basal    1.020172036452892    # dimensionless
+
+  # ISG transcript turnover and the shared translation/degradation rates
+  tg_Isg_mrna  tg_TRANSCRIPT              # /s
+  sg_Rigi      sg_PROTEIN                 # /s
+  sg_Pkr       4.2805996953166866e-05     # /s
+  sg_Oas3      sg_PROTEIN                 # /s
+  sg_Rnasel    sg_PROTEIN                 # /s
+
+  # NF-kB module: TAK1 activation by TNFa or by the poly(I:C):RIG-I:MAVS complex
+  a_Tak1_by_Tnfa      0.8903603794354649  # /s
+  a_Tak1_by_RigiMavs  k_FAST              # /s
+  d_Tak1              k_FAST              # /s
+
+  # IKK cycle; A20 accelerates the active-to-inactive transition
+  a_Ikk    0.010904467109555071    # /s
+  d_Ikk_1  0.0008829700327658654   # /s
+  d_Ikk_2  0.05982062403935003     # dimensionless
+  d_Ikk_3  0.00026826640310831975  # /s
+
+  # IkBa:NF-kB association; the nuclear rate carries the volume ratio k_v
+  b_Nfkb_Ikba_cyt  k_FAST                # /s
+  b_Nfkb_Ikba_nuc  k_v*b_Nfkb_Ikba_cyt   # /s
+
+  # IkBa phosphorylation by active IKK and the three IkBa degradation routes
+  p_Ikba_by_Ikk       0.008458552410073877   # /s
+  g_Ikba_p_any        k_FAST                 # /s
+  g_Ikba_u_free       sg_PROTEIN             # /s
+  g_Ikba_u_with_Nfkb  3.944402357840543e-05  # /s
+
+  # Nucleocytoplasmic shuttling of NF-kB and of free IkBa
+  i_Nfkb             k_FAST                 # /s
+  e_Nfkb_with_Ikba   k_FAST                 # /s
+  i_Ikba             0.0005635774134351319  # /s
+  e_Ikba             0.02051107491820277    # /s
+
+  # NFKBIA (IkBa) gene: transcript turnover and NF-kB activation vs IkBa repression
+  tg_Ikba_mrna           0.0002565157989928973  # /s
+  a_Ikba_gene_by_Nfkb__  0.0684701851861643     # dimensionless
+  a_Ikba_gene_by_Nfkb    k_FAST*a_Ikba_gene_by_Nfkb__  # /s
+  d_Ikba_gene_by_Ikba    k_FAST                 # /s
+
+  # TNFAIP3 (A20) gene: transcript turnover and NF-kB activation vs IkBa repression
+  tg_A20_mrna           0.0009406825155497426  # /s
+  a_A20_gene_by_Nfkb__  0.025686603943611396   # dimensionless
+  a_A20_gene_by_Nfkb    k_FAST*a_A20_gene_by_Nfkb__  # /s
+  d_A20_gene_by_Ikba    k_FAST                 # /s
+
+  # IkBa and A20 protein synthesis; sg_A20 also sets A20 degradation
+  s_Ikba  0.004255786898310512   # /s
+  sg_A20  5.014115674793064e-06  # /s
+
+  # IRF3 module: TBK1 activation, its basal and A20-accelerated reversal
+  p_Tbk1_by_RigiMavs  k_FAST                        # /s
+  q_Tbk1              k_FAST                        # /s
+  q_Tbk1_by_A20__     3.875729946075596e2           # dimensionless
+  q_Tbk1_by_A20       q_Tbk1_by_A20__*q_Tbk1        # /s
+
+  # IRF3 phosphorylation by active TBK1 and its dephosphorylation
+  p_Irf3_by_Tbk1  k_POLYIC  # /s
+  q_Irf3          k_POLYIC  # /s
+
+  # IFN-beta module: receptor binding of autocrine and of externally added IFN-beta
+  b_Ifnar_Ifnb_cyt  k_FAST                 # /s
+  b_Ifnar_Ifnb_ext  0.000750779497463291   # /s
+
+  # IFNAR1 transcript turnover and its sensitivity to active RNase L
+  tg_Ifnar_mrna        tg_TRANSCRIPT           # /s
+  m_Rnasel_Ifnar_mrna  0.0039023754286057065   # dimensionless
+
+  # IFNAR synthesis and the two receptor degradation routes, free and IFN-beta-bound
+  s_Ifnar         2.8778555528751826e-05   # /s
+  g_Ifnar         9.77848544160331e-05     # /s
+  g_Ifnar_w_Ifnb  0.00031054256866899256   # /s
+
+  # IFNB1 gene: transcript turnover and the NF-kB x IRF3 saturation constant
+  tg_Ifnb_mrna          tg_TRANSCRIPT           # /s
+  m_Ifnb_mrna_NfkbIrf3  3.162948461272814e-05   # dimensionless
+
+  # IFN-beta protein synthesis and degradation
+  sg_Ifnb  sg_PROTEIN  # /s
+
+  # STAT1/2 module: IFNAR-driven phosphorylation and its reversal
+  p_Stat      k_FAST                 # /s
+  q_Stat      0.0018294332440515334  # /s
+  m_Ifnar_a   0.020141727438512898   # dimensionless
+
+  # STAT1:STAT2 heterodimer formation and its dephosphorylation-coupled dissociation
+  b_Stat1_Stat2   k_FAST                 # /s
+  qu_Stat1_Stat2  0.052370747192221206   # /s
+
+  # Basal-to-maximal transcription ratios of STAT1 and STAT2, and the shared
+  # STAT1/2-dimer activation strength used by the ISG genes as well
+  ma_Stat1_gene_basal  0.18314838022720048  # dimensionless
+  ma_Stat2_gene_basal  0.07023843113385617  # dimensionless
+  a_gene_by_Stat12dim  13126.669661929025   # dimensionless
+
+  # STAT1 and STAT2 transcript turnover and protein synthesis/degradation
+  tg_Stat_mrna  tg_TRANSCRIPT  # /s
+  sg_Stat       sg_PROTEIN     # /s
+
+end parameters
+
+begin molecule types
+
+  # Polyinosinic:polycytidylic acid, a double-stranded RNA analog of viral RNA
+  PolyIC(Rigi,loc~ext~cyt)
+  # loc: extracellular or cytoplasmic; Rigi: RIG-I-binding site
+
+  # Retinoic acid-inducible gene I (DDX58), the cytoplasmic dsRNA sensor
+  RIGI(Polyic,Mavs)
+
+  # Mitochondrial antiviral-signaling protein, the RIG-I adaptor
+  MAVS(Rigi)
+
+  # Protein kinase R (EIF2AK2), switched on by cytoplasmic poly(I:C)
+  PKR(st~i~a)
+
+  # 2'-5'-oligoadenylate synthetase 3, switched on by cytoplasmic poly(I:C)
+  OAS3(st~i~a)
+
+  # Ribonuclease L, switched on by active OAS3
+  RNaseL(st~i~a)
+
+  # Eukaryotic translation initiation factor 2 alpha; blocks translation when
+  # phosphorylated on Ser51 by active PKR
+  eIF2a(st~0~p)
+
+  # Transcripts of the four IFN-stimulated genes of the poly(I:C) module
+  RIGI_mRNA()
+  PKR_mRNA()
+  OAS3_mRNA()
+  RNaseL_mRNA()
+
+  # Tumor necrosis factor alpha, an extracellular NF-kB stimulus
+  TNFa()
+
+  # TAK1 (MAP3K7), activated by TNFa or by the poly(I:C):RIG-I:MAVS complex
+  TAK1(st~i~a)
+
+  # IkB kinase; cycles neutral -> active -> inactive -> inactive (secondary)
+  IKK(st~n~a~i~ii)
+
+  # IkBa (NFKBIA), the principal NF-kB inhibitor
+  IkBa(Nfkb,loc~nuc~cyt,Ser32_Ser36~0~pp)
+  # Ser32_Ser36: lumped IKK phosphosite; phosphorylated IkBa is rapidly degraded
+
+  # NF-kB, represented by its RelA-containing dimer
+  NFkB(Ikba,loc~nuc~cyt)
+
+  # A20 (TNFAIP3), an NF-kB-inducible inhibitor of both NF-kB and IRF3
+  A20()
+
+  # Transcripts of the two NF-kB-inducible inhibitors
+  IkBa_mRNA()
+  A20_mRNA()
+
+  # TANK-binding kinase 1, activated by phosphorylation on Ser172
+  TBK1(Ser172~0~p)
+
+  # Interferon regulatory factor 3, activated by phosphorylation on Ser396
+  IRF3(Ser396~0~p)
+
+  # Interferon-beta receptor (IFNAR1 subunit)
+  IFNAR(Ifnb)
+
+  # Interferon-beta; loc distinguishes the newly translated cytoplasmic pool
+  # from the extracellular pool that engages IFNAR
+  IFNb(Ifnar,loc~ext~cyt)
+
+  # Transcripts of the IFN-beta receptor and of IFN-beta itself
+  IFNAR_mRNA()
+  IFNb_mRNA()
+
+  # Signal transducer and activator of transcription 1, phosphorylated on Tyr701
+  STAT1(Stat2,Tyr701~0~p)
+
+  # Signal transducer and activator of transcription 2, phosphorylated on Tyr690
+  STAT2(Stat1,Tyr690~0~p)
+
+  # Transcripts of STAT1 and STAT2, both IFN-stimulated genes
+  STAT1_mRNA()
+  STAT2_mRNA()
+
+end molecule types
+
+begin seed species
+
+  # Poly(I:C) module; poly(I:C) and the four sensors start empty and are built up
+  # by the pre-stimulation transcription/translation steady state
+  PolyIC(Rigi,loc~ext)  0         # dimensionless
+  RIGI(Mavs,Polyic)     0         # dimensionless
+  MAVS(Rigi)            h_Mavs    # dimensionless
+  PKR(st~i)             0         # dimensionless
+  OAS3(st~i)            0         # dimensionless
+  RNaseL(st~i)          0         # dimensionless
+  eIF2a(st~0)           n_eIF2a_dephospho_initial  # dimensionless
+  RIGI_mRNA()           0         # dimensionless
+  PKR_mRNA()            0         # dimensionless
+  OAS3_mRNA()           0         # dimensionless
+  RNaseL_mRNA()         0         # dimensionless
+
+  # NF-kB module; the whole NF-kB pool starts sequestered by cytoplasmic IkBa
+  TNFa()  0  # dimensionless
+  NFkB(Ikba!0,loc~cyt).IkBa(Nfkb!0,loc~cyt,Ser32_Ser36~0)  \
+    n_NFkB_IkBa_cyt_initial  # dimensionless
+  TAK1(st~i)   n_Tak1_i_initial  # dimensionless
+  IKK(st~n)    n_Ikk_n_initial   # dimensionless
+  A20()        0                 # dimensionless
+  IkBa_mRNA()  0                 # dimensionless
+  A20_mRNA()   0                 # dimensionless
+
+  # IRF3 module
+  TBK1(Ser172~0)  n_Tbk1_i_initial  # dimensionless
+  IRF3(Ser396~0)  n_Irf3_i_initial  # dimensionless
+
+  # IFN-beta module
+  IFNAR(Ifnb)          0  # dimensionless
+  IFNb(Ifnar,loc~cyt)  0  # dimensionless
+  IFNb(Ifnar,loc~ext)  0  # dimensionless
+  IFNAR_mRNA()         0  # dimensionless
+  IFNb_mRNA()          0  # dimensionless
+
+  # STAT1/2 module
+  STAT1(Stat2,Tyr701~0)  0  # dimensionless
+  STAT2(Stat1,Tyr690~0)  0  # dimensionless
+  STAT1(Stat2!1,Tyr701~p).STAT2(Stat1!1,Tyr690~p)  0  # dimensionless
+  STAT1_mRNA()  0  # dimensionless
+  STAT2_mRNA()  0  # dimensionless
+
+end seed species
+
+begin observables
+
+  # Poly(I:C) module readouts; the Western blot antibodies see the total pools
+  Species    RIG_I_total   RIGI(Mavs!?,Polyic!?)
+  Molecules  PKR_total     PKR()
+  Molecules  OAS3_total    OAS3()
+  Species    RNaseL_total  RNaseL()
+  Species    eIF2a_total   eIF2a()
+
+  # Active RNase L and phospho-eIF2alpha also enter rate expressions
+  Species    RNaseL_a  RNaseL(st~a)
+  Species    eIF2a_p   eIF2a(st~p)
+
+  # ISG transcripts; each also enters its own translation rate expression
+  Species    RIGI_mRNA    RIGI_mRNA()
+  Species    PKR_mRNA     PKR_mRNA()
+  Species    OAS3_mRNA    OAS3_mRNA()
+  Species    RNaseL_mRNA  RNaseL_mRNA()
+
+  # Active TAK1 drives IKK activation quadratically
+  Species    TAK1_a  TAK1(st~a)
+
+  # Free nuclear NF-kB is the transcriptionally active species
+  Species    NFkB_nuc_free   NFkB(loc~nuc,Ikba)
+  Species    NFkB_nuc_total  NFkB(loc~nuc)
+  Species    NFkB_total      NFkB()
+
+  # Total IkBa, matching the antibody, over both locations, both phosphorylation
+  # states, and both the free and the NF-kB-bound forms
+  Species    IkBa_total  IkBa(Nfkb,loc~cyt,Ser32_Ser36~pp),\
+                         IkBa(Nfkb,loc~nuc,Ser32_Ser36~0),\
+                         IkBa(Nfkb,loc~nuc,Ser32_Ser36~pp),\
+                         IkBa(Nfkb,loc~cyt,Ser32_Ser36~0),\
+                         IkBa(Nfkb!+,loc~cyt,Ser32_Ser36~pp),\
+                         IkBa(Nfkb!+,loc~nuc,Ser32_Ser36~0),\
+                         IkBa(Nfkb!+,loc~nuc,Ser32_Ser36~pp),\
+                         IkBa(Nfkb!+,loc~cyt,Ser32_Ser36~0)
+
+  # IkBa resolved by compartment, by freedom from NF-kB, and by phosphorylation
+  Species    IkBa_nuc_total  IkBa(Nfkb,loc~nuc,Ser32_Ser36~0),\
+                             IkBa(Nfkb,loc~nuc,Ser32_Ser36~pp),\
+                             IkBa(Nfkb!+,loc~nuc,Ser32_Ser36~0),\
+                             IkBa(Nfkb!+,loc~nuc,Ser32_Ser36~pp)
+  Species    IkBa_cyt_total  IkBa(Nfkb,loc~cyt,Ser32_Ser36~pp),\
+                             IkBa(Nfkb,loc~cyt,Ser32_Ser36~0),\
+                             IkBa(Nfkb!+,loc~cyt,Ser32_Ser36~pp),\
+                             IkBa(Nfkb!+,loc~cyt,Ser32_Ser36~0)
+  Species    IkBa_cyt_free   IkBa(Nfkb,loc~cyt,Ser32_Ser36~pp),\
+                             IkBa(Nfkb,loc~cyt,Ser32_Ser36~0)
+  Species    IkBa_p_cyt      IkBa(Nfkb,loc~cyt,Ser32_Ser36~pp),\
+                             IkBa(Nfkb!+,loc~cyt,Ser32_Ser36~pp)
+
+  # Free nuclear IkBa competes with NF-kB at the NFKBIA and TNFAIP3 promoters
+  Species    IkBa_nuc_free  IkBa(Nfkb,loc~nuc,Ser32_Ser36~0)
+
+  # A20 enters the IKK inactivation and TBK1 dephosphorylation rate expressions
+  Species    A20  A20()
+
+  # Active IKK, and the two NF-kB-inducible transcripts
+  Species    IKK_a      IKK(st~a)
+  Species    IkBa_mRNA  IkBa_mRNA()
+  Species    A20_mRNA   A20_mRNA()
+
+  # IRF3 module readouts; phospho-IRF3 also drives IFNB1 transcription
+  Species    IRF3_total  IRF3()
+  Species    IRF3_p      IRF3(Ser396~p)
+
+  # IFN-beta module readouts; IFNAR_a drives STAT phosphorylation
+  Species    IFNAR_total  IFNAR()
+  Species    IFNAR_a      IFNAR(Ifnb!+)
+  Species    IFNb_ext     IFNb(loc~ext)
+  Species    IFNb_cyt     IFNb(loc~cyt)
+  Species    IFNAR_mRNA   IFNAR_mRNA()
+  Species    IFNb_mRNA    IFNb_mRNA()
+
+  # STAT1/2 module readouts; totals include the heterodimer, matching the blots
+  Molecules  STAT1_total  STAT1()
+  Molecules  STAT2_total  STAT2()
+  Molecules  STAT1_p      STAT1(Tyr701~p)
+  Species    STAT2_p      STAT2(Tyr690~p)
+
+  # Unphosphorylated STAT monomers set the saturation of their phosphorylation
+  Species    STAT1_u  STAT1(Stat2,Tyr701~0)
+  Species    STAT2_u  STAT2(Stat1,Tyr690~0)
+
+  # The p-STAT1:p-STAT2 heterodimer is the transcription factor of the module
+  Molecules  STAT12_dimer  STAT1(Stat2!1,Tyr701~p).STAT2(Stat1!1,Tyr690~p)
+
+  # STAT1 and STAT2 transcripts
+  Species    STAT1_mRNA  STAT1_mRNA()
+  Species    STAT2_mRNA  STAT2_mRNA()
+
+end observables
+
+begin reaction rules
+
+  ### Poly(I:C) module ###
+
+  # Poly(I:C) is internalized from the medium into the cytoplasm
+  PolyIC(Rigi,loc~ext) -> PolyIC(Rigi,loc~cyt)  i_Polyic
+
+  # RIG-I binds cytoplasmic poly(I:C)
+  RIGI(Mavs,Polyic) + PolyIC(Rigi,loc~cyt) -> \
+    RIGI(Mavs,Polyic!1).PolyIC(Rigi!1,loc~cyt)  b_Rigi_Polyic
+
+  # Poly(I:C)-bound RIG-I turns over, releasing poly(I:C)
+  RIGI(Mavs,Polyic!1).PolyIC(Rigi!1,loc~cyt) -> PolyIC(Rigi,loc~cyt)  sg_Rigi
+
+  # The poly(I:C):RIG-I complex recruits MAVS into the signaling ternary complex
+  RIGI(Mavs,Polyic!+) + MAVS(Rigi) -> RIGI(Mavs!1,Polyic!+).MAVS(Rigi!1)  \
+    b_RigiPolyic_Mavs
+
+  # RIG-I in the ternary complex turns over, releasing poly(I:C) and MAVS
+  PolyIC(Rigi!1,loc~cyt).RIGI(Mavs!2,Polyic!1).MAVS(Rigi!2) -> \
+    PolyIC(Rigi,loc~cyt) + MAVS(Rigi)  sg_Rigi
+
+  # Cytoplasmic poly(I:C) switches PKR on; PKR relaxes back spontaneously
+  PolyIC(loc~cyt) + PKR(st~i) -> PolyIC(loc~cyt) + PKR(st~a)  a_Pkr_by_Polyic
+  PKR(st~a) -> PKR(st~i)  d_Pkr
+
+  # Cytoplasmic poly(I:C) switches OAS3 on; OAS3 relaxes back spontaneously
+  PolyIC(loc~cyt) + OAS3(st~i) -> PolyIC(loc~cyt) + OAS3(st~a)  a_Oas3_by_Polyic
+  OAS3(st~a) -> OAS3(st~i)  d_Oas3
+
+  # Active PKR phosphorylates eIF2alpha; a basal route runs in parallel
+  PKR(st~a) + eIF2a(st~0) -> PKR(st~a) + eIF2a(st~p)  p_Eif2a_by_Pkr
+  eIF2a(st~0) -> eIF2a(st~p)  p_Eif2a_basal
+
+  # eIF2alpha dephosphorylation
+  eIF2a(st~p) -> eIF2a(st~0)  q_Eif2a
+
+  # Active OAS3 switches RNase L on; RNase L relaxes back spontaneously
+  OAS3(st~a) + RNaseL(st~i) -> OAS3(st~a) + RNaseL(st~a)  a_Rnasel_by_Oas3
+  RNaseL(st~a) -> RNaseL(st~i)  d_Rnasel
+
+  # Transcription of the four IFN-stimulated genes; the STAT1/2 heterodimer
+  # relieves each gene from its basal-to-maximal ratio toward saturation
+  0 -> RIGI_mRNA()  \
+    tg_Isg_mrna*(ma_Rigi_gene_basal + a_gene_by_Stat12dim*STAT12_dimer)\
+    /(ma_Rigi_gene_basal + a_gene_by_Stat12dim*STAT12_dimer + 1)
+  0 -> PKR_mRNA()  \
+    h_Pkr_gene*tg_Isg_mrna*(ma_Pkr_Oas3_gene_basal + a_gene_by_Stat12dim*STAT12_dimer)\
+    /(ma_Pkr_Oas3_gene_basal + a_gene_by_Stat12dim*STAT12_dimer + 1)
+  0 -> OAS3_mRNA()  \
+    tg_Isg_mrna*(ma_Pkr_Oas3_gene_basal + a_gene_by_Stat12dim*STAT12_dimer)\
+    /(ma_Pkr_Oas3_gene_basal + a_gene_by_Stat12dim*STAT12_dimer + 1)
+  0 -> RNaseL_mRNA()  \
+    h_Rnasel_gene*tg_Isg_mrna*(ma_Rnasel_gene_basal + a_gene_by_Stat12dim*STAT12_dimer)\
+    /(ma_Rnasel_gene_basal + a_gene_by_Stat12dim*STAT12_dimer + 1)
+
+  # ISG transcript degradation, accelerated in proportion to active RNase L
+  RIGI_mRNA()   -> 0  tg_Isg_mrna*(m_Rnasel + RNaseL_a)/m_Rnasel
+  PKR_mRNA()    -> 0  tg_Isg_mrna*(m_Rnasel + RNaseL_a)/m_Rnasel
+  OAS3_mRNA()   -> 0  tg_Isg_mrna*(m_Rnasel + RNaseL_a)/m_Rnasel
+  RNaseL_mRNA() -> 0  tg_Isg_mrna*(m_Rnasel + RNaseL_a)/m_Rnasel
+
+  # Translation of the four ISG transcripts
+  RIGI_mRNA()   -> RIGI_mRNA() + RIGI(Mavs,Polyic)  sg_Rigi
+  PKR_mRNA()    -> PKR_mRNA() + PKR(st~i)           sg_Pkr
+  OAS3_mRNA()   -> OAS3_mRNA() + OAS3(st~i)         sg_Oas3
+  RNaseL_mRNA() -> RNaseL_mRNA() + RNaseL(st~i)     sg_Rnasel
+
+  # Turnover of the four ISG-encoded proteins
+  RIGI(Mavs,Polyic) -> 0  sg_Rigi
+  PKR()             -> 0  sg_Pkr
+  OAS3()            -> 0  sg_Oas3
+  RNaseL()          -> 0  sg_Rnasel
+
+  ### NF-kB module ###
+
+  # The poly(I:C):RIG-I:MAVS ternary complex activates TAK1
+  RIGI(Mavs!1,Polyic!+).MAVS(Rigi!1) + TAK1(st~i) -> \
+    RIGI(Mavs!1,Polyic!+).MAVS(Rigi!1) + TAK1(st~a)  a_Tak1_by_RigiMavs
+
+  # TNFa activates TAK1; active TAK1 relaxes back spontaneously
+  TNFa() + TAK1(st~i) -> TNFa() + TAK1(st~a)  a_Tak1_by_Tnfa
+  TAK1(st~a) -> TAK1(st~i)  d_Tak1
+
+  # Active TAK1 activates IKK; the quadratic dependence coarse-grains the
+  # cooperative IKK activation of Lipniacki et al. (2004) and Tay et al. (2010)
+  IKK(st~n) -> IKK(st~a)  a_Ikk*TAK1_a*TAK1_a
+
+  # Active IKK is inactivated, faster in proportion to the A20 level
+  IKK(st~a) -> IKK(st~i)  d_Ikk_1/d_Ikk_2*(d_Ikk_2 + A20)
+
+  # Inactive IKK returns to the neutral state through one intermediate
+  IKK(st~i)  -> IKK(st~ii)  d_Ikk_3
+  IKK(st~ii) -> IKK(st~n)   d_Ikk_3
+
+  # IkBa and NF-kB associate in each compartment; the nuclear rate carries k_v
+  IkBa(Nfkb,loc~cyt,Ser32_Ser36~0) + NFkB(Ikba,loc~cyt) -> \
+    IkBa(Nfkb!1,loc~cyt,Ser32_Ser36~0).NFkB(Ikba!1,loc~cyt)  b_Nfkb_Ikba_cyt
+  IkBa(Nfkb,loc~nuc,Ser32_Ser36~0) + NFkB(Ikba,loc~nuc) -> \
+    IkBa(Nfkb!1,loc~nuc,Ser32_Ser36~0).NFkB(Ikba!1,loc~nuc)  b_Nfkb_Ikba_nuc
+
+  # Active IKK phosphorylates cytoplasmic IkBa, free or bound to NF-kB
+  IKK(st~a) + IkBa(Nfkb,loc~cyt,Ser32_Ser36~0) -> \
+    IKK(st~a) + IkBa(Nfkb,loc~cyt,Ser32_Ser36~pp)  p_Ikba_by_Ikk
+  IKK(st~a) + IkBa(Nfkb!+,loc~cyt,Ser32_Ser36~0) -> \
+    IKK(st~a) + IkBa(Nfkb!+,loc~cyt,Ser32_Ser36~pp)  p_Ikba_by_Ikk
+
+  # Phosphorylated cytoplasmic IkBa is rapidly degraded, releasing NF-kB
+  IkBa(Nfkb,loc~cyt,Ser32_Ser36~pp) -> 0  g_Ikba_p_any
+  IkBa(Nfkb!1,loc~cyt,Ser32_Ser36~pp).NFkB(Ikba!1,loc~cyt) -> \
+    NFkB(Ikba,loc~cyt)  g_Ikba_p_any
+
+  # Unphosphorylated cytoplasmic IkBa turns over more slowly, free or bound
+  IkBa(Nfkb,loc~cyt,Ser32_Ser36~0) -> 0  g_Ikba_u_free
+  IkBa(Nfkb!1,loc~cyt,Ser32_Ser36~0).NFkB(Ikba!1,loc~cyt) -> \
+    NFkB(Ikba,loc~cyt)  g_Ikba_u_with_Nfkb
+
+  # Free NF-kB enters the nucleus; nuclear IkBa escorts it back out
+  NFkB(Ikba,loc~cyt) -> NFkB(Ikba,loc~nuc)  i_Nfkb
+  IkBa(Nfkb!1,loc~nuc,Ser32_Ser36~0).NFkB(Ikba!1,loc~nuc) -> \
+    IkBa(Nfkb!1,loc~cyt,Ser32_Ser36~0).NFkB(Ikba!1,loc~cyt)  e_Nfkb_with_Ikba
+
+  # Free unphosphorylated IkBa shuttles between the compartments
+  IkBa(Nfkb,loc~cyt,Ser32_Ser36~0) <-> IkBa(Nfkb,loc~nuc,Ser32_Ser36~0)  \
+    i_Ikba, e_Ikba
+
+  # NFKBIA transcription: free nuclear NF-kB activates, free nuclear IkBa represses
+  0 -> IkBa_mRNA()  \
+    tg_Ikba_mrna*a_Ikba_gene_by_Nfkb*NFkB_nuc_free\
+    /(a_Ikba_gene_by_Nfkb*NFkB_nuc_free + d_Ikba_gene_by_Ikba*IkBa_nuc_free + EPSILON)
+  IkBa_mRNA() -> 0  tg_Ikba_mrna*(m_Rnasel + RNaseL_a)/m_Rnasel
+
+  # TNFAIP3 (A20) transcription, regulated in the same competitive way
+  0 -> A20_mRNA()  \
+    h_A20_gene*tg_A20_mrna*a_A20_gene_by_Nfkb*NFkB_nuc_free\
+    /(a_A20_gene_by_Nfkb*NFkB_nuc_free + d_A20_gene_by_Ikba*IkBa_nuc_free + EPSILON)
+  A20_mRNA() -> 0  tg_A20_mrna*(m_Rnasel + RNaseL_a)/m_Rnasel
+
+  # IkBa translation, arrested in proportion to phospho-eIF2alpha; IkBa protein
+  # degradation is already carried by the four signal-transduction rules above
+  IkBa_mRNA() -> IkBa_mRNA() + IkBa(Nfkb,loc~cyt,Ser32_Ser36~0)  \
+    s_Ikba*m_Eif2a/(m_Eif2a + eIF2a_p)
+
+  # A20 translation, arrested the same way, and A20 turnover
+  A20_mRNA() -> A20_mRNA() + A20()  sg_A20*m_Eif2a/(m_Eif2a + eIF2a_p)
+  A20() -> 0  sg_A20
+
+  ### IRF3 module ###
+
+  # The poly(I:C):RIG-I:MAVS ternary complex phosphorylates TBK1 on Ser172
+  RIGI(Mavs!+,Polyic!+) + TBK1(Ser172~0) -> \
+    RIGI(Mavs!+,Polyic!+) + TBK1(Ser172~p)  p_Tbk1_by_RigiMavs
+
+  # TBK1 is dephosphorylated basally and, much faster, in the presence of A20
+  TBK1(Ser172~p) -> TBK1(Ser172~0)  q_Tbk1
+  A20() + TBK1(Ser172~p) -> A20() + TBK1(Ser172~0)  q_Tbk1_by_A20
+
+  # Phospho-TBK1 phosphorylates IRF3 on Ser396; IRF3 is dephosphorylated
+  TBK1(Ser172~p) + IRF3(Ser396~0) -> TBK1(Ser172~p) + IRF3(Ser396~p)  \
+    p_Irf3_by_Tbk1
+  IRF3(Ser396~p) -> IRF3(Ser396~0)  q_Irf3
+
+  ### IFN-beta module ###
+
+  # IFN-beta engages IFNAR, either the autocrine cytoplasmic pool or the
+  # externally added extracellular pool; the bound ligand is displayed outside
+  IFNAR(Ifnb) + IFNb(Ifnar,loc~cyt) -> IFNAR(Ifnb!1).IFNb(Ifnar!1,loc~ext)  \
+    b_Ifnar_Ifnb_cyt
+  IFNAR(Ifnb) + IFNb(Ifnar,loc~ext) -> IFNAR(Ifnb!1).IFNb(Ifnar!1,loc~ext)  \
+    b_Ifnar_Ifnb_ext
+
+  # IFNAR1 transcription and RNase L-accelerated transcript degradation
+  0 <-> IFNAR_mRNA()  tg_Ifnar_mrna, \
+    tg_Ifnar_mrna*(m_Rnasel_Ifnar_mrna + RNaseL_a)/m_Rnasel_Ifnar_mrna
+
+  # IFNAR translation, arrested by phospho-eIF2alpha, and the two loss routes:
+  # ligand-bound receptor is internalized and degraded faster than free receptor
+  IFNAR_mRNA() -> IFNAR_mRNA() + IFNAR(Ifnb)  s_Ifnar*m_Eif2a/(m_Eif2a + eIF2a_p)
+  IFNAR(Ifnb)   -> 0  g_Ifnar
+  IFNAR(Ifnb!+) -> 0  g_Ifnar_w_Ifnb
+
+  # IFNB1 transcription requires free nuclear NF-kB and phospho-IRF3 jointly;
+  # the transcript is not a substrate of RNase L
+  0 -> IFNb_mRNA()  \
+    tg_Ifnb_mrna*NFkB_nuc_free*IRF3_p/(m_Ifnb_mrna_NfkbIrf3 + NFkB_nuc_free*IRF3_p)
+  IFNb_mRNA() -> 0  tg_Ifnb_mrna
+
+  # IFN-beta translation into the cytoplasmic pool, and its turnover
+  IFNb_mRNA() -> IFNb_mRNA() + IFNb(Ifnar,loc~cyt)  sg_Ifnb
+  IFNb(Ifnar,loc~cyt) -> 0  sg_Ifnb
+
+  ### STAT1/2 module ###
+
+  # Ligand-bound IFNAR phosphorylates STAT1 and STAT2, saturating in the
+  # available unphosphorylated monomer; both are dephosphorylated at rate q_Stat
+  STAT1(Stat2,Tyr701~0) <-> STAT1(Stat2,Tyr701~p)  \
+    p_Stat*IFNAR_a*m_Ifnar_a/(m_Ifnar_a + STAT1_u), q_Stat
+  STAT2(Stat1,Tyr690~0) <-> STAT2(Stat1,Tyr690~p)  \
+    p_Stat*IFNAR_a*m_Ifnar_a/(m_Ifnar_a + STAT2_u), q_Stat
+
+  # Phospho-STAT1 and phospho-STAT2 heterodimerize
+  STAT1(Stat2,Tyr701~p) + STAT2(Stat1,Tyr690~p) -> \
+    STAT1(Stat2!1,Tyr701~p).STAT2(Stat1!1,Tyr690~p)  b_Stat1_Stat2
+
+  # The heterodimer is dephosphorylated and immediately dissociates
+  STAT1(Stat2!1,Tyr701~p).STAT2(Stat1!1,Tyr690~p) -> \
+    STAT1(Stat2,Tyr701~0) + STAT2(Stat1,Tyr690~0)  qu_Stat1_Stat2
+
+  # STAT1 and STAT2 transcription, autoregulated by their own heterodimer
+  0 -> STAT1_mRNA()  \
+    tg_Stat_mrna*(ma_Stat1_gene_basal + a_gene_by_Stat12dim*STAT12_dimer)\
+    /(ma_Stat1_gene_basal + a_gene_by_Stat12dim*STAT12_dimer + 1)
+  0 -> STAT2_mRNA()  \
+    tg_Stat_mrna*(ma_Stat2_gene_basal + a_gene_by_Stat12dim*STAT12_dimer)\
+    /(ma_Stat2_gene_basal + a_gene_by_Stat12dim*STAT12_dimer + 1)
+
+  # STAT transcript degradation, accelerated in proportion to active RNase L
+  STAT1_mRNA() -> 0  tg_Stat_mrna*(m_Rnasel + RNaseL_a)/m_Rnasel
+  STAT2_mRNA() -> 0  tg_Stat_mrna*(m_Rnasel + RNaseL_a)/m_Rnasel
+
+  # STAT1 and STAT2 translation, and turnover of monomers and of the heterodimer
+  STAT1_mRNA() -> STAT1_mRNA() + STAT1(Stat2,Tyr701~0)  sg_Stat
+  STAT2_mRNA() -> STAT2_mRNA() + STAT2(Stat1,Tyr690~0)  sg_Stat
+  STAT1(Stat2) -> 0  sg_Stat
+  STAT2(Stat1) -> 0  sg_Stat
+  STAT1(Stat2!1).STAT2(Stat1!1) -> 0  sg_Stat
+
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 53 species, 96 reactions
+
+  # TNF-alpha protocol
+
+  #@protocol: |
+  #  Three sequential phases, with state carried forward and no reset.
+  #  Phase 1 (30 days, not recorded) relaxes the unstimulated cell to its
+  #  resting steady state. Phase 2 restarts the clock at t = 0 and holds the
+  #  resting state for the 3.78 h that precede stimulation. Phase 3 adds
+  #  TNF-alpha at t = 13600 s and runs 6 h. Reading the recorded trajectory at
+  #  t = 13600 s gives the untreated lane and t = 13600 s plus 5, 10, 15, 30,
+  #  45, 60, 90, 120, and 180 min the fine time course of fig. S12B, and plus
+  #  0.25, 0.5, 1, 1.5, 2, 3, 4, and 6 h the long time course of fig. S12A.
+  #  Set h_A20_gene to 0 in place of TNFAIP3 to obtain the A20 KO lanes.
+
+  #@figure: Fig. S12A and Fig. S12B in Korwek et al. (2023)
+
+  simulate({method=>"ode",suffix=>"ode",t_end=>2592000,n_steps=>1000})
+  simulate({method=>"ode",suffix=>"ode",continue=>0,t_start=>0,t_end=>13600,\
+    n_steps=>1440})
+  setConcentration("TNFa()","n_TNFa_stimulation")
+  simulate({method=>"ode",suffix=>"ode",continue=>1,t_start=>13600,\
+    t_end=>35200,n_steps=>2160})
+end actions

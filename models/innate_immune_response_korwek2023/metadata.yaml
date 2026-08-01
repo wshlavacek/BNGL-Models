@@ -1,0 +1,126 @@
+# metadata.yaml — innate_immune_response_korwek2023
+id: innate_immune_response_korwek2023
+created: 2026-07-31
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, ai_assisted]
+  description: >
+    House-style rewrite of the authors' own BioNetGen file, published as data file S2 of
+    Korwek Z, Czerkies M, Jaruszewicz-Blonska J, Prus W, Kosiuk I, Kochanczyk M, Lipniacki T
+    (2023), "Nonself RNA rewires IFN-beta signaling: A mathematical model of the innate
+    immune response", Science Signaling 16:eabq1173, doi:10.1126/scisignal.abq1173. The
+    primary file reproduces that model bit-for-bit; the four variant files differ from it
+    only in their actions block (and, for the A20 KO file, in one gene-presence switch),
+    supplying the paper's other published stimulation protocols. One parameter is added
+    relative to the source: h_A20_gene, which gates TNFAIP3 transcription so that the A20 KO
+    cell line of fig. S12B can be simulated in the same idiom as the h_Mavs, h_Pkr_gene and
+    h_Rnasel_gene switches the authors already provide; it is 1, and therefore inert, in
+    every file except the A20 KO variant. Model parameters are the authors' PyBioNetFit
+    maximum-likelihood estimates (table 1 and table S1), fitted to 2915 data points.
+
+files:
+  - name: innate_immune_response_korwek2023.bngl
+    role: primary
+    description: >
+      IFN-beta + poly(I:C) protocol - 24 h of IFN-beta followed by 10 h of poly(I:C) without
+      removing the IFN-beta. Reproduces the IFN-beta + poly(I:C) lanes of fig. S4A
+      (quantified in Fig. 2, A and B).
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: innate_immune_response_korwek2023_ifnb.bngl
+    role: variant
+    description: >
+      IFN-beta-only protocol, 34 h. The antiviral state of a bystander cell warned by
+      paracrine IFN-beta; supplies the IFN-beta lanes of fig. S4A and the time course of
+      fig. S2B.
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: innate_immune_response_korwek2023_polyic.bngl
+    role: variant
+    description: >
+      Poly(I:C)-only protocol, 10 h, in a naive cell. Reproduces the transient STAT1/2 pulse
+      of fig. S4C (quantified in Fig. 2, E and F).
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: innate_immune_response_korwek2023_tnfa.bngl
+    role: variant
+    description: >
+      TNF-alpha protocol, 6 h, wild-type cells. TNF-alpha engages the NF-kB module alone, so
+      this protocol isolates it inside the full model; it is the calibration the authors used
+      for the NF-kB rate constants. Reproduces figs. S12A and S12B (WT).
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: innate_immune_response_korwek2023_tnfa_a20ko.bngl
+    role: variant
+    description: >
+      TNF-alpha protocol, 6 h, TNFAIP3 (A20) knockout cells (h_A20_gene = 0). Reproduces the
+      A20 KO lanes of fig. S12B, which the paper reports as a prediction rather than a fit
+      target.
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: independent_korwek2023.py
+    role: verification
+    description: >
+      Independent NumPy/SciPy implementation of the 53-species ODE system, hand-derived from
+      the reaction rules rather than from the BioNetGen-generated network.
+  - name: digitize_korwek2023.py
+    role: verification
+    description: >
+      Recovers the published model trajectories and the quantified Western blot data from
+      figs. S4 and S12 of the supplementary PDF and writes the two reference CSVs.
+  - name: verify_korwek2023.ipynb
+    role: verification
+    description: >
+      Three-level verification - bit-for-bit identity with the authors' data file S2 model,
+      BioNetGen against the independent SciPy integration, and the curated simulations
+      against the digitized figures.
+  - name: verify_korwek2023.png
+    role: figure
+  # Reference simulation data
+  - name: reference/innate_immune_response_korwek2023.net
+    role: reference
+  - name: reference/innate_immune_response_korwek2023_ode.gdat
+    role: reference
+  - name: reference/innate_immune_response_korwek2023_ifnb.net
+    role: reference
+  - name: reference/innate_immune_response_korwek2023_ifnb_ode.gdat
+    role: reference
+  - name: reference/innate_immune_response_korwek2023_polyic.net
+    role: reference
+  - name: reference/innate_immune_response_korwek2023_polyic_ode.gdat
+    role: reference
+  - name: reference/innate_immune_response_korwek2023_tnfa.net
+    role: reference
+  - name: reference/innate_immune_response_korwek2023_tnfa_ode.gdat
+    role: reference
+  - name: reference/innate_immune_response_korwek2023_tnfa_a20ko.net
+    role: reference
+  - name: reference/innate_immune_response_korwek2023_tnfa_a20ko_ode.gdat
+    role: reference
+  # Reported simulation data and experimental data digitized from the source figures
+  - name: reference/korwek2023_figS4_digitized.csv
+    role: reference
+    description: >
+      Published model trajectories and quantified blots from figs. S4A to S4D - 11
+      observables x 10 lanes for the IFN-beta / IFN-beta + poly(I:C) protocol, the same
+      observables x 6 lanes for the poly(I:C)-only protocol, and the OAS3 panels. Each series
+      carries flags marking markers that sit on the axis floor or are clipped by the top of
+      the axis. Regenerate with digitize_korwek2023.py.
+  - name: reference/korwek2023_figS12_digitized.csv
+    role: reference
+    description: >
+      Published model trajectories and quantified blots from figs. S12A and S12B - nuclear
+      NF-kB over 9 lanes, and p-IKK, IkBa and A20 over the wild-type fine and long time
+      courses and the A20 KO time course. Same axis flags. Regenerate with
+      digitize_korwek2023.py.

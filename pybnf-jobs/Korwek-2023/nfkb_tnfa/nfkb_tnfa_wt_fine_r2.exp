@@ -1,0 +1,11 @@
+# time pIKK_fine pIKK_fine_SD IkBa_fine IkBa_fine_SD A20_fine A20_fine_SD
+      0   0.2504   0.0626      NaN      NaN      NaN      NaN
+    300   0.4916   0.1229      NaN      NaN      NaN      NaN
+    600      NaN      NaN      NaN      NaN      NaN      NaN
+    900      NaN      NaN   0.2532   0.0633      NaN      NaN
+   1800      NaN      NaN      NaN      NaN      NaN      NaN
+   2700   1.5379   0.3845      NaN      NaN      NaN      NaN
+   3600      NaN      NaN      NaN      NaN      NaN      NaN
+   5400   1.0681   0.2670      NaN      NaN      NaN      NaN
+   7200   0.4642   0.1161   1.7126   0.4281   2.2654   0.5664
+  10800   0.3994   0.0998      NaN      NaN   5.0952   1.2738

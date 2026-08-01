@@ -1,0 +1,321 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 k_v                        5  # Constant
+    2 h_Mavs                     1  # Constant
+    3 h_Pkr_gene                 1  # Constant
+    4 h_Rnasel_gene              1  # Constant
+    5 h_A20_gene                 0  # Constant
+    6 n_Tak1_i_initial           1  # Constant
+    7 n_NFkB_IkBa_cyt_initial    1  # Constant
+    8 n_Ikk_n_initial            1  # Constant
+    9 n_Irf3_i_initial           1  # Constant
+   10 n_Tbk1_i_initial           1  # Constant
+   11 n_eIF2a_dephospho_initial  1  # Constant
+   12 n_TNFa_stimulation         1  # Constant
+   13 n_IFNb_stimulation         1  # Constant
+   14 n_polyIC_stimulation       1  # Constant
+   15 EPSILON                    1.0e-6  # Constant
+   16 k_FAST                     1.0  # Constant
+   17 k_POLYIC                   0.00024390060510912293  # Constant
+   18 tg_TRANSCRIPT              7.259610076954435e-05  # Constant
+   19 sg_PROTEIN                 1.532955086663982e-05  # Constant
+   20 m_Rnasel                   0.031164323577208185  # Constant
+   21 m_Eif2a                    0.015830114342212334  # Constant
+   22 i_Polyic                   k_POLYIC  # ConstantExpression
+   23 b_Rigi_Polyic              k_POLYIC  # ConstantExpression
+   24 b_RigiPolyic_Mavs          k_POLYIC  # ConstantExpression
+   25 a_Pkr_by_Polyic            k_POLYIC  # ConstantExpression
+   26 d_Pkr                      k_POLYIC  # ConstantExpression
+   27 a_Oas3_by_Polyic           k_POLYIC  # ConstantExpression
+   28 d_Oas3                     k_POLYIC  # ConstantExpression
+   29 a_Rnasel_by_Oas3           k_POLYIC  # ConstantExpression
+   30 d_Rnasel                   k_POLYIC  # ConstantExpression
+   31 p_Eif2a_by_Pkr             k_POLYIC  # ConstantExpression
+   32 p_Eif2a_basal              7.723454616604743e-06  # Constant
+   33 q_Eif2a                    k_POLYIC  # ConstantExpression
+   34 ma_Rigi_gene_basal         0.05930147549419551  # Constant
+   35 ma_Pkr_Oas3_gene_basal     0.7245345686782008  # Constant
+   36 ma_Rnasel_gene_basal       1.020172036452892  # Constant
+   37 tg_Isg_mrna                tg_TRANSCRIPT  # ConstantExpression
+   38 sg_Rigi                    sg_PROTEIN  # ConstantExpression
+   39 sg_Pkr                     4.2805996953166866e-05  # Constant
+   40 sg_Oas3                    sg_PROTEIN  # ConstantExpression
+   41 sg_Rnasel                  sg_PROTEIN  # ConstantExpression
+   42 a_Tak1_by_Tnfa             0.8903603794354649  # Constant
+   43 a_Tak1_by_RigiMavs         k_FAST  # ConstantExpression
+   44 d_Tak1                     k_FAST  # ConstantExpression
+   45 a_Ikk                      0.010904467109555071  # Constant
+   46 d_Ikk_1                    0.0008829700327658654  # Constant
+   47 d_Ikk_2                    0.05982062403935003  # Constant
+   48 d_Ikk_3                    0.00026826640310831975  # Constant
+   49 b_Nfkb_Ikba_cyt            k_FAST  # ConstantExpression
+   50 b_Nfkb_Ikba_nuc            k_v*b_Nfkb_Ikba_cyt  # ConstantExpression
+   51 p_Ikba_by_Ikk              0.008458552410073877  # Constant
+   52 g_Ikba_p_any               k_FAST  # ConstantExpression
+   53 g_Ikba_u_free              sg_PROTEIN  # ConstantExpression
+   54 g_Ikba_u_with_Nfkb         3.944402357840543e-05  # Constant
+   55 i_Nfkb                     k_FAST  # ConstantExpression
+   56 e_Nfkb_with_Ikba           k_FAST  # ConstantExpression
+   57 i_Ikba                     0.0005635774134351319  # Constant
+   58 e_Ikba                     0.02051107491820277  # Constant
+   59 tg_Ikba_mrna               0.0002565157989928973  # Constant
+   60 a_Ikba_gene_by_Nfkb__      0.0684701851861643  # Constant
+   61 a_Ikba_gene_by_Nfkb        k_FAST*a_Ikba_gene_by_Nfkb__  # ConstantExpression
+   62 d_Ikba_gene_by_Ikba        k_FAST  # ConstantExpression
+   63 tg_A20_mrna                0.0009406825155497426  # Constant
+   64 a_A20_gene_by_Nfkb__       0.025686603943611396  # Constant
+   65 a_A20_gene_by_Nfkb         k_FAST*a_A20_gene_by_Nfkb__  # ConstantExpression
+   66 d_A20_gene_by_Ikba         k_FAST  # ConstantExpression
+   67 s_Ikba                     0.004255786898310512  # Constant
+   68 sg_A20                     5.014115674793064e-06  # Constant
+   69 p_Tbk1_by_RigiMavs         k_FAST  # ConstantExpression
+   70 q_Tbk1                     k_FAST  # ConstantExpression
+   71 q_Tbk1_by_A20__            3.875729946075596e2  # Constant
+   72 q_Tbk1_by_A20              q_Tbk1_by_A20__*q_Tbk1  # ConstantExpression
+   73 p_Irf3_by_Tbk1             k_POLYIC  # ConstantExpression
+   74 q_Irf3                     k_POLYIC  # ConstantExpression
+   75 b_Ifnar_Ifnb_cyt           k_FAST  # ConstantExpression
+   76 b_Ifnar_Ifnb_ext           0.000750779497463291  # Constant
+   77 tg_Ifnar_mrna              tg_TRANSCRIPT  # ConstantExpression
+   78 m_Rnasel_Ifnar_mrna        0.0039023754286057065  # Constant
+   79 s_Ifnar                    2.8778555528751826e-05  # Constant
+   80 g_Ifnar                    9.77848544160331e-05  # Constant
+   81 g_Ifnar_w_Ifnb             0.00031054256866899256  # Constant
+   82 tg_Ifnb_mrna               tg_TRANSCRIPT  # ConstantExpression
+   83 m_Ifnb_mrna_NfkbIrf3       3.162948461272814e-05  # Constant
+   84 sg_Ifnb                    sg_PROTEIN  # ConstantExpression
+   85 p_Stat                     k_FAST  # ConstantExpression
+   86 q_Stat                     0.0018294332440515334  # Constant
+   87 m_Ifnar_a                  0.020141727438512898  # Constant
+   88 b_Stat1_Stat2              k_FAST  # ConstantExpression
+   89 qu_Stat1_Stat2             0.052370747192221206  # Constant
+   90 ma_Stat1_gene_basal        0.18314838022720048  # Constant
+   91 ma_Stat2_gene_basal        0.07023843113385617  # Constant
+   92 a_gene_by_Stat12dim        13126.669661929025  # Constant
+   93 tg_Stat_mrna               tg_TRANSCRIPT  # ConstantExpression
+   94 sg_Stat                    sg_PROTEIN  # ConstantExpression
+end parameters
+begin functions
+    1 _rateLaw1() (tg_Isg_mrna*(ma_Rigi_gene_basal+(a_gene_by_Stat12dim*STAT12_dimer)))/((ma_Rigi_gene_basal+(a_gene_by_Stat12dim*STAT12_dimer))+1)
+    2 _rateLaw2() ((h_Pkr_gene*tg_Isg_mrna)*(ma_Pkr_Oas3_gene_basal+(a_gene_by_Stat12dim*STAT12_dimer)))/((ma_Pkr_Oas3_gene_basal+(a_gene_by_Stat12dim*STAT12_dimer))+1)
+    3 _rateLaw3() (tg_Isg_mrna*(ma_Pkr_Oas3_gene_basal+(a_gene_by_Stat12dim*STAT12_dimer)))/((ma_Pkr_Oas3_gene_basal+(a_gene_by_Stat12dim*STAT12_dimer))+1)
+    4 _rateLaw4() ((h_Rnasel_gene*tg_Isg_mrna)*(ma_Rnasel_gene_basal+(a_gene_by_Stat12dim*STAT12_dimer)))/((ma_Rnasel_gene_basal+(a_gene_by_Stat12dim*STAT12_dimer))+1)
+    5 _rateLaw5() (tg_Isg_mrna*(m_Rnasel+RNaseL_a))/m_Rnasel
+    6 _rateLaw6() (tg_Isg_mrna*(m_Rnasel+RNaseL_a))/m_Rnasel
+    7 _rateLaw7() (tg_Isg_mrna*(m_Rnasel+RNaseL_a))/m_Rnasel
+    8 _rateLaw8() (tg_Isg_mrna*(m_Rnasel+RNaseL_a))/m_Rnasel
+    9 _rateLaw9() (a_Ikk*TAK1_a)*TAK1_a
+   10 _rateLaw10() (d_Ikk_1/d_Ikk_2)*(d_Ikk_2+A20)
+   11 _rateLaw11() ((tg_Ikba_mrna*a_Ikba_gene_by_Nfkb)*NFkB_nuc_free)/(((a_Ikba_gene_by_Nfkb*NFkB_nuc_free)+(d_Ikba_gene_by_Ikba*IkBa_nuc_free))+EPSILON)
+   12 _rateLaw12() (tg_Ikba_mrna*(m_Rnasel+RNaseL_a))/m_Rnasel
+   13 _rateLaw13() (((h_A20_gene*tg_A20_mrna)*a_A20_gene_by_Nfkb)*NFkB_nuc_free)/(((a_A20_gene_by_Nfkb*NFkB_nuc_free)+(d_A20_gene_by_Ikba*IkBa_nuc_free))+EPSILON)
+   14 _rateLaw14() (tg_A20_mrna*(m_Rnasel+RNaseL_a))/m_Rnasel
+   15 _rateLaw15() (s_Ikba*m_Eif2a)/(m_Eif2a+eIF2a_p)
+   16 _rateLaw16() (sg_A20*m_Eif2a)/(m_Eif2a+eIF2a_p)
+   17 _rateLaw17() (tg_Ifnar_mrna*(m_Rnasel_Ifnar_mrna+RNaseL_a))/m_Rnasel_Ifnar_mrna
+   18 _rateLaw18() (s_Ifnar*m_Eif2a)/(m_Eif2a+eIF2a_p)
+   19 _rateLaw19() ((tg_Ifnb_mrna*NFkB_nuc_free)*IRF3_p)/(m_Ifnb_mrna_NfkbIrf3+(NFkB_nuc_free*IRF3_p))
+   20 _rateLaw20() ((p_Stat*IFNAR_a)*m_Ifnar_a)/(m_Ifnar_a+STAT1_u)
+   21 _rateLaw21() ((p_Stat*IFNAR_a)*m_Ifnar_a)/(m_Ifnar_a+STAT2_u)
+   22 _rateLaw22() (tg_Stat_mrna*(ma_Stat1_gene_basal+(a_gene_by_Stat12dim*STAT12_dimer)))/((ma_Stat1_gene_basal+(a_gene_by_Stat12dim*STAT12_dimer))+1)
+   23 _rateLaw23() (tg_Stat_mrna*(ma_Stat2_gene_basal+(a_gene_by_Stat12dim*STAT12_dimer)))/((ma_Stat2_gene_basal+(a_gene_by_Stat12dim*STAT12_dimer))+1)
+   24 _rateLaw24() (tg_Stat_mrna*(m_Rnasel+RNaseL_a))/m_Rnasel
+   25 _rateLaw25() (tg_Stat_mrna*(m_Rnasel+RNaseL_a))/m_Rnasel
+end functions
+begin species
+    1 PolyIC(Rigi,loc~ext) 0.000000000000e+00
+    2 RIGI(Mavs,Polyic) 5.598167831799e-02
+    3 MAVS(Rigi) 1.000000000000e+00
+    4 PKR(st~i) 4.201333982151e-01
+    5 OAS3(st~i) 4.201333907669e-01
+    6 RNaseL(st~i) 5.049926441702e-01
+    7 eIF2a(st~0) 9.693055798201e-01
+    8 RIGI_mRNA() 5.598167931044e-02
+    9 PKR_mRNA() 4.201333982151e-01
+   10 OAS3_mRNA() 4.201333982151e-01
+   11 RNaseL_mRNA() 5.049926531228e-01
+   12 TNFa() n_TNFa_stimulation
+   13 IkBa(Nfkb!1,Ser32_Ser36~0,loc~cyt).NFkB(Ikba!1,loc~cyt) 9.982324736967e-01
+   14 TAK1(st~i) 1.000000000000e+00
+   15 IKK(st~n) 1.000000000000e+00
+   16 A20() 0.000000000000e+00
+   17 IkBa_mRNA() 2.929556366288e-02
+   18 A20_mRNA() 0.000000000000e+00
+   19 TBK1(Ser172~0) 1.000000000000e+00
+   20 IRF3(Ser396~0) 1.000000000000e+00
+   21 IFNAR(Ifnb) 1.001381153196e-01
+   22 IFNb(Ifnar,loc~cyt) -9.158062554623e-26
+   23 IFNb(Ifnar,loc~ext) 0.000000000000e+00
+   24 IFNAR_mRNA() 1.000000000000e+00
+   25 IFNb_mRNA() -5.983522583300e-22
+   26 STAT1(Stat2,Tyr701~0) 1.547974709184e-01
+   27 STAT2(Stat1,Tyr690~0) 6.562876817481e-02
+   28 STAT1(Stat2!1,Tyr701~p).STAT2(Stat1!1,Tyr690~p) 1.684436714072e-40
+   29 STAT1_mRNA() 1.547974736626e-01
+   30 STAT2_mRNA() 6.562876933829e-02
+   31 PolyIC(Rigi,loc~cyt) -1.721211692852e-23
+   32 eIF2a(st~p) 3.069442017994e-02
+   33 TAK1(st~a) -1.190045001513e-23
+   34 IKK(st~a) 3.879244256628e-27
+   35 NFkB(Ikba,loc~cyt) 3.284573463588e-05
+   36 IkBa(Nfkb,Ser32_Ser36~0,loc~cyt) 1.987646391750e-01
+   37 IFNAR(Ifnb!1).IFNb(Ifnar!1,loc~ext) -2.917220624832e-23
+   38 STAT1(Stat2,Tyr701~p) -2.812590578821e-22
+   39 STAT2(Stat1,Tyr690~p) -2.432125815462e-22
+   40 PolyIC(Rigi!1,loc~cyt).RIGI(Mavs,Polyic!1) -9.148198092815e-25
+   41 PKR(st~a) -1.072995285550e-23
+   42 OAS3(st~a) -1.186648891305e-23
+   43 IKK(st~i) 3.640125097422e-26
+   44 IkBa(Nfkb,Ser32_Ser36~pp,loc~cyt) 6.527784439703e-30
+   45 IkBa(Nfkb!1,Ser32_Ser36~pp,loc~cyt).NFkB(Ikba!1,loc~cyt) 3.278373072390e-29
+   46 NFkB(Ikba,loc~nuc) 1.701834824979e-03
+   47 IkBa(Nfkb,Ser32_Ser36~0,loc~nuc) 3.860037901890e-03
+   48 MAVS(Rigi!1).PolyIC(Rigi!2,loc~cyt).RIGI(Mavs!1,Polyic!2) -1.190049071335e-23
+   49 RNaseL(st~a) -5.649831026064e-24
+   50 IKK(st~ii) 4.349165138829e-26
+   51 IkBa(Nfkb!1,Ser32_Ser36~0,loc~nuc).NFkB(Ikba!1,loc~nuc) 3.284573463588e-05
+   52 TBK1(Ser172~p) -1.190045001513e-23
+   53 IRF3(Ser396~p) -1.171657260653e-23
+end species
+begin reactions
+    1 1 31 i_Polyic #_R1
+    2 7 32 p_Eif2a_basal #_R11
+    3 0 8 _rateLaw1 #_R15
+    4 0 9 _rateLaw2 #_R16
+    5 0 10 _rateLaw3 #_R17
+    6 0 11 _rateLaw4 #_R18
+    7 8 0 _rateLaw5 #_R19
+    8 9 0 _rateLaw6 #_R20
+    9 10 0 _rateLaw7 #_R21
+   10 11 0 _rateLaw8 #_R22
+   11 8 2,8 sg_Rigi #_R23
+   12 9 4,9 sg_Pkr #_R24
+   13 10 5,10 sg_Oas3 #_R25
+   14 11 6,11 sg_Rnasel #_R26
+   15 2 0 sg_Rigi #_R27
+   16 4 0 sg_Pkr #_R28
+   17 5 0 sg_Oas3 #_R29
+   18 6 0 sg_Rnasel #_R30
+   19 12,14 12,33 a_Tak1_by_Tnfa #_R32
+   20 15 34 _rateLaw9 #_R34
+   21 13 35 g_Ikba_u_with_Nfkb #_R45
+   22 0 17 _rateLaw11 #_R49
+   23 17 0 _rateLaw12 #_R50
+   24 0 18 _rateLaw13 #_R51
+   25 18 0 _rateLaw14 #_R52
+   26 17 17,36 _rateLaw15 #_R53
+   27 18 18,16 _rateLaw16 #_R54
+   28 16 0 sg_A20 #_R55
+   29 21,22 37 b_Ifnar_Ifnb_cyt #_R61
+   30 21,23 37 b_Ifnar_Ifnb_ext #_R62
+   31 0 24 tg_Ifnar_mrna #_R63
+   32 24 0 _rateLaw17 #_reverse__R63
+   33 24 24,21 _rateLaw18 #_R64
+   34 21 0 g_Ifnar #_R65
+   35 0 25 _rateLaw19 #_R67
+   36 25 0 tg_Ifnb_mrna #_R68
+   37 25 22,25 sg_Ifnb #_R69
+   38 22 0 sg_Ifnb #_R70
+   39 26 38 _rateLaw20 #_R71
+   40 27 39 _rateLaw21 #_R72
+   41 28 26,27 qu_Stat1_Stat2 #_R74
+   42 0 29 _rateLaw22 #_R75
+   43 0 30 _rateLaw23 #_R76
+   44 29 0 _rateLaw24 #_R77
+   45 30 0 _rateLaw25 #_R78
+   46 29 26,29 sg_Stat #_R79
+   47 30 27,30 sg_Stat #_R80
+   48 26 0 sg_Stat #_R81
+   49 27 0 sg_Stat #_R82
+   50 28 0 sg_Stat #_R83
+   51 2,31 40 b_Rigi_Polyic #_R2
+   52 4,31 31,41 a_Pkr_by_Polyic #_R6
+   53 5,31 31,42 a_Oas3_by_Polyic #_R8
+   54 32 7 q_Eif2a #_R12
+   55 33 14 d_Tak1 #_R33
+   56 34 43 _rateLaw10 #_R35
+   57 35,36 13 b_Nfkb_Ikba_cyt #_R38
+   58 34,36 34,44 p_Ikba_by_Ikk #_R40
+   59 13,34 34,45 p_Ikba_by_Ikk #_R41
+   60 36 0 g_Ikba_u_free #_R44
+   61 35 46 i_Nfkb #_R46
+   62 36 47 i_Ikba #_R48
+   63 37 0 g_Ifnar_w_Ifnb #_R66
+   64 38 26 q_Stat #_reverse__R71
+   65 39 27 q_Stat #_reverse__R72
+   66 38,39 28 b_Stat1_Stat2 #_R73
+   67 38 0 sg_Stat #_R81
+   68 39 0 sg_Stat #_R82
+   69 40 31 sg_Rigi #_R3
+   70 3,40 48 b_RigiPolyic_Mavs #_R4
+   71 4,40 40,41 a_Pkr_by_Polyic #_R6
+   72 41 4 d_Pkr #_R7
+   73 5,40 40,42 a_Oas3_by_Polyic #_R8
+   74 42 5 d_Oas3 #_R9
+   75 7,41 32,41 p_Eif2a_by_Pkr #_R10
+   76 6,42 42,49 a_Rnasel_by_Oas3 #_R13
+   77 41 0 sg_Pkr #_R28
+   78 42 0 sg_Oas3 #_R29
+   79 43 50 d_Ikk_3 #_R36
+   80 46,47 51 b_Nfkb_Ikba_nuc #_R39
+   81 44 0 g_Ikba_p_any #_R42
+   82 45 35 g_Ikba_p_any #_R43
+   83 47 36 e_Ikba #_reverse__R48
+   84 48 3,31 sg_Rigi #_R5
+   85 4,48 41,48 a_Pkr_by_Polyic #_R6
+   86 5,48 42,48 a_Oas3_by_Polyic #_R8
+   87 49 6 d_Rnasel #_R14
+   88 49 0 sg_Rnasel #_R30
+   89 14,48 33,48 a_Tak1_by_RigiMavs #_R31
+   90 50 15 d_Ikk_3 #_R37
+   91 51 13 e_Nfkb_with_Ikba #_R47
+   92 19,48 48,52 p_Tbk1_by_RigiMavs #_R56
+   93 52 19 q_Tbk1 #_R57
+   94 16,52 16,19 q_Tbk1_by_A20 #_R58
+   95 20,52 52,53 p_Irf3_by_Tbk1 #_R59
+   96 53 20 q_Irf3 #_R60
+end reactions
+begin groups
+    1 RIG_I_total          2,40,48
+    2 PKR_total            4,41
+    3 OAS3_total           5,42
+    4 RNaseL_total         6,49
+    5 eIF2a_total          7,32
+    6 RNaseL_a             49
+    7 eIF2a_p              32
+    8 RIGI_mRNA            8
+    9 PKR_mRNA             9
+   10 OAS3_mRNA            10
+   11 RNaseL_mRNA          11
+   12 TAK1_a               33
+   13 NFkB_nuc_free        46
+   14 NFkB_nuc_total       46,51
+   15 NFkB_total           13,35,45,46,51
+   16 IkBa_total           13,36,44,45,47,51
+   17 IkBa_nuc_total       47,51
+   18 IkBa_cyt_total       13,36,44,45
+   19 IkBa_cyt_free        36,44
+   20 IkBa_p_cyt           44,45
+   21 IkBa_nuc_free        47
+   22 A20                  16
+   23 IKK_a                34
+   24 IkBa_mRNA            17
+   25 A20_mRNA             18
+   26 IRF3_total           20,53
+   27 IRF3_p               53
+   28 IFNAR_total          21,37
+   29 IFNAR_a              37
+   30 IFNb_ext             23,37
+   31 IFNb_cyt             22
+   32 IFNAR_mRNA           24
+   33 IFNb_mRNA            25
+   34 STAT1_total          26,28,38
+   35 STAT2_total          27,28,39
+   36 STAT1_p              28,38
+   37 STAT2_p              28,39
+   38 STAT1_u              26
+   39 STAT2_u              27
+   40 STAT12_dimer         28
+   41 STAT1_mRNA           29
+   42 STAT2_mRNA           30
+end groups
