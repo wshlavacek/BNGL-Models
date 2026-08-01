@@ -1,0 +1,192 @@
+begin model
+
+#@title: CAR CD3zeta phosphorylation by LCK, competitive inhibition (Rohrs et al., 2018)
+
+#@description: |
+#  Fitting-ready form of the competitive inhibition mechanism of Rohrs et al.
+#  (2018). LCK phosphorylates the six CD3zeta ITAM tyrosines in random order
+#  with Michaelis-Menten kinetics, and every tyrosine in the system competes for
+#  the kinase through one shared denominator (Eq. 4): unphosphorylated sites
+#  through K_M,i, phosphorylated sites through K_I,i = K_M,i * X_I.
+#
+#  Two changes turn the reference model in
+#  models/car_cd3zeta_phosphorylation_rohrs2018/ into this one.
+#
+#  (i) No simulation actions -- the time courses are synthesized from the
+#  edition-2 conf.
+#
+#  (ii) Each ITAM tyrosine carries a 0/1 gate parameter, live_<site>. A
+#  tyrosine-to-phenylalanine point mutation is expressed by setting that gate to
+#  zero, which is exactly equivalent to the ~F state of the reference model:
+#  the site can no longer be phosphorylated and drops out of both the Michaelis
+#  and the inhibition sums, so it stops being a substrate and stops being a
+#  competitor. That keeps all seven constructs in a single 65-species network
+#  and makes each mutant a PEtab Condition, a parameter perturbation, rather
+#  than a separate model.
+
+#@keyword: |
+#  signaling, chimeric antigen receptor, CAR T cell, CD3zeta, ITAM, LCK,
+#  multisite phosphorylation, competitive inhibition, product inhibition,
+#  Michaelis-Menten, parameter estimation, PyBNF, Homo sapiens
+
+#@reference: |
+#  Rohrs JA, Zheng D, Graham NA, Wang P, Finley SD (2018). Computational model
+#  of chimeric antigen receptors explains site-specific phosphorylation
+#  kinetics. Biophys J 115(7):1116-1129. doi:10.1016/j.bpj.2018.08.018 --
+#  mechanism (Eqs. 4 and 5), fitting protocol and reported best fit (Data S4,
+#  mmc5.pdf; Figs. 3D and 4).
+
+#@note: |
+#  Amounts are molecule counts on a patch of liposome membrane of area
+#  A_sim = A_ref * f, which is 1 um^2 at these values, so they coincide with the
+#  surface densities the paper works in. The nominal values of the seven fitted
+#  ids below are the authors' reported best fit; the conf brackets them.
+
+begin parameters
+
+  # Avogadro constant
+  NA 6.02214076e23 # molecules/mol
+
+  # Membrane patch simulated, and the subvolume scaling factor
+  A_ref 1 # um^2
+  f 1 # dimensionless
+  A_sim A_ref*f # um^2
+
+  # Membrane-adjacent shell used for surface-density to concentration conversion
+  h_mem 1e-8 # m
+  V_ref A_sim*h_mem*1e-9 # L/patch
+
+  # CD3zeta density used throughout the liposome experiments
+  CD3z_T 20000 # molecules/um^2
+
+  # === Fitted: total LCK density ===
+  LCK_T 19.703 # molecules/um^2
+
+  # === Fitted: five Michaelis constants ===
+  KmA1 96.548 # molecules/um^2
+  KmA2 331.68 # molecules/um^2
+  KmB2 153.82 # molecules/um^2
+  KmC1 484.9 # molecules/um^2
+  KmC2 405.43 # molecules/um^2
+
+  # Held fixed at the estimate of Hui and Vale (2014), as the paper does
+  KmB1 270 # molecules/um^2
+
+  # === Fitted: single scale factor for all six inhibition constants, Eq. 5 ===
+  Xi 0.1153 # dimensionless
+
+  # Inhibition constants of the phosphorylated sites
+  KiA1 KmA1*Xi # molecules/um^2
+  KiA2 KmA2*Xi # molecules/um^2
+  KiB1 KmB1*Xi # molecules/um^2
+  KiB2 KmB2*Xi # molecules/um^2
+  KiC1 KmC1*Xi # molecules/um^2
+  KiC2 KmC2*Xi # molecules/um^2
+
+  # LCK catalytic rate, held fixed at the Hui and Vale (2014) value
+  kcat 360 # /min
+
+  # Tyrosine gates: 1 = wild-type tyrosine, 0 = phenylalanine point mutant.
+  # The conf's condition: lines set these; all six default to wild type.
+  live_A1 1 # dimensionless
+  live_A2 1 # dimensionless
+  live_B1 1 # dimensionless
+  live_B2 1 # dimensionless
+  live_C1 1 # dimensionless
+  live_C2 1 # dimensionless
+
+end parameters
+
+begin molecule types
+
+  # Constitutively active recombinant LCK (G2A, Y505F)
+  LCK(Y394~U~P,Y505~U~P)
+  # CD3zeta intracellular domain: ITAM A (A1, A2), B (B1, B2) and C (C1, C2)
+  CD3z(A1~U~P,A2~U~P,B1~U~P,B2~U~P,C1~U~P,C2~U~P)
+
+end molecule types
+
+begin seed species
+
+  # Kinase, activation-loop phosphorylated and never dephosphorylated
+  LCK(Y394~P,Y505~U) LCK_T*A_sim # molecules
+  # Unphosphorylated CD3zeta when ATP is added at t = 0
+  CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U) CD3z_T*A_sim # molecules
+
+end seed species
+
+begin observables
+
+  # Unphosphorylated tyrosine at each site, Y_i of Eq. 4
+  Molecules Y_A1 CD3z(A1~U)
+  Molecules Y_A2 CD3z(A2~U)
+  Molecules Y_B1 CD3z(B1~U)
+  Molecules Y_B2 CD3z(B2~U)
+  Molecules Y_C1 CD3z(C1~U)
+  Molecules Y_C2 CD3z(C2~U)
+
+  # Phosphotyrosine at each site, pY_i of Eq. 4
+  Molecules pY_A1 CD3z(A1~P)
+  Molecules pY_A2 CD3z(A2~P)
+  Molecules pY_B1 CD3z(B1~P)
+  Molecules pY_B2 CD3z(B2~P)
+  Molecules pY_C1 CD3z(C1~P)
+  Molecules pY_C2 CD3z(C2~P)
+
+  # Doubly phosphorylated, ZAP-70-competent ITAMs
+  Molecules ITAM_A_2p CD3z(A1~P,A2~P)
+  Molecules ITAM_B_2p CD3z(B1~P,B2~P)
+  Molecules ITAM_C_2p CD3z(C1~P,C2~P)
+
+end observables
+
+begin functions
+
+  # Shared denominator of Eq. 4. A gate of zero removes that site from the
+  # competition, which is what a tyrosine-to-phenylalanine mutation does.
+  inhib() = 1 + (live_A1*(Y_A1/KmA1 + pY_A1/KiA1) \
+    + live_A2*(Y_A2/KmA2 + pY_A2/KiA2) \
+    + live_B1*(Y_B1/KmB1 + pY_B1/KiB1) \
+    + live_B2*(Y_B2/KmB2 + pY_B2/KiB2) \
+    + live_C1*(Y_C1/KmC1 + pY_C1/KiC1) \
+    + live_C2*(Y_C2/KmC2 + pY_C2/KiC2))/A_sim
+
+  # Per-site rate constants; BioNetGen supplies the substrate and kinase counts
+  kp_A1() = kcat*live_A1/(KmA1*A_sim*inhib())
+  kp_A2() = kcat*live_A2/(KmA2*A_sim*inhib())
+  kp_B1() = kcat*live_B1/(KmB1*A_sim*inhib())
+  kp_B2() = kcat*live_B2/(KmB2*A_sim*inhib())
+  kp_C1() = kcat*live_C1/(KmC1*A_sim*inhib())
+  kp_C2() = kcat*live_C2/(KmC2*A_sim*inhib())
+
+  # Percent phosphorylation at each site -- the fit targets. These are the
+  # .exp column headers, with parentheses.
+  pct_A1() = 100*pY_A1/(CD3z_T*A_sim)
+  pct_A2() = 100*pY_A2/(CD3z_T*A_sim)
+  pct_B1() = 100*pY_B1/(CD3z_T*A_sim)
+  pct_B2() = 100*pY_B2/(CD3z_T*A_sim)
+  pct_C1() = 100*pY_C1/(CD3z_T*A_sim)
+  pct_C2() = 100*pY_C2/(CD3z_T*A_sim)
+
+end functions
+
+begin reaction rules
+
+  # LCK phosphorylates the six ITAM tyrosines in random order under shared
+  # competitive inhibition; see Eq. 4 in Rohrs et al. (2018)
+  R_phos_A1: CD3z(A1~U) + LCK(Y394~P,Y505~U) -> CD3z(A1~P) + LCK(Y394~P,Y505~U) \
+    kp_A1()
+  R_phos_A2: CD3z(A2~U) + LCK(Y394~P,Y505~U) -> CD3z(A2~P) + LCK(Y394~P,Y505~U) \
+    kp_A2()
+  R_phos_B1: CD3z(B1~U) + LCK(Y394~P,Y505~U) -> CD3z(B1~P) + LCK(Y394~P,Y505~U) \
+    kp_B1()
+  R_phos_B2: CD3z(B2~U) + LCK(Y394~P,Y505~U) -> CD3z(B2~P) + LCK(Y394~P,Y505~U) \
+    kp_B2()
+  R_phos_C1: CD3z(C1~U) + LCK(Y394~P,Y505~U) -> CD3z(C1~P) + LCK(Y394~P,Y505~U) \
+    kp_C1()
+  R_phos_C2: CD3z(C2~U) + LCK(Y394~P,Y505~U) -> CD3z(C2~P) + LCK(Y394~P,Y505~U) \
+    kp_C2()
+
+end reaction rules
+
+end model

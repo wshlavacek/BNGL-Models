@@ -1,0 +1,279 @@
+begin model
+
+#@title: CAR CD3zeta site-specific phosphorylation by LCK (Rohrs et al., 2018)
+
+#@description: |
+#  Site-resolved phosphorylation of the CD3zeta intracellular domain of a
+#  chimeric antigen receptor (CAR) by the Src-family kinase LCK, on a liposome
+#  surface. CD3zeta carries three immunoreceptor tyrosine-based activation
+#  motifs (ITAMs) A, B and C, each with two tyrosines, giving six sites in the
+#  N- to C-terminal order A1, A2, B1, B2, C1, C2. One CD3zeta molecule type
+#  with six independently phosphorylatable tyrosines makes every phosphoform
+#  explicit (64 species), so paired-ITAM readouts such as the doubly
+#  phosphorylated, ZAP-70-competent ITAM are observables of the model.
+#
+#  This is the competitive inhibition mechanism, the best of the four
+#  mechanisms Rohrs et al. (2018) compared (lowest residual error and lowest
+#  AIC; Fig. 3D). LCK acts on all six sites in random order with
+#  Michaelis-Menten kinetics, but every site -- phosphorylated or not, on any
+#  CD3zeta molecule -- competes for the kinase. Each site therefore contributes
+#  a term to one shared denominator (Eq. 4): unphosphorylated sites through
+#  their Michaelis constant K_M,i and phosphorylated sites through an
+#  inhibition constant K_I,i = K_M,i * X_I with a single fitted scale factor
+#  X_I = 0.115, so product inhibition is roughly ninefold stronger than
+#  substrate competition.
+#
+#  Behavior: at 20,000 CD3zeta and 19.7 LCK per square micron the six sites
+#  rise sigmoidally in log time over four decades and saturate at 100%, in the
+#  order A1 (half-maximal at 12 min) < B2 < B1 < A2 < C2 < C1 (151 min). Unlike
+#  a sequential mechanism, every site keeps a Hill coefficient of ~1.0, which
+#  is what the measurements show; unlike a plain random-order mechanism, the
+#  growing pool of phosphorylated sites throttles the kinase and reproduces the
+#  slow approach to saturation seen after about an hour.
+
+#@keyword: |
+#  signaling, chimeric antigen receptor, CAR T cell, T cell receptor, CD3zeta,
+#  ITAM, LCK, Src family kinase, multisite phosphorylation, competitive
+#  inhibition, product inhibition, Michaelis-Menten, monostable, saturating,
+#  membrane surface reaction, liposome, Homo sapiens
+
+#@reference: |
+#  Rohrs JA, Zheng D, Graham NA, Wang P, Finley SD (2018). Computational model
+#  of chimeric antigen receptors explains site-specific phosphorylation
+#  kinetics. Biophys J 115(7):1116-1129. doi:10.1016/j.bpj.2018.08.018 --
+#  mechanism, data and fitted parameters. The parameter values here are those
+#  of the authors' BioNetGen file, Data S4 (mmc5.pdf).
+#
+#  Hui E, Vale RD (2014). In vitro membrane reconstitution of the T-cell
+#  receptor proximal signaling network. Nat Struct Mol Biol 21(2):133-142.
+#  doi:10.1038/nsmb.2762 -- the liposome assay, the fixed catalytic rate and
+#  the fixed K_M,B1.
+
+#@note: |
+#  UNITS AND POPULATIONS. The paper works in surface densities, molecules per
+#  square micron of liposome membrane. Here every amount is a molecule count on
+#  a patch of area A_sim = A_ref * f, and the rate laws divide observables by
+#  A_sim before they enter the Michaelis and inhibition terms, so the model is
+#  a population model for any patch size. At the default A_ref = 1 um^2, f = 1
+#  the counts are numerically equal to the paper's densities. h_mem and V_ref
+#  are the membrane-adjacent shell used to convert a surface density to a molar
+#  concentration; the commented conversion functions at the end of the
+#  functions block emit that concentration.
+#
+#  DIFFERENCES FROM Data S4. (i) The authors represent the six tyrosines as six
+#  independent molecule types, each seeded at the full CD3zeta density. That is
+#  exact for the quantities they report, because every rate law depends only on
+#  aggregate site densities and never on the state of neighboring sites, so the
+#  sites stay statistically independent; the single-chain representation used
+#  here integrates to the same six site trajectories while additionally
+#  resolving the joint phosphoform distribution. (ii) LCK keeps its two
+#  regulatory tyrosines but loses the unused binding site of the source file.
+#  (iii) The tyrosine-to-phenylalanine state is written ~F rather than ~X.
+#
+#  LCK STATE. The assay uses recombinant LCK-G2A-Y505F, which mass spectrometry
+#  showed to be essentially fully phosphorylated on the activating Y394. Only
+#  LCK(Y394~P,Y505~U) is seeded and no rule changes LCK, so the kinase pool is
+#  constant and the Y505F substitution appears as a Y505 state that is never
+#  phosphorylated.
+
+begin parameters
+
+  # Avogadro constant
+  NA 6.02214076e23 # molecules/mol
+
+  # Membrane patch simulated, and the subvolume scaling factor of the SSA
+  # convention. A_sim is the area every density in the rate laws refers to.
+  A_ref 1 # um^2
+  f 1 # dimensionless
+  A_sim A_ref*f # um^2
+
+  # Effective thickness of the membrane-adjacent shell, used only to convert
+  # surface densities to molar concentrations
+  h_mem 1e-8 # m
+
+  # Volume of that shell over the simulated patch (1 um^2 * 1 m = 1e-9 L)
+  V_ref A_sim*h_mem*1e-9 # L/patch
+
+  # CD3zeta density used throughout the liposome experiments
+  CD3z_T 20000 # molecules/um^2
+
+  # LCK density; too low to measure against the experimental error, so it was
+  # fitted along with the Michaelis constants
+  LCK_T 19.703 # molecules/um^2
+
+  # Michaelis constants for LCK acting on each CD3zeta ITAM tyrosine. K_M,B1 is
+  # held at the estimate of Hui and Vale (2014); the other five are fitted.
+  KmA1 96.548 # molecules/um^2
+  KmA2 331.68 # molecules/um^2
+  KmB1 270 # molecules/um^2
+  KmB2 153.82 # molecules/um^2
+  KmC1 484.9 # molecules/um^2
+  KmC2 405.43 # molecules/um^2
+
+  # Single fitted factor relating every inhibition constant to the
+  # corresponding Michaelis constant; see Eq. 5 in Rohrs et al. (2018)
+  Xi 0.1153 # dimensionless
+
+  # Inhibition constants of the phosphorylated sites, K_I,i = K_M,i * X_I
+  KiA1 KmA1*Xi # molecules/um^2
+  KiA2 KmA2*Xi # molecules/um^2
+  KiB1 KmB1*Xi # molecules/um^2
+  KiB2 KmB2*Xi # molecules/um^2
+  KiC1 KmC1*Xi # molecules/um^2
+  KiC2 KmC2*Xi # molecules/um^2
+
+  # LCK catalytic rate, held fixed at the average rate of CD3zeta
+  # phosphorylation by constitutively active LCK measured by Hui and Vale (2014)
+  kcat 360 # /min
+
+end parameters
+
+begin molecule types
+
+  # Constitutively active recombinant LCK (G2A, Y505F)
+  LCK(Y394~U~P,Y505~U~P)
+  # CD3zeta intracellular domain: ITAM A (A1, A2), ITAM B (B1, B2) and ITAM C
+  # (C1, C2), N- to C-terminal. F is a tyrosine-to-phenylalanine substitution.
+  CD3z(A1~U~P~F,A2~U~P~F,B1~U~P~F,B2~U~P~F,C1~U~P~F,C2~U~P~F)
+
+end molecule types
+
+begin seed species
+
+  # Kinase, activation-loop phosphorylated and never dephosphorylated
+  LCK(Y394~P,Y505~U) LCK_T*A_sim # molecules
+  # Wild-type CD3zeta, unphosphorylated when ATP is added at t = 0
+  CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U) CD3z_T*A_sim # molecules
+
+end seed species
+
+begin observables
+
+  # Unphosphorylated tyrosine at each site, Y_i of Eqs. 2 and 4
+  Molecules Y_A1 CD3z(A1~U)
+  Molecules Y_A2 CD3z(A2~U)
+  Molecules Y_B1 CD3z(B1~U)
+  Molecules Y_B2 CD3z(B2~U)
+  Molecules Y_C1 CD3z(C1~U)
+  Molecules Y_C2 CD3z(C2~U)
+
+  # Phosphotyrosine at each site, pY_i of Eqs. 2 and 4; these are the
+  # quantities the mass spectrometry measures
+  Molecules pY_A1 CD3z(A1~P)
+  Molecules pY_A2 CD3z(A2~P)
+  Molecules pY_B1 CD3z(B1~P)
+  Molecules pY_B2 CD3z(B2~P)
+  Molecules pY_C1 CD3z(C1~P)
+  Molecules pY_C2 CD3z(C2~P)
+
+  # Doubly phosphorylated ITAMs, the form that binds ZAP-70. Only the
+  # single-chain representation resolves these.
+  Molecules ITAM_A_2p CD3z(A1~P,A2~P)
+  Molecules ITAM_B_2p CD3z(B1~P,B2~P)
+  Molecules ITAM_C_2p CD3z(C1~P,C2~P)
+
+  # CD3zeta with all six tyrosines phosphorylated
+  Species CD3z_6p CD3z(A1~P,A2~P,B1~P,B2~P,C1~P,C2~P)
+
+end observables
+
+begin functions
+
+  # Shared denominator of Eq. 4: every ITAM tyrosine in the system competes for
+  # LCK, unphosphorylated sites through K_M,i and phosphorylated sites through
+  # K_I,i. Observables are counts, so each is divided by A_sim to recover the
+  # surface density the constants are expressed in.
+  inhib() = 1 + (Y_A1/KmA1 + Y_A2/KmA2 + Y_B1/KmB1 + Y_B2/KmB2 + Y_C1/KmC1 \
+    + Y_C2/KmC2 + pY_A1/KiA1 + pY_A2/KiA2 + pY_B1/KiB1 + pY_B2/KiB2 \
+    + pY_C1/KiC1 + pY_C2/KiC2)/A_sim
+
+  # Per-site rate constants. BioNetGen multiplies by the two reactant counts,
+  # so these carry the (k_cat/K_M,i) prefactor of Eq. 4 divided by A_sim.
+  kp_A1() = kcat/(KmA1*A_sim*inhib())
+  kp_A2() = kcat/(KmA2*A_sim*inhib())
+  kp_B1() = kcat/(KmB1*A_sim*inhib())
+  kp_B2() = kcat/(KmB2*A_sim*inhib())
+  kp_C1() = kcat/(KmC1*A_sim*inhib())
+  kp_C2() = kcat/(KmC2*A_sim*inhib())
+
+  # Percent phosphorylation at each site, the quantity plotted in Figs. 1C, 2,
+  # 3 and S5 of Rohrs et al. (2018)
+  pct_A1() = 100*pY_A1/(CD3z_T*A_sim)
+  pct_A2() = 100*pY_A2/(CD3z_T*A_sim)
+  pct_B1() = 100*pY_B1/(CD3z_T*A_sim)
+  pct_B2() = 100*pY_B2/(CD3z_T*A_sim)
+  pct_C1() = 100*pY_C1/(CD3z_T*A_sim)
+  pct_C2() = 100*pY_C2/(CD3z_T*A_sim)
+
+  # Dimensional conversions (uncomment for concentration output)
+# pY_A1_conc() = pY_A1/(NA*V_ref) # M
+# LCK_conc() = LCK_T*A_sim/(NA*V_ref) # M
+
+end functions
+
+begin reaction rules
+
+  # LCK phosphorylates the six CD3zeta ITAM tyrosines in random order, each
+  # with Michaelis-Menten kinetics and competitive inhibition by every other
+  # site; see Eq. 4 in Rohrs et al. (2018). The kinase is unchanged by the
+  # reaction, so its pool stays constant.
+  R_phos_A1: CD3z(A1~U) + LCK(Y394~P,Y505~U) -> CD3z(A1~P) + LCK(Y394~P,Y505~U) \
+    kp_A1()
+  R_phos_A2: CD3z(A2~U) + LCK(Y394~P,Y505~U) -> CD3z(A2~P) + LCK(Y394~P,Y505~U) \
+    kp_A2()
+  R_phos_B1: CD3z(B1~U) + LCK(Y394~P,Y505~U) -> CD3z(B1~P) + LCK(Y394~P,Y505~U) \
+    kp_B1()
+  R_phos_B2: CD3z(B2~U) + LCK(Y394~P,Y505~U) -> CD3z(B2~P) + LCK(Y394~P,Y505~U) \
+    kp_B2()
+  R_phos_C1: CD3z(C1~U) + LCK(Y394~P,Y505~U) -> CD3z(C1~P) + LCK(Y394~P,Y505~U) \
+    kp_C1()
+  R_phos_C2: CD3z(C2~U) + LCK(Y394~P,Y505~U) -> CD3z(C2~P) + LCK(Y394~P,Y505~U) \
+    kp_C2()
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1}) # 65 species, 192 reactions
+  saveConcentrations()
+
+  # Wild-type CD3zeta phosphorylation time course
+
+  #@protocol: |
+  #  Add ATP at t = 0 to unphosphorylated CD3zeta at 20,000 molecules/um^2 and
+  #  LCK at 19.7 molecules/um^2, and follow percent phosphorylation of the six
+  #  ITAM tyrosines for 1000 min. Output times are logarithmically spaced over
+  #  the four decades of the published axis and include the seven experimental
+  #  sampling times (0.1, 1, 5, 10, 30, 60 and 180 min). Expect sigmoidal
+  #  curves of Hill coefficient ~1 saturating at 100%, ordered A1, B2, B1, A2,
+  #  C2, C1 from fastest to slowest.
+
+  #@figure: Fig. 3D and Fig. S5A in Rohrs et al. (2018)
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,print_functions=>1,\
+    sample_times=>[0.1,0.112202,0.125893,0.141254,0.158489,0.177828,0.199526,\
+    0.223872,0.251189,0.281838,0.316228,0.354813,0.398107,0.446684,0.501187,\
+    0.562341,0.630957,0.707946,0.794328,0.891251,1,1.12202,1.25893,1.41254,1.5,\
+    1.77828,1.99526,2.23872,2.51189,2.81838,3.16228,3.54813,3.98107,4.46684,5,\
+    5.62341,6.30957,7.07946,7.94328,8.91251,10,11.2202,12.5893,14.1254,15.8489,\
+    17.7828,19.9526,22.3872,25.1189,28.1838,30,35.4813,39.8107,44.6684,50.1187,\
+    56.2341,60,70.7946,79.4328,89.1251,100,112.202,125.893,141.254,158.489,180,\
+    199.526,223.872,251.189,281.838,316.228,360,398.107,446.684,501.187,562.341,\
+    630.957,707.946,794.328,891.251,1000]})
+
+  # Stochastic alternative
+
+  #@note: |
+  #  The same protocol under exact SSA. It is a faithful stochastic version of
+  #  the mechanism, but the seeded LCK count is rounded to 20 molecules, so the
+  #  trajectory is not the f = 1 mean of the ODE; scale the patch with f to
+  #  study that. Left commented because ODE is the protocol the paper reports.
+
+#  resetConcentrations()
+#  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>1000,n_steps=>1000,\
+#    print_functions=>1})
+
+end actions

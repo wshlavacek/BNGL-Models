@@ -1,0 +1,291 @@
+begin model
+
+#@title: CAR CD3zeta phosphorylation, ITAM point mutants (Rohrs et al., 2018)
+
+#@description: |
+#  The competitive inhibition model of Rohrs et al. (2018) applied to the six
+#  CD3zeta constructs in which one ITAM tyrosine is replaced by phenylalanine.
+#  Mechanism, rate laws and parameters are those of the primary model,
+#  car_cd3zeta_phosphorylation_rohrs2018.bngl; only the substrate changes. A
+#  mutated site is seeded in the ~F state, which no rule can act on and which
+#  contributes to neither the Michaelis nor the inhibition term of Eq. 4, so
+#  removing a tyrosine removes both a substrate and a competitor.
+#
+#  All seven constructs -- wild type plus the six point mutants -- are declared
+#  as seed species and selected one at a time by the simulation protocols, so
+#  the generated network holds every phosphoform of every construct (257
+#  species, 672 reactions).
+#
+#  Behavior: this is the model's sharpest published test. Because the six sites
+#  are only weakly coupled -- through one shared denominator, not through an
+#  imposed order -- deleting any one of them leaves the other five almost
+#  unchanged, which is what the measurements show and what a phosphate-priming
+#  or sequential mechanism cannot reproduce. The small acceleration that does
+#  occur comes from the removed site no longer competing for LCK.
+
+#@keyword: |
+#  signaling, chimeric antigen receptor, CAR T cell, CD3zeta, ITAM, LCK,
+#  multisite phosphorylation, competitive inhibition, point mutant, tyrosine
+#  to phenylalanine, site coupling, Michaelis-Menten, Homo sapiens
+
+#@reference: |
+#  Rohrs JA, Zheng D, Graham NA, Wang P, Finley SD (2018). Computational model
+#  of chimeric antigen receptors explains site-specific phosphorylation
+#  kinetics. Biophys J 115(7):1116-1129. doi:10.1016/j.bpj.2018.08.018 --
+#  Figs. 2 and S5, D-J; parameters from the authors' BioNetGen file, Data S4
+#  (mmc5.pdf).
+
+#@note: |
+#  The measurements this file reproduces were made on liposomes containing 10%
+#  POPS, the same condition as the wild-type replicates. Rohrs et al. found no
+#  effect of acidic lipid content between 0% and 45% POPS, so the model has no
+#  lipid-composition parameter and the same simulation stands for all three
+#  lipid conditions of Figs. S5, A-C. See the primary model for the unit and
+#  population conventions.
+
+begin parameters
+
+  # Avogadro constant
+  NA 6.02214076e23 # molecules/mol
+
+  # Membrane patch simulated, and the subvolume scaling factor
+  A_ref 1 # um^2
+  f 1 # dimensionless
+  A_sim A_ref*f # um^2
+
+  # Membrane-adjacent shell used for surface-density to concentration conversion
+  h_mem 1e-8 # m
+  V_ref A_sim*h_mem*1e-9 # L/patch
+
+  # Protein densities on the liposome
+  CD3z_T 20000 # molecules/um^2
+  LCK_T 19.703 # molecules/um^2
+
+  # Michaelis constants of the competitive inhibition fit
+  KmA1 96.548 # molecules/um^2
+  KmA2 331.68 # molecules/um^2
+  KmB1 270 # molecules/um^2
+  KmB2 153.82 # molecules/um^2
+  KmC1 484.9 # molecules/um^2
+  KmC2 405.43 # molecules/um^2
+
+  # Scale factor relating inhibition to Michaelis constants, Eq. 5
+  Xi 0.1153 # dimensionless
+
+  # Inhibition constants of the phosphorylated sites
+  KiA1 KmA1*Xi # molecules/um^2
+  KiA2 KmA2*Xi # molecules/um^2
+  KiB1 KmB1*Xi # molecules/um^2
+  KiB2 KmB2*Xi # molecules/um^2
+  KiC1 KmC1*Xi # molecules/um^2
+  KiC2 KmC2*Xi # molecules/um^2
+
+  # LCK catalytic rate
+  kcat 360 # /min
+
+end parameters
+
+begin molecule types
+
+  # Constitutively active recombinant LCK (G2A, Y505F)
+  LCK(Y394~U~P,Y505~U~P)
+  # CD3zeta intracellular domain; F is a tyrosine-to-phenylalanine substitution
+  CD3z(A1~U~P~F,A2~U~P~F,B1~U~P~F,B2~U~P~F,C1~U~P~F,C2~U~P~F)
+
+end molecule types
+
+begin seed species
+
+  # Kinase, activation-loop phosphorylated and never dephosphorylated
+  LCK(Y394~P,Y505~U) LCK_T*A_sim # molecules
+
+  # Wild-type CD3zeta, the construct present at the start
+  CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U) CD3z_T*A_sim # molecules
+
+  # The six point mutants, declared so that their phosphoforms are in the
+  # network and can be switched on by the protocols below
+  CD3z(A1~F,A2~U,B1~U,B2~U,C1~U,C2~U) 0 # molecules
+  CD3z(A1~U,A2~F,B1~U,B2~U,C1~U,C2~U) 0 # molecules
+  CD3z(A1~U,A2~U,B1~F,B2~U,C1~U,C2~U) 0 # molecules
+  CD3z(A1~U,A2~U,B1~U,B2~F,C1~U,C2~U) 0 # molecules
+  CD3z(A1~U,A2~U,B1~U,B2~U,C1~F,C2~U) 0 # molecules
+  CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~F) 0 # molecules
+
+end seed species
+
+begin observables
+
+  # Unphosphorylated tyrosine at each site, Y_i of Eq. 4
+  Molecules Y_A1 CD3z(A1~U)
+  Molecules Y_A2 CD3z(A2~U)
+  Molecules Y_B1 CD3z(B1~U)
+  Molecules Y_B2 CD3z(B2~U)
+  Molecules Y_C1 CD3z(C1~U)
+  Molecules Y_C2 CD3z(C2~U)
+
+  # Phosphotyrosine at each site, pY_i of Eq. 4
+  Molecules pY_A1 CD3z(A1~P)
+  Molecules pY_A2 CD3z(A2~P)
+  Molecules pY_B1 CD3z(B1~P)
+  Molecules pY_B2 CD3z(B2~P)
+  Molecules pY_C1 CD3z(C1~P)
+  Molecules pY_C2 CD3z(C2~P)
+
+  # Sites removed by mutation; these are inert and drop out of Eq. 4
+  Molecules F_A1 CD3z(A1~F)
+  Molecules F_A2 CD3z(A2~F)
+  Molecules F_B1 CD3z(B1~F)
+  Molecules F_B2 CD3z(B2~F)
+  Molecules F_C1 CD3z(C1~F)
+  Molecules F_C2 CD3z(C2~F)
+
+  # Doubly phosphorylated, ZAP-70-competent ITAMs; a point mutation abolishes
+  # the pair it belongs to
+  Molecules ITAM_A_2p CD3z(A1~P,A2~P)
+  Molecules ITAM_B_2p CD3z(B1~P,B2~P)
+  Molecules ITAM_C_2p CD3z(C1~P,C2~P)
+
+end observables
+
+begin functions
+
+  # Shared denominator of Eq. 4; mutated sites contribute nothing
+  inhib() = 1 + (Y_A1/KmA1 + Y_A2/KmA2 + Y_B1/KmB1 + Y_B2/KmB2 + Y_C1/KmC1 \
+    + Y_C2/KmC2 + pY_A1/KiA1 + pY_A2/KiA2 + pY_B1/KiB1 + pY_B2/KiB2 \
+    + pY_C1/KiC1 + pY_C2/KiC2)/A_sim
+
+  # Per-site rate constants of Eq. 4
+  kp_A1() = kcat/(KmA1*A_sim*inhib())
+  kp_A2() = kcat/(KmA2*A_sim*inhib())
+  kp_B1() = kcat/(KmB1*A_sim*inhib())
+  kp_B2() = kcat/(KmB2*A_sim*inhib())
+  kp_C1() = kcat/(KmC1*A_sim*inhib())
+  kp_C2() = kcat/(KmC2*A_sim*inhib())
+
+  # Percent phosphorylation at each site; zero at a mutated site
+  pct_A1() = 100*pY_A1/(CD3z_T*A_sim)
+  pct_A2() = 100*pY_A2/(CD3z_T*A_sim)
+  pct_B1() = 100*pY_B1/(CD3z_T*A_sim)
+  pct_B2() = 100*pY_B2/(CD3z_T*A_sim)
+  pct_C1() = 100*pY_C1/(CD3z_T*A_sim)
+  pct_C2() = 100*pY_C2/(CD3z_T*A_sim)
+
+end functions
+
+begin reaction rules
+
+  # LCK phosphorylates the six ITAM tyrosines in random order under shared
+  # competitive inhibition; see Eq. 4 in Rohrs et al. (2018)
+  R_phos_A1: CD3z(A1~U) + LCK(Y394~P,Y505~U) -> CD3z(A1~P) + LCK(Y394~P,Y505~U) \
+    kp_A1()
+  R_phos_A2: CD3z(A2~U) + LCK(Y394~P,Y505~U) -> CD3z(A2~P) + LCK(Y394~P,Y505~U) \
+    kp_A2()
+  R_phos_B1: CD3z(B1~U) + LCK(Y394~P,Y505~U) -> CD3z(B1~P) + LCK(Y394~P,Y505~U) \
+    kp_B1()
+  R_phos_B2: CD3z(B2~U) + LCK(Y394~P,Y505~U) -> CD3z(B2~P) + LCK(Y394~P,Y505~U) \
+    kp_B2()
+  R_phos_C1: CD3z(C1~U) + LCK(Y394~P,Y505~U) -> CD3z(C1~P) + LCK(Y394~P,Y505~U) \
+    kp_C1()
+  R_phos_C2: CD3z(C2~U) + LCK(Y394~P,Y505~U) -> CD3z(C2~P) + LCK(Y394~P,Y505~U) \
+    kp_C2()
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1}) # 257 species, 672 reactions
+  saveConcentrations()
+
+  # A1 tyrosine-to-phenylalanine mutant
+
+  #@protocol: |
+  #  Replace the wild-type construct with the A1F mutant and run the same
+  #  1000-min ATP-addition experiment. pct_A1 stays at zero; the other five
+  #  sites should track their wild-type curves closely, accelerating only
+  #  slightly because A1 no longer competes for LCK.
+
+  #@figure: Fig. S5D in Rohrs et al. (2018)
+
+  resetConcentrations()
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U)",0)
+  setConcentration("CD3z(A1~F,A2~U,B1~U,B2~U,C1~U,C2~U)","CD3z_T*A_sim")
+  simulate({method=>"ode",suffix=>"ode_A1F",t_start=>0,print_functions=>1,\
+    sample_times=>[0.1,0.125893,0.158489,0.199526,0.251189,0.316228,0.398107,\
+    0.501187,0.630957,0.794328,1,1.25893,1.58489,1.99526,2.51189,3.16228,\
+    3.98107,5,6.30957,7.94328,10,12.5893,15.8489,19.9526,25.1189,30,39.8107,\
+    50.1187,60,79.4328,100,125.893,158.489,180,251.189,316.228,398.107,501.187,\
+    630.957,794.328,1000]})
+
+  # A2 tyrosine-to-phenylalanine mutant
+
+  #@figure: Fig. S5H in Rohrs et al. (2018)
+
+  resetConcentrations()
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U)",0)
+  setConcentration("CD3z(A1~U,A2~F,B1~U,B2~U,C1~U,C2~U)","CD3z_T*A_sim")
+  simulate({method=>"ode",suffix=>"ode_A2F",t_start=>0,print_functions=>1,\
+    sample_times=>[0.1,0.125893,0.158489,0.199526,0.251189,0.316228,0.398107,\
+    0.501187,0.630957,0.794328,1,1.25893,1.58489,1.99526,2.51189,3.16228,\
+    3.98107,5,6.30957,7.94328,10,12.5893,15.8489,19.9526,25.1189,30,39.8107,\
+    50.1187,60,79.4328,100,125.893,158.489,180,251.189,316.228,398.107,501.187,\
+    630.957,794.328,1000]})
+
+  # B1 tyrosine-to-phenylalanine mutant
+
+  #@figure: Fig. S5E in Rohrs et al. (2018)
+
+  resetConcentrations()
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U)",0)
+  setConcentration("CD3z(A1~U,A2~U,B1~F,B2~U,C1~U,C2~U)","CD3z_T*A_sim")
+  simulate({method=>"ode",suffix=>"ode_B1F",t_start=>0,print_functions=>1,\
+    sample_times=>[0.1,0.125893,0.158489,0.199526,0.251189,0.316228,0.398107,\
+    0.501187,0.630957,0.794328,1,1.25893,1.58489,1.99526,2.51189,3.16228,\
+    3.98107,5,6.30957,7.94328,10,12.5893,15.8489,19.9526,25.1189,30,39.8107,\
+    50.1187,60,79.4328,100,125.893,158.489,180,251.189,316.228,398.107,501.187,\
+    630.957,794.328,1000]})
+
+  # B2 tyrosine-to-phenylalanine mutant
+
+  #@figure: Fig. S5I in Rohrs et al. (2018)
+
+  resetConcentrations()
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U)",0)
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~F,C1~U,C2~U)","CD3z_T*A_sim")
+  simulate({method=>"ode",suffix=>"ode_B2F",t_start=>0,print_functions=>1,\
+    sample_times=>[0.1,0.125893,0.158489,0.199526,0.251189,0.316228,0.398107,\
+    0.501187,0.630957,0.794328,1,1.25893,1.58489,1.99526,2.51189,3.16228,\
+    3.98107,5,6.30957,7.94328,10,12.5893,15.8489,19.9526,25.1189,30,39.8107,\
+    50.1187,60,79.4328,100,125.893,158.489,180,251.189,316.228,398.107,501.187,\
+    630.957,794.328,1000]})
+
+  # C1 tyrosine-to-phenylalanine mutant
+
+  #@figure: Fig. S5F in Rohrs et al. (2018)
+
+  resetConcentrations()
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U)",0)
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~F,C2~U)","CD3z_T*A_sim")
+  simulate({method=>"ode",suffix=>"ode_C1F",t_start=>0,print_functions=>1,\
+    sample_times=>[0.1,0.125893,0.158489,0.199526,0.251189,0.316228,0.398107,\
+    0.501187,0.630957,0.794328,1,1.25893,1.58489,1.99526,2.51189,3.16228,\
+    3.98107,5,6.30957,7.94328,10,12.5893,15.8489,19.9526,25.1189,30,39.8107,\
+    50.1187,60,79.4328,100,125.893,158.489,180,251.189,316.228,398.107,501.187,\
+    630.957,794.328,1000]})
+
+  # C2 tyrosine-to-phenylalanine mutant
+
+  #@figure: Fig. S5J in Rohrs et al. (2018)
+
+  resetConcentrations()
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U)",0)
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~F)","CD3z_T*A_sim")
+  simulate({method=>"ode",suffix=>"ode_C2F",t_start=>0,print_functions=>1,\
+    sample_times=>[0.1,0.125893,0.158489,0.199526,0.251189,0.316228,0.398107,\
+    0.501187,0.630957,0.794328,1,1.25893,1.58489,1.99526,2.51189,3.16228,\
+    3.98107,5,6.30957,7.94328,10,12.5893,15.8489,19.9526,25.1189,30,39.8107,\
+    50.1187,60,79.4328,100,125.893,158.489,180,251.189,316.228,398.107,501.187,\
+    630.957,794.328,1000]})
+
+end actions

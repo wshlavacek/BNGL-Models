@@ -1,0 +1,312 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA             6.02214076e23  # Constant
+    2 A_ref          1  # Constant
+    3 f              1  # Constant
+    4 A_sim          A_ref*f  # ConstantExpression
+    5 h_mem          1e-8  # Constant
+    6 V_ref          (A_sim*h_mem)*1e-9  # ConstantExpression
+    7 CD3z_T         20000  # Constant
+    8 LCK_T          1  # Constant
+    9 KmA1           22292  # Constant
+   10 KmA2           1.76e5  # Constant
+   11 KmB1           1.27e5  # Constant
+   12 KmB2           57482  # Constant
+   13 KmC1           2.70e5  # Constant
+   14 KmC2           2.42e5  # Constant
+   15 kcat           1892.4  # Constant
+   16 _InitialConc1  LCK_T*A_sim  # ConstantExpression
+   17 _InitialConc2  CD3z_T*A_sim  # ConstantExpression
+end parameters
+begin functions
+    1 kp_A1() kcat/((KmA1+(Y_A1/A_sim))*A_sim)
+    2 kp_A2() kcat/((KmA2+(Y_A2/A_sim))*A_sim)
+    3 kp_B1() kcat/((KmB1+(Y_B1/A_sim))*A_sim)
+    4 kp_B2() kcat/((KmB2+(Y_B2/A_sim))*A_sim)
+    5 kp_C1() kcat/((KmC1+(Y_C1/A_sim))*A_sim)
+    6 kp_C2() kcat/((KmC2+(Y_C2/A_sim))*A_sim)
+    7 pct_A1() (100*pY_A1)/(CD3z_T*A_sim)
+    8 pct_A2() (100*pY_A2)/(CD3z_T*A_sim)
+    9 pct_B1() (100*pY_B1)/(CD3z_T*A_sim)
+   10 pct_B2() (100*pY_B2)/(CD3z_T*A_sim)
+   11 pct_C1() (100*pY_C1)/(CD3z_T*A_sim)
+   12 pct_C2() (100*pY_C2)/(CD3z_T*A_sim)
+end functions
+begin species
+    1 LCK(Y394~P,Y505~U) _InitialConc1
+    2 CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U) _InitialConc2
+    3 CD3z(A1~P,A2~U,B1~U,B2~U,C1~U,C2~U) 0
+    4 CD3z(A1~U,A2~P,B1~U,B2~U,C1~U,C2~U) 0
+    5 CD3z(A1~U,A2~U,B1~P,B2~U,C1~U,C2~U) 0
+    6 CD3z(A1~U,A2~U,B1~U,B2~P,C1~U,C2~U) 0
+    7 CD3z(A1~U,A2~U,B1~U,B2~U,C1~P,C2~U) 0
+    8 CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~P) 0
+    9 CD3z(A1~P,A2~P,B1~U,B2~U,C1~U,C2~U) 0
+   10 CD3z(A1~P,A2~U,B1~P,B2~U,C1~U,C2~U) 0
+   11 CD3z(A1~P,A2~U,B1~U,B2~P,C1~U,C2~U) 0
+   12 CD3z(A1~P,A2~U,B1~U,B2~U,C1~P,C2~U) 0
+   13 CD3z(A1~P,A2~U,B1~U,B2~U,C1~U,C2~P) 0
+   14 CD3z(A1~U,A2~P,B1~P,B2~U,C1~U,C2~U) 0
+   15 CD3z(A1~U,A2~P,B1~U,B2~P,C1~U,C2~U) 0
+   16 CD3z(A1~U,A2~P,B1~U,B2~U,C1~P,C2~U) 0
+   17 CD3z(A1~U,A2~P,B1~U,B2~U,C1~U,C2~P) 0
+   18 CD3z(A1~U,A2~U,B1~P,B2~P,C1~U,C2~U) 0
+   19 CD3z(A1~U,A2~U,B1~P,B2~U,C1~P,C2~U) 0
+   20 CD3z(A1~U,A2~U,B1~P,B2~U,C1~U,C2~P) 0
+   21 CD3z(A1~U,A2~U,B1~U,B2~P,C1~P,C2~U) 0
+   22 CD3z(A1~U,A2~U,B1~U,B2~P,C1~U,C2~P) 0
+   23 CD3z(A1~U,A2~U,B1~U,B2~U,C1~P,C2~P) 0
+   24 CD3z(A1~P,A2~P,B1~P,B2~U,C1~U,C2~U) 0
+   25 CD3z(A1~P,A2~P,B1~U,B2~P,C1~U,C2~U) 0
+   26 CD3z(A1~P,A2~P,B1~U,B2~U,C1~P,C2~U) 0
+   27 CD3z(A1~P,A2~P,B1~U,B2~U,C1~U,C2~P) 0
+   28 CD3z(A1~P,A2~U,B1~P,B2~P,C1~U,C2~U) 0
+   29 CD3z(A1~P,A2~U,B1~P,B2~U,C1~P,C2~U) 0
+   30 CD3z(A1~P,A2~U,B1~P,B2~U,C1~U,C2~P) 0
+   31 CD3z(A1~P,A2~U,B1~U,B2~P,C1~P,C2~U) 0
+   32 CD3z(A1~P,A2~U,B1~U,B2~P,C1~U,C2~P) 0
+   33 CD3z(A1~P,A2~U,B1~U,B2~U,C1~P,C2~P) 0
+   34 CD3z(A1~U,A2~P,B1~P,B2~P,C1~U,C2~U) 0
+   35 CD3z(A1~U,A2~P,B1~P,B2~U,C1~P,C2~U) 0
+   36 CD3z(A1~U,A2~P,B1~P,B2~U,C1~U,C2~P) 0
+   37 CD3z(A1~U,A2~P,B1~U,B2~P,C1~P,C2~U) 0
+   38 CD3z(A1~U,A2~P,B1~U,B2~P,C1~U,C2~P) 0
+   39 CD3z(A1~U,A2~P,B1~U,B2~U,C1~P,C2~P) 0
+   40 CD3z(A1~U,A2~U,B1~P,B2~P,C1~P,C2~U) 0
+   41 CD3z(A1~U,A2~U,B1~P,B2~P,C1~U,C2~P) 0
+   42 CD3z(A1~U,A2~U,B1~P,B2~U,C1~P,C2~P) 0
+   43 CD3z(A1~U,A2~U,B1~U,B2~P,C1~P,C2~P) 0
+   44 CD3z(A1~P,A2~P,B1~P,B2~P,C1~U,C2~U) 0
+   45 CD3z(A1~P,A2~P,B1~P,B2~U,C1~P,C2~U) 0
+   46 CD3z(A1~P,A2~P,B1~P,B2~U,C1~U,C2~P) 0
+   47 CD3z(A1~P,A2~P,B1~U,B2~P,C1~P,C2~U) 0
+   48 CD3z(A1~P,A2~P,B1~U,B2~P,C1~U,C2~P) 0
+   49 CD3z(A1~P,A2~P,B1~U,B2~U,C1~P,C2~P) 0
+   50 CD3z(A1~P,A2~U,B1~P,B2~P,C1~P,C2~U) 0
+   51 CD3z(A1~P,A2~U,B1~P,B2~P,C1~U,C2~P) 0
+   52 CD3z(A1~P,A2~U,B1~P,B2~U,C1~P,C2~P) 0
+   53 CD3z(A1~P,A2~U,B1~U,B2~P,C1~P,C2~P) 0
+   54 CD3z(A1~U,A2~P,B1~P,B2~P,C1~P,C2~U) 0
+   55 CD3z(A1~U,A2~P,B1~P,B2~P,C1~U,C2~P) 0
+   56 CD3z(A1~U,A2~P,B1~P,B2~U,C1~P,C2~P) 0
+   57 CD3z(A1~U,A2~P,B1~U,B2~P,C1~P,C2~P) 0
+   58 CD3z(A1~U,A2~U,B1~P,B2~P,C1~P,C2~P) 0
+   59 CD3z(A1~P,A2~P,B1~P,B2~P,C1~P,C2~U) 0
+   60 CD3z(A1~P,A2~P,B1~P,B2~P,C1~U,C2~P) 0
+   61 CD3z(A1~P,A2~P,B1~P,B2~U,C1~P,C2~P) 0
+   62 CD3z(A1~P,A2~P,B1~U,B2~P,C1~P,C2~P) 0
+   63 CD3z(A1~P,A2~U,B1~P,B2~P,C1~P,C2~P) 0
+   64 CD3z(A1~U,A2~P,B1~P,B2~P,C1~P,C2~P) 0
+   65 CD3z(A1~P,A2~P,B1~P,B2~P,C1~P,C2~P) 0
+end species
+begin reactions
+    1 2,1 3,1 kp_A1 #R_phos_A1
+    2 2,1 4,1 kp_A2 #R_phos_A2
+    3 2,1 5,1 kp_B1 #R_phos_B1
+    4 2,1 6,1 kp_B2 #R_phos_B2
+    5 2,1 7,1 kp_C1 #R_phos_C1
+    6 2,1 8,1 kp_C2 #R_phos_C2
+    7 4,1 9,1 kp_A1 #R_phos_A1
+    8 5,1 10,1 kp_A1 #R_phos_A1
+    9 6,1 11,1 kp_A1 #R_phos_A1
+   10 7,1 12,1 kp_A1 #R_phos_A1
+   11 8,1 13,1 kp_A1 #R_phos_A1
+   12 3,1 9,1 kp_A2 #R_phos_A2
+   13 5,1 14,1 kp_A2 #R_phos_A2
+   14 6,1 15,1 kp_A2 #R_phos_A2
+   15 7,1 16,1 kp_A2 #R_phos_A2
+   16 8,1 17,1 kp_A2 #R_phos_A2
+   17 3,1 10,1 kp_B1 #R_phos_B1
+   18 4,1 14,1 kp_B1 #R_phos_B1
+   19 6,1 18,1 kp_B1 #R_phos_B1
+   20 7,1 19,1 kp_B1 #R_phos_B1
+   21 8,1 20,1 kp_B1 #R_phos_B1
+   22 3,1 11,1 kp_B2 #R_phos_B2
+   23 4,1 15,1 kp_B2 #R_phos_B2
+   24 5,1 18,1 kp_B2 #R_phos_B2
+   25 7,1 21,1 kp_B2 #R_phos_B2
+   26 8,1 22,1 kp_B2 #R_phos_B2
+   27 3,1 12,1 kp_C1 #R_phos_C1
+   28 4,1 16,1 kp_C1 #R_phos_C1
+   29 5,1 19,1 kp_C1 #R_phos_C1
+   30 6,1 21,1 kp_C1 #R_phos_C1
+   31 8,1 23,1 kp_C1 #R_phos_C1
+   32 3,1 13,1 kp_C2 #R_phos_C2
+   33 4,1 17,1 kp_C2 #R_phos_C2
+   34 5,1 20,1 kp_C2 #R_phos_C2
+   35 6,1 22,1 kp_C2 #R_phos_C2
+   36 7,1 23,1 kp_C2 #R_phos_C2
+   37 14,1 24,1 kp_A1 #R_phos_A1
+   38 15,1 25,1 kp_A1 #R_phos_A1
+   39 16,1 26,1 kp_A1 #R_phos_A1
+   40 17,1 27,1 kp_A1 #R_phos_A1
+   41 18,1 28,1 kp_A1 #R_phos_A1
+   42 19,1 29,1 kp_A1 #R_phos_A1
+   43 20,1 30,1 kp_A1 #R_phos_A1
+   44 21,1 31,1 kp_A1 #R_phos_A1
+   45 22,1 32,1 kp_A1 #R_phos_A1
+   46 23,1 33,1 kp_A1 #R_phos_A1
+   47 10,1 24,1 kp_A2 #R_phos_A2
+   48 11,1 25,1 kp_A2 #R_phos_A2
+   49 12,1 26,1 kp_A2 #R_phos_A2
+   50 13,1 27,1 kp_A2 #R_phos_A2
+   51 18,1 34,1 kp_A2 #R_phos_A2
+   52 19,1 35,1 kp_A2 #R_phos_A2
+   53 20,1 36,1 kp_A2 #R_phos_A2
+   54 21,1 37,1 kp_A2 #R_phos_A2
+   55 22,1 38,1 kp_A2 #R_phos_A2
+   56 23,1 39,1 kp_A2 #R_phos_A2
+   57 9,1 24,1 kp_B1 #R_phos_B1
+   58 11,1 28,1 kp_B1 #R_phos_B1
+   59 12,1 29,1 kp_B1 #R_phos_B1
+   60 13,1 30,1 kp_B1 #R_phos_B1
+   61 15,1 34,1 kp_B1 #R_phos_B1
+   62 16,1 35,1 kp_B1 #R_phos_B1
+   63 17,1 36,1 kp_B1 #R_phos_B1
+   64 21,1 40,1 kp_B1 #R_phos_B1
+   65 22,1 41,1 kp_B1 #R_phos_B1
+   66 23,1 42,1 kp_B1 #R_phos_B1
+   67 9,1 25,1 kp_B2 #R_phos_B2
+   68 10,1 28,1 kp_B2 #R_phos_B2
+   69 12,1 31,1 kp_B2 #R_phos_B2
+   70 13,1 32,1 kp_B2 #R_phos_B2
+   71 14,1 34,1 kp_B2 #R_phos_B2
+   72 16,1 37,1 kp_B2 #R_phos_B2
+   73 17,1 38,1 kp_B2 #R_phos_B2
+   74 19,1 40,1 kp_B2 #R_phos_B2
+   75 20,1 41,1 kp_B2 #R_phos_B2
+   76 23,1 43,1 kp_B2 #R_phos_B2
+   77 9,1 26,1 kp_C1 #R_phos_C1
+   78 10,1 29,1 kp_C1 #R_phos_C1
+   79 11,1 31,1 kp_C1 #R_phos_C1
+   80 13,1 33,1 kp_C1 #R_phos_C1
+   81 14,1 35,1 kp_C1 #R_phos_C1
+   82 15,1 37,1 kp_C1 #R_phos_C1
+   83 17,1 39,1 kp_C1 #R_phos_C1
+   84 18,1 40,1 kp_C1 #R_phos_C1
+   85 20,1 42,1 kp_C1 #R_phos_C1
+   86 22,1 43,1 kp_C1 #R_phos_C1
+   87 9,1 27,1 kp_C2 #R_phos_C2
+   88 10,1 30,1 kp_C2 #R_phos_C2
+   89 11,1 32,1 kp_C2 #R_phos_C2
+   90 12,1 33,1 kp_C2 #R_phos_C2
+   91 14,1 36,1 kp_C2 #R_phos_C2
+   92 15,1 38,1 kp_C2 #R_phos_C2
+   93 16,1 39,1 kp_C2 #R_phos_C2
+   94 18,1 41,1 kp_C2 #R_phos_C2
+   95 19,1 42,1 kp_C2 #R_phos_C2
+   96 21,1 43,1 kp_C2 #R_phos_C2
+   97 34,1 44,1 kp_A1 #R_phos_A1
+   98 35,1 45,1 kp_A1 #R_phos_A1
+   99 36,1 46,1 kp_A1 #R_phos_A1
+  100 37,1 47,1 kp_A1 #R_phos_A1
+  101 38,1 48,1 kp_A1 #R_phos_A1
+  102 39,1 49,1 kp_A1 #R_phos_A1
+  103 40,1 50,1 kp_A1 #R_phos_A1
+  104 41,1 51,1 kp_A1 #R_phos_A1
+  105 42,1 52,1 kp_A1 #R_phos_A1
+  106 43,1 53,1 kp_A1 #R_phos_A1
+  107 28,1 44,1 kp_A2 #R_phos_A2
+  108 29,1 45,1 kp_A2 #R_phos_A2
+  109 30,1 46,1 kp_A2 #R_phos_A2
+  110 31,1 47,1 kp_A2 #R_phos_A2
+  111 32,1 48,1 kp_A2 #R_phos_A2
+  112 33,1 49,1 kp_A2 #R_phos_A2
+  113 40,1 54,1 kp_A2 #R_phos_A2
+  114 41,1 55,1 kp_A2 #R_phos_A2
+  115 42,1 56,1 kp_A2 #R_phos_A2
+  116 43,1 57,1 kp_A2 #R_phos_A2
+  117 25,1 44,1 kp_B1 #R_phos_B1
+  118 26,1 45,1 kp_B1 #R_phos_B1
+  119 27,1 46,1 kp_B1 #R_phos_B1
+  120 31,1 50,1 kp_B1 #R_phos_B1
+  121 32,1 51,1 kp_B1 #R_phos_B1
+  122 33,1 52,1 kp_B1 #R_phos_B1
+  123 37,1 54,1 kp_B1 #R_phos_B1
+  124 38,1 55,1 kp_B1 #R_phos_B1
+  125 39,1 56,1 kp_B1 #R_phos_B1
+  126 43,1 58,1 kp_B1 #R_phos_B1
+  127 24,1 44,1 kp_B2 #R_phos_B2
+  128 26,1 47,1 kp_B2 #R_phos_B2
+  129 27,1 48,1 kp_B2 #R_phos_B2
+  130 29,1 50,1 kp_B2 #R_phos_B2
+  131 30,1 51,1 kp_B2 #R_phos_B2
+  132 33,1 53,1 kp_B2 #R_phos_B2
+  133 35,1 54,1 kp_B2 #R_phos_B2
+  134 36,1 55,1 kp_B2 #R_phos_B2
+  135 39,1 57,1 kp_B2 #R_phos_B2
+  136 42,1 58,1 kp_B2 #R_phos_B2
+  137 24,1 45,1 kp_C1 #R_phos_C1
+  138 25,1 47,1 kp_C1 #R_phos_C1
+  139 27,1 49,1 kp_C1 #R_phos_C1
+  140 28,1 50,1 kp_C1 #R_phos_C1
+  141 30,1 52,1 kp_C1 #R_phos_C1
+  142 32,1 53,1 kp_C1 #R_phos_C1
+  143 34,1 54,1 kp_C1 #R_phos_C1
+  144 36,1 56,1 kp_C1 #R_phos_C1
+  145 38,1 57,1 kp_C1 #R_phos_C1
+  146 41,1 58,1 kp_C1 #R_phos_C1
+  147 24,1 46,1 kp_C2 #R_phos_C2
+  148 25,1 48,1 kp_C2 #R_phos_C2
+  149 26,1 49,1 kp_C2 #R_phos_C2
+  150 28,1 51,1 kp_C2 #R_phos_C2
+  151 29,1 52,1 kp_C2 #R_phos_C2
+  152 31,1 53,1 kp_C2 #R_phos_C2
+  153 34,1 55,1 kp_C2 #R_phos_C2
+  154 35,1 56,1 kp_C2 #R_phos_C2
+  155 37,1 57,1 kp_C2 #R_phos_C2
+  156 40,1 58,1 kp_C2 #R_phos_C2
+  157 54,1 59,1 kp_A1 #R_phos_A1
+  158 55,1 60,1 kp_A1 #R_phos_A1
+  159 56,1 61,1 kp_A1 #R_phos_A1
+  160 57,1 62,1 kp_A1 #R_phos_A1
+  161 58,1 63,1 kp_A1 #R_phos_A1
+  162 50,1 59,1 kp_A2 #R_phos_A2
+  163 51,1 60,1 kp_A2 #R_phos_A2
+  164 52,1 61,1 kp_A2 #R_phos_A2
+  165 53,1 62,1 kp_A2 #R_phos_A2
+  166 58,1 64,1 kp_A2 #R_phos_A2
+  167 47,1 59,1 kp_B1 #R_phos_B1
+  168 48,1 60,1 kp_B1 #R_phos_B1
+  169 49,1 61,1 kp_B1 #R_phos_B1
+  170 53,1 63,1 kp_B1 #R_phos_B1
+  171 57,1 64,1 kp_B1 #R_phos_B1
+  172 45,1 59,1 kp_B2 #R_phos_B2
+  173 46,1 60,1 kp_B2 #R_phos_B2
+  174 49,1 62,1 kp_B2 #R_phos_B2
+  175 52,1 63,1 kp_B2 #R_phos_B2
+  176 56,1 64,1 kp_B2 #R_phos_B2
+  177 44,1 59,1 kp_C1 #R_phos_C1
+  178 46,1 61,1 kp_C1 #R_phos_C1
+  179 48,1 62,1 kp_C1 #R_phos_C1
+  180 51,1 63,1 kp_C1 #R_phos_C1
+  181 55,1 64,1 kp_C1 #R_phos_C1
+  182 44,1 60,1 kp_C2 #R_phos_C2
+  183 45,1 61,1 kp_C2 #R_phos_C2
+  184 47,1 62,1 kp_C2 #R_phos_C2
+  185 50,1 63,1 kp_C2 #R_phos_C2
+  186 54,1 64,1 kp_C2 #R_phos_C2
+  187 64,1 65,1 kp_A1 #R_phos_A1
+  188 63,1 65,1 kp_A2 #R_phos_A2
+  189 62,1 65,1 kp_B1 #R_phos_B1
+  190 61,1 65,1 kp_B2 #R_phos_B2
+  191 60,1 65,1 kp_C1 #R_phos_C1
+  192 59,1 65,1 kp_C2 #R_phos_C2
+end reactions
+begin groups
+    1 Y_A1                 2,4,5,6,7,8,14,15,16,17,18,19,20,21,22,23,34,35,36,37,38,39,40,41,42,43,54,55,56,57,58,64
+    2 Y_A2                 2,3,5,6,7,8,10,11,12,13,18,19,20,21,22,23,28,29,30,31,32,33,40,41,42,43,50,51,52,53,58,63
+    3 Y_B1                 2,3,4,6,7,8,9,11,12,13,15,16,17,21,22,23,25,26,27,31,32,33,37,38,39,43,47,48,49,53,57,62
+    4 Y_B2                 2,3,4,5,7,8,9,10,12,13,14,16,17,19,20,23,24,26,27,29,30,33,35,36,39,42,45,46,49,52,56,61
+    5 Y_C1                 2,3,4,5,6,8,9,10,11,13,14,15,17,18,20,22,24,25,27,28,30,32,34,36,38,41,44,46,48,51,55,60
+    6 Y_C2                 2,3,4,5,6,7,9,10,11,12,14,15,16,18,19,21,24,25,26,28,29,31,34,35,37,40,44,45,47,50,54,59
+    7 pY_A1                3,9,10,11,12,13,24,25,26,27,28,29,30,31,32,33,44,45,46,47,48,49,50,51,52,53,59,60,61,62,63,65
+    8 pY_A2                4,9,14,15,16,17,24,25,26,27,34,35,36,37,38,39,44,45,46,47,48,49,54,55,56,57,59,60,61,62,64,65
+    9 pY_B1                5,10,14,18,19,20,24,28,29,30,34,35,36,40,41,42,44,45,46,50,51,52,54,55,56,58,59,60,61,63,64,65
+   10 pY_B2                6,11,15,18,21,22,25,28,31,32,34,37,38,40,41,43,44,47,48,50,51,53,54,55,57,58,59,60,62,63,64,65
+   11 pY_C1                7,12,16,19,21,23,26,29,31,33,35,37,39,40,42,43,45,47,49,50,52,53,54,56,57,58,59,61,62,63,64,65
+   12 pY_C2                8,13,17,20,22,23,27,30,32,33,36,38,39,41,42,43,46,48,49,51,52,53,55,56,57,58,60,61,62,63,64,65
+   13 ITAM_A_2p            9,24,25,26,27,44,45,46,47,48,49,59,60,61,62,65
+   14 ITAM_B_2p            18,28,34,40,41,44,50,51,54,55,58,59,60,63,64,65
+   15 ITAM_C_2p            23,33,39,42,43,49,52,53,56,57,58,61,62,63,64,65
+end groups

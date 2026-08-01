@@ -1,0 +1,297 @@
+begin model
+
+#@title: CAR CD3zeta phosphorylation, phosphate-priming mechanism (Rohrs et al., 2018)
+
+#@description: |
+#  Phosphate-priming variant of the CD3zeta phosphorylation model of Rohrs et
+#  al. (2018): the mechanism proposed by Mukhopadhyay et al. (2016), in which
+#  phosphate groups already on a CD3zeta chain stiffen it and make the
+#  remaining tyrosines more accessible. Sites are phosphorylated in random
+#  order with Michaelis-Menten kinetics as in the random-order variant, but the
+#  Michaelis constant of every site on a chain carrying p phosphates is divided
+#  by lambda^p (Eq. 3), so each added phosphate makes the chain a lambda-fold
+#  better substrate. lambda is held at 3, the value Mukhopadhyay et al.
+#  estimated; the fit improves for lambda < 1, but that inverts the proposed
+#  biology and was rejected.
+#
+#  The phosphate count is carried as an explicit state, num, on the CD3zeta
+#  molecule, so the six sites and six counts give 36 rules over the same 64
+#  phosphoforms (65 species with LCK). Priming makes the late sites accelerate
+#  as the chain fills up, so the predicted curves are steeper still than the
+#  random-order ones (Hill coefficients 1.7 to 2.8, against ~1.0 measured) and
+#  the site-to-site spread in half-maximal time is exaggerated. It is the worst
+#  of the four mechanisms: residual error 1.74e5, AIC 1010 (Delta_i = 261
+#  relative to competitive inhibition).
+
+#@keyword: |
+#  signaling, chimeric antigen receptor, CAR T cell, CD3zeta, ITAM, LCK,
+#  multisite phosphorylation, phosphate priming, substrate accessibility,
+#  Michaelis-Menten, positive feedback, ultrasensitivity, model discrimination,
+#  Homo sapiens
+
+#@reference: |
+#  Rohrs JA, Zheng D, Graham NA, Wang P, Finley SD (2018). Computational model
+#  of chimeric antigen receptors explains site-specific phosphorylation
+#  kinetics. Biophys J 115(7):1116-1129. doi:10.1016/j.bpj.2018.08.018 --
+#  Fig. 3C; parameters from the authors' BioNetGen file, Data S3 (mmc4.pdf).
+#
+#  Mukhopadhyay H, de Wet B, Clemens L, Maini PK, Allard J, van der Merwe PA,
+#  Dushek O (2016). Multisite phosphorylation modulates the T cell receptor
+#  zeta-chain potency but not the switchlike response. Biophys J
+#  110(8):1896-1906. doi:10.1016/j.bpj.2016.03.024 -- the priming mechanism and
+#  the value lambda = 3.
+
+#@note: |
+#  Data S3 tracks the phosphate count with a separate count molecule bound to
+#  six site molecules; here the same bookkeeping is a num state on the single
+#  CD3zeta molecule, which is equivalent and removes six bonds per complex.
+#  num is redundant with the six tyrosine states -- every rule increments it
+#  exactly when it phosphorylates a site -- so the network stays at 64 CD3zeta
+#  species rather than multiplying them. See the primary model,
+#  car_cd3zeta_phosphorylation_rohrs2018.bngl, for the unit and population
+#  conventions.
+
+begin parameters
+
+  # Avogadro constant
+  NA 6.02214076e23 # molecules/mol
+
+  # Membrane patch simulated, and the subvolume scaling factor
+  A_ref 1 # um^2
+  f 1 # dimensionless
+  A_sim A_ref*f # um^2
+
+  # Membrane-adjacent shell used for surface-density to concentration conversion
+  h_mem 1e-8 # m
+  V_ref A_sim*h_mem*1e-9 # L/patch
+
+  # Protein densities on the liposome
+  CD3z_T 20000 # molecules/um^2
+  LCK_T 16.491 # molecules/um^2
+
+  # Michaelis constants of an unphosphorylated chain; these are divided by
+  # lambda^p once the chain carries p phosphates, so they are large
+  KmA1 1.60e5 # molecules/um^2
+  KmA2 5.55e6 # molecules/um^2
+  KmB1 4.05e6 # molecules/um^2
+  KmB2 3.88e5 # molecules/um^2
+  KmC1 2.55e8 # molecules/um^2
+  KmC2 6.86e6 # molecules/um^2
+
+  # Phosphate-dependent scaling factor, held at the Mukhopadhyay et al. (2016)
+  # estimate; lambda > 1 means each phosphate improves substrate accessibility
+  L 3 # dimensionless
+
+  # LCK catalytic rate
+  kcat 381.73 # /min
+
+end parameters
+
+begin molecule types
+
+  # Constitutively active recombinant LCK (G2A, Y505F)
+  LCK(Y394~U~P,Y505~U~P)
+  # CD3zeta with its six ITAM tyrosines and a running count of the phosphates
+  # already on the chain, which sets the Michaelis constant of Eq. 3
+  CD3z(num~0~1~2~3~4~5~6,A1~U~P,A2~U~P,B1~U~P,B2~U~P,C1~U~P,C2~U~P)
+
+end molecule types
+
+begin seed species
+
+  # Kinase, activation-loop phosphorylated and never dephosphorylated
+  LCK(Y394~P,Y505~U) LCK_T*A_sim # molecules
+  # Unphosphorylated CD3zeta, phosphate count zero
+  CD3z(num~0,A1~U,A2~U,B1~U,B2~U,C1~U,C2~U) CD3z_T*A_sim # molecules
+
+end seed species
+
+begin observables
+
+  # Unphosphorylated tyrosine at each site, Y_i of Eq. 2
+  Molecules Y_A1 CD3z(A1~U)
+  Molecules Y_A2 CD3z(A2~U)
+  Molecules Y_B1 CD3z(B1~U)
+  Molecules Y_B2 CD3z(B2~U)
+  Molecules Y_C1 CD3z(C1~U)
+  Molecules Y_C2 CD3z(C2~U)
+
+  # Phosphotyrosine at each site, pY_i of Eq. 2
+  Molecules pY_A1 CD3z(A1~P)
+  Molecules pY_A2 CD3z(A2~P)
+  Molecules pY_B1 CD3z(B1~P)
+  Molecules pY_B2 CD3z(B2~P)
+  Molecules pY_C1 CD3z(C1~P)
+  Molecules pY_C2 CD3z(C2~P)
+
+  # Doubly phosphorylated, ZAP-70-competent ITAMs
+  Molecules ITAM_A_2p CD3z(A1~P,A2~P)
+  Molecules ITAM_B_2p CD3z(B1~P,B2~P)
+  Molecules ITAM_C_2p CD3z(C1~P,C2~P)
+
+  # Distribution of chains over phosphate number, the state that drives Eq. 3
+  Molecules CD3z_0p CD3z(num~0)
+  Molecules CD3z_3p CD3z(num~3)
+  Molecules CD3z_6p CD3z(num~6)
+
+end observables
+
+begin functions
+
+  # Michaelis-Menten rate constants of Eq. 2 with the primed Michaelis constant
+  # of Eq. 3, K_M,i / lambda^p, written out for each phosphate number p
+  kp_A1_0() = kcat/((KmA1 + Y_A1/A_sim)*A_sim)
+  kp_A1_1() = kcat/((KmA1/L + Y_A1/A_sim)*A_sim)
+  kp_A1_2() = kcat/((KmA1/L/L + Y_A1/A_sim)*A_sim)
+  kp_A1_3() = kcat/((KmA1/L/L/L + Y_A1/A_sim)*A_sim)
+  kp_A1_4() = kcat/((KmA1/L/L/L/L + Y_A1/A_sim)*A_sim)
+  kp_A1_5() = kcat/((KmA1/L/L/L/L/L + Y_A1/A_sim)*A_sim)
+  kp_A2_0() = kcat/((KmA2 + Y_A2/A_sim)*A_sim)
+  kp_A2_1() = kcat/((KmA2/L + Y_A2/A_sim)*A_sim)
+  kp_A2_2() = kcat/((KmA2/L/L + Y_A2/A_sim)*A_sim)
+  kp_A2_3() = kcat/((KmA2/L/L/L + Y_A2/A_sim)*A_sim)
+  kp_A2_4() = kcat/((KmA2/L/L/L/L + Y_A2/A_sim)*A_sim)
+  kp_A2_5() = kcat/((KmA2/L/L/L/L/L + Y_A2/A_sim)*A_sim)
+  kp_B1_0() = kcat/((KmB1 + Y_B1/A_sim)*A_sim)
+  kp_B1_1() = kcat/((KmB1/L + Y_B1/A_sim)*A_sim)
+  kp_B1_2() = kcat/((KmB1/L/L + Y_B1/A_sim)*A_sim)
+  kp_B1_3() = kcat/((KmB1/L/L/L + Y_B1/A_sim)*A_sim)
+  kp_B1_4() = kcat/((KmB1/L/L/L/L + Y_B1/A_sim)*A_sim)
+  kp_B1_5() = kcat/((KmB1/L/L/L/L/L + Y_B1/A_sim)*A_sim)
+  kp_B2_0() = kcat/((KmB2 + Y_B2/A_sim)*A_sim)
+  kp_B2_1() = kcat/((KmB2/L + Y_B2/A_sim)*A_sim)
+  kp_B2_2() = kcat/((KmB2/L/L + Y_B2/A_sim)*A_sim)
+  kp_B2_3() = kcat/((KmB2/L/L/L + Y_B2/A_sim)*A_sim)
+  kp_B2_4() = kcat/((KmB2/L/L/L/L + Y_B2/A_sim)*A_sim)
+  kp_B2_5() = kcat/((KmB2/L/L/L/L/L + Y_B2/A_sim)*A_sim)
+  kp_C1_0() = kcat/((KmC1 + Y_C1/A_sim)*A_sim)
+  kp_C1_1() = kcat/((KmC1/L + Y_C1/A_sim)*A_sim)
+  kp_C1_2() = kcat/((KmC1/L/L + Y_C1/A_sim)*A_sim)
+  kp_C1_3() = kcat/((KmC1/L/L/L + Y_C1/A_sim)*A_sim)
+  kp_C1_4() = kcat/((KmC1/L/L/L/L + Y_C1/A_sim)*A_sim)
+  kp_C1_5() = kcat/((KmC1/L/L/L/L/L + Y_C1/A_sim)*A_sim)
+  kp_C2_0() = kcat/((KmC2 + Y_C2/A_sim)*A_sim)
+  kp_C2_1() = kcat/((KmC2/L + Y_C2/A_sim)*A_sim)
+  kp_C2_2() = kcat/((KmC2/L/L + Y_C2/A_sim)*A_sim)
+  kp_C2_3() = kcat/((KmC2/L/L/L + Y_C2/A_sim)*A_sim)
+  kp_C2_4() = kcat/((KmC2/L/L/L/L + Y_C2/A_sim)*A_sim)
+  kp_C2_5() = kcat/((KmC2/L/L/L/L/L + Y_C2/A_sim)*A_sim)
+
+  # Percent phosphorylation at each site
+  pct_A1() = 100*pY_A1/(CD3z_T*A_sim)
+  pct_A2() = 100*pY_A2/(CD3z_T*A_sim)
+  pct_B1() = 100*pY_B1/(CD3z_T*A_sim)
+  pct_B2() = 100*pY_B2/(CD3z_T*A_sim)
+  pct_C1() = 100*pY_C1/(CD3z_T*A_sim)
+  pct_C2() = 100*pY_C2/(CD3z_T*A_sim)
+
+end functions
+
+begin reaction rules
+
+  # Random-order phosphorylation, one rule per site and per phosphate number,
+  # each incrementing the count that primes the next step
+  R_phos_A1_0: CD3z(num~0,A1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~1,A1~P) \
+    + LCK(Y394~P,Y505~U) kp_A1_0()
+  R_phos_A1_1: CD3z(num~1,A1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~2,A1~P) \
+    + LCK(Y394~P,Y505~U) kp_A1_1()
+  R_phos_A1_2: CD3z(num~2,A1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~3,A1~P) \
+    + LCK(Y394~P,Y505~U) kp_A1_2()
+  R_phos_A1_3: CD3z(num~3,A1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~4,A1~P) \
+    + LCK(Y394~P,Y505~U) kp_A1_3()
+  R_phos_A1_4: CD3z(num~4,A1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~5,A1~P) \
+    + LCK(Y394~P,Y505~U) kp_A1_4()
+  R_phos_A1_5: CD3z(num~5,A1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~6,A1~P) \
+    + LCK(Y394~P,Y505~U) kp_A1_5()
+  R_phos_A2_0: CD3z(num~0,A2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~1,A2~P) \
+    + LCK(Y394~P,Y505~U) kp_A2_0()
+  R_phos_A2_1: CD3z(num~1,A2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~2,A2~P) \
+    + LCK(Y394~P,Y505~U) kp_A2_1()
+  R_phos_A2_2: CD3z(num~2,A2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~3,A2~P) \
+    + LCK(Y394~P,Y505~U) kp_A2_2()
+  R_phos_A2_3: CD3z(num~3,A2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~4,A2~P) \
+    + LCK(Y394~P,Y505~U) kp_A2_3()
+  R_phos_A2_4: CD3z(num~4,A2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~5,A2~P) \
+    + LCK(Y394~P,Y505~U) kp_A2_4()
+  R_phos_A2_5: CD3z(num~5,A2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~6,A2~P) \
+    + LCK(Y394~P,Y505~U) kp_A2_5()
+  R_phos_B1_0: CD3z(num~0,B1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~1,B1~P) \
+    + LCK(Y394~P,Y505~U) kp_B1_0()
+  R_phos_B1_1: CD3z(num~1,B1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~2,B1~P) \
+    + LCK(Y394~P,Y505~U) kp_B1_1()
+  R_phos_B1_2: CD3z(num~2,B1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~3,B1~P) \
+    + LCK(Y394~P,Y505~U) kp_B1_2()
+  R_phos_B1_3: CD3z(num~3,B1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~4,B1~P) \
+    + LCK(Y394~P,Y505~U) kp_B1_3()
+  R_phos_B1_4: CD3z(num~4,B1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~5,B1~P) \
+    + LCK(Y394~P,Y505~U) kp_B1_4()
+  R_phos_B1_5: CD3z(num~5,B1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~6,B1~P) \
+    + LCK(Y394~P,Y505~U) kp_B1_5()
+  R_phos_B2_0: CD3z(num~0,B2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~1,B2~P) \
+    + LCK(Y394~P,Y505~U) kp_B2_0()
+  R_phos_B2_1: CD3z(num~1,B2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~2,B2~P) \
+    + LCK(Y394~P,Y505~U) kp_B2_1()
+  R_phos_B2_2: CD3z(num~2,B2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~3,B2~P) \
+    + LCK(Y394~P,Y505~U) kp_B2_2()
+  R_phos_B2_3: CD3z(num~3,B2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~4,B2~P) \
+    + LCK(Y394~P,Y505~U) kp_B2_3()
+  R_phos_B2_4: CD3z(num~4,B2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~5,B2~P) \
+    + LCK(Y394~P,Y505~U) kp_B2_4()
+  R_phos_B2_5: CD3z(num~5,B2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~6,B2~P) \
+    + LCK(Y394~P,Y505~U) kp_B2_5()
+  R_phos_C1_0: CD3z(num~0,C1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~1,C1~P) \
+    + LCK(Y394~P,Y505~U) kp_C1_0()
+  R_phos_C1_1: CD3z(num~1,C1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~2,C1~P) \
+    + LCK(Y394~P,Y505~U) kp_C1_1()
+  R_phos_C1_2: CD3z(num~2,C1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~3,C1~P) \
+    + LCK(Y394~P,Y505~U) kp_C1_2()
+  R_phos_C1_3: CD3z(num~3,C1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~4,C1~P) \
+    + LCK(Y394~P,Y505~U) kp_C1_3()
+  R_phos_C1_4: CD3z(num~4,C1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~5,C1~P) \
+    + LCK(Y394~P,Y505~U) kp_C1_4()
+  R_phos_C1_5: CD3z(num~5,C1~U) + LCK(Y394~P,Y505~U) -> CD3z(num~6,C1~P) \
+    + LCK(Y394~P,Y505~U) kp_C1_5()
+  R_phos_C2_0: CD3z(num~0,C2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~1,C2~P) \
+    + LCK(Y394~P,Y505~U) kp_C2_0()
+  R_phos_C2_1: CD3z(num~1,C2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~2,C2~P) \
+    + LCK(Y394~P,Y505~U) kp_C2_1()
+  R_phos_C2_2: CD3z(num~2,C2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~3,C2~P) \
+    + LCK(Y394~P,Y505~U) kp_C2_2()
+  R_phos_C2_3: CD3z(num~3,C2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~4,C2~P) \
+    + LCK(Y394~P,Y505~U) kp_C2_3()
+  R_phos_C2_4: CD3z(num~4,C2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~5,C2~P) \
+    + LCK(Y394~P,Y505~U) kp_C2_4()
+  R_phos_C2_5: CD3z(num~5,C2~U) + LCK(Y394~P,Y505~U) -> CD3z(num~6,C2~P) \
+    + LCK(Y394~P,Y505~U) kp_C2_5()
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1}) # 65 species, 192 reactions
+
+  # Wild-type CD3zeta phosphorylation time course, phosphate priming
+
+  #@protocol: |
+  #  The same 1000-min ATP-addition experiment as the primary model, on the
+  #  logarithmic output grid of the published axis. Expect the sites to
+  #  accelerate as chains accumulate phosphate, giving Hill coefficients of 1.7
+  #  to 2.8 -- much steeper than the measured ~1.0 -- and a C1 half-maximal
+  #  time near 200 min, well past the 150 min of the data.
+
+  #@figure: Fig. 3C in Rohrs et al. (2018)
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,print_functions=>1,\
+    sample_times=>[0.1,0.112202,0.125893,0.141254,0.158489,0.177828,0.199526,\
+    0.223872,0.251189,0.281838,0.316228,0.354813,0.398107,0.446684,0.501187,\
+    0.562341,0.630957,0.707946,0.794328,0.891251,1,1.12202,1.25893,1.41254,1.5,\
+    1.77828,1.99526,2.23872,2.51189,2.81838,3.16228,3.54813,3.98107,4.46684,5,\
+    5.62341,6.30957,7.07946,7.94328,8.91251,10,11.2202,12.5893,14.1254,15.8489,\
+    17.7828,19.9526,22.3872,25.1189,28.1838,30,35.4813,39.8107,44.6684,50.1187,\
+    56.2341,60,70.7946,79.4328,89.1251,100,112.202,125.893,141.254,158.489,180,\
+    199.526,223.872,251.189,281.838,316.228,360,398.107,446.684,501.187,562.341,\
+    630.957,707.946,794.328,891.251,1000]})
+
+end actions

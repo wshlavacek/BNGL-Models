@@ -1,0 +1,356 @@
+begin model
+
+#@title: CAR CD3zeta phosphorylation opposed by a phosphatase (Rohrs et al., 2018)
+
+#@description: |
+#  The competitive inhibition model of Rohrs et al. (2018) extended with a
+#  phosphatase, the prediction the paper uses to connect its liposome
+#  measurements to the CD148 experiments of Mukhopadhyay et al. (2016) in
+#  HEK293 cells. LCK phosphorylates the six CD3zeta ITAM tyrosines exactly as
+#  in the primary model; a phosphatase reverses each of them through the same
+#  kind of mechanism, Michaelis-Menten with one shared denominator in which
+#  phosphotyrosines are substrates (constants P_M,i) and unphosphorylated
+#  tyrosines are competitive inhibitors (P_I,i = P_M,i * P_XI).
+#
+#  The parameters that reproduce the published behavior are those of the
+#  authors' Data S5: phosphatase Michaelis constants about ninefold below the
+#  kinase ones but in the same site-to-site proportion, and a much stronger
+#  inhibition scale, P_XI = 0.1 against X_I = 0.115 on a ninefold smaller base.
+#  In other words the phosphatase binds its substrates more tightly than LCK
+#  does and is inhibited more strongly by them.
+#
+#  All seven ITAM configurations of Fig. 5 -- wild type ABC and the six
+#  constructs in which one or two whole ITAMs are mutated out -- are seed
+#  species, selected one at a time by the protocols (126 species, 600
+#  reactions). Behavior: at steady state, percent phosphorylation is a
+#  sigmoidal function of log10(LCK/phosphatase) over four decades. Deleting
+#  ITAMs lowers the plateau in proportion to the tyrosines left and shifts the
+#  curve right -- fewer ITAMs, higher EC50 -- while leaving the Hill
+#  coefficient near one, which is the trend Mukhopadhyay et al. measured under
+#  phosphatase inhibition and which random-order and phosphate-priming
+#  dephosphorylation cannot produce.
+
+#@keyword: |
+#  signaling, chimeric antigen receptor, CAR T cell, CD3zeta, ITAM, LCK,
+#  phosphatase, CD148, PTPRJ, multisite phosphorylation, dephosphorylation,
+#  competitive inhibition, product inhibition, Michaelis-Menten, dose response,
+#  EC50, steady state, Homo sapiens
+
+#@reference: |
+#  Rohrs JA, Zheng D, Graham NA, Wang P, Finley SD (2018). Computational model
+#  of chimeric antigen receptors explains site-specific phosphorylation
+#  kinetics. Biophys J 115(7):1116-1129. doi:10.1016/j.bpj.2018.08.018 --
+#  Fig. 5; parameters from the authors' BioNetGen file, Data S5 (mmc6.pdf),
+#  and the equation summary, Data S6 (mmc7.pdf).
+#
+#  Mukhopadhyay H, de Wet B, Clemens L, Maini PK, Allard J, van der Merwe PA,
+#  Dushek O (2016). Multisite phosphorylation modulates the T cell receptor
+#  zeta-chain potency but not the switchlike response. Biophys J
+#  110(8):1896-1906. doi:10.1016/j.bpj.2016.03.024 -- the ITAM mutant and
+#  phosphatase-inhibition data this prediction is compared with.
+
+#@note: |
+#  The initial conditions are those of Mukhopadhyay et al. (2016), not of the
+#  liposome assay: 1 CD3zeta and 1000 LCK per square micron, with the
+#  phosphatase scanned from 10 to 100,000 per square micron. The abscissa of
+#  Fig. 5 is log10(LCK/phosphatase), so the scan runs from +2 (10
+#  phosphatase/um^2) down to -2 (100,000/um^2).
+#
+#  Percent phosphorylation is normalized to the six tyrosines of wild-type
+#  CD3zeta for every construct, so a construct with one ITAM mutated out
+#  saturates near 67% and one with two ITAMs mutated out near 33%. That is the
+#  normalization the plateaus of Fig. 5A imply. See the primary model,
+#  car_cd3zeta_phosphorylation_rohrs2018.bngl, for the unit and population
+#  conventions.
+
+begin parameters
+
+  # Avogadro constant
+  NA 6.02214076e23 # molecules/mol
+
+  # Membrane patch simulated, and the subvolume scaling factor
+  A_ref 1 # um^2
+  f 1 # dimensionless
+  A_sim A_ref*f # um^2
+
+  # Membrane-adjacent shell used for surface-density to concentration conversion
+  h_mem 1e-8 # m
+  V_ref A_sim*h_mem*1e-9 # L/patch
+
+  # Densities of the Mukhopadhyay et al. (2016) setting
+  CD3z_T 1 # molecules/um^2
+  LCK_T 1000 # molecules/um^2
+
+  # Phosphatase density; scanned from 10 to 100,000 by the protocols
+  Phos_T 1000 # molecules/um^2
+
+  # LCK Michaelis constants, from the competitive inhibition fit
+  KmA1 96.548 # molecules/um^2
+  KmA2 331.68 # molecules/um^2
+  KmB1 270 # molecules/um^2
+  KmB2 153.82 # molecules/um^2
+  KmC1 484.9 # molecules/um^2
+  KmC2 405.43 # molecules/um^2
+
+  # Scale factor relating LCK inhibition to Michaelis constants, Eq. 5
+  Xi 0.1153 # dimensionless
+
+  # LCK inhibition constants
+  KiA1 KmA1*Xi # molecules/um^2
+  KiA2 KmA2*Xi # molecules/um^2
+  KiB1 KmB1*Xi # molecules/um^2
+  KiB2 KmB2*Xi # molecules/um^2
+  KiC1 KmC1*Xi # molecules/um^2
+  KiC2 KmC2*Xi # molecules/um^2
+
+  # LCK catalytic rate
+  kcat 360 # /min
+
+  # Phosphatase Michaelis constants; about ninefold below the LCK values but
+  # in the same site-to-site proportion
+  PmA1 10.56 # molecules/um^2
+  PmA2 36.3 # molecules/um^2
+  PmB1 32.4 # molecules/um^2
+  PmB2 18.36 # molecules/um^2
+  PmC1 67.2 # molecules/um^2
+  PmC2 56.7 # molecules/um^2
+
+  # Scale factor relating phosphatase inhibition to Michaelis constants
+  PXi 0.1 # dimensionless
+
+  # Phosphatase inhibition constants
+  PiA1 PmA1*PXi # molecules/um^2
+  PiA2 PmA2*PXi # molecules/um^2
+  PiB1 PmB1*PXi # molecules/um^2
+  PiB2 PmB2*PXi # molecules/um^2
+  PiC1 PmC1*PXi # molecules/um^2
+  PiC2 PmC2*PXi # molecules/um^2
+
+  # Phosphatase catalytic rate
+  Pcat 360 # /min
+
+end parameters
+
+begin molecule types
+
+  # Constitutively active recombinant LCK (G2A, Y505F)
+  LCK(Y394~U~P,Y505~U~P)
+  # CD3zeta intracellular domain; F is a tyrosine-to-phenylalanine substitution
+  CD3z(A1~U~P~F,A2~U~P~F,B1~U~P~F,B2~U~P~F,C1~U~P~F,C2~U~P~F)
+  # Lumped phosphotyrosine phosphatase, unchanged by the reaction it catalyzes
+  Phos()
+
+end molecule types
+
+begin seed species
+
+  # Kinase and phosphatase, both catalytic pools of constant size
+  LCK(Y394~P,Y505~U) LCK_T*A_sim # molecules
+  Phos() Phos_T*A_sim # molecules
+
+  # Wild-type CD3zeta, all three ITAMs intact
+  CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U) CD3z_T*A_sim # molecules
+
+  # Single-ITAM mutants xBC, AxC and ABx, seeded at zero
+  CD3z(A1~F,A2~F,B1~U,B2~U,C1~U,C2~U) 0 # molecules
+  CD3z(A1~U,A2~U,B1~F,B2~F,C1~U,C2~U) 0 # molecules
+  CD3z(A1~U,A2~U,B1~U,B2~U,C1~F,C2~F) 0 # molecules
+
+  # Double-ITAM mutants Axx, xBx and xxC, seeded at zero
+  CD3z(A1~U,A2~U,B1~F,B2~F,C1~F,C2~F) 0 # molecules
+  CD3z(A1~F,A2~F,B1~U,B2~U,C1~F,C2~F) 0 # molecules
+  CD3z(A1~F,A2~F,B1~F,B2~F,C1~U,C2~U) 0 # molecules
+
+end seed species
+
+begin observables
+
+  # Unphosphorylated tyrosine at each site: LCK substrate, phosphatase inhibitor
+  Molecules Y_A1 CD3z(A1~U)
+  Molecules Y_A2 CD3z(A2~U)
+  Molecules Y_B1 CD3z(B1~U)
+  Molecules Y_B2 CD3z(B2~U)
+  Molecules Y_C1 CD3z(C1~U)
+  Molecules Y_C2 CD3z(C2~U)
+
+  # Phosphotyrosine at each site: phosphatase substrate, LCK inhibitor
+  Molecules pY_A1 CD3z(A1~P)
+  Molecules pY_A2 CD3z(A2~P)
+  Molecules pY_B1 CD3z(B1~P)
+  Molecules pY_B2 CD3z(B2~P)
+  Molecules pY_C1 CD3z(C1~P)
+  Molecules pY_C2 CD3z(C2~P)
+
+  # Sites removed by mutation
+  Molecules F_A1 CD3z(A1~F)
+  Molecules F_B1 CD3z(B1~F)
+  Molecules F_C1 CD3z(C1~F)
+
+  # Doubly phosphorylated, ZAP-70-competent ITAMs
+  Molecules ITAM_A_2p CD3z(A1~P,A2~P)
+  Molecules ITAM_B_2p CD3z(B1~P,B2~P)
+  Molecules ITAM_C_2p CD3z(C1~P,C2~P)
+
+end observables
+
+begin functions
+
+  # Shared LCK denominator, Eq. 4
+  inhib() = 1 + (Y_A1/KmA1 + Y_A2/KmA2 + Y_B1/KmB1 + Y_B2/KmB2 + Y_C1/KmC1 \
+    + Y_C2/KmC2 + pY_A1/KiA1 + pY_A2/KiA2 + pY_B1/KiB1 + pY_B2/KiB2 \
+    + pY_C1/KiC1 + pY_C2/KiC2)/A_sim
+
+  # Shared phosphatase denominator: the same competition with the roles of the
+  # phosphorylated and unphosphorylated sites exchanged
+  pinhib() = 1 + (pY_A1/PmA1 + pY_A2/PmA2 + pY_B1/PmB1 + pY_B2/PmB2 \
+    + pY_C1/PmC1 + pY_C2/PmC2 + Y_A1/PiA1 + Y_A2/PiA2 + Y_B1/PiB1 \
+    + Y_B2/PiB2 + Y_C1/PiC1 + Y_C2/PiC2)/A_sim
+
+  # Per-site phosphorylation rate constants
+  kp_A1() = kcat/(KmA1*A_sim*inhib())
+  kp_A2() = kcat/(KmA2*A_sim*inhib())
+  kp_B1() = kcat/(KmB1*A_sim*inhib())
+  kp_B2() = kcat/(KmB2*A_sim*inhib())
+  kp_C1() = kcat/(KmC1*A_sim*inhib())
+  kp_C2() = kcat/(KmC2*A_sim*inhib())
+
+  # Per-site dephosphorylation rate constants
+  kd_A1() = Pcat/(PmA1*A_sim*pinhib())
+  kd_A2() = Pcat/(PmA2*A_sim*pinhib())
+  kd_B1() = Pcat/(PmB1*A_sim*pinhib())
+  kd_B2() = Pcat/(PmB2*A_sim*pinhib())
+  kd_C1() = Pcat/(PmC1*A_sim*pinhib())
+  kd_C2() = Pcat/(PmC2*A_sim*pinhib())
+
+  # Percent phosphorylation of the whole intracellular domain, normalized to
+  # the six tyrosines of wild-type CD3zeta -- the ordinate of Fig. 5A
+  pct_total() = 100*(pY_A1 + pY_A2 + pY_B1 + pY_B2 + pY_C1 + pY_C2) \
+    /(6*CD3z_T*A_sim)
+
+  # Percent phosphorylation at each site
+  pct_A1() = 100*pY_A1/(CD3z_T*A_sim)
+  pct_A2() = 100*pY_A2/(CD3z_T*A_sim)
+  pct_B1() = 100*pY_B1/(CD3z_T*A_sim)
+  pct_B2() = 100*pY_B2/(CD3z_T*A_sim)
+  pct_C1() = 100*pY_C1/(CD3z_T*A_sim)
+  pct_C2() = 100*pY_C2/(CD3z_T*A_sim)
+
+end functions
+
+begin reaction rules
+
+  # LCK phosphorylates the six ITAM tyrosines under shared competitive
+  # inhibition, Eq. 4
+  R_phos_A1: CD3z(A1~U) + LCK(Y394~P,Y505~U) -> CD3z(A1~P) + LCK(Y394~P,Y505~U) \
+    kp_A1()
+  R_phos_A2: CD3z(A2~U) + LCK(Y394~P,Y505~U) -> CD3z(A2~P) + LCK(Y394~P,Y505~U) \
+    kp_A2()
+  R_phos_B1: CD3z(B1~U) + LCK(Y394~P,Y505~U) -> CD3z(B1~P) + LCK(Y394~P,Y505~U) \
+    kp_B1()
+  R_phos_B2: CD3z(B2~U) + LCK(Y394~P,Y505~U) -> CD3z(B2~P) + LCK(Y394~P,Y505~U) \
+    kp_B2()
+  R_phos_C1: CD3z(C1~U) + LCK(Y394~P,Y505~U) -> CD3z(C1~P) + LCK(Y394~P,Y505~U) \
+    kp_C1()
+  R_phos_C2: CD3z(C2~U) + LCK(Y394~P,Y505~U) -> CD3z(C2~P) + LCK(Y394~P,Y505~U) \
+    kp_C2()
+
+  # The phosphatase reverses each site through the mirror-image mechanism
+  R_dephos_A1: CD3z(A1~P) + Phos() -> CD3z(A1~U) + Phos() kd_A1()
+  R_dephos_A2: CD3z(A2~P) + Phos() -> CD3z(A2~U) + Phos() kd_A2()
+  R_dephos_B1: CD3z(B1~P) + Phos() -> CD3z(B1~U) + Phos() kd_B1()
+  R_dephos_B2: CD3z(B2~P) + Phos() -> CD3z(B2~U) + Phos() kd_B2()
+  R_dephos_C1: CD3z(C1~P) + Phos() -> CD3z(C1~U) + Phos() kd_C1()
+  R_dephos_C2: CD3z(C2~P) + Phos() -> CD3z(C2~U) + Phos() kd_C2()
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1}) # 126 species, 600 reactions
+  saveConcentrations()
+
+  # Wild-type CD3zeta, ABC
+
+  #@protocol: |
+  #  Scan the phosphatase density over four decades, 10 to 100,000
+  #  molecules/um^2 at fixed 1000 LCK/um^2, and read percent phosphorylation
+  #  after 10 min, by which time the system is at steady state. Plotted against
+  #  log10(LCK/phosphatase) = log10(1000/Phos_T) this is the ABC trace of
+  #  Fig. 5A: a sigmoid of Hill coefficient near 1 saturating just above 90%.
+
+  #@figure: Fig. 5, A-C in Rohrs et al. (2018)
+
+  resetConcentrations()
+  parameter_scan({method=>"ode",suffix=>"scan_ABC",parameter=>"Phos_T",\
+    par_min=>10,par_max=>100000,n_scan_pts=>41,log_scale=>1,reset_conc=>1,\
+    t_start=>0,t_end=>10,n_steps=>10,print_functions=>1})
+
+  # ITAM A mutated out, xBC
+
+  #@figure: Fig. 5, A-C in Rohrs et al. (2018)
+
+  resetConcentrations()
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U)",0)
+  setConcentration("CD3z(A1~F,A2~F,B1~U,B2~U,C1~U,C2~U)","CD3z_T*A_sim")
+  parameter_scan({method=>"ode",suffix=>"scan_xBC",parameter=>"Phos_T",\
+    par_min=>10,par_max=>100000,n_scan_pts=>41,log_scale=>1,reset_conc=>1,\
+    t_start=>0,t_end=>10,n_steps=>10,print_functions=>1})
+
+  # ITAM B mutated out, AxC
+
+  #@figure: Fig. 5, A-C in Rohrs et al. (2018)
+
+  resetConcentrations()
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U)",0)
+  setConcentration("CD3z(A1~U,A2~U,B1~F,B2~F,C1~U,C2~U)","CD3z_T*A_sim")
+  parameter_scan({method=>"ode",suffix=>"scan_AxC",parameter=>"Phos_T",\
+    par_min=>10,par_max=>100000,n_scan_pts=>41,log_scale=>1,reset_conc=>1,\
+    t_start=>0,t_end=>10,n_steps=>10,print_functions=>1})
+
+  # ITAM C mutated out, ABx
+
+  #@figure: Fig. 5, A-C in Rohrs et al. (2018)
+
+  resetConcentrations()
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U)",0)
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~F,C2~F)","CD3z_T*A_sim")
+  parameter_scan({method=>"ode",suffix=>"scan_ABx",parameter=>"Phos_T",\
+    par_min=>10,par_max=>100000,n_scan_pts=>41,log_scale=>1,reset_conc=>1,\
+    t_start=>0,t_end=>10,n_steps=>10,print_functions=>1})
+
+  # ITAMs B and C mutated out, Axx
+
+  #@figure: Fig. 5, A-C in Rohrs et al. (2018)
+
+  resetConcentrations()
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U)",0)
+  setConcentration("CD3z(A1~U,A2~U,B1~F,B2~F,C1~F,C2~F)","CD3z_T*A_sim")
+  parameter_scan({method=>"ode",suffix=>"scan_Axx",parameter=>"Phos_T",\
+    par_min=>10,par_max=>100000,n_scan_pts=>41,log_scale=>1,reset_conc=>1,\
+    t_start=>0,t_end=>10,n_steps=>10,print_functions=>1})
+
+  # ITAMs A and C mutated out, xBx
+
+  #@figure: Fig. 5, A-C in Rohrs et al. (2018)
+
+  resetConcentrations()
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U)",0)
+  setConcentration("CD3z(A1~F,A2~F,B1~U,B2~U,C1~F,C2~F)","CD3z_T*A_sim")
+  parameter_scan({method=>"ode",suffix=>"scan_xBx",parameter=>"Phos_T",\
+    par_min=>10,par_max=>100000,n_scan_pts=>41,log_scale=>1,reset_conc=>1,\
+    t_start=>0,t_end=>10,n_steps=>10,print_functions=>1})
+
+  # ITAMs A and B mutated out, xxC
+
+  #@figure: Fig. 5, A-C in Rohrs et al. (2018)
+
+  resetConcentrations()
+  setConcentration("CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U)",0)
+  setConcentration("CD3z(A1~F,A2~F,B1~F,B2~F,C1~U,C2~U)","CD3z_T*A_sim")
+  parameter_scan({method=>"ode",suffix=>"scan_xxC",parameter=>"Phos_T",\
+    par_min=>10,par_max=>100000,n_scan_pts=>41,log_scale=>1,reset_conc=>1,\
+    t_start=>0,t_end=>10,n_steps=>10,print_functions=>1})
+
+end actions
