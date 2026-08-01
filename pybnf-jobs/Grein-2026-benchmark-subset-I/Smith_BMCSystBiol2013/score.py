@@ -4,7 +4,7 @@
 The Grein/Hasenauer optimizer benchmark scores every fit by its optimality gap
     OG = J_pybnf_paperscale - J*,      "solved" iff OG < 1.92   (chi^2, alpha=0.05, 1 dof)
 where J* = min over all optimizer runs on Marvin of the Eq. 6 Gaussian negative
-log-likelihood (suppl/data/best_fx_marvin.csv), and J_pybnf_paperscale is PyBNF's
+log-likelihood (data/best_fx_marvin.csv), and J_pybnf_paperscale is PyBNF's
 best objective put on the paper's Eq. 6 scale.
 
 FIDELITY. Both objectives are the Gaussian NLL with an ESTIMATED sigma (every

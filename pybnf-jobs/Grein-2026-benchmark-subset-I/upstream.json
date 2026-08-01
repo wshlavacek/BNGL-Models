@@ -1,16 +1,26 @@
 {
   "_comment": [
-    "Provenance pin for the only files in this directory that are copied verbatim",
-    "from an external repository: one SBML model per slug. Everything else here is",
-    "written or generated locally -- see README.md 'What is upstream and what is ours'.",
-    "Regenerate/verify by re-fetching the pinned commit and comparing sha256."
+    "Provenance pin for the only files in this directory that are copied from an",
+    "external repository: one SBML model per slug. Everything else here is written",
+    "or generated locally -- see README.md 'What is upstream and what is ours'.",
+    "",
+    "VERIFY: re-fetch pinned_commit, and for every model assert",
+    "    sha256(local_bytes.replace(CRLF, LF)) == sha256(upstream_bytes.replace(CRLF, LF)) == sha256_lf",
+    "One uniform rule, no per-file exceptions. The comparison is on LF-normalized",
+    "content because .gitattributes stores *.xml as LF here regardless of what",
+    "upstream ships; sha256_raw_upstream differs from sha256_raw_local for exactly",
+    "the files whose upstream_line_endings is CRLF, and that difference is expected."
   ],
   "upstream_repository": "https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab",
   "pinned_commit": "4d2085084b289f6215a95475b1ee639fd7d42283",
   "pinned_commit_short": "4d20850",
   "pinned_commit_date": "2026-07-21T07:18:45Z",
   "verified": "2026-07-31",
-  "note": "All 23 model files match the pinned commit. Armistead_CellDeathDis2024 matches after line-ending normalization only: upstream ships it with CRLF and the copy here is LF. .gitattributes does not cover *.xml, so this was not deliberate.",
+  "verification_rule": "sha256 of LF-normalized content",
+  "models_verified": 23,
+  "models_with_crlf_upstream": [
+    "Armistead_CellDeathDis2024"
+  ],
   "reference_objective_source": {
     "repository": "https://github.com/ICB-DCM/optimizer-benchmark-2026-suppl-code-and-data",
     "path": "data/best_fx_marvin.csv",
@@ -20,163 +30,186 @@
     "Armistead_CellDeathDis2024": {
       "model_file": "model_Armistead_CellDeathDis2024.xml",
       "upstream_path": "Benchmark-Models/Armistead_CellDeathDis2024/model_Armistead_CellDeathDis2024.xml",
-      "status": "identical_after_line_ending_normalization",
-      "sha256_local": "b75dc223761af8e14fd054dd7fe0b6a78e9b70a6dc28ac5924e6247d95580f22",
-      "sha256_upstream": "09ee7897c13f94de0fb0c9fa5c9e3ebce88f04b86076abe325eb4c63c474e734"
+      "sha256_lf": "b75dc223761af8e14fd054dd7fe0b6a78e9b70a6dc28ac5924e6247d95580f22",
+      "sha256_raw_local": "b75dc223761af8e14fd054dd7fe0b6a78e9b70a6dc28ac5924e6247d95580f22",
+      "sha256_raw_upstream": "09ee7897c13f94de0fb0c9fa5c9e3ebce88f04b86076abe325eb4c63c474e734",
+      "upstream_line_endings": "CRLF"
     },
     "Bertozzi_PNAS2020": {
       "model_file": "model.xml",
       "upstream_path": "Benchmark-Models/Bertozzi_PNAS2020/model.xml",
-      "status": "identical",
-      "sha256_local": "9812433223587d84c60f9ab202197cfb561e28d30dd16a49d9ec85256eb0ea37",
-      "sha256_upstream": "9812433223587d84c60f9ab202197cfb561e28d30dd16a49d9ec85256eb0ea37"
+      "sha256_lf": "9812433223587d84c60f9ab202197cfb561e28d30dd16a49d9ec85256eb0ea37",
+      "sha256_raw_local": "9812433223587d84c60f9ab202197cfb561e28d30dd16a49d9ec85256eb0ea37",
+      "sha256_raw_upstream": "9812433223587d84c60f9ab202197cfb561e28d30dd16a49d9ec85256eb0ea37",
+      "upstream_line_endings": "LF"
     },
     "Blasi_CellSystems2016": {
       "model_file": "model_Blasi_CellSystems2016.xml",
       "upstream_path": "Benchmark-Models/Blasi_CellSystems2016/model_Blasi_CellSystems2016.xml",
-      "status": "identical",
-      "sha256_local": "f9469a2b49524f5f7d3ab0fbe43f7d8cd89c30a15915e9cc99a7be32918ee9df",
-      "sha256_upstream": "f9469a2b49524f5f7d3ab0fbe43f7d8cd89c30a15915e9cc99a7be32918ee9df"
+      "sha256_lf": "f9469a2b49524f5f7d3ab0fbe43f7d8cd89c30a15915e9cc99a7be32918ee9df",
+      "sha256_raw_local": "f9469a2b49524f5f7d3ab0fbe43f7d8cd89c30a15915e9cc99a7be32918ee9df",
+      "sha256_raw_upstream": "f9469a2b49524f5f7d3ab0fbe43f7d8cd89c30a15915e9cc99a7be32918ee9df",
+      "upstream_line_endings": "LF"
     },
     "Boehm_JProteomeRes2014": {
       "model_file": "model_Boehm_JProteomeRes2014.xml",
       "upstream_path": "Benchmark-Models/Boehm_JProteomeRes2014/model_Boehm_JProteomeRes2014.xml",
-      "status": "identical",
-      "sha256_local": "90fc7f262efd9a2878e8ae0321cfdd66339b18e9573f4aba1469b6268d572ea2",
-      "sha256_upstream": "90fc7f262efd9a2878e8ae0321cfdd66339b18e9573f4aba1469b6268d572ea2"
+      "sha256_lf": "90fc7f262efd9a2878e8ae0321cfdd66339b18e9573f4aba1469b6268d572ea2",
+      "sha256_raw_local": "90fc7f262efd9a2878e8ae0321cfdd66339b18e9573f4aba1469b6268d572ea2",
+      "sha256_raw_upstream": "90fc7f262efd9a2878e8ae0321cfdd66339b18e9573f4aba1469b6268d572ea2",
+      "upstream_line_endings": "LF"
     },
     "Borghans_BiophysChem1997": {
       "model_file": "model_Borghans_BiophysChem1997.xml",
       "upstream_path": "Benchmark-Models/Borghans_BiophysChem1997/model_Borghans_BiophysChem1997.xml",
-      "status": "identical",
-      "sha256_local": "5403a767f9289a63ef8ea961886bff61fd81e8002cf6068f7fe7a17a2b127873",
-      "sha256_upstream": "5403a767f9289a63ef8ea961886bff61fd81e8002cf6068f7fe7a17a2b127873"
+      "sha256_lf": "5403a767f9289a63ef8ea961886bff61fd81e8002cf6068f7fe7a17a2b127873",
+      "sha256_raw_local": "5403a767f9289a63ef8ea961886bff61fd81e8002cf6068f7fe7a17a2b127873",
+      "sha256_raw_upstream": "5403a767f9289a63ef8ea961886bff61fd81e8002cf6068f7fe7a17a2b127873",
+      "upstream_line_endings": "LF"
     },
     "Brannmark_JBC2010": {
       "model_file": "model_Brannmark_JBC2010.xml",
       "upstream_path": "Benchmark-Models/Brannmark_JBC2010/model_Brannmark_JBC2010.xml",
-      "status": "identical",
-      "sha256_local": "2be8106fa6286d1533a6a5850b136490b4ead64de841852328e687e3e852175b",
-      "sha256_upstream": "2be8106fa6286d1533a6a5850b136490b4ead64de841852328e687e3e852175b"
+      "sha256_lf": "2be8106fa6286d1533a6a5850b136490b4ead64de841852328e687e3e852175b",
+      "sha256_raw_local": "2be8106fa6286d1533a6a5850b136490b4ead64de841852328e687e3e852175b",
+      "sha256_raw_upstream": "2be8106fa6286d1533a6a5850b136490b4ead64de841852328e687e3e852175b",
+      "upstream_line_endings": "LF"
     },
     "Bruno_JExpBot2016": {
       "model_file": "model_Bruno_JExpBot2016.xml",
       "upstream_path": "Benchmark-Models/Bruno_JExpBot2016/model_Bruno_JExpBot2016.xml",
-      "status": "identical",
-      "sha256_local": "c769e63b6c12f63f172fd1f4e386fee5065d48a7b1029afb27d8217aaaa90399",
-      "sha256_upstream": "c769e63b6c12f63f172fd1f4e386fee5065d48a7b1029afb27d8217aaaa90399"
+      "sha256_lf": "c769e63b6c12f63f172fd1f4e386fee5065d48a7b1029afb27d8217aaaa90399",
+      "sha256_raw_local": "c769e63b6c12f63f172fd1f4e386fee5065d48a7b1029afb27d8217aaaa90399",
+      "sha256_raw_upstream": "c769e63b6c12f63f172fd1f4e386fee5065d48a7b1029afb27d8217aaaa90399",
+      "upstream_line_endings": "LF"
     },
     "Crauste_CellSystems2017": {
       "model_file": "model_Crauste_CellSystems2017.xml",
       "upstream_path": "Benchmark-Models/Crauste_CellSystems2017/model_Crauste_CellSystems2017.xml",
-      "status": "identical",
-      "sha256_local": "27cdd9e58a9a5b678d8d55ae49fdaba4c2e52a16de6b434fe0f77eb775614bfd",
-      "sha256_upstream": "27cdd9e58a9a5b678d8d55ae49fdaba4c2e52a16de6b434fe0f77eb775614bfd"
+      "sha256_lf": "27cdd9e58a9a5b678d8d55ae49fdaba4c2e52a16de6b434fe0f77eb775614bfd",
+      "sha256_raw_local": "27cdd9e58a9a5b678d8d55ae49fdaba4c2e52a16de6b434fe0f77eb775614bfd",
+      "sha256_raw_upstream": "27cdd9e58a9a5b678d8d55ae49fdaba4c2e52a16de6b434fe0f77eb775614bfd",
+      "upstream_line_endings": "LF"
     },
     "Elowitz_Nature2000": {
       "model_file": "model_Elowitz_Nature2000.xml",
       "upstream_path": "Benchmark-Models/Elowitz_Nature2000/model_Elowitz_Nature2000.xml",
-      "status": "identical",
-      "sha256_local": "3a3f7d96e618791124da46337b6e95126c4985429f65adb212f82c18d79b1640",
-      "sha256_upstream": "3a3f7d96e618791124da46337b6e95126c4985429f65adb212f82c18d79b1640"
+      "sha256_lf": "3a3f7d96e618791124da46337b6e95126c4985429f65adb212f82c18d79b1640",
+      "sha256_raw_local": "3a3f7d96e618791124da46337b6e95126c4985429f65adb212f82c18d79b1640",
+      "sha256_raw_upstream": "3a3f7d96e618791124da46337b6e95126c4985429f65adb212f82c18d79b1640",
+      "upstream_line_endings": "LF"
     },
     "Fiedler_BMCSystBiol2016": {
       "model_file": "model_Fiedler_BMCSystBiol2016.xml",
       "upstream_path": "Benchmark-Models/Fiedler_BMCSystBiol2016/model_Fiedler_BMCSystBiol2016.xml",
-      "status": "identical",
-      "sha256_local": "40c66f3280795fd3821f151e1cf88dd27f75204f7ca13b1c1cf8be5354bdec0a",
-      "sha256_upstream": "40c66f3280795fd3821f151e1cf88dd27f75204f7ca13b1c1cf8be5354bdec0a"
+      "sha256_lf": "40c66f3280795fd3821f151e1cf88dd27f75204f7ca13b1c1cf8be5354bdec0a",
+      "sha256_raw_local": "40c66f3280795fd3821f151e1cf88dd27f75204f7ca13b1c1cf8be5354bdec0a",
+      "sha256_raw_upstream": "40c66f3280795fd3821f151e1cf88dd27f75204f7ca13b1c1cf8be5354bdec0a",
+      "upstream_line_endings": "LF"
     },
     "Giordano_Nature2020": {
       "model_file": "model_Giordano_Nature2020.xml",
       "upstream_path": "Benchmark-Models/Giordano_Nature2020/model_Giordano_Nature2020.xml",
-      "status": "identical",
-      "sha256_local": "1855fb5673300b7b1fc0890d5d5d810deb7731101dc227b6cb16042b0c615675",
-      "sha256_upstream": "1855fb5673300b7b1fc0890d5d5d810deb7731101dc227b6cb16042b0c615675"
+      "sha256_lf": "1855fb5673300b7b1fc0890d5d5d810deb7731101dc227b6cb16042b0c615675",
+      "sha256_raw_local": "1855fb5673300b7b1fc0890d5d5d810deb7731101dc227b6cb16042b0c615675",
+      "sha256_raw_upstream": "1855fb5673300b7b1fc0890d5d5d810deb7731101dc227b6cb16042b0c615675",
+      "upstream_line_endings": "LF"
     },
     "Laske_PLOSComputBiol2019": {
       "model_file": "model_Laske_PLOSComputBiol2019.xml",
       "upstream_path": "Benchmark-Models/Laske_PLOSComputBiol2019/model_Laske_PLOSComputBiol2019.xml",
-      "status": "identical",
-      "sha256_local": "c235713beb5228f46f52fa4e7e6be600df4e8cb99a842935d8b63f49c09207f7",
-      "sha256_upstream": "c235713beb5228f46f52fa4e7e6be600df4e8cb99a842935d8b63f49c09207f7"
+      "sha256_lf": "c235713beb5228f46f52fa4e7e6be600df4e8cb99a842935d8b63f49c09207f7",
+      "sha256_raw_local": "c235713beb5228f46f52fa4e7e6be600df4e8cb99a842935d8b63f49c09207f7",
+      "sha256_raw_upstream": "c235713beb5228f46f52fa4e7e6be600df4e8cb99a842935d8b63f49c09207f7",
+      "upstream_line_endings": "LF"
     },
     "Okuonghae_ChaosSolitonsFractals2020": {
       "model_file": "model_Okuonghae_ChaosSolitonsFractals2020.xml",
       "upstream_path": "Benchmark-Models/Okuonghae_ChaosSolitonsFractals2020/model_Okuonghae_ChaosSolitonsFractals2020.xml",
-      "status": "identical",
-      "sha256_local": "773631da51ad82aedfa4084f5f25a40d317282f8115ef77e8599e3db47a30734",
-      "sha256_upstream": "773631da51ad82aedfa4084f5f25a40d317282f8115ef77e8599e3db47a30734"
+      "sha256_lf": "773631da51ad82aedfa4084f5f25a40d317282f8115ef77e8599e3db47a30734",
+      "sha256_raw_local": "773631da51ad82aedfa4084f5f25a40d317282f8115ef77e8599e3db47a30734",
+      "sha256_raw_upstream": "773631da51ad82aedfa4084f5f25a40d317282f8115ef77e8599e3db47a30734",
+      "upstream_line_endings": "LF"
     },
     "Oliveira_NatCommun2021": {
       "model_file": "Oliveira_NatCommun2021_model.xml",
       "upstream_path": "Benchmark-Models/Oliveira_NatCommun2021/Oliveira_NatCommun2021_model.xml",
-      "status": "identical",
-      "sha256_local": "49ea75a2ea36c4f79c928f6a30470dd15605272b986d6f99ddbeef16f95cea55",
-      "sha256_upstream": "49ea75a2ea36c4f79c928f6a30470dd15605272b986d6f99ddbeef16f95cea55"
+      "sha256_lf": "49ea75a2ea36c4f79c928f6a30470dd15605272b986d6f99ddbeef16f95cea55",
+      "sha256_raw_local": "49ea75a2ea36c4f79c928f6a30470dd15605272b986d6f99ddbeef16f95cea55",
+      "sha256_raw_upstream": "49ea75a2ea36c4f79c928f6a30470dd15605272b986d6f99ddbeef16f95cea55",
+      "upstream_line_endings": "LF"
     },
     "Perelson_Science1996": {
       "model_file": "model_Perelson_Science1996.xml",
       "upstream_path": "Benchmark-Models/Perelson_Science1996/model_Perelson_Science1996.xml",
-      "status": "identical",
-      "sha256_local": "828bd344bd65f2e1fc6fcdcd2a68df5307f3ee2113b916c04b474042d19b81dd",
-      "sha256_upstream": "828bd344bd65f2e1fc6fcdcd2a68df5307f3ee2113b916c04b474042d19b81dd"
+      "sha256_lf": "828bd344bd65f2e1fc6fcdcd2a68df5307f3ee2113b916c04b474042d19b81dd",
+      "sha256_raw_local": "828bd344bd65f2e1fc6fcdcd2a68df5307f3ee2113b916c04b474042d19b81dd",
+      "sha256_raw_upstream": "828bd344bd65f2e1fc6fcdcd2a68df5307f3ee2113b916c04b474042d19b81dd",
+      "upstream_line_endings": "LF"
     },
     "Rahman_MBS2016": {
       "model_file": "model_Rahman_MBS2016.xml",
       "upstream_path": "Benchmark-Models/Rahman_MBS2016/model_Rahman_MBS2016.xml",
-      "status": "identical",
-      "sha256_local": "00632eaa0aaf371b07b56dea05f12005997809c685953d4960a84cd700100394",
-      "sha256_upstream": "00632eaa0aaf371b07b56dea05f12005997809c685953d4960a84cd700100394"
+      "sha256_lf": "00632eaa0aaf371b07b56dea05f12005997809c685953d4960a84cd700100394",
+      "sha256_raw_local": "00632eaa0aaf371b07b56dea05f12005997809c685953d4960a84cd700100394",
+      "sha256_raw_upstream": "00632eaa0aaf371b07b56dea05f12005997809c685953d4960a84cd700100394",
+      "upstream_line_endings": "LF"
     },
     "Raia_CancerResearch2011": {
       "model_file": "model_Raia_CancerResearch2011.xml",
       "upstream_path": "Benchmark-Models/Raia_CancerResearch2011/model_Raia_CancerResearch2011.xml",
-      "status": "identical",
-      "sha256_local": "62c639dd80abbd243a5f2ce9aa804226d436cd65c1561a05e27e6cfd6eb0f8ef",
-      "sha256_upstream": "62c639dd80abbd243a5f2ce9aa804226d436cd65c1561a05e27e6cfd6eb0f8ef"
+      "sha256_lf": "62c639dd80abbd243a5f2ce9aa804226d436cd65c1561a05e27e6cfd6eb0f8ef",
+      "sha256_raw_local": "62c639dd80abbd243a5f2ce9aa804226d436cd65c1561a05e27e6cfd6eb0f8ef",
+      "sha256_raw_upstream": "62c639dd80abbd243a5f2ce9aa804226d436cd65c1561a05e27e6cfd6eb0f8ef",
+      "upstream_line_endings": "LF"
     },
     "SalazarCavazos_MBoC2020": {
       "model_file": "model_SalazarCavazos_MBoC2020.xml",
       "upstream_path": "Benchmark-Models/SalazarCavazos_MBoC2020/model_SalazarCavazos_MBoC2020.xml",
-      "status": "identical",
-      "sha256_local": "84dcf36f8f1d845492fd729e465beb6cf9858e9e1f0de6214510c1e9025e86ba",
-      "sha256_upstream": "84dcf36f8f1d845492fd729e465beb6cf9858e9e1f0de6214510c1e9025e86ba"
+      "sha256_lf": "84dcf36f8f1d845492fd729e465beb6cf9858e9e1f0de6214510c1e9025e86ba",
+      "sha256_raw_local": "84dcf36f8f1d845492fd729e465beb6cf9858e9e1f0de6214510c1e9025e86ba",
+      "sha256_raw_upstream": "84dcf36f8f1d845492fd729e465beb6cf9858e9e1f0de6214510c1e9025e86ba",
+      "upstream_line_endings": "LF"
     },
     "Schwen_PONE2014": {
       "model_file": "model_Schwen_PONE2014.xml",
       "upstream_path": "Benchmark-Models/Schwen_PONE2014/model_Schwen_PONE2014.xml",
-      "status": "identical",
-      "sha256_local": "92b7b158a0d6131f1e81403c3ff3375d7e122aee42fc437c3c09fbf54f4d833f",
-      "sha256_upstream": "92b7b158a0d6131f1e81403c3ff3375d7e122aee42fc437c3c09fbf54f4d833f"
+      "sha256_lf": "92b7b158a0d6131f1e81403c3ff3375d7e122aee42fc437c3c09fbf54f4d833f",
+      "sha256_raw_local": "92b7b158a0d6131f1e81403c3ff3375d7e122aee42fc437c3c09fbf54f4d833f",
+      "sha256_raw_upstream": "92b7b158a0d6131f1e81403c3ff3375d7e122aee42fc437c3c09fbf54f4d833f",
+      "upstream_line_endings": "LF"
     },
     "Smith_BMCSystBiol2013": {
       "model_file": "model_Smith_BMCSystBiol2013.xml",
       "upstream_path": "Benchmark-Models/Smith_BMCSystBiol2013/model_Smith_BMCSystBiol2013.xml",
-      "status": "identical",
-      "sha256_local": "a21f1453e81ceb8595a072cccb57ccb3c5ae1437074044640fdce1b45bced069",
-      "sha256_upstream": "a21f1453e81ceb8595a072cccb57ccb3c5ae1437074044640fdce1b45bced069"
+      "sha256_lf": "a21f1453e81ceb8595a072cccb57ccb3c5ae1437074044640fdce1b45bced069",
+      "sha256_raw_local": "a21f1453e81ceb8595a072cccb57ccb3c5ae1437074044640fdce1b45bced069",
+      "sha256_raw_upstream": "a21f1453e81ceb8595a072cccb57ccb3c5ae1437074044640fdce1b45bced069",
+      "upstream_line_endings": "LF"
     },
     "Sneyd_PNAS2002": {
       "model_file": "model_Sneyd_PNAS2002.xml",
       "upstream_path": "Benchmark-Models/Sneyd_PNAS2002/model_Sneyd_PNAS2002.xml",
-      "status": "identical",
-      "sha256_local": "2c3b5e5ffe2f62c19a28bf3261d5aa0582f862ce6b64532737c87a070f7ca592",
-      "sha256_upstream": "2c3b5e5ffe2f62c19a28bf3261d5aa0582f862ce6b64532737c87a070f7ca592"
+      "sha256_lf": "2c3b5e5ffe2f62c19a28bf3261d5aa0582f862ce6b64532737c87a070f7ca592",
+      "sha256_raw_local": "2c3b5e5ffe2f62c19a28bf3261d5aa0582f862ce6b64532737c87a070f7ca592",
+      "sha256_raw_upstream": "2c3b5e5ffe2f62c19a28bf3261d5aa0582f862ce6b64532737c87a070f7ca592",
+      "upstream_line_endings": "LF"
     },
     "Weber_BMC2015": {
       "model_file": "model_Weber_BMC2015.xml",
       "upstream_path": "Benchmark-Models/Weber_BMC2015/model_Weber_BMC2015.xml",
-      "status": "identical",
-      "sha256_local": "a1b78bde2cf1d7d114be8d4ea2b3c72537139cfc06b6b73045028f0de6c814e3",
-      "sha256_upstream": "a1b78bde2cf1d7d114be8d4ea2b3c72537139cfc06b6b73045028f0de6c814e3"
+      "sha256_lf": "a1b78bde2cf1d7d114be8d4ea2b3c72537139cfc06b6b73045028f0de6c814e3",
+      "sha256_raw_local": "a1b78bde2cf1d7d114be8d4ea2b3c72537139cfc06b6b73045028f0de6c814e3",
+      "sha256_raw_upstream": "a1b78bde2cf1d7d114be8d4ea2b3c72537139cfc06b6b73045028f0de6c814e3",
+      "upstream_line_endings": "LF"
     },
     "Zhao_QuantBiol2020": {
       "model_file": "model_Zhao_QuantBiol2020.xml",
       "upstream_path": "Benchmark-Models/Zhao_QuantBiol2020/model_Zhao_QuantBiol2020.xml",
-      "status": "identical",
-      "sha256_local": "f52825e3a880d322bc5e20b4be53b8dd7aebb117d662bb8109171d6511bae54e",
-      "sha256_upstream": "f52825e3a880d322bc5e20b4be53b8dd7aebb117d662bb8109171d6511bae54e"
+      "sha256_lf": "f52825e3a880d322bc5e20b4be53b8dd7aebb117d662bb8109171d6511bae54e",
+      "sha256_raw_local": "f52825e3a880d322bc5e20b4be53b8dd7aebb117d662bb8109171d6511bae54e",
+      "sha256_raw_upstream": "f52825e3a880d322bc5e20b4be53b8dd7aebb117d662bb8109171d6511bae54e",
+      "upstream_line_endings": "LF"
     }
   }
 }

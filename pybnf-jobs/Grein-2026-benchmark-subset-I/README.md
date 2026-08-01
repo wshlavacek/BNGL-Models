@@ -45,10 +45,20 @@ below. Nothing upstream is ever modified.
 ### Upstream pin
 
 `upstream.json` pins the exact upstream commit the 23 SBML files were taken from —
-`4d2085084b289f6215a95475b1ee639fd7d42283` (2026-07-21) — and records a sha256 for each file, local
-and upstream. All 23 were verified against that commit on 2026-07-31: 22 byte-identical, and
-`Armistead_CellDeathDis2024` identical after line-ending normalization (upstream ships it CRLF, the
-copy here is LF; `.gitattributes` does not cover `*.xml`, so that was not deliberate).
+`4d2085084b289f6215a95475b1ee639fd7d42283` (2026-07-21) — and records, per file, a sha256 of its
+LF-normalized content plus the raw sha256 on each side. Verifying is one uniform rule with no
+per-file exceptions: re-fetch the pinned commit and assert, for every model,
+
+    sha256(local LF-normalized) == sha256(upstream LF-normalized) == sha256_lf
+
+All 23 pass as of 2026-07-31.
+
+The comparison is on LF-normalized content because `.gitattributes` stores `*.xml` as LF here
+whatever upstream ships. One upstream file, `Armistead_CellDeathDis2024`, is CRLF, so its
+`sha256_raw_upstream` differs from `sha256_raw_local`; `upstream.json` flags that in
+`upstream_line_endings` and `models_with_crlf_upstream`, and it is expected rather than drift. The
+`*.xml text eol=lf` rule means a future re-copy of a CRLF upstream file is normalized on `git add`
+instead of silently landing with foreign line endings.
 
 `upstream.json` also records where `jstar.txt` comes from: `data/best_fx_marvin.csv` in
 `ICB-DCM/optimizer-benchmark-2026-suppl-code-and-data` — **not** `suppl/data/best_fx_marvin.csv`,
@@ -59,7 +69,7 @@ which is the path the preprint's own text implies and which 404s.
     OG = −log_likelihood − J*        "solved" iff  OG < 1.92     (χ², α = 0.05, 1 dof)
 
 where **J\*** = `min` over all optimizer runs on the *Marvin* cluster of the paper's Eq. 6 Gaussian
-negative log-likelihood (`suppl/data/best_fx_marvin.csv`, column `fx_best`). Each slug ships
+negative log-likelihood (`data/best_fx_marvin.csv`, column `fx_best`). Each slug ships
 `score.py`, which computes exactly this.
 
 ## Objective fidelity
