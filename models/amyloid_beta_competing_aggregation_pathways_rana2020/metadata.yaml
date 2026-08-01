@@ -1,0 +1,130 @@
+# metadata.yaml — amyloid_beta_competing_aggregation_pathways_rana2020
+id: amyloid_beta_competing_aggregation_pathways_rana2020
+created: 2026-08-01
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_ode, ai_assisted]
+  description: >
+    Built by reading Rana et al. (2020), 2020 IEEE 20th International Conference on
+    BioInformatics and BioEngineering (BIBE), pp. 73-78, doi:10.1109/BIBE50027.2020.00020.
+    The reaction network is transcribed from that paper's Eq. 4 (on pathway), Eq. 4-II
+    (off pathway) and Eq. 5 (pathway switching), with every rate law taken from its flux
+    equations H_i, I_i, G'_1, H'_i, I'_i and J. The ThT time courses the model is compared
+    against are Fig. 1 of the same paper, digitized here because nothing is tabulated;
+    they originate in Ghosh et al. (2020), R Soc Open Sci 7:191814. Rate-constant values
+    are NOT the paper's Table I: five of the thirteen constants are never tabulated, and
+    the tabulated on-pathway pair is incompatible with the reported 25 uM peptide
+    concentration (see the #@note in any .bngl file). They were obtained by refitting this
+    network to the digitized data with PyBioNetFit; the job setups are under
+    pybnf-jobs/Rana-2020/.
+
+files:
+  - name: amyloid_beta_competing_aggregation_pathways_rana2020.bngl
+    role: primary
+    description: >
+      Complete competing-pathway model with 5 mM C12 fatty-acid pseudo-micelles present
+      from t = 0 — the off-pathway reference condition of Fig. 1c (red trace).
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: amyloid_beta_competing_aggregation_pathways_rana2020_on_pathway.bngl
+    role: variant
+    description: >
+      On-pathway-only reduction (Eq. 4 alone, no fatty acid), the sub-model Rana et al.
+      fit first; reproduces Fig. 1a.
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: amyloid_beta_competing_aggregation_pathways_rana2020_micelle_addition_3h.bngl
+    role: variant
+    description: >
+      On-to-off switching: pseudo-micelles added at 3 h to a lag-phase sample; Fig. 1c
+      (green trace).
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: amyloid_beta_competing_aggregation_pathways_rana2020_micelle_addition_24h.bngl
+    role: variant
+    description: >
+      On-to-off switching: pseudo-micelles added at 24 h; Fig. 1c (blue trace).
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: amyloid_beta_competing_aggregation_pathways_rana2020_micelle_removal_5h.bngl
+    role: variant
+    description: >
+      Off-to-on switching: the pseudo-micelle pool is emptied at 5 h (dilution below the
+      critical micelle concentration); Fig. 1b (green trace).
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: amyloid_beta_competing_aggregation_pathways_rana2020_micelle_removal_24h.bngl
+    role: variant
+    description: >
+      Off-to-on switching: the pseudo-micelle pool is emptied at 24 h; Fig. 1b (blue
+      trace).
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: generator/build_rana2020.py
+    role: verification
+    description: >
+      Writes all six .bngl files. They are one 80-reaction network under six pseudo-micelle
+      schedules, and the oligomer chain has to be enumerated rule by rule because a BNGL
+      state label cannot be incremented, so they are generated rather than hand-edited.
+      tests/test_rana_generator.py checks that it reproduces every committed file
+      byte-for-byte.
+  - name: digitize_rana2020.py
+    role: verification
+    description: >
+      Recovers the four Fig. 1 panels from the publisher PDF by ink-vector colour
+      separation and writes the reference/*_digitized.csv tables.
+  - name: independent_rana2020.py
+    role: verification
+    description: >
+      NumPy/SciPy implementation of the paper's flux equations, written from the equations
+      rather than from BioNetGen's generated network; the oracle for the notebook.
+  - name: verify_rana2020.ipynb
+    role: verification
+  - name: verify_rana2020.png
+    role: figure
+  # Digitized reported simulation data
+  - name: reference/rana2020_fig1a_digitized.csv
+    role: reference
+    description: Fig. 1a — on-pathway ThT time course, 25 uM Abeta42, no fatty acid.
+  - name: reference/rana2020_fig1b_digitized.csv
+    role: reference
+    description: >
+      Fig. 1b — pseudo-micelle removal event: 5 mM C12 fatty-acid control and dilution at
+      5 h and 24 h.
+  - name: reference/rana2020_fig1c_digitized.csv
+    role: reference
+    description: >
+      Fig. 1c — pseudo-micelle addition event: fatty-acid reference and addition at 3 h
+      and 24 h.
+  - name: reference/rana2020_fig1d_digitized.csv
+    role: reference
+    description: Fig. 1d — the published global fit over all five experiments.
+  # BioNetGen reference outputs
+  - name: reference/amyloid_beta_competing_aggregation_pathways_rana2020.net
+    role: reference
+  - name: reference/amyloid_beta_competing_aggregation_pathways_rana2020_ode.gdat
+    role: reference
+  - name: reference/amyloid_beta_competing_aggregation_pathways_rana2020_on_pathway.net
+    role: reference
+  - name: reference/amyloid_beta_competing_aggregation_pathways_rana2020_on_pathway_ode.gdat
+    role: reference
+  - name: reference/amyloid_beta_competing_aggregation_pathways_rana2020_micelle_addition_3h_ode.gdat
+    role: reference
+  - name: reference/amyloid_beta_competing_aggregation_pathways_rana2020_micelle_addition_24h_ode.gdat
+    role: reference
+  - name: reference/amyloid_beta_competing_aggregation_pathways_rana2020_micelle_removal_5h_ode.gdat
+    role: reference
+  - name: reference/amyloid_beta_competing_aggregation_pathways_rana2020_micelle_removal_24h_ode.gdat
+    role: reference

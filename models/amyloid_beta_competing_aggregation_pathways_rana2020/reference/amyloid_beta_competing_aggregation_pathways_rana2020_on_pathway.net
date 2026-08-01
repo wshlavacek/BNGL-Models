@@ -1,0 +1,88 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA       6.02214076e23  # Constant
+    2 V_ref    1e-4  # Constant
+    3 Abeta_0  25  # Constant
+    4 k_nuon   3.66768  # Constant
+    5 k_nuon_  82.1423  # Constant
+    6 k_fbon   6.7244  # Constant
+    7 k_fbon_  9.98968  # Constant
+    8 map_on   8.66927  # Constant
+end parameters
+begin functions
+    1 ThT_on() map_on*Obs_F
+end functions
+begin species
+    1 Ab(n~1,p~on) Abeta_0
+    2 Ab(n~2,p~on) 0
+    3 Ab(n~3,p~on) 0
+    4 Ab(n~4,p~on) 0
+    5 Ab(n~5,p~on) 0
+    6 Ab(n~6,p~on) 0
+    7 Ab(n~7,p~on) 0
+    8 Ab(n~8,p~on) 0
+    9 Ab(n~9,p~on) 0
+   10 Ab(n~10,p~on) 0
+   11 Ab(n~11,p~on) 0
+   12 Ab(n~12,p~on) 0
+end species
+begin reactions
+    1 1,1 2 k_nuon #R_nuon_1_f
+    2 2 1,1 k_nuon_ #R_nuon_1_r
+    3 1,2 3 k_nuon #R_nuon_2_f
+    4 3 1,2 k_nuon_ #R_nuon_2_r
+    5 1,3 4 k_nuon #R_nuon_3_f
+    6 4 1,3 k_nuon_ #R_nuon_3_r
+    7 1,4 5 k_nuon #R_nuon_4_f
+    8 5 1,4 k_nuon_ #R_nuon_4_r
+    9 1,5 6 k_nuon #R_nuon_5_f
+   10 6 1,5 k_nuon_ #R_nuon_5_r
+   11 1,6 7 k_nuon #R_nuon_6_f
+   12 7 1,6 k_nuon_ #R_nuon_6_r
+   13 1,7 8 k_nuon #R_nuon_7_f
+   14 8 1,7 k_nuon_ #R_nuon_7_r
+   15 1,8 9 k_nuon #R_nuon_8_f
+   16 9 1,8 k_nuon_ #R_nuon_8_r
+   17 1,9 10 k_nuon #R_nuon_9_f
+   18 10 1,9 k_nuon_ #R_nuon_9_r
+   19 1,10 11 k_nuon #R_nuon_10_f
+   20 11 1,10 k_nuon_ #R_nuon_10_r
+   21 1,11 12 k_nuon #R_nuon_11_f
+   22 12 1,11 k_nuon_ #R_nuon_11_r
+   23 1,12 12 k_fbon #R_fbon_1_f
+   24 12 1,12 k_fbon_ #R_fbon_1_r
+   25 2,12 12 k_fbon #R_fbon_2_f
+   26 12 2,12 k_fbon_ #R_fbon_2_r
+   27 3,12 12 k_fbon #R_fbon_3_f
+   28 12 3,12 k_fbon_ #R_fbon_3_r
+   29 4,12 12 k_fbon #R_fbon_4_f
+   30 12 4,12 k_fbon_ #R_fbon_4_r
+   31 5,12 12 k_fbon #R_fbon_5_f
+   32 12 5,12 k_fbon_ #R_fbon_5_r
+   33 6,12 12 k_fbon #R_fbon_6_f
+   34 12 6,12 k_fbon_ #R_fbon_6_r
+   35 7,12 12 k_fbon #R_fbon_7_f
+   36 12 7,12 k_fbon_ #R_fbon_7_r
+   37 8,12 12 k_fbon #R_fbon_8_f
+   38 12 8,12 k_fbon_ #R_fbon_8_r
+   39 9,12 12 k_fbon #R_fbon_9_f
+   40 12 9,12 k_fbon_ #R_fbon_9_r
+   41 10,12 12 k_fbon #R_fbon_10_f
+   42 12 10,12 k_fbon_ #R_fbon_10_r
+   43 11,12 12 k_fbon #R_fbon_11_f
+   44 12 11,12 k_fbon_ #R_fbon_11_r
+end reactions
+begin groups
+    1 Obs_A1               1
+    2 Obs_A2               2
+    3 Obs_A3               3
+    4 Obs_A4               4
+    5 Obs_A5               5
+    6 Obs_A6               6
+    7 Obs_A7               7
+    8 Obs_A8               8
+    9 Obs_A9               9
+   10 Obs_A10              10
+   11 Obs_A11              11
+   12 Obs_F                12
+end groups

@@ -1,0 +1,323 @@
+begin model
+
+#@title: Amyloid-beta competing aggregation pathways (Rana et al., 2020)
+
+#@description: |
+#  Ensemble-kinetics model of amyloid-beta 42 aggregation along two competing
+#  pathways. On pathway, monomer adds stepwise to a growing oligomer
+#  (A_i + A_1 <-> A_i+1, i = 1..11) up to the 12-mer nucleus A_12, which Rana et al.
+#  (2020) identify with the fibril F; the fibril then takes up oligomers
+#  catalytically (A_i + F <-> F). Off pathway, four monomers condense on a C12
+#  fatty-acid pseudo-micelle L (4 A_1 + L <-> A'_4), the off-pathway oligomer grows
+#  by monomer addition to A'_12, and A'_12 captures a 4-11mer to give the lumped,
+#  kinetically trapped 12-23mer F'_1. The two pathways exchange at the tetramer
+#  (A_4 <-> A'_4). All kinetics are mass action. The thioflavin T signal is read as
+#  map_on*F + map_off*F'_1.
+#  Dynamically the model is a competition for a single monomer pool. Without fatty
+#  acid the on pathway alone runs, and the sequential 11-step nucleation chain
+#  produces a long lag (~28 h at 25 uM) followed by a steep sigmoidal rise to a
+#  fibril plateau. Adding pseudo-micelles opens the off pathway, which has no lag:
+#  it consumes monomer immediately, arrests fibril formation and settles at a lower
+#  plateau of trapped oligomer. Removing the micelles reverses the diversion and the
+#  on pathway resumes.
+
+#@keyword: |
+#  protein aggregation, amyloid-beta, Alzheimer disease, competing pathways,
+#  nucleation-elongation, fatty acid micelle, pathway switching, mass action,
+#  lag phase, sigmoidal kinetics, Homo sapiens
+
+#@reference: |
+#  Rana P, Bose P, Vaidya A, Rangachari V, Ghosh P (2020). Global fitting and
+#  parameter identifiability for amyloid-beta aggregation with competing
+#  pathways. 2020 IEEE 20th International Conference on BioInformatics and
+#  BioEngineering (BIBE), pp. 73-78. doi:10.1109/BIBE50027.2020.00020
+#
+#  Source of the ThT data reproduced here:
+#  Ghosh P, Rana P, Rangachari V, Saha J, Steen E, Vaidya A (2020). A game
+#  theoretic approach to deciphering the dynamics of amyloid-beta aggregation
+#  along competing pathways. R Soc Open Sci 7(8):191814. doi:10.1098/rsos.191814
+
+#@note: |
+#  PARAMETER PROVENANCE. Rana et al. (2020) specify the reaction network completely
+#  (Eq. 4, Eq. 5 and the flux equations), but Table I tabulates only eight of the
+#  thirteen rate constants: k_fbon, k_fbon_, k_con_, k_fboff_ and k_swi_ are never
+#  given, and neither is the pseudo-micelle concentration or the size of the
+#  addition/removal spikes. The tabulated values also cannot be used as they stand:
+#  at the peptide concentration the paper reports (25 uM), the On-Pathway column
+#  (k_nuon 22.04 /uM/h, k_nuon_ 12.72 /h) drives the whole nucleation chain to
+#  equilibrium within ~0.03 h, which leaves no slow variable and therefore no lag
+#  phase, whereas Fig. 1a shows a ~28 h lag. The values here were therefore obtained
+#  by refitting this network to the ThT traces digitized from Fig. 1, which is the
+#  paper's own procedure; see reference/ and the PyBNF job setups under
+#  pybnf-jobs/Rana-2020/. verify_rana2020.ipynb reports both the agreement with the
+#  digitized data and the comparison against Table I.
+#
+#  RULE ENUMERATION. The oligomer size is a BNGL state label, and state labels are
+#  opaque tokens that cannot be incremented, so each step of the A_1..A_12 and
+#  A'_4..A'_12 chains is written as its own rule. The model is therefore explicit
+#  rather than generative; this is a faithful transcription of an ODE model, not a
+#  combinatorial rule-based one.
+#
+#  MASS BALANCE. Total peptide is not conserved, by construction: the published
+#  fibril-binding reaction A_i + F <-> F consumes an i-mer without enlarging F, and
+#  its reverse emits an i-mer from F. Fibril mass is not a state variable of the
+#  published model and is not added here.
+#
+#  ODE ONLY. 25 uM in a 100 uL well is 1.5e15 molecules, so stochastic simulation of
+#  this model is not computationally feasible and no ssa/psa/nfr protocol is given.
+#  The assay is a bulk in-vitro measurement for which the deterministic limit is the
+#  intended interpretation.
+
+begin parameters
+  # Constants for conversion to a population-based (molecule-count) unit system.
+  # V_ref is a 100 uL plate well, the format in which the ThT assays of Rana
+  # et al. (2020) are read.
+  NA     6.02214076e23  # molecules/mol
+  V_ref  1e-4           # L/well
+
+  # 25 uM Abeta42 is the peptide concentration stated in Sec. II-A of Rana
+  # et al. (2020).
+  Abeta_0      25  # uM
+
+  # Mic_present is the pseudo-micelle concentration formed by 5 mM C12 fatty
+  # acid, taken as 100 uM (aggregation number 50). The aggregation number is not
+  # reported and is not identifiable from these data: while micelles are in
+  # excess only the product k_con*[L] is constrained, so Mic_present is fixed and
+  # k_con absorbs it. 100 uM is a large excess over the ~6 uM of micelle the off
+  # pathway can consume from 25 uM peptide. Mic_0 is how much of it is present at
+  # t = 0 in this protocol.
+  Mic_present  100  # uM
+  Mic_0        100  # uM
+
+  # On-pathway nucleation, A_i + A_1 <-> A_i+1; see Eq. 4 and flux H_i in
+  # Rana et al. (2020).
+  k_nuon   1.31254  # /uM/h
+  k_nuon_  157.191  # /h
+
+  # On-pathway fibril binding, A_i + F <-> F; see Eq. 4 and flux I_i in
+  # Rana et al. (2020). F is the 12-mer nucleus, A_12.
+  k_fbon   337.386  # /uM/h
+  k_fbon_  43.1824  # /h
+
+  # Off-pathway condensation on a pseudo-micelle, 4 A_1 + L <-> A'_4; see
+  # Eq. 4-II and flux G'_1 in Rana et al. (2020).
+  k_con    39.4913  # /uM^4/h
+  k_con_   0.584679  # /h
+
+  # BioNetGen divides the propensity of a rule with n identical reactant
+  # patterns by (n-1)!, so the four A_1 patterns of R_con_f carry a factor
+  # 1/3! that the published flux G'_1 = k_con[A_1]^4[L] does not. k_con_bng
+  # cancels it, keeping the rate law identical to the paper's.
+  k_con_bng  6*k_con   # /uM^4/h
+
+  # Off-pathway nucleation, A'_i + A_1 <-> A'_i+1; see Eq. 4-II and flux H'_i
+  # in Rana et al. (2020).
+  k_nuoff   322.014  # /uM/h
+  k_nuoff_  43.6098  # /h
+
+  # Off-pathway oligomer capture, A'_12 + A'_i <-> F'_1; see Eq. 4-II and flux
+  # I'_i in Rana et al. (2020). k_fboff is k_el1f of Eq. 4-II.
+  k_fboff   0.19102  # /uM/h
+  k_fboff_  0.0154033  # /h
+
+  # Pathway switching at the tetramer, A_4 <-> A'_4; see Eq. 5 and flux J in
+  # Rana et al. (2020).
+  k_swi   48815.8  # /h
+  k_swi_  1.14118  # /h
+
+  # Thioflavin T mapping constants. Rana et al. (2020) write the measured signal
+  # as signal_on + signal_off and fit an off-pathway mapping constant (map' in
+  # Sec. IV-B, k_off / k_off1 / k_off2 in Table I) over 10^0-10^5.
+  map_on   0.647864  # a.u./uM
+  map_off  1.90457  # a.u./uM
+end parameters
+
+begin molecule types
+  # Abeta42 oligomer: p is the pathway it belongs to, n its size in monomers.
+  # Ab(p~on,n~12) is the on-pathway fibril F; Ab(p~off,n~4) is A'_4.
+  Ab(p~on~off,n~1~2~3~4~5~6~7~8~9~10~11~12)
+  # Lumped off-pathway 12-23mer, F'_1: kinetically trapped and unable to
+  # aggregate further, so it carries no size state.
+  Foff()
+  # C12 fatty-acid pseudo-micelle, L.
+  Mic()
+end molecule types
+
+begin seed species
+  Ab(p~on,n~1)  Abeta_0  # uM
+  Mic()         Mic_0    # uM
+end seed species
+
+begin observables
+  # On-pathway oligomers A_1..A_11.
+  Molecules  Obs_A1  Ab(p~on,n~1)
+  Molecules  Obs_A2  Ab(p~on,n~2)
+  Molecules  Obs_A3  Ab(p~on,n~3)
+  Molecules  Obs_A4  Ab(p~on,n~4)
+  Molecules  Obs_A5  Ab(p~on,n~5)
+  Molecules  Obs_A6  Ab(p~on,n~6)
+  Molecules  Obs_A7  Ab(p~on,n~7)
+  Molecules  Obs_A8  Ab(p~on,n~8)
+  Molecules  Obs_A9  Ab(p~on,n~9)
+  Molecules  Obs_A10  Ab(p~on,n~10)
+  Molecules  Obs_A11  Ab(p~on,n~11)
+
+  # On-pathway 12-mer: the nucleus, identified with the fibril F.
+  Molecules  Obs_F  Ab(p~on,n~12)
+
+  # Off-pathway oligomers A'_4..A'_12.
+  Molecules  Obs_Ap4  Ab(p~off,n~4)
+  Molecules  Obs_Ap5  Ab(p~off,n~5)
+  Molecules  Obs_Ap6  Ab(p~off,n~6)
+  Molecules  Obs_Ap7  Ab(p~off,n~7)
+  Molecules  Obs_Ap8  Ab(p~off,n~8)
+  Molecules  Obs_Ap9  Ab(p~off,n~9)
+  Molecules  Obs_Ap10  Ab(p~off,n~10)
+  Molecules  Obs_Ap11  Ab(p~off,n~11)
+  Molecules  Obs_Ap12  Ab(p~off,n~12)
+
+  # Lumped off-pathway 12-23mer F'_1 and the free pseudo-micelle pool L.
+  Molecules  Obs_Fp1  Foff()
+  Molecules  Obs_L    Mic()
+end observables
+
+begin functions
+  # Thioflavin T signal. Rana et al. (2020) report the measured trace as the sum
+  # of an on-pathway and an off-pathway contribution; the cross-beta-rich
+  # species are the on-pathway fibril F and the off-pathway aggregate F'_1.
+  ThT_on()     = map_on*Obs_F
+  ThT_off()    = map_off*Obs_Fp1
+  ThT_total()  = map_on*Obs_F + map_off*Obs_Fp1
+
+  # Dimensional conversions (uncomment for molecule-count output)
+# F_count()    = Obs_F*1e-6*NA*V_ref  # molecules/well
+# Fp1_count()  = Obs_Fp1*1e-6*NA*V_ref  # molecules/well
+end functions
+
+begin reaction rules
+  # --- On pathway, Eq. 4 in Rana et al. (2020) ---
+
+  # Nucleation by monomer addition, A_i + A_1 <-> A_i+1 (flux H_i). Forward and
+  # reverse are written as separate rules because the reverse of a
+  # molecule-deleting rule is a molecule-synthesizing rule.
+  R_nuon_1_f: Ab(p~on,n~1) + Ab(p~on,n~1) -> Ab(p~on,n~2)  k_nuon
+  R_nuon_1_r: Ab(p~on,n~2) -> Ab(p~on,n~1) + Ab(p~on,n~1)  k_nuon_
+  R_nuon_2_f: Ab(p~on,n~2) + Ab(p~on,n~1) -> Ab(p~on,n~3)  k_nuon
+  R_nuon_2_r: Ab(p~on,n~3) -> Ab(p~on,n~2) + Ab(p~on,n~1)  k_nuon_
+  R_nuon_3_f: Ab(p~on,n~3) + Ab(p~on,n~1) -> Ab(p~on,n~4)  k_nuon
+  R_nuon_3_r: Ab(p~on,n~4) -> Ab(p~on,n~3) + Ab(p~on,n~1)  k_nuon_
+  R_nuon_4_f: Ab(p~on,n~4) + Ab(p~on,n~1) -> Ab(p~on,n~5)  k_nuon
+  R_nuon_4_r: Ab(p~on,n~5) -> Ab(p~on,n~4) + Ab(p~on,n~1)  k_nuon_
+  R_nuon_5_f: Ab(p~on,n~5) + Ab(p~on,n~1) -> Ab(p~on,n~6)  k_nuon
+  R_nuon_5_r: Ab(p~on,n~6) -> Ab(p~on,n~5) + Ab(p~on,n~1)  k_nuon_
+  R_nuon_6_f: Ab(p~on,n~6) + Ab(p~on,n~1) -> Ab(p~on,n~7)  k_nuon
+  R_nuon_6_r: Ab(p~on,n~7) -> Ab(p~on,n~6) + Ab(p~on,n~1)  k_nuon_
+  R_nuon_7_f: Ab(p~on,n~7) + Ab(p~on,n~1) -> Ab(p~on,n~8)  k_nuon
+  R_nuon_7_r: Ab(p~on,n~8) -> Ab(p~on,n~7) + Ab(p~on,n~1)  k_nuon_
+  R_nuon_8_f: Ab(p~on,n~8) + Ab(p~on,n~1) -> Ab(p~on,n~9)  k_nuon
+  R_nuon_8_r: Ab(p~on,n~9) -> Ab(p~on,n~8) + Ab(p~on,n~1)  k_nuon_
+  R_nuon_9_f: Ab(p~on,n~9) + Ab(p~on,n~1) -> Ab(p~on,n~10)  k_nuon
+  R_nuon_9_r: Ab(p~on,n~10) -> Ab(p~on,n~9) + Ab(p~on,n~1)  k_nuon_
+  R_nuon_10_f: Ab(p~on,n~10) + Ab(p~on,n~1) -> Ab(p~on,n~11)  k_nuon
+  R_nuon_10_r: Ab(p~on,n~11) -> Ab(p~on,n~10) + Ab(p~on,n~1)  k_nuon_
+  R_nuon_11_f: Ab(p~on,n~11) + Ab(p~on,n~1) -> Ab(p~on,n~12)  k_nuon
+  R_nuon_11_r: Ab(p~on,n~12) -> Ab(p~on,n~11) + Ab(p~on,n~1)  k_nuon_
+
+  # Fibril binding, A_i + F <-> F (flux I_i). The fibril is catalytic: it takes up
+  # an oligomer without changing its own count, which is how Rana et al. (2020)
+  # write the reaction and the flux.
+  R_fbon_1_f: Ab(p~on,n~1) + Ab(p~on,n~12) -> Ab(p~on,n~12)  k_fbon
+  R_fbon_1_r: Ab(p~on,n~12) -> Ab(p~on,n~12) + Ab(p~on,n~1)  k_fbon_
+  R_fbon_2_f: Ab(p~on,n~2) + Ab(p~on,n~12) -> Ab(p~on,n~12)  k_fbon
+  R_fbon_2_r: Ab(p~on,n~12) -> Ab(p~on,n~12) + Ab(p~on,n~2)  k_fbon_
+  R_fbon_3_f: Ab(p~on,n~3) + Ab(p~on,n~12) -> Ab(p~on,n~12)  k_fbon
+  R_fbon_3_r: Ab(p~on,n~12) -> Ab(p~on,n~12) + Ab(p~on,n~3)  k_fbon_
+  R_fbon_4_f: Ab(p~on,n~4) + Ab(p~on,n~12) -> Ab(p~on,n~12)  k_fbon
+  R_fbon_4_r: Ab(p~on,n~12) -> Ab(p~on,n~12) + Ab(p~on,n~4)  k_fbon_
+  R_fbon_5_f: Ab(p~on,n~5) + Ab(p~on,n~12) -> Ab(p~on,n~12)  k_fbon
+  R_fbon_5_r: Ab(p~on,n~12) -> Ab(p~on,n~12) + Ab(p~on,n~5)  k_fbon_
+  R_fbon_6_f: Ab(p~on,n~6) + Ab(p~on,n~12) -> Ab(p~on,n~12)  k_fbon
+  R_fbon_6_r: Ab(p~on,n~12) -> Ab(p~on,n~12) + Ab(p~on,n~6)  k_fbon_
+  R_fbon_7_f: Ab(p~on,n~7) + Ab(p~on,n~12) -> Ab(p~on,n~12)  k_fbon
+  R_fbon_7_r: Ab(p~on,n~12) -> Ab(p~on,n~12) + Ab(p~on,n~7)  k_fbon_
+  R_fbon_8_f: Ab(p~on,n~8) + Ab(p~on,n~12) -> Ab(p~on,n~12)  k_fbon
+  R_fbon_8_r: Ab(p~on,n~12) -> Ab(p~on,n~12) + Ab(p~on,n~8)  k_fbon_
+  R_fbon_9_f: Ab(p~on,n~9) + Ab(p~on,n~12) -> Ab(p~on,n~12)  k_fbon
+  R_fbon_9_r: Ab(p~on,n~12) -> Ab(p~on,n~12) + Ab(p~on,n~9)  k_fbon_
+  R_fbon_10_f: Ab(p~on,n~10) + Ab(p~on,n~12) -> Ab(p~on,n~12)  k_fbon
+  R_fbon_10_r: Ab(p~on,n~12) -> Ab(p~on,n~12) + Ab(p~on,n~10)  k_fbon_
+  R_fbon_11_f: Ab(p~on,n~11) + Ab(p~on,n~12) -> Ab(p~on,n~12)  k_fbon
+  R_fbon_11_r: Ab(p~on,n~12) -> Ab(p~on,n~12) + Ab(p~on,n~11)  k_fbon_
+
+  # --- Off pathway, Eq. 4-II in Rana et al. (2020) ---
+
+  # Condensation of four monomers on a pseudo-micelle, 4 A_1 + L <-> A'_4
+  # (flux G'_1). See the k_con_bng comment in the parameters block.
+  R_con_f: Ab(p~on,n~1) + Ab(p~on,n~1) + Ab(p~on,n~1) + Ab(p~on,n~1) + Mic() \
+    -> Ab(p~off,n~4)  k_con_bng
+  R_con_r: Ab(p~off,n~4) -> Ab(p~on,n~1) + Ab(p~on,n~1) + Ab(p~on,n~1) \
+    + Ab(p~on,n~1) + Mic()  k_con_
+
+  # Off-pathway nucleation by monomer addition, A'_i + A_1 <-> A'_i+1 (flux H'_i).
+  R_nuoff_4_f: Ab(p~off,n~4) + Ab(p~on,n~1) -> Ab(p~off,n~5)  k_nuoff
+  R_nuoff_4_r: Ab(p~off,n~5) -> Ab(p~off,n~4) + Ab(p~on,n~1)  k_nuoff_
+  R_nuoff_5_f: Ab(p~off,n~5) + Ab(p~on,n~1) -> Ab(p~off,n~6)  k_nuoff
+  R_nuoff_5_r: Ab(p~off,n~6) -> Ab(p~off,n~5) + Ab(p~on,n~1)  k_nuoff_
+  R_nuoff_6_f: Ab(p~off,n~6) + Ab(p~on,n~1) -> Ab(p~off,n~7)  k_nuoff
+  R_nuoff_6_r: Ab(p~off,n~7) -> Ab(p~off,n~6) + Ab(p~on,n~1)  k_nuoff_
+  R_nuoff_7_f: Ab(p~off,n~7) + Ab(p~on,n~1) -> Ab(p~off,n~8)  k_nuoff
+  R_nuoff_7_r: Ab(p~off,n~8) -> Ab(p~off,n~7) + Ab(p~on,n~1)  k_nuoff_
+  R_nuoff_8_f: Ab(p~off,n~8) + Ab(p~on,n~1) -> Ab(p~off,n~9)  k_nuoff
+  R_nuoff_8_r: Ab(p~off,n~9) -> Ab(p~off,n~8) + Ab(p~on,n~1)  k_nuoff_
+  R_nuoff_9_f: Ab(p~off,n~9) + Ab(p~on,n~1) -> Ab(p~off,n~10)  k_nuoff
+  R_nuoff_9_r: Ab(p~off,n~10) -> Ab(p~off,n~9) + Ab(p~on,n~1)  k_nuoff_
+  R_nuoff_10_f: Ab(p~off,n~10) + Ab(p~on,n~1) -> Ab(p~off,n~11)  k_nuoff
+  R_nuoff_10_r: Ab(p~off,n~11) -> Ab(p~off,n~10) + Ab(p~on,n~1)  k_nuoff_
+  R_nuoff_11_f: Ab(p~off,n~11) + Ab(p~on,n~1) -> Ab(p~off,n~12)  k_nuoff
+  R_nuoff_11_r: Ab(p~off,n~12) -> Ab(p~off,n~11) + Ab(p~on,n~1)  k_nuoff_
+
+  # Capture of a 4-11mer by an off-pathway 12-mer, A'_12 + A'_i <-> F'_1
+  # (flux I'_i). Both oligomers are consumed into the lumped 12-23mer.
+  R_fboff_4_f: Ab(p~off,n~12) + Ab(p~off,n~4) -> Foff()  k_fboff
+  R_fboff_4_r: Foff() -> Ab(p~off,n~12) + Ab(p~off,n~4)  k_fboff_
+  R_fboff_5_f: Ab(p~off,n~12) + Ab(p~off,n~5) -> Foff()  k_fboff
+  R_fboff_5_r: Foff() -> Ab(p~off,n~12) + Ab(p~off,n~5)  k_fboff_
+  R_fboff_6_f: Ab(p~off,n~12) + Ab(p~off,n~6) -> Foff()  k_fboff
+  R_fboff_6_r: Foff() -> Ab(p~off,n~12) + Ab(p~off,n~6)  k_fboff_
+  R_fboff_7_f: Ab(p~off,n~12) + Ab(p~off,n~7) -> Foff()  k_fboff
+  R_fboff_7_r: Foff() -> Ab(p~off,n~12) + Ab(p~off,n~7)  k_fboff_
+  R_fboff_8_f: Ab(p~off,n~12) + Ab(p~off,n~8) -> Foff()  k_fboff
+  R_fboff_8_r: Foff() -> Ab(p~off,n~12) + Ab(p~off,n~8)  k_fboff_
+  R_fboff_9_f: Ab(p~off,n~12) + Ab(p~off,n~9) -> Foff()  k_fboff
+  R_fboff_9_r: Foff() -> Ab(p~off,n~12) + Ab(p~off,n~9)  k_fboff_
+  R_fboff_10_f: Ab(p~off,n~12) + Ab(p~off,n~10) -> Foff()  k_fboff
+  R_fboff_10_r: Foff() -> Ab(p~off,n~12) + Ab(p~off,n~10)  k_fboff_
+  R_fboff_11_f: Ab(p~off,n~12) + Ab(p~off,n~11) -> Foff()  k_fboff
+  R_fboff_11_r: Foff() -> Ab(p~off,n~12) + Ab(p~off,n~11)  k_fboff_
+
+  # --- Pathway switching, Eq. 5 in Rana et al. (2020) ---
+
+  # Rana et al. (2020) allow switching at any oligomer level but their minimal
+  # model realizes it at the tetramer, which is what flux J (Eq. 6) states.
+  R_swi: Ab(p~on,n~4) <-> Ab(p~off,n~4)  k_swi, k_swi_
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 23 species, 80 reactions
+
+  # Off-pathway reference: 25 uM Abeta42 with 5 mM C12 fatty acid
+
+  #@protocol: |
+  #  Pseudo-micelles are present from t = 0, so the off pathway is open
+  #  throughout. Expect thioflavin T to rise without a lag phase and to
+  #  settle near half the fibril plateau of the fatty acid-free
+  #  experiment: monomer is diverted into trapped off-pathway oligomer
+  #  before the on-pathway nucleation chain can fill.
+
+  #@figure: Fig. 1c (red trace) in Rana et al. (2020)
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>80,\
+    n_steps=>1600,print_functions=>1})
+end actions
