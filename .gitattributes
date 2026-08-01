@@ -6,3 +6,9 @@
 *.species text eol=lf
 *.func   text eol=lf
 *.rxn    text eol=lf
+
+# SBML copied from upstream collections is stored LF here even when upstream
+# ships CRLF, so a re-copy cannot silently land with foreign line endings.
+# Upstream fidelity is therefore checked on LF-normalized content; see
+# pybnf-jobs/Grein-2026-benchmark-subset-I/upstream.json.
+*.xml    text eol=lf
