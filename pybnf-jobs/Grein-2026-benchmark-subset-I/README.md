@@ -1,8 +1,8 @@
-# Benchmark-Models-PEtab — PyBNF on the Grein et al. 2026 optimizer benchmark
+# Grein 2026 benchmark, subset I — PyBNF fitting jobs
 
-PyBNF fitting jobs for problems from the community **PEtab Benchmark-Models** collection, each
-carrying the reference objective from the **Grein et al. 2026** optimizer benchmark. These are the
-first data points placing PyBNF on that leaderboard.
+PyBNF fitting jobs for the **23 subset-I problems** of the **Grein et al. 2026** optimizer benchmark,
+each carrying that benchmark's reference objective. These are the first data points placing PyBNF on
+that leaderboard.
 
 > Grein T, Penas DR, Weindl D, Lakrisenko P, Banga JR, Hasenauer J.
 > **"A benchmark collection for optimizer evaluation in systems biology"** (working title).
@@ -10,9 +10,49 @@ first data points placing PyBNF on that leaderboard.
 > Data: `Benchmarking-Initiative/Benchmark-Models-PEtab` (the problems, PEtab v1) +
 > `ICB-DCM/optimizer-benchmark-2026-suppl-code-and-data` (reference objectives `best_fx_marvin.csv`).
 
+Grein et al. cover 30 problems; this directory covers subset I, which is 23 of them.
+
 Unlike the hand-built BNGL jobs elsewhere in `pybnf-jobs/`, these are **PEtab-imported SBML** jobs
 (`edition = 2`, `sbml_backend = bngsim`): ODE models converted from the PEtab v1 collection through
 PyBNF's importer.
+
+## This directory is not a vendored copy
+
+It was named `Benchmark-Models-PEtab` until 2026-07-31, after the upstream repository, which made it
+read as a checkout of that repository that we had no business editing. It never was one. There is no
+submodule, and **not one upstream PEtab problem file lives here** — no `*.yaml`, no
+`measurementData_*.tsv`, `observables_*.tsv`, `experimentalCondition_*.tsv` or `parameters_*.tsv`. A
+PEtab problem *is* those tables. What is here is a corpus of **PyBNF jobs derived from** them, plus a
+verbatim copy of each problem's SBML model.
+
+### What is upstream and what is ours
+
+Counting every file inside the 23 slug directories:
+
+| category | files | bytes | |
+|---|---:|---:|---|
+| SBML model, verbatim from upstream | 23 | 1,681,108 | **copied** — 80% of bytes, 7% of files |
+| `.exp` and `_measparams.tsv` — PyBNF-format *translations* of the upstream measurement tables, emitted by the importer | 185 | 141,974 | derived |
+| `jstar.txt` — one number, transcribed from the ICB-DCM suppl repository | 23 | 433 | derived |
+| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 104 | 276,073 | **written here** |
+| total | 335 | 2,099,588 | |
+
+The SBML files dominate the byte count and nothing else, which is why the directory *looks* mostly
+vendored while being 93% non-copied by file count. **Editing this directory is normal**: the
+locally authored files are the deliverable, and adding a job necessarily edits the coverage matrix
+below. Nothing upstream is ever modified.
+
+### Upstream pin
+
+`upstream.json` pins the exact upstream commit the 23 SBML files were taken from —
+`4d2085084b289f6215a95475b1ee639fd7d42283` (2026-07-21) — and records a sha256 for each file, local
+and upstream. All 23 were verified against that commit on 2026-07-31: 22 byte-identical, and
+`Armistead_CellDeathDis2024` identical after line-ending normalization (upstream ships it CRLF, the
+copy here is LF; `.gitattributes` does not cover `*.xml`, so that was not deliberate).
+
+`upstream.json` also records where `jstar.txt` comes from: `data/best_fx_marvin.csv` in
+`ICB-DCM/optimizer-benchmark-2026-suppl-code-and-data` — **not** `suppl/data/best_fx_marvin.csv`,
+which is the path the preprint's own text implies and which 404s.
 
 ## The scoring: optimality gap (OG)
 
