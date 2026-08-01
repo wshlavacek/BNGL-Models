@@ -1,0 +1,69 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA             6.02214076e23  # Constant
+    2 A_ref          1  # Constant
+    3 f              1  # Constant
+    4 A_sim          A_ref*f  # ConstantExpression
+    5 h_mem          1e-8  # Constant
+    6 V_ref          (A_sim*h_mem)*1e-9  # ConstantExpression
+    7 CD3z_T         20000  # Constant
+    8 LCK_T          20  # Constant
+    9 KmA1           1.50e5  # Constant
+   10 KmA2           27000  # Constant
+   11 KmB1           6.03e5  # Constant
+   12 KmB2           27000  # Constant
+   13 KmC1           8.64e5  # Constant
+   14 KmC2           27000  # Constant
+   15 kcat           360  # Constant
+   16 _InitialConc1  LCK_T*A_sim  # ConstantExpression
+   17 _InitialConc2  CD3z_T*A_sim  # ConstantExpression
+end parameters
+begin functions
+    1 kp_A1() kcat/((KmA1+(Y_A1/A_sim))*A_sim)
+    2 kp_A2() kcat/((KmA2+(Y_A2/A_sim))*A_sim)
+    3 kp_B1() kcat/((KmB1+(Y_B1/A_sim))*A_sim)
+    4 kp_B2() kcat/((KmB2+(Y_B2/A_sim))*A_sim)
+    5 kp_C1() kcat/((KmC1+(Y_C1/A_sim))*A_sim)
+    6 kp_C2() kcat/((KmC2+(Y_C2/A_sim))*A_sim)
+    7 pct_A1() (100*pY_A1)/(CD3z_T*A_sim)
+    8 pct_A2() (100*pY_A2)/(CD3z_T*A_sim)
+    9 pct_B1() (100*pY_B1)/(CD3z_T*A_sim)
+   10 pct_B2() (100*pY_B2)/(CD3z_T*A_sim)
+   11 pct_C1() (100*pY_C1)/(CD3z_T*A_sim)
+   12 pct_C2() (100*pY_C2)/(CD3z_T*A_sim)
+end functions
+begin species
+    1 LCK(Y394~P,Y505~U) _InitialConc1
+    2 CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U) _InitialConc2
+    3 CD3z(A1~P,A2~U,B1~U,B2~U,C1~U,C2~U) 0
+    4 CD3z(A1~P,A2~U,B1~U,B2~P,C1~U,C2~U) 0
+    5 CD3z(A1~P,A2~U,B1~P,B2~P,C1~U,C2~U) 0
+    6 CD3z(A1~P,A2~P,B1~P,B2~P,C1~U,C2~U) 0
+    7 CD3z(A1~P,A2~P,B1~P,B2~P,C1~U,C2~P) 0
+    8 CD3z(A1~P,A2~P,B1~P,B2~P,C1~P,C2~P) 0
+end species
+begin reactions
+    1 2,1 3,1 kp_A1 #R_phos_A1
+    2 3,1 4,1 kp_B2 #R_phos_B2
+    3 4,1 5,1 kp_B1 #R_phos_B1
+    4 5,1 6,1 kp_A2 #R_phos_A2
+    5 6,1 7,1 kp_C2 #R_phos_C2
+    6 7,1 8,1 kp_C1 #R_phos_C1
+end reactions
+begin groups
+    1 Y_A1                 2
+    2 Y_B2                 3
+    3 Y_B1                 4
+    4 Y_A2                 5
+    5 Y_C2                 6
+    6 Y_C1                 7
+    7 pY_A1                3,4,5,6,7,8
+    8 pY_A2                6,7,8
+    9 pY_B1                5,6,7,8
+   10 pY_B2                4,5,6,7,8
+   11 pY_C1                8
+   12 pY_C2                7,8
+   13 ITAM_A_2p            6,7,8
+   14 ITAM_B_2p            5,6,7,8
+   15 ITAM_C_2p            8
+end groups

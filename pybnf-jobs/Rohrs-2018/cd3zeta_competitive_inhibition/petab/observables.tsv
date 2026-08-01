@@ -1,0 +1,7 @@
+observableId	observableFormula	noiseFormula	noiseDistribution	noisePlaceholders
+func_pct_A1	pct_A1	1	normal
+func_pct_A2	pct_A2	1	normal
+func_pct_B1	pct_B1	1	normal
+func_pct_B2	pct_B2	1	normal
+func_pct_C1	pct_C1	1	normal
+func_pct_C2	pct_C2	1	normal

@@ -1,0 +1,260 @@
+# metadata.yaml — car_cd3zeta_phosphorylation_rohrs2018
+id: car_cd3zeta_phosphorylation_rohrs2018
+created: 2026-07-31
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, restructuration, ai_assisted]
+  description: >
+    Built from Rohrs JA, Zheng D, Graham NA, Wang P, Finley SD (2018), Biophys J
+    115:1116-1129, and from the five BioNetGen files the authors published as
+    Data S1-S5 (mmc2-mmc6.pdf) together with the phosphatase equation summary
+    Data S6 (mmc7.pdf). Mechanisms, parameter values and initial conditions are
+    the authors'. The representation is harmonized: the authors write CD3zeta as
+    one six-tyrosine molecule in Data S1, as a six-site complex bound to a
+    phosphate counter in Data S3, and as six independent molecule types in
+    Data S2, S4 and S5; every file here uses the single six-tyrosine CD3zeta
+    molecule of Data S1. That is exact for everything the paper reports -- no
+    rate law depends on the state of a neighboring site, so the sites stay
+    statistically independent, which the verification notebook checks directly --
+    and it additionally resolves the joint phosphoform distribution, including
+    the doubly phosphorylated ITAM that binds ZAP-70.
+
+files:
+  - name: car_cd3zeta_phosphorylation_rohrs2018.bngl
+    role: primary
+    description: >
+      Competitive inhibition mechanism (Eqs. 4 and 5), the best of the four
+      candidates by residual error and AIC. Wild-type CD3zeta on liposomes;
+      65 species, 192 reactions. Reproduces Fig. 3D and Fig. S5A.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: car_cd3zeta_phosphorylation_rohrs2018_sequential.bngl
+    role: variant
+    description: >
+      Sequential-order mechanism (Data S1): LCK works down the fixed chain A1,
+      B2, B1, A2, C2, C1, so only 7 of the 64 phosphoforms are reachable
+      (8 species, 6 reactions). Reproduces Fig. 3A qualitatively -- the Hill
+      coefficient climbing along the chain -- but not quantitatively; see the
+      note on Data S1 below.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: car_cd3zeta_phosphorylation_rohrs2018_random.bngl
+    role: variant
+    description: >
+      Random-order mechanism (Data S2): six independent Michaelis-Menten
+      substrates, no coupling of any kind. 65 species, 192 reactions.
+      Reproduces Fig. 3B.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: car_cd3zeta_phosphorylation_rohrs2018_priming.bngl
+    role: variant
+    description: >
+      Phosphate-priming mechanism of Mukhopadhyay et al. (2016) (Data S3): the
+      Michaelis constant of every site on a chain is divided by lambda^p with p
+      the phosphates already on that chain, carried as a num state rather than
+      the bound counter molecule of the source file. 65 species, 192 reactions
+      through 36 rules. Reproduces Fig. 3C.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: car_cd3zeta_phosphorylation_rohrs2018_mutants.bngl
+    role: variant
+    description: >
+      Competitive inhibition applied to the six tyrosine-to-phenylalanine ITAM
+      point mutants, all seven constructs in one network (257 species, 672
+      reactions) and selected by setConcentration. Reproduces Fig. S5, D-J.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: car_cd3zeta_phosphorylation_rohrs2018_phosphatase.bngl
+    role: variant
+    description: >
+      Competitive inhibition plus a phosphatase acting through the mirror-image
+      mechanism (Data S5, equations in Data S6), at the initial conditions of
+      Mukhopadhyay et al. (2016). Seven ITAM configurations in one network
+      (126 species, 600 reactions), each scanned over four decades of
+      phosphatase density. Reproduces Fig. 5, A-C.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: ">=2.9.3"
+  - name: verify_rohrs2018.ipynb
+    role: verification
+    description: >
+      Transcribes Eqs. 2-5 and the Data S6 phosphatase equations independently in
+      SciPy -- as six site-density ODEs for the mechanisms whose sites are
+      uncoupled, and as a 64-state master equation over bit-mask phosphoforms for
+      phosphate priming -- and matches BioNetGen to 1e-3 percentage points or
+      better on all six files. Checks per-site conservation, the sequential
+      chain ordering, and the site-independence identity that licenses the
+      authors' six-molecule representation. Compares the simulations against all
+      21 digitized reference series: the nine Fig. S5 model curves (<= 1.6
+      percentage points), the Fig. S5 measurements (same residual as the authors'
+      own published fit, SSE 1.25e4 against 1.27e4 over 354 points), the Fig. 3
+      half-maximal times and Hill coefficients of all four mechanisms, and the
+      Fig. 5 phosphatase response, EC50 shifts and Hill coefficients.
+  - name: verify_rohrs2018.png
+    role: figure
+  - name: digitize_rohrs2018.py
+    role: verification
+    description: >
+      Regenerates every reference/rohrs2018_*_digitized.csv from the article PDF,
+      which lives in the uncommitted dev/papers tree. Fig. S5 is vector art, so
+      each marker, error bar and curve vertex is recovered exactly; data-point
+      positions are taken from the error-bar segments rather than the marker
+      glyphs, whose paths in this PDF carry a systematic offset of about 0.15 pt.
+      Figs. 3 and 5 are raster and are read by colour segmentation with each
+      panel calibrated on its own tick marks.
+
+  # --- BioNetGen reference output ---
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018.net
+    role: reference
+    description: Competitive inhibition network, 65 species and 192 reactions.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_ode.gdat
+    role: reference
+    description: Wild-type time course, 0.1 to 1000 min on a logarithmic grid.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_sequential.net
+    role: reference
+    description: Sequential chain network, 8 species and 6 reactions.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_sequential_ode.gdat
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_random.net
+    role: reference
+    description: Random-order network, 65 species and 192 reactions.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_random_ode.gdat
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_priming.net
+    role: reference
+    description: Phosphate-priming network, 65 species and 192 reactions.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_priming_ode.gdat
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_mutants.net
+    role: reference
+    description: >
+      Wild type plus the six Y->F constructs, 257 species and 672 reactions.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_mutants_ode_A1F.gdat
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_mutants_ode_A2F.gdat
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_mutants_ode_B1F.gdat
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_mutants_ode_B2F.gdat
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_mutants_ode_C1F.gdat
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_mutants_ode_C2F.gdat
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase.net
+    role: reference
+    description: >
+      Wild type plus the six ITAM-deletion constructs with the phosphatase,
+      126 species and 600 reactions.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_ABC.scan
+    role: reference
+    description: >
+      Wild-type steady state over 41 phosphatase densities, 10 to 100,000/um^2.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_xBC.scan
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_AxC.scan
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_ABx.scan
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_Axx.scan
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_xBx.scan
+    role: reference
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_xxC.scan
+    role: reference
+  # Per-point parameter_scan output. Only the .gdat files are committed: the
+  # per-point .net files differ from the committed base network only in the
+  # value of the scanned parameter.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_ABC/
+    role: reference
+    description: 41 per-point .gdat files.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_xBC/
+    role: reference
+    description: 41 per-point .gdat files.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_AxC/
+    role: reference
+    description: 41 per-point .gdat files.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_ABx/
+    role: reference
+    description: 41 per-point .gdat files.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_Axx/
+    role: reference
+    description: 41 per-point .gdat files.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_xBx/
+    role: reference
+    description: 41 per-point .gdat files.
+  - name: reference/car_cd3zeta_phosphorylation_rohrs2018_phosphatase_scan_xxC/
+    role: reference
+    description: 41 per-point .gdat files.
+
+  # --- Data digitized from the published figures by digitize_rohrs2018.py ---
+  - name: reference/rohrs2018_figS5a_wildtype_10pct_pops_rep2_data_digitized.csv
+    role: reference
+    description: >
+      Fig. S5A measured percent phosphorylation with SD, wild-type CD3zeta on
+      10% POPS liposomes (second biological replicate), seven time points.
+  - name: reference/rohrs2018_figS5a_wildtype_10pct_pops_rep2_model_digitized.csv
+    role: reference
+    description: The authors' plotted competitive inhibition fit for that panel.
+  - name: reference/rohrs2018_figS5b_wildtype_0pct_pops_data_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5b_wildtype_0pct_pops_model_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5c_wildtype_45pct_pops_data_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5c_wildtype_45pct_pops_model_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5d_mutant_A1_data_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5d_mutant_A1_model_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5e_mutant_B1_data_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5e_mutant_B1_model_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5f_mutant_C1_data_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5f_mutant_C1_model_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5h_mutant_A2_data_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5h_mutant_A2_model_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5i_mutant_B2_data_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5i_mutant_B2_model_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5j_mutant_C2_data_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_figS5j_mutant_C2_model_digitized.csv
+    role: reference
+  - name: reference/rohrs2018_fig3_sigmoid_summary_digitized.csv
+    role: reference
+    description: >
+      Fig. 3 middle and bottom rows: half-maximal time and Hill coefficient of
+      each of the four mechanisms, plus the sigmoid fit to the experimental data
+      of Fig. 1, D and E. The same data points appear in all four panels, so
+      their spread across panels bounds the raster digitization error at 0.85 min
+      in half-maximal time and 0.04 in Hill coefficient.
+  - name: reference/rohrs2018_fig5a_wildtype_response_digitized.csv
+    role: reference
+    description: >
+      Fig. 5A wild-type (ABC) trace only. The six mutant traces are drawn as
+      three overlapping dashed pairs at 974 px panel width and cannot be
+      separated where they cross; the mutant comparison uses Fig. 5, B and C.
+  - name: reference/rohrs2018_fig5bc_phosphatase_summary_digitized.csv
+    role: reference
+    description: >
+      Fig. 5, B and C: normalized log(EC50) and Hill coefficient of the
+      phosphatase response for all seven ITAM configurations.

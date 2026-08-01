@@ -1,0 +1,186 @@
+begin model
+
+#@title: CAR CD3zeta phosphorylation, sequential-order mechanism (Rohrs et al., 2018)
+
+#@description: |
+#  Sequential-order variant of the CD3zeta phosphorylation model of Rohrs et
+#  al. (2018): the first of the four candidate mechanisms they compared, and
+#  the one their data reject. LCK phosphorylates the six ITAM tyrosines in the
+#  fixed order A1, B2, B1, A2, C2, C1 -- the order of the half-maximal times
+#  measured by mass spectrometry -- so a site becomes a substrate only once
+#  every earlier site is phosphorylated. Each step is plain Michaelis-Menten
+#  (Eq. 2), with no coupling between steps beyond the ordering itself.
+#
+#  Because the mechanism is a strict chain, only 7 of the 64 CD3zeta
+#  phosphoforms are reachable and the network is 8 species. That ordering also
+#  produces the mechanism's signature failure: each successive site inherits
+#  the delay of all its predecessors, so the predicted curves get steeper down
+#  the chain and the Hill coefficient climbs from 0.67 at A1 to 2.7 at C1,
+#  whereas the measurements give ~1.0 at every site. Residual error 6.67e4,
+#  AIC 852 (Delta_i = 103 relative to competitive inhibition).
+
+#@keyword: |
+#  signaling, chimeric antigen receptor, CAR T cell, CD3zeta, ITAM, LCK,
+#  multisite phosphorylation, sequential phosphorylation, distributive
+#  ordered mechanism, Michaelis-Menten, ultrasensitivity, Hill coefficient,
+#  model discrimination, Homo sapiens
+
+#@reference: |
+#  Rohrs JA, Zheng D, Graham NA, Wang P, Finley SD (2018). Computational model
+#  of chimeric antigen receptors explains site-specific phosphorylation
+#  kinetics. Biophys J 115(7):1116-1129. doi:10.1016/j.bpj.2018.08.018 --
+#  Fig. 3A; parameters from the authors' BioNetGen file, Data S1 (mmc2.pdf).
+
+#@note: |
+#  Differs from the primary model, car_cd3zeta_phosphorylation_rohrs2018.bngl,
+#  only in the mechanism and the fitted parameters: the phosphorylation order
+#  is fixed and there is no competitive inhibition, so each rate law sees only
+#  its own substrate. Data S1 already writes CD3zeta as one molecule with six
+#  tyrosines, and this file keeps that representation; see the primary model
+#  for the unit and population conventions.
+
+begin parameters
+
+  # Avogadro constant
+  NA 6.02214076e23 # molecules/mol
+
+  # Membrane patch simulated, and the subvolume scaling factor
+  A_ref 1 # um^2
+  f 1 # dimensionless
+  A_sim A_ref*f # um^2
+
+  # Membrane-adjacent shell used for surface-density to concentration conversion
+  h_mem 1e-8 # m
+  V_ref A_sim*h_mem*1e-9 # L/patch
+
+  # Protein densities on the liposome
+  CD3z_T 20000 # molecules/um^2
+  LCK_T 20 # molecules/um^2
+
+  # Michaelis constants fitted under the sequential-order mechanism
+  KmA1 1.50e5 # molecules/um^2
+  KmA2 27000 # molecules/um^2
+  KmB1 6.03e5 # molecules/um^2
+  KmB2 27000 # molecules/um^2
+  KmC1 8.64e5 # molecules/um^2
+  KmC2 27000 # molecules/um^2
+
+  # LCK catalytic rate, fixed at the Hui and Vale (2014) value
+  kcat 360 # /min
+
+end parameters
+
+begin molecule types
+
+  # Constitutively active recombinant LCK (G2A, Y505F)
+  LCK(Y394~U~P,Y505~U~P)
+  # CD3zeta intracellular domain: ITAM A (A1, A2), B (B1, B2) and C (C1, C2)
+  CD3z(A1~U~P,A2~U~P,B1~U~P,B2~U~P,C1~U~P,C2~U~P)
+
+end molecule types
+
+begin seed species
+
+  # Kinase, activation-loop phosphorylated and never dephosphorylated
+  LCK(Y394~P,Y505~U) LCK_T*A_sim # molecules
+  # Unphosphorylated CD3zeta at the start of the reaction
+  CD3z(A1~U,A2~U,B1~U,B2~U,C1~U,C2~U) CD3z_T*A_sim # molecules
+
+end seed species
+
+begin observables
+
+  # Substrate available at each step of the chain: a site is a substrate only
+  # once every earlier site in the order A1, B2, B1, A2, C2, C1 is phosphorylated
+  Molecules Y_A1 CD3z(A1~U)
+  Molecules Y_B2 CD3z(A1~P,B2~U)
+  Molecules Y_B1 CD3z(A1~P,B2~P,B1~U)
+  Molecules Y_A2 CD3z(A1~P,B2~P,B1~P,A2~U)
+  Molecules Y_C2 CD3z(A1~P,B2~P,B1~P,A2~P,C2~U)
+  Molecules Y_C1 CD3z(A1~P,B2~P,B1~P,A2~P,C2~P,C1~U)
+
+  # Phosphotyrosine at each site
+  Molecules pY_A1 CD3z(A1~P)
+  Molecules pY_A2 CD3z(A2~P)
+  Molecules pY_B1 CD3z(B1~P)
+  Molecules pY_B2 CD3z(B2~P)
+  Molecules pY_C1 CD3z(C1~P)
+  Molecules pY_C2 CD3z(C2~P)
+
+  # Doubly phosphorylated, ZAP-70-competent ITAMs
+  Molecules ITAM_A_2p CD3z(A1~P,A2~P)
+  Molecules ITAM_B_2p CD3z(B1~P,B2~P)
+  Molecules ITAM_C_2p CD3z(C1~P,C2~P)
+
+end observables
+
+begin functions
+
+  # Michaelis-Menten rate constants, Eq. 2. BioNetGen supplies the substrate
+  # and kinase counts, so each function is k_cat/(K_M,i + Y_i) with Y_i
+  # converted from a count to the surface density the constants refer to.
+  kp_A1() = kcat/((KmA1 + Y_A1/A_sim)*A_sim)
+  kp_A2() = kcat/((KmA2 + Y_A2/A_sim)*A_sim)
+  kp_B1() = kcat/((KmB1 + Y_B1/A_sim)*A_sim)
+  kp_B2() = kcat/((KmB2 + Y_B2/A_sim)*A_sim)
+  kp_C1() = kcat/((KmC1 + Y_C1/A_sim)*A_sim)
+  kp_C2() = kcat/((KmC2 + Y_C2/A_sim)*A_sim)
+
+  # Percent phosphorylation at each site
+  pct_A1() = 100*pY_A1/(CD3z_T*A_sim)
+  pct_A2() = 100*pY_A2/(CD3z_T*A_sim)
+  pct_B1() = 100*pY_B1/(CD3z_T*A_sim)
+  pct_B2() = 100*pY_B2/(CD3z_T*A_sim)
+  pct_C1() = 100*pY_C1/(CD3z_T*A_sim)
+  pct_C2() = 100*pY_C2/(CD3z_T*A_sim)
+
+end functions
+
+begin reaction rules
+
+  # The six phosphorylation steps, each gated on all of its predecessors, in
+  # the order A1, B2, B1, A2, C2, C1
+  R_phos_A1: CD3z(A1~U) + LCK(Y394~P,Y505~U) -> CD3z(A1~P) + LCK(Y394~P,Y505~U) \
+    kp_A1()
+  R_phos_B2: CD3z(A1~P,B2~U) + LCK(Y394~P,Y505~U) -> CD3z(A1~P,B2~P) \
+    + LCK(Y394~P,Y505~U) kp_B2()
+  R_phos_B1: CD3z(A1~P,B2~P,B1~U) + LCK(Y394~P,Y505~U) -> CD3z(A1~P,B2~P,B1~P) \
+    + LCK(Y394~P,Y505~U) kp_B1()
+  R_phos_A2: CD3z(A1~P,B2~P,B1~P,A2~U) + LCK(Y394~P,Y505~U) \
+    -> CD3z(A1~P,B2~P,B1~P,A2~P) + LCK(Y394~P,Y505~U) kp_A2()
+  R_phos_C2: CD3z(A1~P,B2~P,B1~P,A2~P,C2~U) + LCK(Y394~P,Y505~U) \
+    -> CD3z(A1~P,B2~P,B1~P,A2~P,C2~P) + LCK(Y394~P,Y505~U) kp_C2()
+  R_phos_C1: CD3z(A1~P,B2~P,B1~P,A2~P,C2~P,C1~U) + LCK(Y394~P,Y505~U) \
+    -> CD3z(A1~P,B2~P,B1~P,A2~P,C2~P,C1~P) + LCK(Y394~P,Y505~U) kp_C1()
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1}) # 8 species, 6 reactions
+
+  # Wild-type CD3zeta phosphorylation time course, sequential order
+
+  #@protocol: |
+  #  The same 1000-min ATP-addition experiment as the primary model, on the
+  #  logarithmic output grid of the published axis. Expect the six sites to
+  #  saturate in the imposed order with progressively steeper curves: the Hill
+  #  coefficient rises along the chain instead of staying near 1, which is the
+  #  disagreement with the data that rules this mechanism out.
+
+  #@figure: Fig. 3A in Rohrs et al. (2018)
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,print_functions=>1,\
+    sample_times=>[0.1,0.112202,0.125893,0.141254,0.158489,0.177828,0.199526,\
+    0.223872,0.251189,0.281838,0.316228,0.354813,0.398107,0.446684,0.501187,\
+    0.562341,0.630957,0.707946,0.794328,0.891251,1,1.12202,1.25893,1.41254,1.5,\
+    1.77828,1.99526,2.23872,2.51189,2.81838,3.16228,3.54813,3.98107,4.46684,5,\
+    5.62341,6.30957,7.07946,7.94328,8.91251,10,11.2202,12.5893,14.1254,15.8489,\
+    17.7828,19.9526,22.3872,25.1189,28.1838,30,35.4813,39.8107,44.6684,50.1187,\
+    56.2341,60,70.7946,79.4328,89.1251,100,112.202,125.893,141.254,158.489,180,\
+    199.526,223.872,251.189,281.838,316.228,360,398.107,446.684,501.187,562.341,\
+    630.957,707.946,794.328,891.251,1000]})
+
+end actions

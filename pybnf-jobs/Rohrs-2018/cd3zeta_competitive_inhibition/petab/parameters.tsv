@@ -1,0 +1,8 @@
+parameterId	estimate	lowerBound	upperBound	priorDistribution	priorParameters
+LCK_T	true	0.6	6000	log-uniform	0.6;6000
+KmA1	true	2.7	27000	log-uniform	2.7;27000
+KmA2	true	2.7	27000	log-uniform	2.7;27000
+KmB2	true	2.7	27000	log-uniform	2.7;27000
+KmC1	true	2.7	27000	log-uniform	2.7;27000
+KmC2	true	2.7	27000	log-uniform	2.7;27000
+Xi	true	0.01	100	log-uniform	0.01;100

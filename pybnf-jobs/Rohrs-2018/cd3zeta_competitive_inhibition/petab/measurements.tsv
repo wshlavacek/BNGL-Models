@@ -1,0 +1,313 @@
+observableId	experimentId	time	measurement	noiseParameters
+func_pct_A1		0.1	2.8054
+func_pct_A1		1	15.6212
+func_pct_A1		5	39.4058
+func_pct_A1		10	48.0397
+func_pct_A1		30	75.5532
+func_pct_A1		60	89.7368
+func_pct_A1		180	97.3165
+func_pct_A2		0.1	1.3069
+func_pct_A2		1	1.2372
+func_pct_A2		5	2.3523
+func_pct_A2		10	5.6194
+func_pct_A2		30	17.7121
+func_pct_A2		60	30.9113
+func_pct_A2		180	69.6027
+func_pct_B1		0.1	1.6292
+func_pct_B1		1	2.8751
+func_pct_B1		5	9.2176
+func_pct_B1		10	15.5515
+func_pct_B1		30	37.5152
+func_pct_B1		60	60.0627
+func_pct_B1		180	85.6856
+func_pct_B2		0.1	2.483
+func_pct_B2		1	9.4093
+func_pct_B2		5	23.0005
+func_pct_B2		10	26.8601
+func_pct_B2		30	63.0075
+func_pct_B2		60	79.2821
+func_pct_B2		180	91.1047
+func_pct_C1		0.1	0.5227
+func_pct_C1		1	7.5188
+func_pct_C1		5	6.9873
+func_pct_C1		10	11.1082
+func_pct_C1		30	18.6879
+func_pct_C1		60	38.2297
+func_pct_C1		180	70.1951
+func_pct_C2		0.1	0.7841
+func_pct_C2		1	3.1974
+func_pct_C2		5	6.5952
+func_pct_C2		10	9.54
+func_pct_C2		30	10.8468
+func_pct_C2		60	34.8318
+func_pct_C2		180	70.3258
+func_pct_A1		0.1	0.3227
+func_pct_A1		1.5	23.8547
+func_pct_A1		10	44.7033
+func_pct_A1		60	77.7752
+func_pct_A1		360	96.5328
+func_pct_A2		0.1	0.1616
+func_pct_A2		1.5	5.0274
+func_pct_A2		10	13.9836
+func_pct_A2		60	40.4516
+func_pct_A2		360	79.9359
+func_pct_B1		0.1	0.1964
+func_pct_B1		1.5	5.8812
+func_pct_B1		10	16.1443
+func_pct_B1		60	40.652
+func_pct_B1		360	81.9571
+func_pct_B2		0.1	0.1616
+func_pct_B2		1.5	10.5858
+func_pct_B2		10	26.0763
+func_pct_B2		60	63.2692
+func_pct_B2		360	91.6975
+func_pct_C1		0.1	0.2574
+func_pct_C1		1.5	3.3982
+func_pct_C1		10	9.4794
+func_pct_C1		60	29.6048
+func_pct_C1		360	70.7792
+func_pct_C2		0.1	0.4229
+func_pct_C2		1.5	4.8357
+func_pct_C2		10	13.1386
+func_pct_C2		60	40.321
+func_pct_C2		360	81.5651
+func_pct_A1		0.1	0.9762
+func_pct_A1		1.5	24.7085
+func_pct_A1		10	43.5968
+func_pct_A1		60	78.4983
+func_pct_A1		360	96.9249
+func_pct_A2		0.1	0.2269
+func_pct_A2		1.5	4.1823
+func_pct_A2		10	13.1386
+func_pct_A2		60	42.6123
+func_pct_A2		360	81.7654
+func_pct_B1		0.1	0.2269
+func_pct_B1		1.5	5.1581
+func_pct_B1		10	14.7678
+func_pct_B1		60	42.351
+func_pct_B1		360	82.0878
+func_pct_B2		0.1	0.6494
+func_pct_B2		1.5	10.1328
+func_pct_B2		10	27.9059
+func_pct_B2		60	65.1598
+func_pct_B2		360	93.0043
+func_pct_C1		0.1	0.2617
+func_pct_C1		1.5	2.6751
+func_pct_C1		10	10.0675
+func_pct_C1		60	32.6803
+func_pct_C1		360	73.4626
+func_pct_C2		0.1	0.5231
+func_pct_C2		1.5	4.1126
+func_pct_C2		10	13.988
+func_pct_C2		60	41.6278
+func_pct_C2		360	86.2087
+func_pct_A2	mut_A1	0.1	0.0693
+func_pct_A2	mut_A1	1	1.8292
+func_pct_A2	mut_A1	5	7.3877
+func_pct_A2	mut_A1	10	11.5086
+func_pct_A2	mut_A1	30	33.2719
+func_pct_A2	mut_A1	60	47.4556
+func_pct_A2	mut_A1	180	74.8384
+func_pct_B1	mut_A1	0.1	1.1758
+func_pct_B1	mut_A1	1	7.588
+func_pct_B1	mut_A1	5	20.5868
+func_pct_B1	mut_A1	10	32.5488
+func_pct_B1	mut_A1	30	53.5281
+func_pct_B1	mut_A1	60	61.4388
+func_pct_B1	mut_A1	180	86.8614
+func_pct_B2	mut_A1	0.1	3.2057
+func_pct_B2	mut_A1	1	15.7515
+func_pct_B2	mut_A1	5	35.1625
+func_pct_B2	mut_A1	10	48.2397
+func_pct_B2	mut_A1	30	69.672
+func_pct_B2	mut_A1	60	82.2264
+func_pct_B2	mut_A1	180	90.7819
+func_pct_C1	mut_A1	0.1	0.457
+func_pct_C1	mut_A1	1	7.4574
+func_pct_C1	mut_A1	5	13.4689
+func_pct_C1	mut_A1	10	21.2402
+func_pct_C1	mut_A1	30	36.147
+func_pct_C1	mut_A1	60	42.8816
+func_pct_C1	mut_A1	180	74.0543
+func_pct_C2	mut_A1	0.1	0.7837
+func_pct_C2	mut_A1	1	2.2212
+func_pct_C2	mut_A1	5	10.2017
+func_pct_C2	mut_A1	10	15.4901
+func_pct_C2	mut_A1	30	29.6128
+func_pct_C2	mut_A1	60	39.2834
+func_pct_C2	mut_A1	180	68.7572
+func_pct_A1	mut_A2	0.1	0.2938
+func_pct_A1	mut_A2	1	20.3261
+func_pct_A1	mut_A2	5	34.378
+func_pct_A1	mut_A2	10	50.1924
+func_pct_A1	mut_A2	30	65.4213
+func_pct_A1	mut_A2	60	73.2622
+func_pct_A1	mut_A2	180	93.5267
+func_pct_B1	mut_A2	0.1	0.6531
+func_pct_B1	mut_A2	1	11.3064
+func_pct_B1	mut_A2	5	17.9076
+func_pct_B1	mut_A2	10	27.5154
+func_pct_B1	mut_A2	30	42.0247
+func_pct_B1	mut_A2	60	57.5106
+func_pct_B1	mut_A2	180	79.474
+func_pct_B2	mut_A2	0.1	0.2284
+func_pct_B2	mut_A2	1	13.7902
+func_pct_B2	mut_A2	5	21.0448
+func_pct_B2	mut_A2	10	30.8487
+func_pct_B2	mut_A2	30	42.9394
+func_pct_B2	mut_A2	60	65.883
+func_pct_B2	mut_A2	180	84.3093
+func_pct_C1	mut_A2	0.1	0.4571
+func_pct_C1	mut_A2	1	6.6663
+func_pct_C1	mut_A2	5	12.1558
+func_pct_C1	mut_A2	10	16.4701
+func_pct_C1	mut_A2	30	26.7958
+func_pct_C1	mut_A2	60	37.1223
+func_pct_C1	mut_A2	180	53.5901
+func_pct_C2	mut_A2	0.1	0.3264
+func_pct_C2	mut_A2	1	2.9409
+func_pct_C2	mut_A2	5	5.6199
+func_pct_C2	mut_A2	10	8.5612
+func_pct_C2	mut_A2	30	16.7315
+func_pct_C2	mut_A2	60	27.5808
+func_pct_C2	mut_A2	180	47.3174
+func_pct_A1	mut_B1	0.1	1.4359
+func_pct_A1	mut_B1	1	32.3285
+func_pct_A1	mut_B1	5	56.3687
+func_pct_A1	mut_B1	10	58.2581
+func_pct_A1	mut_B1	30	73.8699
+func_pct_A1	mut_B1	60	86.0859
+func_pct_A1	mut_B1	180	93.008
+func_pct_A2	mut_B1	0.1	0.3258
+func_pct_A2	mut_B1	1	3.9784
+func_pct_A2	mut_B1	5	7.5134
+func_pct_A2	mut_B1	10	15.4804
+func_pct_A2	mut_B1	30	18.4843
+func_pct_A2	mut_B1	60	35.6633
+func_pct_A2	mut_B1	180	48.4018
+func_pct_B2	mut_B1	0.1	2.0889
+func_pct_B2	mut_B1	1	13.2601
+func_pct_B2	mut_B1	5	22.7943
+func_pct_B2	mut_B1	10	35.4021
+func_pct_B2	mut_B1	30	53.626
+func_pct_B2	mut_B1	60	65.7723
+func_pct_B2	mut_B1	180	86.1555
+func_pct_C1	mut_B1	0.1	0.3258
+func_pct_C1	mut_B1	1	5.2235
+func_pct_C1	mut_B1	5	16.5252
+func_pct_C1	mut_B1	10	20.5044
+func_pct_C1	mut_B1	30	22.9249
+func_pct_C1	mut_B1	60	35.2715
+func_pct_C1	mut_B1	180	64.4662
+func_pct_C2	mut_B1	0.1	0.3214
+func_pct_C2	mut_B1	1	3.395
+func_pct_C2	mut_B1	5	8.4277
+func_pct_C2	mut_B1	10	13.1295
+func_pct_C2	mut_B1	30	23.8392
+func_pct_C2	mut_B1	60	32.6594
+func_pct_C2	mut_B1	180	59.6948
+func_pct_A1	mut_B2	0.1	2.8091
+func_pct_A1	mut_B2	1	11.5611
+func_pct_A1	mut_B2	5	27.7601
+func_pct_A1	mut_B2	10	49.3782
+func_pct_A1	mut_B2	30	79.495
+func_pct_A1	mut_B2	60	94.5752
+func_pct_A1	mut_B2	180	93.7916
+func_pct_A2	mut_B2	0.1	0.2615
+func_pct_A2	mut_B2	1	0.3921
+func_pct_A2	mut_B2	5	1.7634
+func_pct_A2	mut_B2	10	8.2952
+func_pct_A2	mut_B2	30	22.8608
+func_pct_A2	mut_B2	60	38.9292
+func_pct_A2	mut_B2	180	78.0497
+func_pct_B1	mut_B2	0.1	1.3716
+func_pct_B1	mut_B2	1	3.7886
+func_pct_B1	mut_B2	5	15.2189
+func_pct_B1	mut_B2	10	21.816
+func_pct_B1	mut_B2	30	45.0692
+func_pct_B1	mut_B2	60	57.8064
+func_pct_B1	mut_B2	180	89.8735
+func_pct_C1	mut_B2	0.1	0.6533
+func_pct_C1	mut_B2	1	1.894
+func_pct_C1	mut_B2	5	7.1851
+func_pct_C1	mut_B2	10	7.7075
+func_pct_C1	mut_B2	30	19.3337
+func_pct_C1	mut_B2	60	34.4879
+func_pct_C1	mut_B2	180	76.2213
+func_pct_C2	mut_B2	0.1	3.3315
+func_pct_C2	mut_B2	1	1.4369
+func_pct_C2	mut_B2	5	4.7028
+func_pct_C2	mut_B2	10	10.0592
+func_pct_C2	mut_B2	30	22.469
+func_pct_C2	mut_B2	60	46.2447
+func_pct_C2	mut_B2	180	78.3806
+func_pct_A1	mut_C1	0.1	0.4226
+func_pct_A1	mut_C1	1	7.706
+func_pct_A1	mut_C1	5	31.8067
+func_pct_A1	mut_C1	10	42.7774
+func_pct_A1	mut_C1	30	74.5229
+func_pct_A1	mut_C1	60	90.7918
+func_pct_A1	mut_C1	180	97.5179
+func_pct_A2	mut_C1	0.1	0.2267
+func_pct_A2	mut_C1	1	1.3064
+func_pct_A2	mut_C1	5	4.6324
+func_pct_A2	mut_C1	10	16.3955
+func_pct_A2	mut_C1	30	29.6561
+func_pct_A2	mut_C1	60	59.1726
+func_pct_A2	mut_C1	180	90.0735
+func_pct_B1	mut_C1	0.1	0.4531
+func_pct_B1	mut_C1	1	3.1958
+func_pct_B1	mut_C1	5	7.3751
+func_pct_B1	mut_C1	10	22.203
+func_pct_B1	mut_C1	30	35.7249
+func_pct_B1	mut_C1	60	61.4625
+func_pct_B1	mut_C1	180	85.2411
+func_pct_B2	mut_C1	0.1	0.4226
+func_pct_B2	mut_C1	1	6.7918
+func_pct_B2	mut_C1	5	19.3994
+func_pct_B2	mut_C1	10	41.2799
+func_pct_B2	mut_C1	30	60.6789
+func_pct_B2	mut_C1	60	83.8654
+func_pct_B2	mut_C1	180	95.0712
+func_pct_C2	mut_C1	0.1	0.7796
+func_pct_C2	mut_C1	1	2.0204
+func_pct_C2	mut_C1	5	7.7756
+func_pct_C2	mut_C1	10	19.1991
+func_pct_C2	mut_C1	30	35.7249
+func_pct_C2	mut_C1	60	55.1239
+func_pct_C2	mut_C1	180	86.6778
+func_pct_A1	mut_C2	0.1	0.4571
+func_pct_A1	mut_C2	1	4.2478
+func_pct_A1	mut_C2	5	20.0316
+func_pct_A1	mut_C2	10	32.2209
+func_pct_A1	mut_C2	30	69.9342
+func_pct_A1	mut_C2	60	85.8165
+func_pct_A1	mut_C2	180	94.3718
+func_pct_A2	mut_C2	0.1	0.1958
+func_pct_A2	mut_C2	1	0.7838
+func_pct_A2	mut_C2	5	4.1824
+func_pct_A2	mut_C2	10	8.5289
+func_pct_A2	mut_C2	30	27.6461
+func_pct_A2	mut_C2	60	54.4439
+func_pct_A2	mut_C2	180	85.1631
+func_pct_B1	mut_C2	0.1	1.3065
+func_pct_B1	mut_C2	1	2.9409
+func_pct_B1	mut_C2	5	11.4371
+func_pct_B1	mut_C2	10	18.8877
+func_pct_B1	mut_C2	30	45.8153
+func_pct_B1	mut_C2	60	56.9879
+func_pct_B1	mut_C2	180	89.2142
+func_pct_B2	mut_C2	0.1	0.2284
+func_pct_B2	mut_C2	1	4.3785
+func_pct_B2	mut_C2	5	19.5411
+func_pct_B2	mut_C2	10	31.6981
+func_pct_B2	mut_C2	30	68.1656
+func_pct_B2	mut_C2	60	77.1827
+func_pct_B2	mut_C2	180	92.8037
+func_pct_C1	mut_C2	0.1	0.1958
+func_pct_C1	mut_C2	1	0.6531
+func_pct_C1	mut_C2	5	0.5878
+func_pct_C1	mut_C2	10	4.2478
+func_pct_C1	mut_C2	30	13.1368
+func_pct_C1	mut_C2	60	30.1291
+func_pct_C1	mut_C2	180	59.9935

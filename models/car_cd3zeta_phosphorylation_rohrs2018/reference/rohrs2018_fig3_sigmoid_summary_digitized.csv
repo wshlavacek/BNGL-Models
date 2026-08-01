@@ -1,0 +1,13 @@
+# Fig. 3, middle and bottom rows: half-maximal time (min) and Hill coefficient of each mechanism's predicted response, plus the sigmoid fit to the experimental data (Fig. 1, D and E)
+# Digitized from Rohrs et al. (2018) Biophys J 115:1116-1129 by digitize_rohrs2018.py
+quantity,source,A1,A2,B1,B2,C1,C2
+half_max_time_min,competitive_inhibition,12.3239,84.507,61.6197,25.5282,150.528,114.437
+half_max_time_min,experiment_sigmoid_fit,14.7379,73.911,65.4421,21.6673,149.582,80.2901
+half_max_time_min,phosphate_priming,14.9385,63.2689,57.9965,23.7258,200.351,66.7838
+half_max_time_min,random_order,12.3239,67.7817,51.0563,25.5282,102.113,92.4296
+half_max_time_min,sequential_order,8.80282,80.1056,52.8169,29.9296,148.768,96.831
+hill_coefficient,competitive_inhibition,1.025,1.015,1.015,1.005,1.045,1.025
+hill_coefficient,experiment_sigmoid_fit,0.966587,1.04355,0.918612,0.919862,1.00442,1.06754
+hill_coefficient,phosphate_priming,1.66,2.73,2.62,1.89,2.51,2.81
+hill_coefficient,random_order,1.65,1.48,1.49,1.54,1.47,1.48
+hill_coefficient,sequential_order,0.67474,1.51557,1.18339,0.913495,2.71972,1.80623

@@ -1,0 +1,5 @@
+# Fig. 5, B and C: normalized log(EC50) and Hill coefficient of the phosphatase-model response for each ITAM mutant
+# Digitized from Rohrs et al. (2018) Biophys J 115:1116-1129 by digitize_rohrs2018.py
+quantity,ABC,xBC,AxC,ABx,Axx,xBx,xxC
+log_ec50_normalized,0,0.0973607,0.0703812,0.059824,0.160704,0.168915,0.178299
+hill_coefficient_normalized,1.01349,1.06979,1.04868,1.01349,1.06979,1.09091,1.14721
