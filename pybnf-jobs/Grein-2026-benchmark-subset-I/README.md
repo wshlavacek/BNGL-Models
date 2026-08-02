@@ -86,17 +86,35 @@ by regime. Classified from each conf's `noise_model` lines and `.exp` columns:
 | **estimated, prediction-dependent σ** (`sigma = prediction_formula …`) | 2 | Armistead, Raia | `(N/2)log(2π)` |
 | **per-measurement σ** (`sigma = formula noiseParameterN_*`, bound via `_measparams.tsv` sidecars, ADR-0083) | 2 | Fiedler, Zhao | `(N/2)log(2π)` |
 | **mixed estimated + `fix_at`** | 1 | Weber | `(N/2)log(2π)` + the fixed-σ terms |
-| **`objective = sos`, no noise model** | 2 | Oliveira, Smith | *see caveat below* |
+| **unit σ** (`objective = sos`, no noise model) | 2 | Oliveira, Smith | `(N/2)log(2π)` |
 
-For every regime except the last, the objective is the *full* Gaussian NLL (Eq. 6, with the
-`log(2πσ²)` normalizer), not a bare sum-of-squares. The fixed-per-point identity is verified
-numerically against the `.exp` `_SD` columns in two slugs' `VALIDATION.md` — Bruno to 4.9×10⁻⁷ (where
-σᵢ < 1 makes `Σ log σᵢ` negative) and Crauste to 1.5×10⁻⁷ (where σᵢ ≫ 1 makes it large and positive).
+The objective is the *full* Gaussian NLL (Eq. 6, with the `log(2πσ²)` normalizer) in every regime, not
+a bare sum-of-squares. The fixed-per-point identity is verified numerically against the `.exp` `_SD`
+columns in two slugs' `VALIDATION.md` — Bruno to 4.9×10⁻⁷ (where σᵢ < 1 makes `Σ log σᵢ` negative) and
+Crauste to 1.5×10⁻⁷ (where σᵢ ≫ 1 makes it large and positive).
 
-> **Caveat — `Oliveira_NatCommun2021` and `Smith_BMCSystBiol2013` ship `objective = sos`**, a plain
-> sum of squares with no noise model, which is *not* the paper's Eq. 6 NLL. Their `†` OG values in
-> the matrix below should be treated as unverified pending a check of whether the scoring identity
-> holds for them at all. This is flagged rather than fixed; do not cite those two rows.
+### Why `objective = sos` is faithful for Oliveira and Smith
+
+These two ship a plain sum of squares and no `noise_model` line, which looks like a fidelity break. It
+is not, and the reason is worth recording because it is not obvious from the conf alone. **Both
+problems specify σ ≡ 1 upstream**, checked against the pinned commit:
+
+- `Smith_BMCSystBiol2013` — `observables_*.tsv` carries the literal `noiseFormula = 1.0` for all seven
+  observables.
+- `Oliveira_NatCommun2021` — `noiseFormula = noiseParameter1_*`, bound by the measurement table to
+  `sd_cumulative_cases` / `sd_cumulative_deaths`, which `parameters_*.tsv` gives `nominalValue = 1`
+  and **`estimate = 0`** — fixed, not estimated.
+
+With σ ≡ 1 uniformly, Eq. 6 is `½Σr² + (N/2)log(2π)`. Minimizing `sos` (`Σr²`) and minimizing that NLL
+differ by a positive affine map, so they have the **same argmin** — the optimizer lands on the same
+point either way. (Uniformity is what makes this safe: with per-observable σ ≠ 1 the two objectives
+would weight residuals differently and the argmins would diverge.)
+
+Scoring is unaffected regardless, because `score.py` never reads the `sos` value: `−lnL` in
+`information_criteria.txt` is computed from the **noise model's** per-point `log_density` (ADR-0056),
+independent of the fitting objective. Oliveira confirms the arithmetic exactly — `J_paper − reduced =
+110.27262 = 120 × ½log(2π)`. For Smith the same constant (56.97) is invisible only because it falls
+below the ulp of its nominal objective, 6.85×10³².
 
 PyBNF **minimizes a reduced objective** that drops the parameter-independent per-point
 constants — `½log(2π)`, and (for a log10 observable) the change-of-variables Jacobian
