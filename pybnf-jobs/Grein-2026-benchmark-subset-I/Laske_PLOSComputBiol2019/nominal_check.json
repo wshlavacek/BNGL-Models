@@ -2,12 +2,12 @@
   "problem": "Laske",
   "slug": "Laske_PLOSComputBiol2019",
   "jstar": 276.05406127180015,
-  "J_paper": 372.75319082302,
-  "reduced_objective": 73.06811803176683,
+  "J_paper": 315.90591054673496,
+  "reduced_objective": 16.220837755481792,
   "n_scored": 42,
   "k": 13,
-  "OG_nominal": 96.69912955121987,
+  "OG_nominal": 39.85184927493481,
   "optimizer": "gntr",
   "status": "setup only",
-  "interpretation": "Imports, simulates and scores; the PEtab nominal point is NOT the published optimum (OG = 96.7 >> 1.92), so no optimality is claimed. Import exercised the #509 natural-log (lnnormal) noise family alongside linear Gaussian observables."
+  "interpretation": "Imports, simulates and scores; the PEtab nominal point is NOT the published optimum (OG = 39.9 >> 1.92), so no optimality is claimed. Import exercised the #509 natural-log (lnnormal) noise family alongside linear Gaussian observables. Recomputed 2026-08-02 after lanl/PyBNF#531: the previous value (OG 96.7) was evaluated against a forward model in which the 27 ModelValue_* aliases each SBML initialAssignment derives (ModelValue_79 = k_syn_R_M, ModelValue_80 = k_syn_P, ...) never tracked their sources, so the fitted k_syn_R_M and the condition target k_syn_P were both inert."
 }

@@ -2,11 +2,11 @@
   "problem": "Bertozzi",
   "slug": "Bertozzi_PNAS2020",
   "jstar": 158.86426270904192,
-  "J_paper": 178639066015.4067,
-  "reduced_objective": 178639065995.19006,
+  "J_paper": 158.86426780179107,
+  "reduced_objective": 138.64762007128826,
   "n_scored": 22,
   "k": 8,
-  "OG_nominal": 178639065856.54245,
-  "optimizer": "cmaes",
-  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+  "OG_nominal": 5.092749148616349e-06,
+  "optimizer": "gntr",
+  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective against the paper's Eq. 6 NLL. Recomputed 2026-08-02 after lanl/PyBNF#531: the previous value (OG 1.79e+11) was evaluated against a forward model whose derived parameter beta_N = R0_*gamma_/N_ never tracked its condition-set dependencies, so R0_ was inert and the trajectory was wrong by six orders of magnitude."
 }

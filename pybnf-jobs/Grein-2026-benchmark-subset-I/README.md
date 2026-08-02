@@ -34,8 +34,8 @@ Counting every file inside the 23 slug directories:
 | SBML model, verbatim from upstream | 23 | 1,681,108 | **copied** — 80% of bytes, 7% of files |
 | `.exp` and `_measparams.tsv` — PyBNF-format *translations* of the upstream measurement tables, emitted by the importer | 185 | 141,974 | derived |
 | `jstar.txt` — one number, transcribed from the ICB-DCM suppl repository | 23 | 433 | derived |
-| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 113 | 309,108 | **written here** |
-| total | 344 | 2,132,623 | |
+| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 116 | 323,552 | **written here** |
+| total | 347 | 2,147,067 | |
 
 The SBML files dominate the byte count and nothing else, which is why the directory *looks* mostly
 vendored while being 93% non-copied by file count. **Editing this directory is normal**: the
@@ -128,17 +128,29 @@ exactly, for **both** linear and log10 observables.
 
 **This identity is now corroborated across the collection, not just argued.** For ten problems the
 PEtab `nominalValue` point is the published optimum, and evaluating PyBNF's objective there
-reproduces the paper's `J*` to within the solved threshold — six to ~10⁻⁶ or better, plus
-`Fiedler_BMCSystBiol2016` at ~2e−3 (see `nominal_check.json` in each slug). That is an end-to-end
-check of the whole imported chain: SBML model → simulation → observable formulas → noise model →
-objective. (For the log10 slugs the nominal check carries the change-of-variables Jacobian and is
-recorded but not asserted as a validation.)
+reproduces the paper's `J*` to within the solved threshold — six to ~10⁻³ or better (four of those
+to ~10⁻⁵), plus `Fiedler_BMCSystBiol2016` at ~2e−3 (see `nominal_check.json` in each slug). That is
+an end-to-end check of the whole imported chain: SBML model → simulation → observable formulas →
+noise model → objective. (For the log10 slugs the nominal check carries the change-of-variables
+Jacobian and is recorded but not asserted as a validation.)
+
+> **Two nominal checks were recomputed on 2026-08-02** and their old values should not be used.
+> `Bertozzi_PNAS2020` moved from `OG = 1.79e+11` to `5.09e−06` — its nominal point *is* the
+> published optimum after all — and `Laske_PLOSComputBiol2019` from `96.7` to `39.9`. Both had been
+> evaluated against a forward model that **lanl/PyBNF#531** has since fixed: a parameter fixed by an
+> SBML `initialAssignment` was never recomputed when its dependencies changed, so Bertozzi's
+> `beta_N = R0_*gamma_/N_` and Laske's 27 COPASI-style `ModelValue_*` aliases all kept their
+> load-time values. That silently pinned any fitted or condition-set quantity reaching the dynamics
+> only through them. It is a **scalar-path** defect, so it affected every `job_type`, not just the
+> gradient ones. No other subset-I model derives a parameter this way — checked by scanning all 23
+> SBML files for an `initialAssignment` whose symbol is a non-rule-governed parameter.
 
 ## Coverage: all 23 subset-I problems
 
 | slug | J\* | scale | k | n | optimizer | OG | status |
 |---|---|---|---|---|---|---|---|
 | `Armistead_CellDeathDis2024` | −301.9161878 | lin | 14 | 58 | gntr | 5.8e−06 | ✅ **solved** |
+| `Bertozzi_PNAS2020` | 158.8642627 | lin | 8 | 22 | gntr | 5.4e−06 | ✅ **solved** |
 | `Blasi_CellSystems2016` | −1090.5618246 | ln | 9 | 252 | gntr | −4.3e−07 | ✅ **solved** |
 | `Boehm_JProteomeRes2014` | 138.2219682 | lin | 9 | 48 | gntr | 0.0012 | ✅ **solved** |
 | `Bruno_JExpBot2016` | −46.6881979 | lin | 13 | 77 | gntr | 1.1e−05 | ✅ **solved** |
@@ -149,7 +161,7 @@ recorded but not asserted as a validation.)
 | `Raia_CancerResearch2011` | 345.3097673 | lin | 39 | 205 | gntr | 0.78 † | 🟢 objective validated |
 | `SalazarCavazos_MBoC2020` | 366.8615730 | lin | 6 | 18 | gntr | 0.326 † | 🟢 objective validated |
 | `Sneyd_PNAS2002` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 | ✅ **solved** |
-| `Laske_PLOSComputBiol2019` | 276.0540613 | lin/ln | 13 | 42 | gntr | 96.7 † | ⚪ setup only |
+| `Laske_PLOSComputBiol2019` | 276.0540613 | lin/ln | 13 | 42 | gntr | 39.9 † | ⚪ setup only |
 | `Schwen_PONE2014` | 952.4217251 | log10 | 30 | 286 | gntr | −8.42 † | ⚪ setup only |
 | `Elowitz_Nature2000` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † | ⚪ setup only |
 | `Borghans_BiophysChem1997` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ⚪ setup only |
@@ -159,11 +171,10 @@ recorded but not asserted as a validation.)
 | `Weber_BMC2015` | 296.2020025 | lin | 36 | 135 | gntr | 1.4e+04 † | ⚪ setup only |
 | `Okuonghae_ChaosSolitonsFractals2020` | 373.5476580 | lin | 16 | 92 | cmaes | 4.7e+05 † | ⚪ setup only |
 | `Oliveira_NatCommun2021` | 7904.9343174 | lin | 12 | 120 | gntr | 9.6e+06 † | ⚪ setup only |
-| `Bertozzi_PNAS2020` | 158.8642627 | lin | 8 | 22 | cmaes | 1.8e+11 † | ⚪ setup only |
 | `Smith_BMCSystBiol2013` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † | ⚪ setup only |
 
 `k` = free parameters, `n` = scored data points.
-**† = optimality gap at the PEtab nominal point, not from a fit.** Only the seven ✅ rows report an
+**† = optimality gap at the PEtab nominal point, not from a fit.** Only the eight ✅ rows report an
 OG from an actual optimization run.
 
 Three status levels, and the difference matters:
@@ -206,27 +217,37 @@ its `VALIDATION.md`.
   gradient path genuinely refuses the problem, and for the three strongly multimodal problems
   (Borghans, Elowitz, Okuonghae), where a local method from a few starts lands in a local basin.
 
-The two remaining gradient-path refusals are **distinct**, and neither is the ADR-0076 condition
-routing that earlier revisions of this file attributed to both:
+**One** gradient-path refusal remains, and it has nothing to do with condition routing:
 
 | slug | refusal | fixable by |
 |---|---|---|
-| `Bertozzi_PNAS2020` | condition sets `I0_`, which seeds a species initial value whose `d(IC)/d(I0_)` is **not a plain 1** (a non-bare `initialAssignment`, an amount species needing a non-unit concentration factor, or a parameter seeding several species) — the honest-refusal boundary #511 deliberately left | extending the ADR-0076 routing to non-unit seed derivatives |
 | `Smith_BMCSystBiol2013` | the model contains **discrete events** (state-dependent jumps); forward output sensitivities go stale across a jump, so bngsim cannot supply a gradient there (`_require_differentiable_dynamics`, lanl/PyBNF #461) | nothing in the ADR-0076 line — this needs event-aware sensitivities |
 
-`Bruno_JExpBot2016` was in this list until **lanl/PyBNF #511** (merged #513, 2026-07-23) taught
-`route_experiment` to compose the chain rule for a free parameter that reaches the model only through
-a `condition:` parameter reference. It now fits on the gradient path and **solves** (`OG = 1.1×10⁻⁵`
-in 41 s); its conf carries `job_type = gntr`. Its `VALIDATION.md` records the history.
+The ADR-0076 condition-routing line is now **clear**, in two steps:
+
+- `Bruno_JExpBot2016` left the list at **lanl/PyBNF #511** (merged #513, 2026-07-23), which taught
+  `route_experiment` to compose the chain rule for a free parameter that reaches the model only
+  through a `condition:` parameter reference. It fits on the gradient path and **solves**
+  (`OG = 1.1×10⁻⁵` in 41 s). Its `VALIDATION.md` records the history.
+- `Bertozzi_PNAS2020` left it at **lanl/PyBNF #530** (ADR-0095, 2026-08-02), which stopped assuming
+  that seed derivative is a plain `1`. Bertozzi needed all of it: `I0_` seeds two species with
+  opposite signs (`I_ = I0_`, `S_ = N_ - I0_`), and `R0_`/`gamma_` reach the dynamics only through
+  the derived `beta_N = R0_*gamma_/N_`, whose derivatives are expressions re-evaluated at each fit
+  point. Note that the last of those was never covered by the refusal at all — those two columns
+  were silently wrong rather than refused, which is why #530 could not be landed without #531.
+  It now **solves** (`OG = 5.4×10⁻⁶`) and its conf carries `job_type = gntr`.
 
 Every shipped conf was verified to start and complete a tiny run.
 
 **These recipes are reasonable defaults, not tuned ones — and that is a real limitation.** A full
 `gntr` run of the shipped `SalazarCavazos_MBoC2020` conf (20 starts × 500) converged to `OG = 10.2`,
 i.e. *worse* than that problem's own nominal point (`OG = 0.33`): 20 box-sampled starts were not
-enough to find the reference basin. Expect to tune `population_size` / `max_iterations`, or to switch
-to `cmaes` with IPOP restarts, before treating any ⚪ or 🟢 row as a statement about PyBNF's
-optimizers. The seven ✅ rows are the only ones where a fit was actually driven to `OG < 1.92`.
+enough to find the reference basin. `Laske_PLOSComputBiol2019`, run once on the corrected forward
+model, went the other way — `OG = 6.76`, well in from its nominal `39.9`, but still outside the
+threshold. Neither run is shipped, and neither slug's status changes. Expect to tune
+`population_size` / `max_iterations`, or to switch to `cmaes` with IPOP restarts, before treating any
+⚪ or 🟢 row as a statement about PyBNF's optimizers. The eight ✅ rows are the only ones where a fit
+was actually driven to `OG < 1.92`.
 
 ## Import + fit pipeline (reproduce)
 
