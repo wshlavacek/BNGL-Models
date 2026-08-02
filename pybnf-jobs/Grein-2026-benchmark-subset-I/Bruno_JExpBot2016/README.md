@@ -5,13 +5,18 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Status
 
-**Objective validated at the PEtab nominal point** (OG = 3.23e-06 < 1.92). No optimization run has been performed here.
+**SOLVED** — `OG = 1.1e-05` from a from-scratch 20-start `gntr` fit in 41 s, well inside
+the threshold `OG < 1.92`. The PEtab nominal point is *also* this problem's published
+optimum (`OG = 3.23e-06`), so the objective is validated independently of the optimizer.
+See `VALIDATION.md`.
 
 ## Reference
 
 | quantity | value |
 |---|---|
 | reference `J*` (Grein et al., best over all optimizer runs) | `-46.688197918626756` |
+| paper-scale NLL at the fitted optimum | `-46.68818673` |
+| **optimality gap from the fit** | **`1.1e-05`** |
 | paper-scale NLL at the PEtab nominal point | `-46.688194686350265` |
 | optimality gap at nominal | `3.232276490905406e-06` |
 | scored data points `n` | 77 |
@@ -23,8 +28,17 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Optimizer
 
-`job_type = cmaes` — CMA-ES with IPOP restarts (ADR-0070/0082) — a global search, chosen because this problem is multimodal or refuses the gradient path. Note: fell back to cmaes: gntr: Error: Condition sets 'init_b10' to the value of free parameter 'init_b10_1' (a per-condition estimated initial condition, ADR-0076). The gradient path cannot yet route a free parameter that reaches the model through a c The shipped recipe was
-verified to start and run on this problem.
+`job_type = gntr` — the general-objective Fisher/Gauss-Newton trust region (ADR-0068),
+PyBNF's fides-analogue and the default for this collection. 20 box-sampled starts,
+converged in 41 s.
+
+This slug shipped `job_type = cmaes` until **lanl/PyBNF#511** (merged #513, 2026-07-23),
+with a note that the gradient path had refused it: all 13 free parameters reach the model
+only through `condition:` parameter references (`init_b10 = init_b10_1`, a per-condition
+estimated initial condition, ADR-0076), and `route_experiment` aborted on any such
+perturbation rather than emit a silently-zero column. #511 taught it to compose the chain
+rule instead, and the problem moved onto the gradient path and solved. **This README kept
+describing the old recipe until 2026-08-02** — the conf itself has said `gntr` since #511.
 
 ## Contents
 
@@ -33,6 +47,8 @@ verified to start and run on this problem.
 - `experiment____model1_data1.exp`, `experiment____model1_data2.exp`, `experiment____model1_data3.exp`, `experiment____model1_data4.exp`, `experiment____model1_data5.exp`, `experiment____model1_data6.exp` — experimental data
 - `jstar.txt` — the reference `J*`
 - `nominal_check.json` — the nominal-point evaluation recorded above
+- `best_fit_params.txt`, `information_criteria.txt` — the shipped fit's provenance
+- `VALIDATION.md` — the full validation against `J*`
 - `score.py` — scores a run against `J*`
 
 ## Provenance
@@ -48,5 +64,5 @@ if valid simulations on your machine are being marked as failures.
 
 ```bash
 pybnf -c Bruno_JExpBot2016.conf -o
-python score.py output
+python score.py output          # or: python score.py   (scores the shipped provenance)
 ```

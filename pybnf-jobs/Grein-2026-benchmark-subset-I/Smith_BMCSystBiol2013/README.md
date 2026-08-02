@@ -23,8 +23,16 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Optimizer
 
-`job_type = cmaes` — CMA-ES with IPOP restarts (ADR-0070/0082) — a global search, chosen because this problem is multimodal or refuses the gradient path. Note: fell back to cmaes: gntr: Error: Gradient-based fitting is not available for this fit; use a metaheuristic fit_type instead (e.g. fit_type = de, the default, or pso / ss / cmaes), which needs no gradient. The shipped recipe was
-verified to start and run on this problem.
+`job_type = cmaes` — CMA-ES with IPOP restarts (ADR-0070/0082), a global search, because
+**the gradient path genuinely refuses this problem**. The model contains discrete events
+(state-dependent jumps); bngsim's forward output sensitivities are not reinitialised across
+such a jump, so they go silently stale at and after one fires, and bngsim refuses to supply
+them rather than return wrong derivatives. PyBNF reads that as a pre-flight gate
+(`_require_differentiable_dynamics`, lanl/PyBNF#461) and refuses `gntr`/`trf`/`lbfgs` up
+front. This is the one remaining gradient refusal in subset I, and it needs event-aware
+sensitivities — nothing in the ADR-0076 condition-routing line touches it.
+
+The shipped recipe was verified to start and run on this problem.
 
 ## Contents
 

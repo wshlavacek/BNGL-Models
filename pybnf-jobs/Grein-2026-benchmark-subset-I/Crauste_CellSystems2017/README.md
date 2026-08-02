@@ -5,7 +5,10 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Status
 
-**Objective validated at the PEtab nominal point** (OG = 0.509 < 1.92). No optimization run has been performed here.
+**SOLVED** — `OG = 0.583` from a from-scratch 20-start `gntr` fit, inside the threshold
+`OG < 1.92` though not saturated: this is a sparse, weakly-identified problem (12 parameters
+against 21 points) with a flat basin floor. The PEtab nominal point is also inside the
+threshold (`OG = 0.509`). See `VALIDATION.md`.
 
 ## Reference
 
