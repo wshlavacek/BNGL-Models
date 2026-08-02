@@ -11,3 +11,17 @@ my_models/reference/
 dev/
 bnf_*.log
 **/results_*/
+
+# PyBNF run output. A fit writes output_dir/ (Results/, FailedSimLogs/, alg_backup.bp) into the
+# job directory it runs in, so a broad `git add <slug-dir>` while a fit is in flight sweeps a
+# scratch run into the tree -- which is exactly how 15 such files reached 7e3a63b. Shipped fit
+# provenance is copied OUT of a run as best_fit_params.txt / information_criteria.txt; the run
+# directory itself is never a deliverable.
+**/output/
+**/output_*/
+
+# Local checkout of the upstream PEtab benchmark collection, kept beside the jobs for
+# regenerating nominal checks. Deliberately not vendored -- see Grein-2026-benchmark-subset-I's
+# README ("not one upstream PEtab problem file lives here") and upstream.json, which pins the
+# commit instead.
+pybnf-jobs/Benchmark-Models-PEtab/
