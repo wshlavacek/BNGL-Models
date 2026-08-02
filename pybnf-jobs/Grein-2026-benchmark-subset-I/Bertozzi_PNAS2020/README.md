@@ -29,7 +29,7 @@ threshold `OG < 1.92`. The PEtab nominal point is *also* this problem's publishe
 
 `job_type = gntr` — the general-objective Fisher/Gauss-Newton trust region (ADR-0068),
 PyBNF's fides-analogue and the default for this collection. 20 box-sampled starts,
-converged in about a minute.
+converged well inside the 500-iteration budget (the stop criterion fired at ~350).
 
 ### This slug used to ship `cmaes`, for two reasons that were both wrong
 

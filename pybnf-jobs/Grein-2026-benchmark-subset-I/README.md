@@ -34,8 +34,8 @@ Counting every file inside the 23 slug directories:
 | SBML model, verbatim from upstream | 23 | 1,681,108 | **copied** — 80% of bytes, 7% of files |
 | `.exp` and `_measparams.tsv` — PyBNF-format *translations* of the upstream measurement tables, emitted by the importer | 185 | 141,974 | derived |
 | `jstar.txt` — one number, transcribed from the ICB-DCM suppl repository | 23 | 433 | derived |
-| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 116 | 323,552 | **written here** |
-| total | 347 | 2,147,067 | |
+| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 119 | 340,630 | **written here** |
+| total | 350 | 2,164,145 | |
 
 The SBML files dominate the byte count and nothing else, which is why the directory *looks* mostly
 vendored while being 93% non-copied by file count. **Editing this directory is normal**: the
@@ -92,6 +92,26 @@ The objective is the *full* Gaussian NLL (Eq. 6, with the `log(2πσ²)` normali
 a bare sum-of-squares. The fixed-per-point identity is verified numerically against the `.exp` `_SD`
 columns in two slugs' `VALIDATION.md` — Bruno to 4.9×10⁻⁷ (where σᵢ < 1 makes `Σ log σᵢ` negative) and
 Crauste to 1.5×10⁻⁷ (where σᵢ ≫ 1 makes it large and positive).
+
+**The restored-constant column above is the σ-source part only.** A slug whose observables are
+log-transformed carries the change-of-variables Jacobian on top of it, and for six of them that term
+*dominates* — so the column is not the whole restored constant for those, and reading it as such
+will mislead. Measured at each nominal point (`J_paper − reduced` against `(N/2)log(2π)`):
+
+| slug | scale | restored | of which `(N/2)log(2π)` | of which Jacobian |
+|---|---|---:|---:|---:|
+| `Blasi_CellSystems2016` | ln | −870.4303 | 231.5725 | −1102.0028 |
+| `Borghans_BiophysChem1997` | log10 | 114.7780 | 102.0022 | 12.7758 |
+| `Elowitz_Nature2000` | log10 | 60.5282 | 53.2984 | 7.2298 |
+| `Laske_PLOSComputBiol2019` | lin/ln | 299.6851 | 38.5954 | 261.0897 |
+| `Perelson_Science1996` | log10 | 247.8317 | 14.7030 | 233.1287 |
+| `Schwen_PONE2014` | log10 | 1255.8661 | 262.8164 | 993.0497 |
+
+`Laske_PLOSComputBiol2019` is the one to read first, because it is the **mixed** case: 33 of its 42
+points are natural-log (`lnnormal`) and 9 are linear Gaussian, so its Jacobian is `Σ log(y_obs)` over
+the `lnnormal` points *only*. Computed straight from the `.exp` columns that is 261.089654, which with
+`(N/2)log(2π) = 38.595418` gives 299.685073 — the observed restored constant to every digit. Its
+`VALIDATION.md` records the check.
 
 ### Why `objective = sos` is faithful for Oliveira and Smith
 
@@ -156,12 +176,12 @@ Jacobian and is recorded but not asserted as a validation.)
 | `Bruno_JExpBot2016` | −46.6881979 | lin | 13 | 77 | gntr | 1.1e−05 | ✅ **solved** |
 | `Crauste_CellSystems2017` | 190.4570655 | lin | 12 | 21 | gntr | 0.583 | ✅ **solved** |
 | `Fiedler_BMCSystBiol2016` | −58.5839553 | lin | 22 | 72 | gntr | −0.0022 † | 🟢 objective validated |
+| `Laske_PLOSComputBiol2019` | 276.0540613 | lin/ln | 13 | 42 | gntr | −1e−06 | ✅ **solved** |
 | `Perelson_Science1996` | 222.2807689 | log10 | 3 | 16 | cmaes | 5e−7 | ✅ **solved** |
 | `Rahman_MBS2016` | 21.1534861 | lin | 9 | 23 | gntr | 3.9e−06 † | 🟢 objective validated |
 | `Raia_CancerResearch2011` | 345.3097673 | lin | 39 | 205 | gntr | 0.78 † | 🟢 objective validated |
 | `SalazarCavazos_MBoC2020` | 366.8615730 | lin | 6 | 18 | gntr | 0.326 † | 🟢 objective validated |
 | `Sneyd_PNAS2002` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 | ✅ **solved** |
-| `Laske_PLOSComputBiol2019` | 276.0540613 | lin/ln | 13 | 42 | gntr | 39.9 † | ⚪ setup only |
 | `Schwen_PONE2014` | 952.4217251 | log10 | 30 | 286 | gntr | −8.42 † | ⚪ setup only |
 | `Elowitz_Nature2000` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † | ⚪ setup only |
 | `Borghans_BiophysChem1997` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ⚪ setup only |
@@ -174,7 +194,7 @@ Jacobian and is recorded but not asserted as a validation.)
 | `Smith_BMCSystBiol2013` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † | ⚪ setup only |
 
 `k` = free parameters, `n` = scored data points.
-**† = optimality gap at the PEtab nominal point, not from a fit.** Only the eight ✅ rows report an
+**† = optimality gap at the PEtab nominal point, not from a fit.** Only the nine ✅ rows report an
 OG from an actual optimization run.
 
 Three status levels, and the difference matters:
@@ -242,11 +262,11 @@ Every shipped conf was verified to start and complete a tiny run.
 **These recipes are reasonable defaults, not tuned ones — and that is a real limitation.** A full
 `gntr` run of the shipped `SalazarCavazos_MBoC2020` conf (20 starts × 500) converged to `OG = 10.2`,
 i.e. *worse* than that problem's own nominal point (`OG = 0.33`): 20 box-sampled starts were not
-enough to find the reference basin. `Laske_PLOSComputBiol2019`, run once on the corrected forward
-model, went the other way — `OG = 6.76`, well in from its nominal `39.9`, but still outside the
-threshold. Neither run is shipped, and neither slug's status changes. Expect to tune
+enough to find the reference basin. `Laske_PLOSComputBiol2019` is the worked example in the other
+direction, and it is now **solved**: the collection-default 20 × 500 reaches only `OG = 6.76` on it,
+while 100 × 1000 — the budget its conf now carries — reaches the reference optimum itself. Expect to tune
 `population_size` / `max_iterations`, or to switch to `cmaes` with IPOP restarts, before treating any
-⚪ or 🟢 row as a statement about PyBNF's optimizers. The eight ✅ rows are the only ones where a fit
+⚪ or 🟢 row as a statement about PyBNF's optimizers. The nine ✅ rows are the only ones where a fit
 was actually driven to `OG < 1.92`.
 
 ## Import + fit pipeline (reproduce)

@@ -5,9 +5,11 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Status
 
-**Setup only** — the job imports, simulates, and scores, but the PEtab nominal point
-is **not** the published optimum (OG = 39.9 ≫ 1.92), so nothing about optimality is
-claimed. This is a ready-to-run job, not a result.
+**SOLVED** — `OG = -1e-06` from a from-scratch 100-start `gntr` fit: the fit reaches the
+benchmark reference optimum `J*` itself, to six decimal places. Unlike most solved slugs
+here the PEtab nominal point is **not** this problem's optimum (`OG = 39.9`), so this
+result comes entirely from the optimizer, not from the imported parameter values. See
+`VALIDATION.md`.
 
 > **The nominal check was recomputed on 2026-08-02** after **lanl/PyBNF#531**, and the
 > number moved from `OG = 96.7` to `OG = 39.9`. This model is a COPASI export: every rate
@@ -25,6 +27,8 @@ claimed. This is a ready-to-run job, not a result.
 | quantity | value |
 |---|---|
 | reference `J*` (Grein et al., best over all optimizer runs) | `276.05406127180015` |
+| paper-scale NLL at the fitted optimum | `276.0540604` |
+| **optimality gap from the fit** | **`-1e-06`** |
 | paper-scale NLL at the PEtab nominal point | `315.90591054673496` |
 | optimality gap at nominal | `39.85184927493481` |
 | scored data points `n` | 42 |
@@ -37,16 +41,20 @@ claimed. This is a ready-to-run job, not a result.
 ## Optimizer
 
 `job_type = gntr` — general-objective Fisher/Gauss-Newton trust region (ADR-0068),
-which handles this problem's estimated noise scales. This is a **default recipe, not
-a tuned one**; expect to tune `population_size` / `max_iterations` (or switch to
-`cmaes` with IPOP restarts) before treating a run as a statement about PyBNF's
-optimizers.
+which handles this problem's estimated noise scales — with **100 starts × 1000
+iterations**. That is a deliberately larger budget than the collection's usual
+20 × 500, and this slug is the reason the distinction is worth stating: at 20 × 500 the
+same method reaches only `OG = 6.76`. The extra starts are what find the basin.
 
-The shipped recipe was run once on the corrected forward model (2026-08-02, after
-lanl/PyBNF#531) and reached `OG = 6.76` — a long way in from the nominal `39.9`, but
-still outside the `1.92` threshold, so the status stays **setup only** and no artifacts
-from that run are shipped. Taking this one to solved is a tuning exercise, not a
-capability gap: the gradient path accepts the problem.
+Getting here took two PyBNF fixes and one budget increase, in that order — see
+`VALIDATION.md` for the full account:
+
+| | `OG` |
+|---|---|
+| 20 × 500, before lanl/PyBNF#531 (stale derived parameters) | 96.7 at nominal, no usable fit |
+| 20 × 500, after #531 | 6.76 |
+| 100 × 1000, after #531, gradient still missing a column (#534) | 0.104 |
+| 100 × 1000, after #531 **and** #534 | **-1e-06** |
 
 ## Provenance
 
@@ -66,11 +74,13 @@ recovered.
 - `experiment____virus_infection*.exp` — experimental data (3 replicate files)
 - `jstar.txt` — the reference `J*`
 - `nominal_check.json` — the nominal-point evaluation recorded above
+- `best_fit_params.txt`, `information_criteria.txt` — the shipped fit's provenance
+- `VALIDATION.md` — the full validation against `J*`
 - `score.py` — scores a run against `J*`
 
 ## Running
 
 ```bash
 pybnf -c Laske_PLOSComputBiol2019.conf -o
-python score.py output
+python score.py output          # or: python score.py   (scores the shipped provenance)
 ```

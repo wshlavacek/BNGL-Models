@@ -33,7 +33,8 @@ the eight — so the restored constant is the bare `(N/2)log(2π)`:
 
 From-scratch multi-start `gntr` (20 starts × 500 iterations, `random_seed = 1`,
 `sbml_backend = bngsim`) converges to `J_pybnf = 138.6476200551601` ⇒ `J_paper = 158.8642678` ⇒
-**OG = 5.4×10⁻⁶ < 1.92**, against `J* = 158.86426270904192`. Wall time about one minute on 6 cores.
+**OG = 5.4×10⁻⁶ < 1.92**, against `J* = 158.86426270904192`. The stop criterion fired at ~350 of
+the 500 allowed iterations, on 6 cores.
 
 The PEtab `nominalValue` point evaluates to `OG_nominal = 5.09×10⁻⁶`, so for this problem the nominal
 point **is** the published optimum and the fit found it from scratch. The two agree on six of the
@@ -118,14 +119,23 @@ at each evaluated PSet.
 
 ## Provenance
 
-Run against **bngsim 0.12.0** (`~/Code/bngsim` at `f4b24ac`) with PyBNF at ADR-0094 + ADR-0095. The
+Run against **bngsim 0.12.1** (the released PyPI wheel) with PyBNF at ADR-0094 + ADR-0095. The
 `nominal_check.json` here was recomputed after both fixes; the value it carried before 2026-08-02 is
 not comparable with anything.
+
+The fit was first produced on a locally built 0.12.0 and re-run on 0.12.1, which fixes a `set_param`
+regression that shipped in 0.12.0 (it discarded state a run had advanced when the species happened
+not to move; `bng_parity` went PASS → DIFF on the 0.12.0 sweep). That pattern needs
+`run()` → `set_state()` → `set_param()`, which a single-run time course like this one never
+performs — and the two builds agree here to the last digit: identical `information_criteria.txt`,
+identical nominal check, and fitted parameter values matching to a relative 0.0 across all 20
+recorded rows. The only difference between the two `best_fit_params.txt` files is the worker-label
+column.
 
 ## Bottom line
 
 The derived-parameter case, and the collection's sharpest reminder that a shipped recipe can be a
 symptom rather than a choice. Both the `cmaes` recipe and the `1.79×10¹¹` nominal gap were downstream
 of a simulation bug, not of the problem's difficulty: with the forward model correct and the
-condition-routed gradient columns complete, it solves on the gradient path in about a minute, from
-scratch, to six significant figures.
+condition-routed gradient columns complete, it solves on the gradient path from scratch, to six
+significant figures.
