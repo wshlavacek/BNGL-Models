@@ -34,8 +34,8 @@ Counting every file inside the 23 slug directories:
 | SBML model, verbatim from upstream | 23 | 1,681,108 | **copied** — 80% of bytes, 7% of files |
 | `.exp` and `_measparams.tsv` — PyBNF-format *translations* of the upstream measurement tables, emitted by the importer | 185 | 141,974 | derived |
 | `jstar.txt` — one number, transcribed from the ICB-DCM suppl repository | 23 | 433 | derived |
-| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 107 | 287,397 | **written here** |
-| total | 338 | 2,110,912 | |
+| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 113 | 309,108 | **written here** |
+| total | 344 | 2,132,623 | |
 
 The SBML files dominate the byte count and nothing else, which is why the directory *looks* mostly
 vendored while being 93% non-copied by file count. **Editing this directory is normal**: the
@@ -74,12 +74,29 @@ negative log-likelihood (`data/best_fx_marvin.csv`, column `fx_best`). Each slug
 
 ## Objective fidelity
 
-Every subset-I problem *except* `Bruno_JExpBot2016` estimates its measurement noise as a **free
-`sigma`/`sd_*` parameter**, so the objective is the *full* Gaussian NLL (Eq. 6, with the `log(2πσ²)`
-normalizer), not a bare sum-of-squares. (Bruno's σ is **known and fixed per data point**, carried in
-the measurement table and imported as `_SD` columns; all 13 of its free parameters are model
-parameters. Its restored constant is correspondingly `Σ log σᵢ + (N/2)log(2π)` rather than the bare
-`(N/2)log(2π)` — verified to 4.9×10⁻⁷ in its `VALIDATION.md`.)
+Subset I is **not one noise regime**. Earlier revisions of this file asserted that every problem
+estimates its σ as a free `sigma`/`sd_*` parameter; that is wrong, and the correction matters because
+the restored constant — the bridge between what PyBNF minimizes and the paper's Eq. 6 NLL — differs
+by regime. Classified from each conf's `noise_model` lines and `.exp` columns:
+
+| regime | n | slugs | restored constant |
+|---|---:|---|---|
+| **estimated scalar σ** (`sigma = fit p`) | 12 | Bertozzi, Blasi, Boehm, Borghans, Brannmark, Elowitz, Giordano, Laske, Okuonghae, Perelson, Schwen, Sneyd | `(N/2)log(2π)` |
+| **fixed per-point σ** (data `_SD` columns) | 4 | Bruno, Crauste, Rahman, SalazarCavazos | `Σ log σᵢ + (N/2)log(2π)` |
+| **estimated, prediction-dependent σ** (`sigma = prediction_formula …`) | 2 | Armistead, Raia | `(N/2)log(2π)` |
+| **per-measurement σ** (`sigma = formula noiseParameterN_*`, bound via `_measparams.tsv` sidecars, ADR-0083) | 2 | Fiedler, Zhao | `(N/2)log(2π)` |
+| **mixed estimated + `fix_at`** | 1 | Weber | `(N/2)log(2π)` + the fixed-σ terms |
+| **`objective = sos`, no noise model** | 2 | Oliveira, Smith | *see caveat below* |
+
+For every regime except the last, the objective is the *full* Gaussian NLL (Eq. 6, with the
+`log(2πσ²)` normalizer), not a bare sum-of-squares. The fixed-per-point identity is verified
+numerically against the `.exp` `_SD` columns in two slugs' `VALIDATION.md` — Bruno to 4.9×10⁻⁷ (where
+σᵢ < 1 makes `Σ log σᵢ` negative) and Crauste to 1.5×10⁻⁷ (where σᵢ ≫ 1 makes it large and positive).
+
+> **Caveat — `Oliveira_NatCommun2021` and `Smith_BMCSystBiol2013` ship `objective = sos`**, a plain
+> sum of squares with no noise model, which is *not* the paper's Eq. 6 NLL. Their `†` OG values in
+> the matrix below should be treated as unverified pending a check of whether the scoring identity
+> holds for them at all. This is flagged rather than fixed; do not cite those two rows.
 
 PyBNF **minimizes a reduced objective** that drops the parameter-independent per-point
 constants — `½log(2π)`, and (for a log10 observable) the change-of-variables Jacobian
@@ -103,11 +120,11 @@ recorded but not asserted as a validation.)
 
 | slug | J\* | scale | k | n | optimizer | OG | status |
 |---|---|---|---|---|---|---|---|
-| `Armistead_CellDeathDis2024` | −301.9161878 | lin | 14 | 58 | gntr | 5.8e−06 † | 🟢 objective validated |
+| `Armistead_CellDeathDis2024` | −301.9161878 | lin | 14 | 58 | gntr | 5.8e−06 | ✅ **solved** |
 | `Blasi_CellSystems2016` | −1090.5618246 | ln | 9 | 252 | gntr | −4.3e−07 | ✅ **solved** |
 | `Boehm_JProteomeRes2014` | 138.2219682 | lin | 9 | 48 | gntr | 0.0012 | ✅ **solved** |
 | `Bruno_JExpBot2016` | −46.6881979 | lin | 13 | 77 | gntr | 1.1e−05 | ✅ **solved** |
-| `Crauste_CellSystems2017` | 190.4570655 | lin | 12 | 21 | gntr | 0.509 † | 🟢 objective validated |
+| `Crauste_CellSystems2017` | 190.4570655 | lin | 12 | 21 | gntr | 0.583 | ✅ **solved** |
 | `Fiedler_BMCSystBiol2016` | −58.5839553 | lin | 22 | 72 | gntr | −0.0022 † | 🟢 objective validated |
 | `Perelson_Science1996` | 222.2807689 | log10 | 3 | 16 | cmaes | 5e−7 | ✅ **solved** |
 | `Rahman_MBS2016` | 21.1534861 | lin | 9 | 23 | gntr | 3.9e−06 † | 🟢 objective validated |
@@ -128,7 +145,7 @@ recorded but not asserted as a validation.)
 | `Smith_BMCSystBiol2013` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † | ⚪ setup only |
 
 `k` = free parameters, `n` = scored data points.
-**† = optimality gap at the PEtab nominal point, not from a fit.** Only the five ✅ rows report an
+**† = optimality gap at the PEtab nominal point, not from a fit.** Only the seven ✅ rows report an
 OG from an actual optimization run.
 
 Three status levels, and the difference matters:
@@ -191,7 +208,7 @@ Every shipped conf was verified to start and complete a tiny run.
 i.e. *worse* than that problem's own nominal point (`OG = 0.33`): 20 box-sampled starts were not
 enough to find the reference basin. Expect to tune `population_size` / `max_iterations`, or to switch
 to `cmaes` with IPOP restarts, before treating any ⚪ or 🟢 row as a statement about PyBNF's
-optimizers. The five ✅ rows are the only ones where a fit was actually driven to `OG < 1.92`.
+optimizers. The seven ✅ rows are the only ones where a fit was actually driven to `OG < 1.92`.
 
 ## Import + fit pipeline (reproduce)
 
