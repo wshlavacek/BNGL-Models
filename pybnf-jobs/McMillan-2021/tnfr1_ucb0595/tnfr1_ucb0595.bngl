@@ -1,0 +1,141 @@
+begin model
+
+#@title: UCB-0595-distorted TNF-TNFR1 sequential binding (McMillan et al., 2021)
+
+#@description: |
+#  Equilibrium binding of soluble human TNFR1 to the three sites of a trimeric
+#  human TNF ligand, reconstructed from the BioNetGen model distributed with
+#  McMillan et al. (2021). The affinity of a free site depends on whether zero,
+#  one, or two receptors are already bound, giving three sequential microscopic
+#  dissociation constants. UCB-0595 stabilizes a distorted TNF trimer: the first
+#  two receptors still bind tightly, whereas the third-site dissociation
+#  constant rises to 9.612 uM. A receptor titration therefore accumulates the 2R
+#  state and requires high receptor concentration to populate 3R. The model uses
+#  molecule counts in a 1 fL assay volume and is simulated deterministically to
+#  reproduce the compound-bound IMS-MS equilibrium titration in Fig. 1b.
+
+#@keyword: |
+#  receptor-ligand binding, tumor necrosis factor, TNFR1, sequential binding,
+#  negative cooperativity, UCB-0595, small-molecule inhibition, ion-mobility
+#  mass spectrometry, mass action, equilibrium titration, Homo sapiens
+
+#@reference: |
+#  McMillan D, Martinez-Fleites C, Porter J, Fox D 3rd, Davis R, Mori P, et al.
+#  (2021). Structural insights into the disruption of TNF-TNFR1 signalling by
+#  small molecules stabilising a distorted TNF. Nat Commun 12:582.
+#  doi:10.1038/s41467-020-20828-3
+
+#@note: |
+#  This variant differs from the primary apo-TNF model only in the three
+#  dissociation constants reported for UCB-0595-bound TNF in Fig. 1b. The three
+#  sites are explicitly named so the occupancy-dependent affinities in the
+#  authors' Supplementary Software 1 retain their original rule semantics.
+
+begin parameters
+  # Avogadro constant (exact)
+  NA 6.02214076e23 # molecules/mol
+
+  # Assay volume used by McMillan et al. (2021), Supplementary Software 1
+  V_ref 1e-15 # L/assay
+
+  # Initial trimeric TNF concentration in the Fig. 1b IMS-MS titration
+  TNF_conc 5000 # nM
+  # Initial soluble TNFR1 concentration; scanned over the Fig. 1b doses
+  TNFR1_conc 1000 # nM
+
+  # Population equivalents in the assay volume
+  TNF_total TNF_conc*1e-9*NA*V_ref # molecules
+  TNFR1_total TNFR1_conc*1e-9*NA*V_ref # molecules
+
+  # Common dissociation rate used by the authors' supplied model
+  koff 0.01 # /s
+
+  # UCB-0595-bound TNF sequential dissociation constants reported in Fig. 1b
+  Kd_1 0.04 # nM
+  Kd_2 0.19 # nM
+  Kd_3 9612 # nM
+
+  # Association rates converted to population units
+  kon_1 koff/(Kd_1*1e-9*NA*V_ref) # /(molecule/assay)/s
+  kon_2 koff/(Kd_2*1e-9*NA*V_ref) # /(molecule/assay)/s
+  kon_3 koff/(Kd_3*1e-9*NA*V_ref) # /(molecule/assay)/s
+end parameters
+
+begin molecule types
+  # Trimeric TNF represented as one molecule with three receptor-binding sites
+  TNF(s1,s2,s3)
+  # Soluble human TNFR1 ectodomain
+  TNFR1(tnf)
+end molecule types
+
+begin seed species
+  # Free TNF trimers
+  TNF(s1,s2,s3) TNF_total # molecules
+  # Free soluble TNFR1
+  TNFR1(tnf) TNFR1_total # molecules
+end seed species
+
+begin observables
+  # Total TNF trimers across all receptor occupancies
+  Molecules TNF_all TNF()
+  # TNF trimers with no receptor bound
+  Species TNF_0R TNF(s1,s2,s3)
+  # TNF trimers with exactly one receptor bound
+  Species TNF_1R TNF(s1!+,s2,s3),TNF(s1,s2!+,s3),TNF(s1,s2,s3!+)
+  # TNF trimers with exactly two receptors bound
+  Species TNF_2R TNF(s1!+,s2!+,s3),TNF(s1!+,s2,s3!+),TNF(s1,s2!+,s3!+)
+  # TNF trimers with all three receptors bound
+  Species TNF_3R TNF(s1!+,s2!+,s3!+)
+  # Total receptor molecules bound to TNF
+  Molecules TNFR1_bound TNFR1(tnf!+)
+end observables
+
+begin functions
+  # IMS-MS readouts: molar fractions of TNF occupancy states
+  Frac_TNF_0R() TNF_0R/TNF_all
+  Frac_TNF_1R() TNF_1R/TNF_all
+  Frac_TNF_2R() TNF_2R/TNF_all
+  Frac_TNF_3R() TNF_3R/TNF_all
+
+  # Dimensional conversions (uncomment for concentration output)
+# TNF_all_conc() = TNF_all/(NA*V_ref) # M
+# TNF_0R_conc() = TNF_0R/(NA*V_ref) # M
+# TNF_1R_conc() = TNF_1R/(NA*V_ref) # M
+# TNF_2R_conc() = TNF_2R/(NA*V_ref) # M
+# TNF_3R_conc() = TNF_3R/(NA*V_ref) # M
+# TNFR1_bound_conc() = TNFR1_bound/(NA*V_ref) # M
+end functions
+
+begin reaction rules
+  # First receptor-binding event: any one of the three free TNF sites
+  R_bind_1_s1: TNF(s1,s2,s3)+TNFR1(tnf)<->\
+    TNF(s1!1,s2,s3).TNFR1(tnf!1) kon_1,koff
+  R_bind_1_s2: TNF(s1,s2,s3)+TNFR1(tnf)<->\
+    TNF(s1,s2!1,s3).TNFR1(tnf!1) kon_1,koff
+  R_bind_1_s3: TNF(s1,s2,s3)+TNFR1(tnf)<->\
+    TNF(s1,s2,s3!1).TNFR1(tnf!1) kon_1,koff
+
+  # Second receptor-binding event: either remaining site on a 1R complex
+  R_bind_2_s1_s2: TNF(s1!+,s2,s3)+TNFR1(tnf)<->\
+    TNF(s1!+,s2!1,s3).TNFR1(tnf!1) kon_2,koff
+  R_bind_2_s1_s3: TNF(s1!+,s2,s3)+TNFR1(tnf)<->\
+    TNF(s1!+,s2,s3!1).TNFR1(tnf!1) kon_2,koff
+  R_bind_2_s2_s1: TNF(s1,s2!+,s3)+TNFR1(tnf)<->\
+    TNF(s1!1,s2!+,s3).TNFR1(tnf!1) kon_2,koff
+  R_bind_2_s2_s3: TNF(s1,s2!+,s3)+TNFR1(tnf)<->\
+    TNF(s1,s2!+,s3!1).TNFR1(tnf!1) kon_2,koff
+  R_bind_2_s3_s1: TNF(s1,s2,s3!+)+TNFR1(tnf)<->\
+    TNF(s1!1,s2,s3!+).TNFR1(tnf!1) kon_2,koff
+  R_bind_2_s3_s2: TNF(s1,s2,s3!+)+TNFR1(tnf)<->\
+    TNF(s1,s2!1,s3!+).TNFR1(tnf!1) kon_2,koff
+
+  # Third receptor-binding event: the last free site on a 2R complex
+  R_bind_3_s3: TNF(s1!+,s2!+,s3)+TNFR1(tnf)<->\
+    TNF(s1!+,s2!+,s3!1).TNFR1(tnf!1) kon_3,koff
+  R_bind_3_s2: TNF(s1!+,s2,s3!+)+TNFR1(tnf)<->\
+    TNF(s1!+,s2!1,s3!+).TNFR1(tnf!1) kon_3,koff
+  R_bind_3_s1: TNF(s1,s2!+,s3!+)+TNFR1(tnf)<->\
+    TNF(s1!1,s2!+,s3!+).TNFR1(tnf!1) kon_3,koff
+end reaction rules
+
+end model

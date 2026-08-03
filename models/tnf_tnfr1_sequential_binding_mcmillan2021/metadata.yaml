@@ -1,0 +1,157 @@
+# metadata.yaml — tnf_tnfr1_sequential_binding_mcmillan2021
+id: tnf_tnfr1_sequential_binding_mcmillan2021
+created: 2026-08-03
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, ai_assisted]
+  description: >
+    Reconstructed from the BioNetGen model and SciPy fitting script distributed
+    as Supplementary Software 1 with McMillan et al. (2021), Nature
+    Communications 12:582, DOI 10.1038/s41467-020-20828-3. The seven-dose
+    occupancy fractions are copied from the publisher's official Source Data
+    workbook, sheet Fig 1b; no curve digitization was used.
+
+files:
+  - name: tnf_tnfr1_sequential_binding_mcmillan2021.bngl
+    role: primary
+    description: >
+      Apo-TNF sequential binding model with the published 0.01, 0.02, and
+      0.22 nM microscopic dissociation constants and an active Figure 1b
+      receptor-titration protocol.
+    documentation_target: standard
+    min_bionetgen_version: "2.9.3"
+  - name: tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595.bngl
+    role: variant
+    description: >
+      UCB-0595-bound TNF variant with the published 0.04, 0.19, and 9612 nM
+      microscopic dissociation constants and the matching Figure 1b protocol.
+    documentation_target: standard
+    min_bionetgen_version: "2.9.3"
+  - name: verify_mcmillan2021.ipynb
+    role: verification
+    description: >
+      Runs both BNGL files in temporary directories, independently integrates
+      the four-state occupancy equations in SciPy, verifies agreement to
+      1.4e-9 or better, and compares the published parameterizations with the
+      official Figure 1b occupancy fractions.
+  - name: verify_mcmillan2021.png
+    role: figure
+    description: >
+      Overlay of BioNetGen trajectories, independent SciPy solutions, and the
+      official Figure 1b source data for apo and UCB-0595-bound TNF.
+  - name: reference/mcmillan2021_fig1b_apo.csv
+    role: reference
+  - name: reference/mcmillan2021_fig1b_ucb0595.csv
+    role: reference
+  - name: reference/mcmillan2021_source_data.xlsx
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ode.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ode.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ode.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan.scan
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00001.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00001.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00001.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00002.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00002.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00002.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00003.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00003.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00003.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00004.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00004.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00004.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00005.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00005.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00005.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00006.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00006.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00006.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00007.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00007.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_scan/tnf_tnfr1_sequential_binding_mcmillan2021_scan_00007.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_ode.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_ode.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_ode.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan.scan
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00001.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00001.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00001.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00002.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00002.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00002.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00003.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00003.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00003.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00004.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00004.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00004.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00005.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00005.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00005.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00006.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00006.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00006.net
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00007.cdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00007.gdat
+    role: reference
+  - name: reference/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan/tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595_scan_00007.net
+    role: reference
