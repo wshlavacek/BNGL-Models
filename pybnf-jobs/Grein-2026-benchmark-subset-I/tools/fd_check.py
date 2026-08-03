@@ -11,16 +11,28 @@ This found lanl/PyBNF#534 the first time it was pointed at a real model: a free
 parameter bound by id that reached the trajectory only by seeding another entity
 assembled to exactly 0 while central differences said -10.4.
 
-Two things to know before trusting a red row:
+Four things to know before trusting a red row:
 
 * **Step size.** On a stiff model 1e-7 is pure roundoff and 1e-6 is marginal; 3e-4
   (the default here) gave the best agreement on Laske. Sweep `-h` before concluding
-  anything -- a REAL defect does not move with the step size, FD noise does.
+  anything -- a REAL defect does not move with the step size, FD noise does. Sweep
+  UPWARD too: the small-h end is the roundoff end, so a column drifting away from the
+  assembled value as h shrinks is converging at the other end.
 * **The default point.** With no param-values.json this evaluates at each parameter's
   median-quantile value, which may be a silly point for the model. Pass the PEtab
   nominal values (see tools/README.md) for a meaningful comparison.
+* **A gradient check is only a test where the gradient is large.** Most slugs here have
+  `OG_nominal` ~ 0 -- their PEtab nominal point IS the optimum, where the true gradient
+  vanishes and both sides are noise. Every such slug flags red at the nominal point and
+  every one of those flags is an artefact. Use `--disp F` to re-evaluate F of each box
+  width away, which is what separated Fiedler's real defect from eleven artefacts
+  (lanl/PyBNF#535).
+* **Bounds.** `FreeParameter.set_value` clamps an out-of-box value, so a parameter on a
+  bound has f(u+h) == f(u) and its central difference is a half-step -- or exactly zero
+  when both sides clamp, which looks like a dead column. The evaluation point is kept
+  `8*h` clear of both bounds and any parameter that had to be moved is reported.
 
-Usage:  fd_check.py <slug-dir | job.conf> [param-values.json] [-h STEP]
+Usage:  fd_check.py <slug-dir | job.conf> [param-values.json] [-h STEP] [--disp F]
 """
 import json
 import os
@@ -66,6 +78,7 @@ def main():
     has_values = len(sys.argv) > 2 and not sys.argv[2].startswith('-')
     values = json.load(open(sys.argv[2])) if has_values else None
     step = float(sys.argv[sys.argv.index('-h') + 1]) if '-h' in sys.argv else 3e-4
+    disp = float(sys.argv[sys.argv.index('--disp') + 1]) if '--disp' in sys.argv else 0.0
     if os.path.isdir(target):
         slug_dir = target
         confs = [os.path.join(slug_dir, f) for f in sorted(os.listdir(slug_dir))
@@ -85,6 +98,20 @@ def main():
         free = [v.set_value(v.initial_value_from_quantile(0.5)
                             if hasattr(v, 'initial_value_from_quantile') else v.value)
                 for v in free]
+    # Move the evaluation point off the optimum if asked, and keep every parameter clear of its
+    # box either way: set_value CLAMPS out of bounds, so a parameter sitting ON a bound has
+    # f(u+h) == f(u) and reads as a dead column that is nothing of the sort.
+    lo = np.array([v.to_sampling_space(v.lower_bound) for v in free])
+    hi = np.array([v.to_sampling_space(v.upper_bound) for v in free])
+    u = np.array([v.to_sampling_space(v.value) for v in free])
+    if disp:
+        u = u + disp * (hi - lo) * np.array([1.0 if j % 2 == 0 else -1.0 for j in range(len(free))])
+    u = np.clip(u, lo + 8.0 * step, hi - 8.0 * step)
+    moved = [v.name for v, a, b in zip(free, u, [v.to_sampling_space(v.value) for v in free])
+             if a != b]
+    if moved:
+        print('moved off the optimum / away from a bound:', moved)
+    free = [v.set_value(v.from_sampling_space(x)) for v, x in zip(free, u)]
     names = [v.name for v in free]
     pset = PSet(free)
 
