@@ -103,8 +103,13 @@ def main():
     if values:
         free = [v.set_value(values[v.name]) for v in free]
     else:
-        free = [v.set_value(v.initial_value_from_quantile(0.5)
-                            if hasattr(v, 'initial_value_from_quantile') else v.value)
+        # initial_value_from_quantile returns a FreeParameter, not a value -- the name says
+        # otherwise, but that is the contract every caller in PyBNF relies on (base.py builds
+        # its latin-hypercube PSet straight from it). Wrapping it in set_value passed a
+        # FreeParameter where a float belongs, and the bounds check inside set_value then died
+        # on `FreeParameter < float` with a bare "'float' object has no attribute 'name'".
+        free = [v.initial_value_from_quantile(0.5)
+                if hasattr(v, 'initial_value_from_quantile') else v.set_value(v.value)
                 for v in free]
     # Move the evaluation point off the optimum if asked, and keep every parameter clear of its
     # box either way: set_value CLAMPS out of bounds, so a parameter sitting ON a bound has
