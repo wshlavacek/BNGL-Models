@@ -72,6 +72,25 @@ exactly `0` against a central difference of `-10.4`.
 > box width along sampling space is enough. This is what separated `Fiedler_BMCSystBiol2016`'s real
 > defect (lanl/PyBNF#535) from the eleven artefacts around it.
 
+> **Gotcha: an experiment must travel with its `data_key`.** `gradient_at` appends
+> `(sim, exp, routing, suffix)`; this script used to append the first three only. The visible
+> consequence is mild — a column under an analytic per-series `scale` (ADR-0066, lanl/PyBNF#533) is
+> *refused* rather than assembled, which is loud. The invisible one is not: `_iter_scored_points`
+> repoints `objective._scale_factors` at the current experiment **only when `data_key` is supplied**,
+> so without it `_scale_factors` keeps whatever the last `evaluate()` inside `evaluate_multiple` left
+> there, and every experiment's residual is scored with the last experiment's profiled `c*`. Nothing
+> errors, and the ratio between two experiments' `c*` presents as a clean multiplicative factor on the
+> affected columns — indistinguishable by eye from a product bug. Only bites a slug that declares
+> `normalization … = scale`. Fixed; found while auditing this script for lanl/PyBNF#537.
+
+> **Gotcha: both sides must include the constraint penalty.** `loss_at` calls
+> `evaluate_multiple(..., config.constraints)`, which adds `cset.total_penalty(...)` — so the finite
+> difference has always differentiated the penalty. The assembled side called
+> `assemble_gaussian_gradient` alone and never its sibling `assemble_constraint_gradient`, which is
+> the other half of what `gradient_at` does. On a slug with active constraints every constraint-touched
+> column therefore read red, by construction. Only bites a slug with a `.con` / `.prop` file — no PEtab
+> import in this corpus has one, which is why it went unnoticed. Fixed; found alongside the above.
+
 > **Gotcha: keep every parameter clear of its box bound.** `FreeParameter.set_value` *clamps* an
 > out-of-box value, so a parameter sitting on a bound has `f(u+h) == f(u)`: its central difference is
 > a half-step, or exactly zero when both sides clamp. That reads as a dead gradient column and is

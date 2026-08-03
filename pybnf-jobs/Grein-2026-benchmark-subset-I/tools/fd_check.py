@@ -11,7 +11,7 @@ This found lanl/PyBNF#534 the first time it was pointed at a real model: a free
 parameter bound by id that reached the trajectory only by seeding another entity
 assembled to exactly 0 while central differences said -10.4.
 
-Four things to know before trusting a red row:
+Five things to know before trusting a red row:
 
 * **Step size.** On a stiff model 1e-7 is pure roundoff and 1e-6 is marginal; 3e-4
   (the default here) gave the best agreement on Laske. Sweep `-h` before concluding
@@ -31,6 +31,12 @@ Four things to know before trusting a red row:
   bound has f(u+h) == f(u) and its central difference is a half-step -- or exactly zero
   when both sides clamp, which looks like a dead column. The evaluation point is kept
   `8*h` clear of both bounds and any parameter that had to be moved is reported.
+* **Both sides must model the same objective.** The two ways this script used to compare
+  unlike quantities are fixed below and described in tools/README.md: each experiment now
+  travels with its `data_key` (without it `objective._scale_factors` keeps the last-scored
+  experiment's series factors, silently), and the assembled side now adds the constraint
+  penalty gradient that `loss_at` has always included. Both found while auditing this
+  script for lanl/PyBNF#537.
 
 Usage:  fd_check.py <slug-dir | job.conf> [param-values.json] [-h STEP] [--disp F]
 """
@@ -41,7 +47,9 @@ import tempfile
 
 import numpy as np
 from pybnf.algorithms import core
-from pybnf.gradient import apply_routings, assemble_gaussian_gradient, route_for_model
+from pybnf.gradient import (
+    apply_routings, assemble_constraint_gradient, assemble_gaussian_gradient, route_for_model,
+)
 from pybnf.parse import load_config
 from pybnf.pset import PSet
 
@@ -149,13 +157,26 @@ def main():
     # that lives in an observable formula or a noise scale.
     config.obj.evaluate_multiple(res.simdata, config.exp_data, pset, config.constraints)
     values_at = {p.name: p.value for p in pset}
+    resolved = {key: r.at_point(values_at) for key, r in routings.items()}
     experiments = []
     for mname, by_suffix in res.simdata.items():
         me = config.exp_data.get(mname, {})
         for suffix, sim in by_suffix.items():
             if suffix in me:
-                experiments.append((sim, me[suffix], routings[(mname, suffix)].at_point(values_at)))
+                # The suffix travels as the experiment's data_key, exactly as gradient_at passes
+                # it. Omitting it does not merely refuse an analytic 'scale' column -- it also
+                # leaves objective._scale_factors pointing at whichever experiment
+                # evaluate_multiple scored LAST, so every experiment's residual is scored with
+                # the wrong series factor. Silent, and a ratio of two profiled c* reads as a
+                # clean factor (lanl/PyBNF#537).
+                experiments.append((sim, me[suffix], resolved[(mname, suffix)], suffix))
     g = assemble_gaussian_gradient(config.obj, experiments, free)
+    if config.constraints:
+        # loss_at scores the constraint penalties (evaluate_multiple takes config.constraints),
+        # so the assembled side must carry their gradient too or every constraint-touched column
+        # reads red as an artefact. This is the second half of gradient_at (lanl/PyBNF#537).
+        g.gradient = g.gradient + assemble_constraint_gradient(
+            config.constraints, res.simdata, resolved, free)
 
     print(f'\n{"param":26s} {"assembled":>15s} {"central diff":>15s} {"rel err":>10s}')
     scale = max(np.max(np.abs(grad_fd)), 1e-30)
