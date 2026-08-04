@@ -62,13 +62,17 @@ Before creating or editing model artifacts:
    Prefer source tabular data when available. If the paper only reports curves
    in figures, digitize the relevant panel(s) from the source PDF or image,
    calibrate the plotted axes, and save the digitized data in `reference/`.
-7. Create `verify_<author><year>.ipynb`. The notebook must run BioNetGen,
-   independently implement the paper's equations or expected dynamics in
-   Python/SciPy, compare BioNetGen output against the independent implementation
-   quantitatively, compare the curated simulation against the reported
-   simulation data quantitatively, and save `verify_<author><year>.png`.
+7. Create the verification artifact — normally `verify_<author><year>.ipynb`,
+   or a driver script for a campaign a notebook cannot hold (see "Verification
+   Artifact Shape"). Whichever shape, it must run BioNetGen, independently
+   implement the paper's equations or expected dynamics in Python/SciPy, compare
+   BioNetGen output against that independent implementation quantitatively,
+   compare the curated simulation against the reported simulation data
+   quantitatively, and save `verify_<author><year>.png`.
 8. Create `metadata.yaml` following `skills/bngl/skill.md` section 5. List every
-   deliverable, including all reference files.
+   deliverable, including all reference files. A scan output directory may be
+   listed as a single `reference/<prefix>_scan/` entry rather than one entry per
+   file inside it; list everything else individually.
 9. After all curation artifacts are complete and verified, update the Models table
    in `README.md` with the new collection. Include the folder and BNGL file names,
    a concise description of the primary model, and source reference(s).
@@ -104,6 +108,53 @@ If reported simulation data cannot be digitized or otherwise extracted, document
 the reason in the notebook and metadata. Do not treat visual qualitative
 agreement as sufficient when a figure or table can be quantified.
 
+## Verification Artifact Shape
+
+The verification is a *contract*, not a file format: run BioNetGen, check it against an
+independent implementation, check it against the reported data, emit
+`verify_<author><year>.png`. Two shapes satisfy it.
+
+**Notebook (default).** `verify_<author><year>.ipynb`, committed **with its outputs**
+so a reader sees the numbers without rerunning. Use it whenever the campaign fits
+in a notebook run.
+
+**Driver script.** `run_<author><year>.py` plus the committed PNG, and no notebook.
+Use this when the campaign cannot reasonably live in a notebook — a network-free
+(NFsim/RuleMonkey) model, a large replicate ensemble, or any run measured in hours
+rather than seconds. `p53_nhej_dolan2015` (50 loci, 2400-minute NFsim single-cell
+run) and `tcr_signaling_chylek2014` are the two current examples. The script must
+still perform and report every comparison a notebook would, and the folder must
+still ship the PNG. Record in `metadata.yaml` and the README row *why* the notebook
+shape was not used.
+
+Do not stretch a notebook around a multi-hour job to satisfy the letter of the
+default; do not reach for a driver script to avoid writing the comparisons.
+
+**More than one verification file is fine.** Where a folder verifies genuinely
+separate things, add a descriptive suffix rather than forcing one file:
+`verify_<author><year>_<aspect>.ipynb` (e.g. `verify_michalski2012_six_state.ipynb`,
+`verify_dembo1978_monovalent.ipynb`). Exactly one of them carries the plain
+`verify_<author><year>` name and is the entry point.
+
+### Helper scripts
+
+Verification work factored out of the notebook is committed beside it, listed in
+`metadata.yaml` with `role: verification`. Use these prefixes — they are the
+conventions already in the collection, and they tell a reader what a file is
+without opening it:
+
+| prefix | purpose |
+|---|---|
+| `independent_<author><year>.py` | the level-1 independent implementation, when it is too long to sit inline in the notebook |
+| `digitize_<author><year>.py` | recovers plotted curves from the source PDF; must record panel, extraction method, axis calibration, and any legend scale factors |
+| `extract_<author><year>.py` | pulls tabular data out of supplementary material |
+| `run_<author><year>.py` | drives the simulation campaign (the driver-script shape above, or a long run a notebook then reads) |
+| `generator/build_<author><year>.py` | generates the `.bngl` when the model is written programmatically; put the generator and its modules in a `generator/` subdirectory (`lambda_switch_arkin1998`, `amyloid_beta_competing_aggregation_pathways_rana2020`) |
+
+A committed digitizer or generator is what makes a derived artifact reproducible
+rather than merely present. If a `reference/` CSV was digitized, the script that
+produced it belongs in the folder.
+
 ## Point Of Contact
 
 `metadata.yaml` requires a model-specific `point_of_contact`. Do not infer or
@@ -130,11 +181,25 @@ A complete curated model folder must contain, at minimum:
 models/<canonical_model_name>/
 ├── <canonical_model_name>.bngl
 ├── metadata.yaml
-├── verify_<author><year>.ipynb
-├── verify_<author><year>.png
+├── verify_<author><year>.ipynb      # or run_<author><year>.py — see
+│                                    #   "Verification Artifact Shape"
+├── verify_<author><year>.png        # required in BOTH shapes
 └── reference/
     ├── <BioNetGen-generated reference outputs>
     └── <reported or digitized simulation data used for verification>
+```
+
+Optional, and common:
+
+```text
+├── <canonical_model_name>_<variant>.bngl   # complete variant / related models
+├── verify_<author><year>_<aspect>.ipynb    # additional verification files
+├── independent_<author><year>.py           # role: verification
+├── digitize_<author><year>.py              # role: verification
+├── extract_<author><year>.py               # role: verification
+├── run_<author><year>.py                   # role: verification
+└── generator/                              # programmatically generated models
+    └── build_<author><year>.py
 ```
 
 Additional complete BNGL variant or related files may be added when they are
@@ -149,13 +214,18 @@ The task is not complete until:
   execution;
 - `reference/` contains committed reference outputs from the final BNGL file or
   files;
-- the notebook regenerates the PNG and reports quantitative agreement between
-  BioNetGen and the independent implementation;
-- the notebook reports quantitative agreement between BioNetGen output and the
-  reported simulation data for the reproduced figure or explicitly documents why
-  reported simulation data could not be extracted;
+- the verification artifact — notebook or driver script — regenerates the PNG and
+  reports quantitative agreement between BioNetGen and the independent
+  implementation;
+- it reports quantitative agreement between BioNetGen output and the reported
+  simulation data for the reproduced figure, or explicitly documents why reported
+  simulation data could not be extracted;
+- if the driver-script shape was used, the reason is recorded in `metadata.yaml`
+  and the README row;
+- a committed notebook carries its executed outputs;
 - any reported or digitized simulation data used for comparison are committed in
-  `reference/` and listed in `metadata.yaml`;
+  `reference/` and listed in `metadata.yaml`, together with the `digitize_`/
+  `extract_` script that produced them when they were derived;
 - `metadata.yaml` is complete and includes a user-supplied point of contact;
 - `README.md` includes the completed model collection in the Models table.
 
