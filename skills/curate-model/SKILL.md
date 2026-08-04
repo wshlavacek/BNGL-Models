@@ -210,6 +210,37 @@ readable claim: a parity plot of all model values against all reference values w
 the identity line, coloured by panel, annotated with the pooled metric. That one panel
 is what makes correctness a glance instead of a survey.
 
+### Helper library
+
+`scripts/verification_figure.py` builds this layout, so none of it has to be re-derived
+per model. One helper per requirement — `overlay_axis` (house style, bngl §2),
+`residual_axis` (tolerance band + metric banner), `parity_axis` (identity line + pooled
+metric), `verdict_footer` — and `two_level_figure` assembles the default:
+
+```python
+import sys; sys.path.insert(0, "../../skills/curate-model/scripts")
+from verification_figure import Comparison, two_level_figure
+
+fig, metrics = two_level_figure(
+    t, bng_values,
+    [Comparison("independent SciPy ODE", scipy_values, tol=1e-4),
+     Comparison("Fig. 2A (digitized)", paper_values, tol=0.15, x=paper_t, stat="median")],
+    title="Verification of models/<name> against <Author> et al. (<year>)",
+    ylabel="pERK (a.u.)", xlabel="time (h)",
+)
+fig.savefig("verify_<author><year>.png", dpi=200, bbox_inches="tight")
+```
+
+It interpolates the model onto a reference's own abscissa when they differ (a digitized
+curve rarely shares the simulation's time grid), floors the relative-error denominator so
+a near-zero reference cannot manufacture a huge error, and refuses mismatched lengths
+rather than silently truncating. It decides nothing about whether a fit is good — you
+supply the tolerance and its justification. Run the file directly for a self-test.
+
+Use it as the default and drop to the individual helpers when a model needs a layout the
+default cannot express; a bespoke figure that meets the contract is fine, a bespoke figure
+that skips the residuals is not.
+
 ### Worked examples
 
 `mapk_adaptive_resistance_frohlich2023` is the closest current example of required
