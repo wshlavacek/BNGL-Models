@@ -1,0 +1,122 @@
+# metadata.yaml — ste5_fus3_ptc1_switch_malleshaiah2010
+id: ste5_fus3_ptc1_switch_malleshaiah2010
+created: 2026-08-04
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_ode, reformulation, bug_fix]
+  description: >
+    Curated from Malleshaiah MK, Shahrezaei V, Swain PS, Michnick SW (2010),
+    Nature 465:101-105, doi:10.1038/nature08946. The supplement describes a
+    Facile/Allosteric Network Compiler model, gives its 38 concentration ODEs,
+    and reports fitted parameters, but supplies no original model file. The
+    primary BNGL preserves Supplementary Table 3 literally. The table labels
+    three bimolecular association constants as /nM/s; bracketed variants treat
+    those labels as /M/s and convert them to the native nM system. The literal
+    reading reproduces neither Fig. 3b curve (4PS RMSE 2.020 sites; 1PS RMSE
+    0.410 site). The molar reading reproduces 1PS (RMSE 0.089 site) and improves
+    4PS, but the 4PS RMSE remains 0.290 site against a 0.15-site digitization
+    tolerance. This published-artifact disagreement is documented without
+    refitting or silently changing any value.
+    The displayed Fus3_Ste5n_2 equation has a -k(P) loss term; the BNGL uses
+    k(K), as do both matching gain terms and Fig. 23b. Using different rate
+    symbols for the loss and gain would violate conservation.
+
+files:
+  - name: ste5_fus3_ptc1_switch_malleshaiah2010.bngl
+    role: primary
+    description: >
+      Four-site model preserving the Table 3 association values and /nM/s unit
+      labels literally. Generates 38 species and 80 reactions in BioNetGen
+      2.9.3. Its Fig. 3b 4PS curve is not reproduced (documented).
+    documentation_target: comprehensive
+    min_bionetgen_version: "2.9.3"
+  - name: ste5_fus3_ptc1_switch_malleshaiah2010_1ps.bngl
+    role: variant
+    description: >
+      One-site counterpart of the literal Table 3 reading. Generates 14 species
+      and 23 reactions. Its Fig. 3b 1PS curve is not reproduced (documented).
+    documentation_target: comprehensive
+    min_bionetgen_version: "2.9.3"
+  - name: ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units.bngl
+    role: variant
+    description: >
+      Four-site bracket interpreting the three bimolecular association labels
+      as /M/s, converted to /nM/s. It improves the Fig. 3b RMSE from 2.020 to
+      0.290 site but remains outside the 0.15-site tolerance.
+    documentation_target: comprehensive
+    min_bionetgen_version: "2.9.3"
+  - name: ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps.bngl
+    role: variant
+    description: >
+      One-site molar-association-units bracket. It reproduces the Fig. 3b 1PS
+      curve with RMSE 0.089 site.
+    documentation_target: comprehensive
+    min_bionetgen_version: "2.9.3"
+  - name: generate_malleshaiah2010_models.py
+    role: verification
+    description: >
+      Deterministically generates all four BNGL files from the shared state-
+      aggregation and reaction construction.
+  - name: independent_malleshaiah2010.py
+    role: verification
+    description: >
+      Independent SciPy implementation of the supplementary ODE fluxes. It does
+      not read the BNG-generated networks.
+  - name: digitize_malleshaiah2010.py
+    role: verification
+    description: >
+      Renders page 3 of the supplied main-paper PDF at 300 dpi, isolates the red
+      Fig. 3b lines, applies recorded log-x and linear-y calibration, and writes
+      both digitized CSV files.
+  - name: verify_malleshaiah2010.ipynb
+    role: verification
+    description: >
+      Executed notebook comparing all four BioNetGen scans with the independent
+      equations and with the digitized Fig. 3b 4PS and 1PS curves. Maximum
+      BNG-versus-SciPy difference is 2.2e-7 phosphorylation site.
+  - name: verify_malleshaiah2010.png
+    role: figure
+  - name: reference/malleshaiah2010_fig3b_4ps_digitized.csv
+    role: reference
+    description: Digitized solid 4PS curve from Fig. 3b.
+  - name: reference/malleshaiah2010_fig3b_1ps_digitized.csv
+    role: reference
+    description: Digitized dashed 1PS curve from Fig. 3b.
+
+  # Literal four-site BioNetGen reference outputs
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010/ste5_fus3_ptc1_switch_malleshaiah2010.net
+    role: reference
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010/ste5_fus3_ptc1_switch_malleshaiah2010_scan.scan
+    role: reference
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010/ste5_fus3_ptc1_switch_malleshaiah2010_scan/
+    role: reference
+
+  # Literal one-site BioNetGen reference outputs
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_1ps/ste5_fus3_ptc1_switch_malleshaiah2010_1ps.net
+    role: reference
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_1ps/ste5_fus3_ptc1_switch_malleshaiah2010_1ps_scan.scan
+    role: reference
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_1ps/ste5_fus3_ptc1_switch_malleshaiah2010_1ps_scan/
+    role: reference
+
+  # Molar-association-units four-site BioNetGen reference outputs
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units.net
+    role: reference
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_scan.scan
+    role: reference
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_scan/
+    role: reference
+
+  # Molar-association-units one-site BioNetGen reference outputs
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps.net
+    role: reference
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps_scan.scan
+    role: reference
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps_scan/
+    role: reference
