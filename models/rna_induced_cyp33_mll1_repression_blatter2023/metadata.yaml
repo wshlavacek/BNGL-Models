@@ -26,7 +26,6 @@ files:
       H3K4me3, and RNA allosteric switch network. The active protocol
       reproduces the Fig. 5B RNA+Cyp33 stimulation and removal trajectory.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_blatter2023.ipynb
     role: verification

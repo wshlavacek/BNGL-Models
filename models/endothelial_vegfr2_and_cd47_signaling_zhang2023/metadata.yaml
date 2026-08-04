@@ -45,7 +45,6 @@ files:
       leaves about 0.7% discretization error on the calcium and eNOS
       observables; the whole file takes about seven minutes.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: endothelial_vegfr2_and_cd47_signaling_zhang2023_tumor_growth.bngl
     role: related
@@ -63,7 +62,6 @@ files:
       different values for five of the parameters and that no published set
       reproduces the treated arms; the recalibration is pybnf-jobs/Zhang-2023.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_zhang2023.ipynb
     role: verification

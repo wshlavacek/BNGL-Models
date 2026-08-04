@@ -31,7 +31,6 @@ files:
       Complete competing-pathway model with 5 mM C12 fatty-acid pseudo-micelles present
       from t = 0 — the off-pathway reference condition of Fig. 1c (red trace).
     documentation_target: comprehensive
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: amyloid_beta_competing_aggregation_pathways_rana2020_on_pathway.bngl
     role: variant
@@ -39,7 +38,6 @@ files:
       On-pathway-only reduction (Eq. 4 alone, no fatty acid), the sub-model Rana et al.
       fit first; reproduces Fig. 1a.
     documentation_target: comprehensive
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: amyloid_beta_competing_aggregation_pathways_rana2020_micelle_addition_3h.bngl
     role: variant
@@ -47,14 +45,12 @@ files:
       On-to-off switching: pseudo-micelles added at 3 h to a lag-phase sample; Fig. 1c
       (green trace).
     documentation_target: comprehensive
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: amyloid_beta_competing_aggregation_pathways_rana2020_micelle_addition_24h.bngl
     role: variant
     description: >
       On-to-off switching: pseudo-micelles added at 24 h; Fig. 1c (blue trace).
     documentation_target: comprehensive
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: amyloid_beta_competing_aggregation_pathways_rana2020_micelle_removal_5h.bngl
     role: variant
@@ -62,7 +58,6 @@ files:
       Off-to-on switching: the pseudo-micelle pool is emptied at 5 h (dilution below the
       critical micelle concentration); Fig. 1b (green trace).
     documentation_target: comprehensive
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: amyloid_beta_competing_aggregation_pathways_rana2020_micelle_removal_24h.bngl
     role: variant
@@ -70,7 +65,6 @@ files:
       Off-to-on switching: the pseudo-micelle pool is emptied at 24 h; Fig. 1b (blue
       trace).
     documentation_target: comprehensive
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: generator/build_rana2020.py
     role: verification

@@ -27,7 +27,6 @@ files:
       j-2 = koff.  Requires -bscb and -utl 5.  The verification
       notebook runs three doses by modifying LT_per_cell.
     documentation_target: standard
-    rating:
     min_bionetgen_version: ">2.9.3"
   - name: blbr_rings_posner1995_no_rings.bngl
     role: variant

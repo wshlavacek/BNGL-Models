@@ -29,7 +29,6 @@ files:
       (cyclic) binding. Relaxes to ~35 nM beta-catenin; the active
       parameter_scan reproduces Fig. 5A (beta-catenin vs full-length APC).
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: beta_catenin_destruction_complex_barua2013_apc1338.bngl
     role: variant
@@ -39,7 +38,6 @@ files:
       beta-catenin (~3.7x normal); the active parameter_scan reproduces Fig. 6A
       (beta-catenin vs APC1338), the diversion-sink effect of APC truncation.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_barua2013.ipynb
     role: verification

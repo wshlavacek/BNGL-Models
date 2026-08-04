@@ -59,7 +59,6 @@ files:
       the sloppy/non-identifiable Mitra 2019 best fit; the reproduced curves -- not
       the individual constants -- are the identifiable check.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: run_mitra2019.py
     role: verification

@@ -50,7 +50,6 @@ files:
       reactions. The active protocol scans external H2O2 over five decades at 1 nM
       insulin and reads FOXO1 localization at one hour, reproducing Fig. 2H.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: insulin_signalling_and_oxidative_stress_smith2013_core.bngl
     role: variant
@@ -62,7 +61,6 @@ files:
       species and 52 reactions. The active protocol is a 100 nM insulin pulse washed
       out at fifteen minutes, reproducing Fig. 2A, Fig. 2C and Fig. 2D.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_smith2013.ipynb
     role: verification

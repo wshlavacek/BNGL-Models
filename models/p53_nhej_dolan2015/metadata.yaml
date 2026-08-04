@@ -51,7 +51,6 @@ files:
       no irradiation) reproducing Fig. 4; uncomment the IR event and timer
       functions to enable acute irradiation.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: run_dolan2015.py
     role: verification

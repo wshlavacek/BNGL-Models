@@ -25,7 +25,6 @@ files:
       PIP3, and degranulation. Pulse/wash protocol with 5
       quiescence intervals (5-240 min) reproducing Fig. 4.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: antigen_pulses_harmon2017_simplified.bngl
     role: variant

@@ -22,19 +22,16 @@ files:
     role: primary
     description: Eq. 10 approximate steric hindrance (broken line in Fig. 8)
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: steric_effects_hlavacek1999_nosteric.bngl
     role: variant
     description: Equivalent site model without steric effects (dotted line in Fig. 8)
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: steric_effects_hlavacek1999_combinatoric.bngl
     role: variant
     description: Combinatoric exact steric hindrance (solid line in Fig. 8)
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_hlavacek1999.ipynb
     role: verification

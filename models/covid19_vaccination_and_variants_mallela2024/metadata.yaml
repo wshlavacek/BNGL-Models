@@ -45,7 +45,6 @@ files:
       the ~19.2M population precludes SSA and NFsim supports neither).
       Actions block reproduces the daily new-case trajectory (#@figure Fig. 4).
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: covid19_vaccination_and_variants_mallela2024_dallas.bngl
     role: variant
@@ -56,7 +55,6 @@ files:
       Chronicle rather than Covid Act Now, starting on day 584), and the extra
       social-distancing period tau4. Reproduces Fig. 2 in Mallela et al. (2024).
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: covid19_vaccination_and_variants_mallela2024_houston.bngl
     role: variant
@@ -67,7 +65,6 @@ files:
       social-distancing eigenvalue (lambda1 = 0.11 /d) and its latest Delta
       takeoff (theta2 = day 521). Reproduces Fig. 3 in Mallela et al. (2024).
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: covid19_vaccination_and_variants_mallela2024_phoenix.bngl
     role: variant
@@ -77,7 +74,6 @@ files:
       Carries the paper's highest detection fraction (fD = 0.54) and its latest
       Alpha takeoff (theta1 = day 404). Reproduces Fig. 5 in Mallela et al. (2024).
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_mallela2024.ipynb
     role: verification

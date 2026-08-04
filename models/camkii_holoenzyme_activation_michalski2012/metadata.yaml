@@ -26,7 +26,6 @@ files:
   - name: camkii_holoenzyme_activation_michalski2012.bngl
     role: primary
     documentation_target: standard
-    rating:
     min_bionetgen_version: ">=2.9.3"
   - name: camkii_holoenzyme_activation_michalski2012_dimer.bngl
     role: variant
@@ -35,7 +34,6 @@ files:
       autophosphorylation and the one Eq. 6 of the paper writes out
       explicitly. Adds the r2 = 0 protocol of Fig. 4.
     documentation_target: standard
-    rating:
     min_bionetgen_version: ">=2.9.3"
   - name: camkii_holoenzyme_activation_michalski2012_pp1.bngl
     role: variant
@@ -43,7 +41,6 @@ files:
       Hexamer ring with a Michaelis-Menten PP1, reaching a true equilibrium
       (Fig. 5a). 132 species and 868 unidirectional reactions.
     documentation_target: standard
-    rating:
     min_bionetgen_version: ">=2.9.3"
   - name: camkii_holoenzyme_activation_michalski2012_isha.bngl
     role: variant
@@ -53,7 +50,6 @@ files:
       autophosphorylation rate law, with and without phosphatase
       (Figs. 7a and 7b).
     documentation_target: standard
-    rating:
     min_bionetgen_version: ">=2.9.3"
   - name: camkii_holoenzyme_activation_michalski2012_nfsim.bngl
     role: variant
@@ -65,7 +61,6 @@ files:
       Reaches the holoenzyme sizes of Fig. 6a, which generate_network
       cannot (44368 dodecamer configurations).
     documentation_target: standard
-    rating:
     min_bionetgen_version: ">=2.9.3"
   - name: camkii_holoenzyme_activation_michalski2012_six_state_trimer.bngl
     role: related
@@ -74,7 +69,6 @@ files:
       calmodulin trapping, T305 phosphorylation and PP1 (83 species, 487
       unidirectional reactions). Reproduces Figs. 8a-8d.
     documentation_target: standard
-    rating:
     min_bionetgen_version: ">=2.9.3"
   - name: camkii_holoenzyme_activation_michalski2012_six_state_isha.bngl
     role: related
@@ -82,7 +76,6 @@ files:
       Infinite subunit holoenzyme approximation of the six-state model;
       thirteen species replace the 83 of the trimer.
     documentation_target: standard
-    rating:
     min_bionetgen_version: ">=2.9.3"
   - name: verify_michalski2012.ipynb
     role: verification

@@ -25,7 +25,6 @@ files:
       Excess-ligand approximation for high concentrations.
       Parameter scan reproduces Fig. 5 (X_T = 500 curve).
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_goldstein1980.ipynb
     role: verification

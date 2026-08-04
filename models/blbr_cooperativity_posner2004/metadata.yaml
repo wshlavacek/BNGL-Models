@@ -25,13 +25,11 @@ files:
     role: primary
     description: No rings (J2 = 0); parameters from Table 1, "-rings" column
     documentation_target: standard
-    rating:
     min_bionetgen_version: ">2.9.3"
   - name: blbr_cooperativity_posner2004_rings.bngl
     role: variant
     description: With rings (J2 = 3.4); parameters from Table 1, "+rings" column
     documentation_target: standard
-    rating:
     min_bionetgen_version: ">2.9.3"
   - name: verify_posner2004.ipynb
     role: verification

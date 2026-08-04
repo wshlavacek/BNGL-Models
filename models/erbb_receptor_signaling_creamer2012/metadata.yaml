@@ -49,7 +49,6 @@ files:
       reporting phosphorylation time courses for 55 S/T/Y residues plus ERK and Akt
       (Fig. 4).
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: run_creamer2012.py
     role: verification

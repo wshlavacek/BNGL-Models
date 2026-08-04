@@ -40,7 +40,6 @@ files:
       integration; the ~19.2M population precludes SSA; NFsim lacks if() rate
       laws). Actions block simulates the daily forecast (#@figure Fig 3).
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: covid19_regional_epidemic_forecasting_lin2021_singlephase.bngl
     role: variant
@@ -53,7 +52,6 @@ files:
       NYC census; nominals from an independent de fit. Captures the wave but
       overshoots the peak (~22,500 vs ~15,900 cases/day) — motivating the primary.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_lin2021.ipynb
     role: verification

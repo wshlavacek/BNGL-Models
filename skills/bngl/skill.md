@@ -623,7 +623,7 @@ Each model folder within `models/` MUST contain a `metadata.yaml` file that reco
 # metadata.yaml — provenance and manifest for a model folder
 id: <string>            # REQUIRED — folder name, used as stable identifier
 created: <YYYY-MM-DD>   # REQUIRED — date the model was first added to the library
-status: <string>        # DEPRECATED — replaced by per-file rating system (see rating.md)
+status: <string>        # DEPRECATED — do not use; per-file `documentation_target` carries intent
 
 point_of_contact:       # REQUIRED — single person most knowledgeable about this folder
   name: <string>        # REQUIRED
@@ -653,7 +653,6 @@ files:                  # REQUIRED — manifest of all files in the folder
     role: <enum>        # REQUIRED — controlled vocabulary (see §5.3)
     description: <string>  # OPTIONAL — what this file is or how it differs
     documentation_target: <enum>  # OPTIONAL — none | minimal | standard | extra | comprehensive
-    rating: <number>    # COMPUTED — assigned by grader, do not edit manually
     min_bionetgen_version: <string>  # OPTIONAL — minimum compatible BNG version (per-file)
 ```
 
@@ -702,8 +701,8 @@ Every folder MUST have exactly one file with `role: primary`. The primary `.bngl
 ### 5.4 Metadata rules
 
 1. **One `metadata.yaml` per folder.** The `id` field is the folder name — it identifies the collection, not individual files. Individual files are distinguished by the `files` manifest.
-2. **Point of contact is singular and MUST include an email.** List the person most knowledgeable about this folder. Email is required for contact verification (see `rating.md` §2, Rating 1). An `alternate_point_of_contact` MAY be listed as a backup. Additional contributors go in the optional `contributors` list. Per-file `point_of_contact` overrides in the `files` manifest are allowed when different people contribute different files.
-3. **Rating and documentation level.** Each `.bngl` file is rated per the system defined in `rating.md`. The `documentation_target` field on each file entry declares the intended annotation/formatting depth (`none`, `minimal`, `standard`, `extra`, `comprehensive`). The `rating` field is computed by the grader and MUST NOT be manually edited. The folder-level `status` field is deprecated in favor of per-file ratings.
+2. **Point of contact is singular and MUST include an email.** List the person most knowledgeable about this folder. Email is required for contact verification. An `alternate_point_of_contact` MAY be listed as a backup. Additional contributors go in the optional `contributors` list. Per-file `point_of_contact` overrides in the `files` manifest are allowed when different people contribute different files.
+3. **Documentation level.** The `documentation_target` field on each file entry declares the intended annotation/formatting depth (`none`, `minimal`, `standard`, `extra`, `comprehensive`). The folder-level `status` field is deprecated; do not use it. (A per-file numeric `rating` was specified in an earlier `rating.md` and removed 2026-08-04 — it was never computed, because the grader it depended on was never implemented, and all 107 instances in the collection were blank. `documentation_target` is the field that carries intent.)
 4. **Reference simulation data** lives in a `reference/` subdirectory within each model folder. This directory contains committed output files (`.net`, `.gdat`, `.cdat`, `.scan`, `.xml`, `.species`, and scan subdirectories) that serve as regression baselines. Files are organized flat — filenames encode the parent `.bngl` file via the naming convention. Reference files SHOULD be listed in the `files` manifest with `role: reference` and paths relative to the model folder (e.g., `reference/model_ode.gdat`).
 5. **Generated output files** outside `reference/` are transient and SHOULD NOT be committed. Use `.gitignore` or clean up after runs.
 6. **Git tracks version history.** Do not duplicate commit history or changelogs in `metadata.yaml`. Use `git log -- models/<folder>/` for history.
@@ -730,13 +729,11 @@ files:
   - name: genetic_toggle_switch_gardner2000.bngl
     role: primary
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: genetic_toggle_switch_gardner2000_iptg.bngl
     role: variant
     description: Adds IPTG induction mechanism
     documentation_target: standard
-    rating:
     min_bionetgen_version: ">2.9.3"
   - name: verify_gardner2000.ipynb
     role: verification
@@ -965,7 +962,7 @@ Severity levels:
 ### 9.4a Folder metadata
 - **ERROR**: `metadata.yaml` exists in each model folder under `models/`.
 - **ERROR**: required keys present: `id`, `created`, `point_of_contact`, `source`, `files`.
-- **ERROR**: `point_of_contact` has `name` and `email` (email is required for contact verification; see `rating.md`).
+- **ERROR**: `point_of_contact` has `name` and `email` (email is required for contact verification).
 - **ERROR**: `source.tags` is a non-empty list and all tags use values from the controlled vocabulary (§5.2).
 - **ERROR**: exactly one file has `role: primary`; its stem matches the folder name.
 - **ERROR**: all file roles use values from the controlled vocabulary (§5.3).

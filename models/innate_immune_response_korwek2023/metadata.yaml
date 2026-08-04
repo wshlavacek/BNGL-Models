@@ -32,7 +32,6 @@ files:
       removing the IFN-beta. Reproduces the IFN-beta + poly(I:C) lanes of fig. S4A
       (quantified in Fig. 2, A and B).
     documentation_target: comprehensive
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: innate_immune_response_korwek2023_ifnb.bngl
     role: variant
@@ -41,7 +40,6 @@ files:
       paracrine IFN-beta; supplies the IFN-beta lanes of fig. S4A and the time course of
       fig. S2B.
     documentation_target: comprehensive
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: innate_immune_response_korwek2023_polyic.bngl
     role: variant
@@ -49,7 +47,6 @@ files:
       Poly(I:C)-only protocol, 10 h, in a naive cell. Reproduces the transient STAT1/2 pulse
       of fig. S4C (quantified in Fig. 2, E and F).
     documentation_target: comprehensive
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: innate_immune_response_korwek2023_tnfa.bngl
     role: variant
@@ -58,7 +55,6 @@ files:
       this protocol isolates it inside the full model; it is the calibration the authors used
       for the NF-kB rate constants. Reproduces figs. S12A and S12B (WT).
     documentation_target: comprehensive
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: innate_immune_response_korwek2023_tnfa_a20ko.bngl
     role: variant
@@ -67,7 +63,6 @@ files:
       A20 KO lanes of fig. S12B, which the paper reports as a prediction rather than a fit
       target.
     documentation_target: comprehensive
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: independent_korwek2023.py
     role: verification

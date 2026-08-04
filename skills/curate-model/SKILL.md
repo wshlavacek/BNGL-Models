@@ -27,8 +27,9 @@ Before creating or editing model artifacts:
    authoritative for the workflow**: which artifacts exist, the two verification
    levels, the verification-artifact shape, and the completion criteria. Where
    the two ever disagree on process, this skill wins.
-2. Read `skills/bngl/rating.md` for trust, annotation, formatting, and reference
-   data expectations.
+2. Read `skills/bngl/skill.md` §5 for the `metadata.yaml` schema, the source-tag
+   vocabulary, and the file-role vocabulary, and §9 for the lint rules a finished
+   folder must pass.
 3. Read `skills/bngl/templates/model_skeleton.bngl` before writing a new BNGL
    file.
 4. Read `skills/nfsim/SKILL.md` when NFsim behavior, crosslinking, molecularity,
@@ -82,11 +83,9 @@ Before creating or editing model artifacts:
 8. Create `metadata.yaml` following `skills/bngl/skill.md` section 5. List every
    deliverable, including all reference files. A scan output directory may be
    listed as a single `reference/<prefix>_scan/` entry rather than one entry per
-   file inside it; list everything else individually. **Leave `rating:` unset.**
-   It is a computed field and the grader described in `skills/bngl/rating.md` is
-   not implemented, so every one of the collection's entries is blank; write
-   `documentation_target:` instead, which is the field that carries intent and is
-   populated everywhere.
+   file inside it; list everything else individually. Declare each file's intended
+   annotation depth with `documentation_target:`; there is no numeric `rating:`
+   field — it was removed 2026-08-04, having never been computed.
 9. After all curation artifacts are complete and verified, update the Models table
    in `README.md` with the new collection. Include the folder and BNGL file names,
    a concise description of the primary model, and source reference(s).
@@ -128,6 +127,24 @@ When reported data are available only as plotted curves:
 If reported simulation data cannot be digitized or otherwise extracted, document
 the reason in the notebook and metadata. Do not treat visual qualitative
 agreement as sufficient when a figure or table can be quantified.
+
+## Reproducibility Of Committed Reference Output
+
+`reference/` is a regression baseline, so "the fresh run matches the reference" needs a
+definition. Re-running the final `.bngl` must reproduce the committed output under these
+rules — the verification artifact should assert them, not eyeball them:
+
+- **`.net` and `.xml`:** exact structural match, ignoring comment lines and whitespace.
+- **`.gdat` and `.scan`:** for each value, either **relative error ≤ 1e-3**, **or**
+  **absolute error ≤ `atol`**, where `atol = 1e-6 × max(|column|)`. The absolute-error
+  fallback handles near-zero trajectories, where relative error is undefined or inflated.
+- A **seeded stochastic** protocol is held to the same bar: same seed, same numbers. If a
+  fresh run does not reproduce a committed seeded trajectory, the seed is not pinned.
+
+Commit reference output for every uncommented simulation protocol — `.gdat`/`.scan` from
+`simulate`/`parameter_scan`, the `.net` for any generate-first protocol, the `.xml` for any
+network-free one, and the per-point files in scan subdirectories. Reference data for
+commented-out protocols is welcome but not required.
 
 ## Verification Artifact Shape
 

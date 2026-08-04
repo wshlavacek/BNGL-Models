@@ -44,7 +44,6 @@ files:
       competitive proteolysis with CIII protection. Reproduces the
       Table-3 protein-lifetime and CIII-protection targets.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: lambda_switch_arkin1998_promoters.bngl
     role: related
@@ -53,7 +52,6 @@ files:
       (Cro2/CI2-repressed) from Table 1; reproduces the Fig. 2
       promoter-activation methodology.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: lambda_switch_arkin1998_fullcircuit.bngl
     role: related
@@ -70,7 +68,6 @@ files:
       Species-type observables; RuleWorld/nfsim#86). writeXML only;
       simulate the XML with run_fullcircuit.py.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: lambda_switch_arkin1998_fullcircuit_exact.bngl
     role: related
@@ -92,7 +89,6 @@ files:
       Translation stays geometric-burst (deprioritized). Drive with
       run_fullcircuit.py under FULLCIRCUIT_MODEL=exact.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: run_fullcircuit.py
     role: verification

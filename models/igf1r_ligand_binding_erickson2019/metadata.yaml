@@ -42,7 +42,6 @@ files:
       notebook. ssa/psa/nfr are not used — the radioligand assay is an inherently
       deterministic equilibrium/relaxation readout.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_erickson2019.ipynb
     role: verification

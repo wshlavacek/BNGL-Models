@@ -28,7 +28,6 @@ files:
       3600 s after ligand stimulation and prints scaled WT pSOS1, pEGFR, and
       pERK outputs for comparison with the Miller et al. quantitative data.
     documentation_target: minimal
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: mek_isoform_erk_feedback_miller2026_kocieniewski2013.bngl
     role: variant
@@ -36,7 +35,6 @@ files:
       Same wild-type model structure using the original Kocieniewski and
       Lipniacki (2013) parameterization.
     documentation_target: minimal
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_miller2026.ipynb
     role: verification

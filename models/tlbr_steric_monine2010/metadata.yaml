@@ -53,7 +53,6 @@ files:
       non-identifiable (paper Fig S2), so the reproduced isotherm -- not the
       individual constants -- is the identifiable check.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: run_monine2010.py
     role: verification

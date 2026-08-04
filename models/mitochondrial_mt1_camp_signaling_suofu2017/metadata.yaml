@@ -31,7 +31,6 @@ files:
       membrane; three protocols reproduce the basal state and both panels of
       Fig. 4J.
     documentation_target: comprehensive
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_suofu2017.ipynb
     role: verification

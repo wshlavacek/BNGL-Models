@@ -33,7 +33,6 @@ files:
       Expressions 7 and 8 with BioNetGen mass-action semantics for the
       homodimeric driver step; deterministic limit is Eqs. S5.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: noise_induced_bistable_futile_cycle_samoilov2005_unordered_pair.bngl
     role: variant
@@ -42,7 +41,6 @@ files:
       k_21/2), which reproduces the Fig. 3A switching statistics but not the
       reported deterministic fixed point.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: noise_induced_bistable_futile_cycle_samoilov2005_no_driver.bngl
     role: variant
@@ -50,7 +48,6 @@ files:
       Expression 7 only, external noise driver deleted; the paper's control
       showing that the bistability disappears with the driver.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_samoilov2005.ipynb
     role: verification

@@ -35,7 +35,6 @@ files:
       Y1068 and Y1148 docking sites). Reproduces Fig. 2 A/C/D/E (solid,
       network-model curves).
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: combinatorial_egfr_signaling_blinov2006_pathway.bngl
     role: variant
@@ -45,7 +44,6 @@ files:
       species. Reproduces the Fig. 2 broken-line curves (panels A, C, D) and
       supports an independent hand-coded 18-ODE verification.
     documentation_target: standard
-    rating:
     min_bionetgen_version: "2.9.3"
   - name: verify_blinov2006.ipynb
     role: verification
