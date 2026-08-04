@@ -1,7 +1,9 @@
 # Data provenance — tracing and re-digitizing an `.exp` to its primary source
 
 How to close **Gate 1**: prove every `.exp` value comes from the primary paper. Two cases —
-tabular (easy) and figure (digitize). Reuses `curate-model`'s digitization discipline.
+tabular (easy) and figure (digitize). Reuses `curate-model`'s digitization discipline, which is
+`skills/curate-model/references/digitization.md` — read it before digitizing anything, and build
+on `skills/curate-model/scripts/digitize.py` rather than starting from a blank file.
 
 ## Case A — the data are in a table (paper or SI)
 
@@ -17,15 +19,21 @@ this).
 
 ## Case B — the data are only in a figure → re-digitize from the PDF
 
-Follow `curate-model` §"Reported Simulation Data Verification":
+Follow `curate-model` §"Reported Simulation Data Verification", and
+`skills/curate-model/references/digitization.md` for the method:
 
-1. **Render the panel at high resolution.** Read the figure page from the parking-garage PDF (the
-   Read tool renders PDF pages as images — request the specific page). If the PDF page is low-res,
-   note it as a digitization-uncertainty source.
+1. **Get the panel at the highest fidelity available.** Look for vector art first — `pdftocairo
+   -svg` or PyMuPDF `get_drawings()` recover the typesetter's own coordinates exactly, and five of
+   the seven figures behind the committed digitizers turned out to be vector where a casual look
+   suggested a picture. Rasterize only when the panel really is a bitmap or when overlapping series
+   make colour separation the simpler route, and note a low-resolution page as a
+   digitization-uncertainty source.
 2. **Identify the exact panel and series** the job fits (e.g. "Fig 5B, filled circles, WT").
-3. **Calibrate the axes.** Record two known reference points per axis (from tick labels) and the
-   scale (linear / log10). Every data point maps pixel → data via that calibration. Log axes are
-   the #1 source of digitization error — calibrate in log space.
+3. **Calibrate the axes on the tick marks, never the plot frame.** Record the tick positions and
+   their values, and the scale (linear / log10); every data point maps pixel → data via that
+   calibration. A plot frame is drawn wherever the plotting library likes — michalski2012's is
+   offset from its axis limits by several points, which would put every value wrong by a fixed
+   fraction of a decade. Log axes are the #1 source of digitization error — calibrate in log space.
 4. **Extract the points** at the independent-variable values the `.exp` uses (or the figure's own
    sampling). Record any **legend scale factor** or normalization ("normalized to t=0",
    "% of maximum").

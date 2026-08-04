@@ -51,10 +51,16 @@ Before creating or editing model artifacts:
    reproduce. A published result that will not reproduce is a finding, not a
    blocker; that reference gives the triage, the five permitted responses, and the
    house wording. Read it *before* changing any published value.
-8. Review existing `models/` folders for naming, metadata, verification notebook,
+8. Read `references/digitization.md` whenever the reported data exist only as a
+   plotted curve. It fixes the choice of extraction route (look for vector art
+   before rasterizing anything), the rule that calibration is anchored to the tick
+   marks and never the plot frame, how to separate overlapping series and what to
+   do when you cannot, and what has to be recorded alongside the numbers for the
+   CSV to be usable. `scripts/digitize.py` is the library it describes.
+9. Review existing `models/` folders for naming, metadata, verification notebook,
    PNG, reference-data, and README conventions.
-9. Read all relevant files in the requested `dev/papers/<folder>/`, including the
-   PDF and any existing source BNGL or model files.
+10. Read all relevant files in the requested `dev/papers/<folder>/`, including the
+    PDF and any existing source BNGL or model files.
 
 ## Workflow
 
@@ -80,6 +86,9 @@ Before creating or editing model artifacts:
    Prefer source tabular data when available. If the paper only reports curves
    in figures, digitize the relevant panel(s) from the source PDF or image,
    calibrate the plotted axes, and save the digitized data in `reference/`.
+   Follow `references/digitization.md` and build on `scripts/digitize.py`; commit
+   the `digitize_<author><year>.py` that produced the CSVs, and check that
+   re-running it leaves `git diff` empty before you move on.
 7. Create the verification artifact — normally `verify_<author><year>.ipynb`,
    or a driver script for a campaign a notebook cannot hold (see "Verification
    Artifact Shape"). Whichever shape, it must run BioNetGen, independently
@@ -315,7 +324,7 @@ without opening it:
 | prefix | purpose |
 |---|---|
 | `independent_<author><year>.py` | the level-1 independent implementation, when it is too long to sit inline in the notebook |
-| `digitize_<author><year>.py` | recovers plotted curves from the source PDF; must record panel, extraction method, axis calibration, and any legend scale factors |
+| `digitize_<author><year>.py` | recovers plotted curves from the source PDF; must record panel, extraction method, axis calibration, and any legend scale factors, and must regenerate its CSVs byte for byte (`references/digitization.md`, built on `scripts/digitize.py`) |
 | `extract_<author><year>.py` | pulls tabular data out of supplementary material |
 | `run_<author><year>.py` | drives the simulation campaign (the driver-script shape above, or a long run a notebook then reads) |
 | `generator/build_<author><year>.py` | generates the `.bngl` when the model is written programmatically; put the generator and its modules in a `generator/` subdirectory (`lambda_switch_arkin1998`, `amyloid_beta_competing_aggregation_pathways_rana2020`) |

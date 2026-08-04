@@ -1147,7 +1147,7 @@ When a model includes `#@figure:` annotations linking protocols to figures in a 
 2. Inspect the output (`.gdat` or `.scan`) for qualitative agreement: correct steady-state values, correct oscillation period, correct bifurcation structure, etc.
 3. Document the expected qualitative behavior in the `#@protocol:` tag so that future reviewers know what to look for.
 
-Quantitative digitization of paper figures for automated comparison is deferred to future tooling.
+Quantitative digitization of paper figures is no longer deferred: when the figure carries the only copy of the reported data, digitize it and compare numerically. The method is `skills/curate-model/references/digitization.md` and the library is `skills/curate-model/scripts/digitize.py`; the digitizer is committed beside the model as `digitize_<author><year>.py` and must regenerate its CSVs byte for byte.
 
 - **ERROR**: modified model released without verification against original.
 

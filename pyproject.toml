@@ -30,6 +30,13 @@ docs = [
   "mkdocs>=1.6",
   "mkdocs-material>=9.5",
 ]
+# Figure digitization (skills/curate-model/scripts/digitize.py). Not installed by default:
+# only a digitizer needs these, and the source PDFs they read are not committed. The SVG
+# route needs neither, just the poppler CLI. Install with `uv sync --group digitize`.
+digitize = [
+  "pillow>=10.0",
+  "pymupdf>=1.24",
+]
 
 [tool.uv]
 package = false
