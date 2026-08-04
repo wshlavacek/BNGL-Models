@@ -58,7 +58,13 @@ Before creating or editing model artifacts:
 3. Create `reference/` inside the new model folder.
 4. Write the primary BNGL file as `<canonical_model_name>.bngl`, following
    `skills/bngl/skill.md`. Add complete variant BNGL files when needed, using
-   `<canonical_model_name>_<variant>.bngl`.
+   `<canonical_model_name>_<variant>.bngl`. Two content rules drift most often and
+   are worth checking explicitly before moving on: every parameter carries an
+   inline unit comment (`skills/bngl/skill.md` §1.3.1, `# /s`, `# M`,
+   `# dimensionless`), and the header **declares the simulation intent** — whether
+   the model is population-based (molecule counts) or concentration-based with
+   conversion through `NA` and a volume (§1.3.4). About half the collection is
+   missing the second one; do not add to that.
 5. Run the BNGL file or files with BioNetGen. Copy generated reference outputs
    (`.gdat`, `.cdat`, `.net`, `.scan`, `.xml`, `.species`, and scan output
    directories) into `reference/`.
@@ -76,10 +82,21 @@ Before creating or editing model artifacts:
 8. Create `metadata.yaml` following `skills/bngl/skill.md` section 5. List every
    deliverable, including all reference files. A scan output directory may be
    listed as a single `reference/<prefix>_scan/` entry rather than one entry per
-   file inside it; list everything else individually.
+   file inside it; list everything else individually. **Leave `rating:` unset.**
+   It is a computed field and the grader described in `skills/bngl/rating.md` is
+   not implemented, so every one of the collection's entries is blank; write
+   `documentation_target:` instead, which is the field that carries intent and is
+   populated everywhere.
 9. After all curation artifacts are complete and verified, update the Models table
    in `README.md` with the new collection. Include the folder and BNGL file names,
    a concise description of the primary model, and source reference(s).
+10. **Link the fitting-job sibling, if there is one.** Check `pybnf-jobs/` for a
+    `<FirstAuthor>-<Year>/` directory from the same paper. When one exists, name it
+    in this model's README row and in `metadata.yaml`, and add the reverse link to
+    the job's README — the two halves of one paper should each say the other
+    exists. Use the corpus's single canonical `<firstauthor><year>` key for the
+    paper across `models/`, `pybnf-jobs/`, and `dev/papers/`; check for an existing
+    spelling before coining one.
 
 ## Reported Simulation Data Verification
 

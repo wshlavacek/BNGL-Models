@@ -1,21 +1,29 @@
-#@model_id: TODO_unique_id
-#@title: TODO_short_title
-#@description: TODO_1_to_3_sentences
-#@organism: TODO_human_or_mouse_or_other
-#@authors: TODO_name_list
-#@created: YYYY-MM-DD
-#@modified: YYYY-MM-DD
-#@bng_version: >=2.9.3
-#@units_convention: TODO_authoring_units_and_population_conversion_basis
-#@runtime_expectation: ~<1 min typical runs
-#@license: CC-BY-4.0
-#@house_style_version: X.Y
-#@source: handwritten
-#@reference: TODO_optional_DOI_or_PMID
-#@note: |
-#  TODO_optional_notes
-
 begin model
+
+# Header metadata block. Minimal mode (§6.1.1) — these four keys are REQUIRED and
+# go immediately after `begin model`, one blank line between each tag. The verbose
+# keys (#@organism, #@license, #@units_convention, …) belong to §6.1.2, which is
+# DEFERRED: do not use them until that section is specified.
+
+#@title: TODO_descriptive_title (Firstauthor et al., YEAR)
+
+#@description: |
+#  TODO — cover all three: what it IS (biology, components, interactions), how it
+#  WORKS (mass action, Hill, feedback topology), and what it DOES when simulated
+#  (steady states, oscillations, bistability, transients). A description that only
+#  says what the model is, is insufficient (§6.1.1).
+
+#@keyword: |
+#  TODO — domain, dynamics, math/topology, and organism as a full binomial
+#  (e.g. receptor signaling, compartmental, energy patterns, Homo sapiens)
+
+#@reference: |
+#  TODO Authors (Year). Title. Journal Volume:Pages. doi:XX.XXXX/XXXXX
+
+#@note: |
+#  TODO optional — delete this tag if unused. Declare the simulation intent here
+#  or in the protocol: population-based (molecule counts), or concentration-based
+#  with conversion through NA and a volume (§1.3.4).
 
 begin parameters
   # --- Required conversion constants (use when applicable) ---
