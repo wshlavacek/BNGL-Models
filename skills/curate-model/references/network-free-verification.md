@@ -222,8 +222,20 @@ why.
 
 `nfsim/SKILL.md` says what `-bscb` and `-utl` do. Whether they matter **for this model** is a
 measurement, and the exact arm is the instrument. Run NFsim at default flags, with `-bscb`, and
-with `-bscb` plus a raised `-utl`, and compare each against the same RuleMonkey ensemble. Three
-outcomes, all present in the collection:
+with `-bscb` plus a raised `-utl`, and compare each against the same RuleMonkey ensemble.
+
+**First check whether the flag can apply at all — a ring in the seed species is not the same as
+ring-forming rules.** `-bscb` constrains *bimolecular* reactant patterns, so a model whose rules
+never create a bond gives it nothing to act on.
+`camkii_holoenzyme_activation_michalski2012_nfsim.bngl` seeds a pre-formed twelve-subunit ring and
+thereafter only changes subunit states: both autophosphorylation rules are single connected
+two-molecule patterns joined by an explicit bond — unimolecular — so `-bscb` is inert, and the
+auto-computed UTL of 2 already covers the largest pattern in the file.
+`blbr_rings_posner1995` looks structurally similar and is the opposite case: its rules *build* the
+rings, through bimolecular crosslinking and an explicit closure rule, and it requires
+`-bscb -utl 5`. Read the rules, not the topology of the seeded species.
+
+Where the flag can apply, three outcomes, all present in the collection:
 
 - **The flags are no-ops — and that is a result worth having.** `creamer2012`'s adaptor layer can
   in principle bridge a receptor dimer through Grb2 and Shc, so the same-complex question is real
@@ -300,14 +312,13 @@ Of the seven actively network-free folders with no cross-engine arm, six are the
 family and need none — they are checked against closed-form equilibrium or kinetic theory, which
 is the stronger witness (§2). The seventh is the open case:
 
-**`camkii_holoenzyme_activation_michalski2012_nfsim.bngl`.** A twelve-subunit *ring*, where
-same-complex binding is the entire mechanism, run at default flags with no `-bscb` and no `-utl`
-— against `blbr_rings_posner1995`, which requires `-bscb -utl 5` for the same structural motif.
-The file is anchored where an exact witness exists: its reformulation reproduces the primary
-file's exact hexamer ODE. But its reason for existing is the dodecamer-to-100-mer range that
-`generate_network` cannot reach (44,368 dodecamer configurations), and *there* it has no exact
-witness and no committed flag determination. That is where the next network-free verification
-should go.
+**`camkii_holoenzyme_activation_michalski2012_nfsim.bngl`.** The file is anchored where an exact
+witness exists — its reformulation reproduces the primary file's exact hexamer ODE — but its
+reason for existing is the dodecamer-to-100-mer range that `generate_network` cannot reach
+(44,368 dodecamer configurations), and there it has no exact witness. It is the cheapest
+outstanding cross-check in the collection: the model carries ~2,500 dodecamers over six seconds
+of simulated time, so a five-configuration, eight-seed campaign runs in about nine seconds.
+It is not a flags problem — see below — it is simply a check that has never been committed.
 
 ## 9. Worked examples
 
