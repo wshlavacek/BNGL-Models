@@ -32,6 +32,7 @@ files:
       kSyCb = 0.05 /min it produces a stable limit cycle (period ~137 min).
       7 species, 14 reactions.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: cell_cycle_oscillator_lang2024_restriction_point.bngl
     role: related
@@ -40,6 +41,7 @@ files:
       with E2f autoactivation). Irreversible toggle in CycD; upper saddle-node
       at Cd ~ 0.32 AU. 5 species, 10 reactions.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: cell_cycle_oscillator_lang2024_g1s.bngl
     role: related
@@ -47,6 +49,7 @@ files:
       CycA/Apc:Cdh1 G1/S bistable switch (Fig 1D; Eqs 9-15). Hysteresis in E2f
       (bistable ~0.42-0.59 AU). 6 species, 12 reactions.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: cell_cycle_oscillator_lang2024_g2m.bngl
     role: related
@@ -55,6 +58,7 @@ files:
       Saddle-nodes at CycB:Cdk1 = 0.110/0.068 and pEnsa:B55 = 0.112/0.248.
       4 species, 8 reactions.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: cell_cycle_oscillator_lang2024_fused.bngl
     role: related
@@ -68,6 +72,7 @@ files:
       two-cell-cycle ODE reproduction protocol (t_end = 136471.6126, n_steps =
       1200) that emits the 8 nuclear observation functions obs_*__nuc_median().
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: verify_lang2024.ipynb
     role: verification

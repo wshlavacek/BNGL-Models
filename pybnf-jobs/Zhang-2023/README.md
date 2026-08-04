@@ -40,9 +40,9 @@ not calibration.
 
 ## The jobs
 
-| slug | fits | flavor | data | status |
-|---|---|---|---|---|
-| [`tumor_growth`](tumor_growth/) | the six growth parameters the Methods name as fitted — `w_OR`, `kTD`, `EC50TD`, `kg`, `klinear`, `kkill` | quantitative, `sos`, **PEtab-exportable** | 34 points digitized from Fig. 4D (Bridgeman et al. 2016 xenograft), four arms | ✅ tier-1 + PEtab round-trip + fit + reproduction · **75/100** ([VALIDATION](tumor_growth/VALIDATION.md)) |
+| slug | run cost | fits | flavor | data | status |
+|---|---|---|---|---|---|
+| [`tumor_growth`](tumor_growth/) | `minutes` | the six growth parameters the Methods name as fitted — `w_OR`, `kTD`, `EC50TD`, `kg`, `klinear`, `kkill` | quantitative, `sos`, **PEtab-exportable** | 34 points digitized from Fig. 4D (Bridgeman et al. 2016 xenograft), four arms | ✅ tier-1 + PEtab round-trip + fit + reproduction · **75/100** ([VALIDATION](tumor_growth/VALIDATION.md)) |
 
 ## What this job pins down
 

@@ -33,9 +33,9 @@ phospho-turnover constants.
 
 ## The job
 
-| slug | fits | simulator | flavor | status |
-|---|---|---|---|---|
-| [`egfr_simpull`](egfr_simpull/) | SiMPull % phosphorylation (pY1068, pY1173, pan-PY): EGF dose-response (3 doses) **+** 25 nM time course, jointly (6 params) | **ODE** | quantitative, **PEtab-exportable**, `chi_sq` | ✅ tier-1 + PEtab round-trip + reproduction (median 10.4 % rel err) · **validated** ([`egfr_simpull/VALIDATION.md`](egfr_simpull/VALIDATION.md), 93/100) |
+| slug | run cost | fits | simulator | flavor | status |
+|---|---|---|---|---|---|
+| [`egfr_simpull`](egfr_simpull/) | `minutes` | SiMPull % phosphorylation (pY1068, pY1173, pan-PY): EGF dose-response (3 doses) **+** 25 nM time course, jointly (6 params) | **ODE** | quantitative, **PEtab-exportable**, `chi_sq` | ✅ tier-1 + PEtab round-trip + reproduction (median 10.4 % rel err) · **validated** ([`egfr_simpull/VALIDATION.md`](egfr_simpull/VALIDATION.md), 93/100) |
 
 Quantitative and **PEtab-v2-exportable** (unlike the native-only `Kirsch-2020` / `Rukhlenko-2022`
 fold-change jobs). **Not heavy** — the 75-species network generates in ~1 s and a full fit runs on a

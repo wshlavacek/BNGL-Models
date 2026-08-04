@@ -44,6 +44,7 @@ files:
       by run_cortes2017.py. Global mean-field promoter occupancies,
       exponential Vol() clock capped at v=2, theta-mode DNA replication.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: lambda_switch_cortes2017_pergenome.bngl
     role: variant
@@ -58,6 +59,7 @@ files:
       (NFsim/RuleMonkey) only; drive with run_cortes2017.py under
       CORTES_MODEL=pergenome.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: lambda_switch_cortes2017_ciiq.bngl
     role: related
@@ -68,6 +70,7 @@ files:
       incoherent-feed-forward steady states of Fig. 1C (q_ss rises then
       collapses as m/v increases past the c=1 crossover).
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: run_cortes2017.py
     role: verification

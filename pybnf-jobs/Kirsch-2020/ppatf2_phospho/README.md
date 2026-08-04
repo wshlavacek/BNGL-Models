@@ -1,5 +1,7 @@
 # ppatf2_phospho — pp-ATF2(T69/T71) phosphorylation after anisomycin (PyBNF edition-2 job)
 
+**Run cost: `minutes`** — 300 evaluations (10 × 30 `de`), 1 free parameter.
+
 A PyBNF edition-2 parameter-fitting job derived from:
 
 > Kirsch K, Zeke A, Tőke O, Sok P, Sethi A, Sebő A, Kumar GS, Egri P, Póti ÁL,

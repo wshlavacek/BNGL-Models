@@ -1,5 +1,7 @@
 # five_dl1_ssa — exact-SSA fit to the Jones 5DL1 noise curve
 
+**Run cost: `hours`** — 360 parameter sets × `smoothing = 200` = **72,000 exact SSA trajectories**.
+
 This is a small PyBNF edition-2 stochastic fit of the two-state promoter in Rijal and Mehta
 (2025), Fig. 3A, to the 5DL1 mRNA mean/Fano measurements in Jones et al. (2014), Fig. 3A.
 

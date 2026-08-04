@@ -25,6 +25,7 @@ files:
       ring formation (J1 = J2 = 0). Three rules: capture, cross-link,
       dissociation. NFsim with -bscb flag.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: blbr_dembo1978_with_rings.bngl
     role: variant
@@ -34,6 +35,7 @@ files:
       J2 = 100. Uses component states (u/c/g) and requires
       -bscb -utl 5.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: ">2.9.3"
   - name: blbr_dembo1978_monovalent_inhibitor.bngl
     role: variant
@@ -42,6 +44,7 @@ files:
       but cannot cross-link, demonstrating inhibition of cross-linking
       as in Dembo and Goldstein (1978) Fig. 6.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: verify_dembo1978.ipynb
     role: verification

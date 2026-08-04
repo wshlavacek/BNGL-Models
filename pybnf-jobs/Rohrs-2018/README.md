@@ -37,9 +37,9 @@ The network is finite and tiny (65 species, 192 reactions), so the model is chea
 
 ## Jobs
 
-| slug | fits | flavor | data source | status |
-|---|---|---|---|---|
-| [`cd3zeta_competitive_inhibition/`](cd3zeta_competitive_inhibition/) | LCK density, five Michaelis constants and the inhibition scale ξ (7 free; k<sub>cat</sub> and K<sub>M,B1</sub> held, as the paper does) | quantitative (`.exp` only) → **PEtab v2-exportable** | Fig. S5, A–J — nine time courses, 312 scored points, digitized from the vector supplement | ✅ round-trips through PEtab v2; a full `de` + simplex fit reaches `sos` 7368 against 6254 at the published parameters, recovering the K<sub>M</sub> ranking exactly |
+| slug | run cost | fits | flavor | data source | status |
+|---|---|---|---|---|---|
+| [`cd3zeta_competitive_inhibition/`](cd3zeta_competitive_inhibition/) | `hours` | LCK density, five Michaelis constants and the inhibition scale ξ (7 free; k<sub>cat</sub> and K<sub>M,B1</sub> held, as the paper does) | quantitative (`.exp` only) → **PEtab v2-exportable** | Fig. S5, A–J — nine time courses, 312 scored points, digitized from the vector supplement | ✅ round-trips through PEtab v2; a full `de` + simplex fit reaches `sos` 7368 against 6254 at the published parameters, recovering the K<sub>M</sub> ranking exactly |
 
 Mutants are **Conditions, not separate models**: each ITAM tyrosine carries a 0/1 gate parameter
 `live_<site>`, and setting it to zero removes that site from both the substrate and the inhibitor

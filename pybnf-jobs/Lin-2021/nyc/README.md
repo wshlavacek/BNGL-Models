@@ -1,5 +1,7 @@
 # nyc — New York-Newark-Jersey City MSA COVID-19 first wave, ODE (PyBNF edition-2 job)
 
+**Run cost: `minutes`** — 1,800 evaluations (30 × 60 `de`), 6 free parameters.
+
 A PyBNF edition-2 parameter-fitting job that fits **daily new detected COVID-19 case counts**
 for the New York-Newark-Jersey City MSA (NY-NJ-PA) over the first pandemic wave, derived from:
 

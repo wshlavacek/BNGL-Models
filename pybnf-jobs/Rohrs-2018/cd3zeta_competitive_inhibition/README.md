@@ -1,5 +1,7 @@
 # cd3zeta_competitive_inhibition — CD3ζ site-specific phosphorylation by LCK (PyBNF edition-2 job)
 
+**Run cost: `hours`** — 12,000 evaluations (40 × 300 `de`), each integrating a 672-reaction network over nine time courses.
+
 A PyBNF edition-2 parameter-fitting job that reproduces the **headline parameter-estimation
 problem** of Rohrs et al. (2018): fit the competitive-inhibition mechanism of CD3ζ ITAM
 phosphorylation to site-resolved phosphoproteomic time courses across wild-type and ITAM-mutant

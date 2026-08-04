@@ -35,6 +35,7 @@ files:
       context-resolved acetylation rules plus four unspecific deacetylation
       rules. Reproduces Fig. 2C.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: ">=2.9.3"
   - name: combinatorial_histone_h4_acetylation_blasi2016_unspecific.bngl
     role: variant
@@ -43,6 +44,7 @@ files:
       rule names a neighboring lysine and every motif in a layer shares an
       abundance. Reproduces Fig. 2A.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: ">=2.9.3"
   - name: combinatorial_histone_h4_acetylation_blasi2016_site_specific.bngl
     role: variant
@@ -50,6 +52,7 @@ files:
       Best site-specific scenario: one rate per lysine, context-independent,
       so the steady state factorizes over the four sites. Reproduces Fig. 2B.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: ">=2.9.3"
   - name: verify_blasi2016.ipynb
     role: verification

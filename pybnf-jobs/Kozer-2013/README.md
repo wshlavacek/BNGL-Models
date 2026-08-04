@@ -37,10 +37,10 @@ The fit recipes come from the PyBNF 2019 paper corpus (Mitra et al., *iScience* 
 
 ## The jobs
 
-| slug | model | fit data | simulator | fit | status |
-|---|---|---|---|---|---|
-| [`egfr_ode`](egfr_ode/) | Kozer **2013** ODE, tetramer cap | cluster density + phospho-EGFR (Figs 2B/2D/3B/3D), 9 params | **ODE** | 5 sloppy kinetics + 4 scale factors, `chi_sq` | ✅ validated (89/100) · 🔶 heavy |
-| [`egfr_nf`](egfr_nf/) | **Mitra 2019** unbounded network-free | same 2013 data as `egfr_ode`, 9 params | **NFsim** | 5 kinetics + 4 scale factors, `chi_sq` | ✅ validated (86/100) · 🔶 heavy |
+| slug | run cost | model | fit data | simulator | fit | status |
+|---|---|---|---|---|---|---|
+| [`egfr_ode`](egfr_ode/) | `minutes` | Kozer **2013** ODE, tetramer cap | cluster density + phospho-EGFR (Figs 2B/2D/3B/3D), 9 params | **ODE** | 5 sloppy kinetics + 4 scale factors, `chi_sq` | ✅ validated (89/100) · 🔶 heavy |
+| [`egfr_nf`](egfr_nf/) | `hours` | **Mitra 2019** unbounded network-free | same 2013 data as `egfr_ode`, 9 params | **NFsim** | 5 kinetics + 4 scale factors, `chi_sq` | ✅ validated (86/100) · 🔶 heavy |
 
 Both are **PEtab-v2-exportable** and **heavy** (the ODE network is cluster-scale to generate; NFsim
 is cluster-scale to run) — a full fit is a cluster job; the tier-1 parse and PEtab round-trip are

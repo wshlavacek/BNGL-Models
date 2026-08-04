@@ -1,5 +1,7 @@
 # mek_isoform_amcmc — MEK-isoform ERK cascade, Bayesian UQ by adaptive MCMC (PyBNF, native-only)
 
+**Run cost: `cluster`** — 300,000 MCMC steps across five models; the edition-1 twin of `mek_isoform_amcmc`.
+
 The **uncertainty-quantification** half of the Miller-2026 study: a focused Bayesian analysis that
 samples the posterior of the two profile-likelihood-identifiable feedback rate constants (**d3, u3**),
 propagating parametric uncertainty into prediction credible bands.

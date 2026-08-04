@@ -1,5 +1,7 @@
 # cstar_skmel133_bpsl — cSTAR DPD / Waddington-landscape BPSL job (PyBNF, native-only)
 
+**Run cost: `minutes`** — 600 evaluations (12 × 50 `de`) plus a `check` conf, 4 free parameters.
+
 The constraint-bearing sibling of [`../cstar_skmel133`](../cstar_skmel133), and the one
 example in this set that exercises PyBNF's **signature capability — BPSL** (the Biological
 Property Specification Language). Instead of fitting numbers, it fits the paper's

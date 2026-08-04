@@ -28,6 +28,7 @@ files:
   - name: three_stage_stochastic_gene_expression_shahrezaei2008.bngl
     role: primary
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: verify_shahrezaei2008.ipynb
     role: verification

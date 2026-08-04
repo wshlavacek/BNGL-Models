@@ -1,5 +1,7 @@
 # `jak_stat_fig2b` — six-condition JAK-STAT fit
 
+**Run cost: `hours`** — 96,000 evaluations (96 × 1,000 `de`) fitting 48 free parameters over six conditions.
+
 This job reconstructs the parameter-estimation problem behind Figure 2B of
 Cheemalavagu et al. (2024): fit a mechanistic IL-6/IL-10 receptor–JAK1/JAK2–STAT1/STAT3
 model with SOCS1/SOCS3 feedback to six 0–90 min cytokine time courses.

@@ -29,6 +29,7 @@ files:
       aggregation, Lyn-mediated receptor phosphorylation, Syk recruitment,
       and Syk activation-loop transphosphorylation.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: early_fceri_signaling_faeder2003_fyn.bngl
     role: variant
@@ -40,6 +41,7 @@ files:
       "Fyn phosphorylation by SH2-bound Lyn" rule is corrected relative to
       the distributed model (1281 species, 15328 reactions).
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: verify_faeder2003.ipynb
     role: verification

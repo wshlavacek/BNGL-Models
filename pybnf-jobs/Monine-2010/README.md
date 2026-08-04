@@ -39,9 +39,9 @@ and the cell geometry (Table 1 of Monine 2010) are fixed.
 
 ## The job
 
-| slug | fits | simulator | flavor | status |
-|---|---|---|---|---|
-| [`tlbr`](tlbr/) | bound-ligand fraction FL vs. total-ligand dose-response, 12 doses (3 params) | **NF** (NFsim, network-free) | quantitative, **PEtab-exportable**, `sos` | ✅ tier-1 + PEtab round-trip + reproduction (median 2.4 % rel err) · **validated** (`tlbr/VALIDATION.md`, 91/100) |
+| slug | run cost | fits | simulator | flavor | status |
+|---|---|---|---|---|---|
+| [`tlbr`](tlbr/) | `hours` | bound-ligand fraction FL vs. total-ligand dose-response, 12 doses (3 params) | **NF** (NFsim, network-free) | quantitative, **PEtab-exportable**, `sos` | ✅ tier-1 + PEtab round-trip + reproduction (median 2.4 % rel err) · **validated** (`tlbr/VALIDATION.md`, 91/100) |
 
 Quantitative and **PEtab-v2-exportable** (unlike the native-only `Kirsch-2020` /
 `Rukhlenko-2022` fold-change jobs). Network-free but **not heavy** — a single 12-dose scan runs

@@ -30,6 +30,7 @@ files:
   - name: demographic_noise_predator_prey_cycles_mckane2005.bngl
     role: primary
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: verify_mckane2005.ipynb
     role: verification

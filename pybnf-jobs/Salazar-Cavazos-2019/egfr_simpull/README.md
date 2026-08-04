@@ -1,5 +1,7 @@
 # egfr_simpull — multisite EGFR phosphorylation, CHO EGFR-GFP cells, ODE (PyBNF edition-2 job)
 
+**Run cost: `minutes`** — 2,500 evaluations (50 × 50 `de`), 6 free parameters.
+
 A PyBNF edition-2, parameter-fitting job setup derived from:
 
 > Salazar-Cavazos E, Franco Nitta C, Mitra ED, Wilson BS, Lidke KA, Hlavacek WS, Lidke DS.

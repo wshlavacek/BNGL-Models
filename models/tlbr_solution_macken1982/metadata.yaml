@@ -27,6 +27,7 @@ files:
       solution with three rules: capture, crosslink, dissociation.
       NFsim with -bscb flag (no intra-complex rings).
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: verify_macken1982.ipynb
     role: verification

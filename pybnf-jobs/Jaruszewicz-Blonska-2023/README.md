@@ -48,10 +48,10 @@ the authors' `setParameter`/`simulate_ode` phase block — and there is **no `be
 Two slugs fit the **same reduced model to the same original model**, under the paper's two
 in-silico experiments. Both recover the same Table 1.
 
-| slug | protocol | fit target | data | status |
-|---|---|---|---|---|
-| [`reduced_combination`](reduced_combination/) | **combination experiment** (Fig 2): tonic + 5 pulsatile, WT + A20KO, **914 independent points** (S1 Table) | original model, 6 protocols × 2 genotypes | 12-model joint `de` fit, exact Eq-7 objective | Gate 3a **reproduces the paper's reported AMD\*_WT=1.29 / AMD\*_A20KO=1.16 exactly**; Gate 3b recovers **all 13 within 3×** (ε now ~1.5×; Table 1 = the objective minimum) · **94/100** ([VALIDATION](reduced_combination/VALIDATION.md)) |
-| [`reduced_onoff`](reduced_onoff/) | **on-off** (Table 2): 2 h TNF on / 10 h off, WT + A20KO, **41 independent points** — the paper's proposed identifiability-optimal protocol | original model, on-off | `de` fit, exact Eq-7 objective | Gate 3a AMD\*≈1.4; Gate 3b recovers **11/13 within 3×** (the 2 that drift = the paper's least-identifiable δ, ε) · **89/100** ([VALIDATION](reduced_onoff/VALIDATION.md)) |
+| slug | run cost | protocol | fit target | data | status |
+|---|---|---|---|---|---|
+| [`reduced_combination`](reduced_combination/) | `hours` | **combination experiment** (Fig 2): tonic + 5 pulsatile, WT + A20KO, **914 independent points** (S1 Table) | original model, 6 protocols × 2 genotypes | 12-model joint `de` fit, exact Eq-7 objective | Gate 3a **reproduces the paper's reported AMD\*_WT=1.29 / AMD\*_A20KO=1.16 exactly**; Gate 3b recovers **all 13 within 3×** (ε now ~1.5×; Table 1 = the objective minimum) · **94/100** ([VALIDATION](reduced_combination/VALIDATION.md)) |
+| [`reduced_onoff`](reduced_onoff/) | `hours` | **on-off** (Table 2): 2 h TNF on / 10 h off, WT + A20KO, **41 independent points** — the paper's proposed identifiability-optimal protocol | original model, on-off | `de` fit, exact Eq-7 objective | Gate 3a AMD\*≈1.4; Gate 3b recovers **11/13 within 3×** (the 2 that drift = the paper's least-identifiable δ, ε) · **89/100** ([VALIDATION](reduced_onoff/VALIDATION.md)) |
 
 The **combination** slug is the paper's headline result (Fig 2). Because a `condition:` can perturb
 only *free* parameters under the bngsim backend (and the TNF window parameters are not fit), each of

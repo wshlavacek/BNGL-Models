@@ -45,9 +45,11 @@ files:
       binding, 60 s response); set the PTPN6 or LCP2 seed-species copy number to
       0 to reproduce a knockdown.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: run_tcr_chylek2014.py
     role: verification
+    scale: hours
     description: >
       Self-contained driver. `reference` runs the committed model's faithful
       published protocol with standard BioNetGen NFsim (full subvolume Fx=0.02)

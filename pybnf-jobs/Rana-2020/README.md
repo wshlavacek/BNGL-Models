@@ -54,12 +54,12 @@ beside the published column.
 
 ## The jobs
 
-| slug | fits | data | paper's SSE | SSE here | status |
-|---|---|---|---|---|---|
-| [`on_pathway`](on_pathway/) | the 4 on-pathway constants of Eq. 4 + ThT scale (5 free) | Fig. 1a, 97 points | 0.13 | **0.022** | ✅ |
-| [`micelle_addition`](micelle_addition/) | all 12 rate constants + 2 ThT scales (14 free), on→off switching | Fig. 1c, 322 points | 4.12 | **4.27** | ✅ |
-| [`micelle_removal`](micelle_removal/) | all 12 rate constants + 2 ThT scales (14 free), off→on switching | Fig. 1b, 120 points | 1.22 | **0.33** | ✅ |
-| [`global`](global/) | all 12 rate constants + 3 ThT scales (15 free), all five experiments at once | Figs. 1a+1b+1c, 427 points | 8.2 | **15.65** | ✅ |
+| slug | run cost | fits | data | paper's SSE | SSE here | status |
+|---|---|---|---|---|---|---|
+| [`on_pathway`](on_pathway/) | `minutes` | the 4 on-pathway constants of Eq. 4 + ThT scale (5 free) | Fig. 1a, 97 points | 0.13 | **0.022** | ✅ |
+| [`micelle_addition`](micelle_addition/) | `hours` | all 12 rate constants + 2 ThT scales (14 free), on→off switching | Fig. 1c, 322 points | 4.12 | **4.27** | ✅ |
+| [`micelle_removal`](micelle_removal/) | `hours` | all 12 rate constants + 2 ThT scales (14 free), off→on switching | Fig. 1b, 120 points | 1.22 | **0.33** | ✅ |
+| [`global`](global/) | `hours` | all 12 rate constants + 3 ThT scales (15 free), all five experiments at once | Figs. 1a+1b+1c, 427 points | 8.2 | **15.65** | ✅ |
 
 All four are quantitative `sos` jobs and all four are **PEtab.v2-exportable**; ✅ means tier-1 +
 PEtab round-trip + a real bngsim fit + a reproduction figure. "SSE here" is the committed model

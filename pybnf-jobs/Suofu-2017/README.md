@@ -50,9 +50,9 @@ Network generation gives **26 species and 30 reactions** — milliseconds per si
 
 ## The jobs
 
-| slug | fits | flavor | data | status |
-|---|---|---|---|---|
-| [`mito_camp`](mito_camp/) | the twelve rate constants of Supplementary Data Table 1, the PM/OMM MT1 concentration ratio, and `MT1_OMM_amp` (which of the paper's two contradictory OMM receptor densities is operative) | quantitative, `sos`, **PEtab-exportable** | 77 points digitized from Fig. 4H (melatonin) and Fig. 4I (DAMGO), two compartment-targeted FRET sensors each | ✅ tier-1 + PEtab round-trip + fit + reproduction · **65/100** ([VALIDATION](mito_camp/VALIDATION.md)) |
+| slug | run cost | fits | flavor | data | status |
+|---|---|---|---|---|---|
+| [`mito_camp`](mito_camp/) | `hours` | the twelve rate constants of Supplementary Data Table 1, the PM/OMM MT1 concentration ratio, and `MT1_OMM_amp` (which of the paper's two contradictory OMM receptor densities is operative) | quantitative, `sos`, **PEtab-exportable** | 77 points digitized from Fig. 4H (melatonin) and Fig. 4I (DAMGO), two compartment-targeted FRET sensors each | ✅ tier-1 + PEtab round-trip + fit + reproduction · **65/100** ([VALIDATION](mito_camp/VALIDATION.md)) |
 
 > ✅ **The fit scores better on the paper's own data than the paper's own plotted fit:
 > SSE 4405.6 → 3684.6 over the same 77 points (RMSE 7.56 → 6.92 percentage points), and it

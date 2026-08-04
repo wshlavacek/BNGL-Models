@@ -12,9 +12,9 @@ BNGL, experimental workbooks, and 2,067 retained parameter sets are available in
 [`ncheemalavagu/STAT_models`](https://github.com/ncheemalavagu/STAT_models) at commit
 `28874f0801077f479526157300f70fdccb672013`.
 
-| slug | fits | flavor | data | verification status |
-|---|---|---|---|---|
-| [`jak_stat_fig2b`](jak_stat_fig2b/) | 46 biological parameters plus two measurement scales; six IL-6/IL-10 conditions; pSTAT1 and pSTAT3 | ODE, quantitative, `chi_sq`, PEtab-v2-exportable | Figure 2B pooled workbooks; 84 observations | ✅ tier-1 PASS; PEtab round-trip PASS; executed verification notebook PASS; representative published ensemble χ² 74.5, median relative error 8.8%; bounded PyBNF fit PASS |
+| slug | run cost | fits | flavor | data | verification status |
+|---|---|---|---|---|---|
+| [`jak_stat_fig2b`](jak_stat_fig2b/) | `hours` | 46 biological parameters plus two measurement scales; six IL-6/IL-10 conditions; pSTAT1 and pSTAT3 | ODE, quantitative, `chi_sq`, PEtab-v2-exportable | Figure 2B pooled workbooks; 84 observations | ✅ tier-1 PASS; PEtab round-trip PASS; executed verification notebook PASS; representative published ensemble χ² 74.5, median relative error 8.8%; bounded PyBNF fit PASS |
 
 BioNetGen builds the 53-species/122-reaction network in about 0.1 s. The bounded fit is
 an execution smoke test; a converged 48-dimensional fit still warrants parallel compute.

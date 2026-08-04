@@ -33,6 +33,7 @@ files:
       candidates by residual error and AIC. Wild-type CD3zeta on liposomes;
       65 species, 192 reactions. Reproduces Fig. 3D and Fig. S5A.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: ">=2.9.3"
   - name: car_cd3zeta_phosphorylation_rohrs2018_sequential.bngl
     role: variant
@@ -43,6 +44,7 @@ files:
       coefficient climbing along the chain -- but not quantitatively; see the
       note on Data S1 below.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: ">=2.9.3"
   - name: car_cd3zeta_phosphorylation_rohrs2018_random.bngl
     role: variant
@@ -51,6 +53,7 @@ files:
       substrates, no coupling of any kind. 65 species, 192 reactions.
       Reproduces Fig. 3B.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: ">=2.9.3"
   - name: car_cd3zeta_phosphorylation_rohrs2018_priming.bngl
     role: variant
@@ -61,6 +64,7 @@ files:
       the bound counter molecule of the source file. 65 species, 192 reactions
       through 36 rules. Reproduces Fig. 3C.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: ">=2.9.3"
   - name: car_cd3zeta_phosphorylation_rohrs2018_mutants.bngl
     role: variant
@@ -69,6 +73,7 @@ files:
       point mutants, all seven constructs in one network (257 species, 672
       reactions) and selected by setConcentration. Reproduces Fig. S5, D-J.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: ">=2.9.3"
   - name: car_cd3zeta_phosphorylation_rohrs2018_phosphatase.bngl
     role: variant
@@ -79,6 +84,7 @@ files:
       (126 species, 600 reactions), each scanned over four decades of
       phosphatase density. Reproduces Fig. 5, A-C.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: ">=2.9.3"
   - name: verify_rohrs2018.ipynb
     role: verification

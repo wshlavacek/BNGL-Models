@@ -1,5 +1,7 @@
 # lacud5_ssa — exact-SSA fit to the Jones lacUV5/lacUD5 noise curve
 
+**Run cost: `hours`** — 360 parameter sets × `smoothing = 200` = **72,000 exact SSA trajectories**.
+
 This is a small PyBNF edition-2 stochastic fit of the two-state promoter in Rijal and Mehta
 (2025), Fig. 3A, to the lacUV5 mRNA mean/Fano measurements in Jones et al. (2014), Fig. 3A.
 Rijal's paper and released data call the promoter `lacUD5`; Jones calls it `lacUV5`. The job uses

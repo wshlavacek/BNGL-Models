@@ -51,9 +51,11 @@ files:
       no irradiation) reproducing Fig. 4; uncomment the IR event and timer
       functions to enable acute irradiation.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: run_dolan2015.py
     role: verification
+    scale: hours
     description: >
       Self-contained driver. `reference` runs the committed model's faithful
       published protocol with standard BioNetGen NFsim (seed 2015 reproduces the

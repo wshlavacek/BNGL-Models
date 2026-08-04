@@ -1,5 +1,7 @@
 # cstar_trkab_bmra_exact — the joint Trk fit with the EXACT Eq.14 BMRA constraints
 
+**Run cost: `minutes`** — 1,000 evaluations (20 × 50 `ss`) over two models, 51 free parameters.
+
 The joint TrkA + TrkB reconstruction of the paper's fit, imposing the paper's real constraint
 object: each model's **Eq.14 connection coefficients `r_ij`** constrained TWO-SIDED inside the BMRA
 confidence intervals (Table S5, 10-min posterior). The sibling

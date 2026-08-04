@@ -1,5 +1,7 @@
 # tnfr1_ucb0595 — UCB-0595-distorted TNF sequential TNFR1 binding fit
 
+**Run cost: `minutes`** — 600 evaluations (12 × 50 `de`) on a 24-reaction equilibrium network.
+
 This PyBNF edition-2 job fits the three sequential microscopic dissociation
 constants of soluble human TNFR1 binding to UCB-0595-bound trimeric human TNF.
 It reproduces the quantitative analysis behind the right panel of Fig. 1b in

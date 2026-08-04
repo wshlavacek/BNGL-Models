@@ -1,5 +1,7 @@
 # `global` — one parameterization for all five ThT experiments
 
+**Run cost: `hours`** — 28,800 evaluations (72 × 400 `ss`) fitting 15 parameters across all protocols at once.
+
 PyBNF edition-2 fitting job derived from:
 
 > Rana P, Bose P, Vaidya A, Rangachari V, Ghosh P.

@@ -943,7 +943,7 @@ Entity-level annotations MAY be used when they add value (provenance, non-obviou
 
 - It MAY appear **in the header** (when the cost characterizes the whole file) or **attached to a specific `simulate*()` / `parameter_scan()` call** (PREFERRED, because it names the protocol it describes). Both placements are in current use and both are compliant.
 - Write it whenever `scale:` is `hours` or `cluster` (§7.1), and whenever a file is surprisingly cheap or expensive for its size.
-- State the number, the machine, and the dominant cost. "Slow" is not a runtime expectation.
+- State the cost, its basis (measured on what machine, or estimated from which §5.6.1 proxy), and what dominates it. "Slow" is not a runtime expectation.
 
 ```
   simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>432000,n_steps=>7200,\
@@ -983,9 +983,13 @@ Therefore:
 - **REQUIRED:** every `.bngl` file declares `scale:` in its folder's `metadata.yaml` (§5.6),
   assigned by the static procedure in §5.6.1. This is the machine-readable class, and it is the
   only place the class is stored.
-- **REQUIRED when `scale:` is `hours` or `cluster`:** a `#@runtime_expectation:` (§6.3) giving
-  the measured cost, the machine, and what dominates it. A heavy model with no explanation is not
-  acceptable; a heavy model with one is.
+- **REQUIRED when `scale:` is `hours` or `cluster`:** a `#@runtime_expectation:` (§6.3) saying
+  what the run costs, **on what basis**, and what dominates the cost. A measured wall time is the
+  best basis and MUST be given when one exists — you have usually just run the model. When it does
+  not, an estimate from the §5.6.1 proxies is acceptable *and MUST be labelled as an estimate*;
+  what is not acceptable is a heavy model with no explanation at all. The dominant cost is the
+  part that ages well: wall times drift with hardware, but "each of the 320 RuleMonkey runs steps
+  every particle" stays true.
 - **RECOMMENDED:** where an expensive protocol has a cheap counterpart that answers the same
   question (a shortened `t_end`, a reduced scan, a smaller ensemble), ship it as a sibling file
   or a commented alternative and say so, so a reader without the hardware still has a way in.

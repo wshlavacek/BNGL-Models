@@ -1,5 +1,7 @@
 # Boehm_JProteomeRes2014 — STAT5A/B phosphorylation dynamics (PEtab benchmark, PyBNF gntr)
 
+**Run cost: `minutes`** — 10,000 evaluations (20 × 500 `gntr`) on a 9-reaction ODE model.
+
 A PyBNF **edition-2, PEtab-imported SBML** fitting job for the `Boehm_JProteomeRes2014` problem from
 the community PEtab Benchmark-Models collection, scored against the **Grein et al. 2026** optimizer
 benchmark. See [`../README.md`](../README.md) for the collection, the scoring, and the objective-fidelity

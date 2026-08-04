@@ -1,5 +1,7 @@
 # igf1r — IGF1 / IGF1R harmonic-oscillator binding fit (Erickson 2019's actual published fit)
 
+**Run cost: `minutes`** — 1,000 evaluations (20 × 50 `ss`) on a 6-rule ODE model.
+
 A PyBNF **edition-2 (new-era)** parameter-fitting job (`igf1r.conf` / `igf1r.bngl`); the
 SI-verbatim **edition-1** twin is kept as `igf1r_legacy.conf` / `igf1r_legacy.bngl` (provenance +
 the BNG2.pl reproduction oracle). It reproduces the IGF1-IGF1R binding fit of Erickson et al. 2019

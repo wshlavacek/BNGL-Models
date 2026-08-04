@@ -28,6 +28,7 @@ files:
       reproduces the Fig. 3a relaxation-oscillation trajectories for
       RAS-GTP, active RAF, MEK-PP, and ERK-PP.
     documentation_target: minimal
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: verify_kocieniewski2026.ipynb
     role: verification

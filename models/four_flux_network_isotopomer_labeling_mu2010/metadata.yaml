@@ -32,6 +32,7 @@ files:
       reproduce the four curves of Fig. 15.4: the reference condition, two alternative
       M2 pool sizes, and a redistribution of flux between the two branches.
     documentation_target: comprehensive
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: independent_mu2010.py
     role: verification

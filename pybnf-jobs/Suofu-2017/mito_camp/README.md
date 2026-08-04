@@ -1,5 +1,7 @@
 # mito_camp — mitochondrial vs. plasma-membrane Gi signaling, ODE (PyBNF edition-2 job)
 
+**Run cost: `hours`** — **measured at 28 min on 16 cores** = 7.5 core-hours for 39,000 evaluations (130 × 300 `de`) — the corpus's per-evaluation anchor, 0.69 s.
+
 A PyBNF edition-2 parameter-fitting job that refits the **twelve rate constants of
 Supplementary Data Table 1** — plus the PM/OMM MT1 concentration ratio and one parameter
 that resolves a contradiction in the paper — of the compartmental cAMP model of:

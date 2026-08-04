@@ -31,9 +31,9 @@ by detailed balance) to **three** Kiselyov datasets at once.
 
 ## The job
 
-| slug | fits | simulator | flavor | status |
-|---|---|---|---|---|
-| [`igf1r`](igf1r/) | 7 rate constants to **F5B + F5D_20min + F5D_60min** jointly (Kiselyov Fig 5B/5D) | **ODE** (finite network, no cap) | legacy (edition-1), in-model multi-phase `parameter_scan`, `chi_sq`, `normalization=init` → **NATIVE-ONLY** | ✅ validated 93/100 — see [`VALIDATION.md`](igf1r/VALIDATION.md) |
+| slug | run cost | fits | simulator | flavor | status |
+|---|---|---|---|---|---|
+| [`igf1r`](igf1r/) | `minutes` | 7 rate constants to **F5B + F5D_20min + F5D_60min** jointly (Kiselyov Fig 5B/5D) | **ODE** (finite network, no cap) | legacy (edition-1), in-model multi-phase `parameter_scan`, `chi_sq`, `normalization=init` → **NATIVE-ONLY** | ✅ validated 93/100 — see [`VALIDATION.md`](igf1r/VALIDATION.md) |
 
 **Validated against the authors' own files.** Erickson's SI ("S2 Compressed File Archive") ships
 the exact BioNetFit model + conf + data that produced the paper's **Table 1**; the job is built

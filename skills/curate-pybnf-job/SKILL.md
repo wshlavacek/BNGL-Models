@@ -245,10 +245,10 @@ than guessing.
 8. **Write the slug `README.md`.** It is the entry point and must stand alone: what the job fits
    and why; the model and where it came from; the training data and its figure/table provenance;
    the free parameters; the archetype and its consequences (PEtab-exportable? native-only?);
-   **the status line — J\*, its tier, OG, the badge, and the scale (see below)**; the exact run
-   command; and a link to `VALIDATION.md` once `validate-pybnf-job` has been run. Update the
-   paper-level README's slug table — including its **Scale** column — and the root `README.md` if
-   the job pairs with a curated model.
+   **a `**Run cost:**` line directly under the title** (see below); **the status line — J\*, its
+   tier, OG, and the badge**; the exact run command; and a link to `VALIDATION.md` once
+   `validate-pybnf-job` has been run. Update the paper-level README's slug table — including its
+   **`run cost`** column — and the root `README.md` if the job pairs with a curated model.
 
 9. **Report — and close the loop upstream.** Summarize the new slug, the verification results
    (tier-1; PEtab round-trip *or* BPSL `check`; **OG and status**; the paper-reproduction metric),
@@ -273,9 +273,17 @@ old bar ("a real bngsim fit reaches a finite objective") passes a broken model a
 
 ## Declare the scale — and that is where `heavy` comes from
 
-Every slug states what it costs to run, in the README status line and in the paper-level slug
-table's **Scale** column. Same four-value vocabulary as `models/` (`skills/bngl/skill.md` §5.6),
-so one word means one thing across the repository:
+Every slug states what it costs to run, twice: a `**Run cost: \`<class>\`** — <why>.` line
+directly under the slug README's title, and a **`run cost`** column in the paper-level slug
+table. Same four-value vocabulary as `models/` (`skills/bngl/skill.md` §5.6), so one word means
+one thing across the repository. Give the *why* — the evaluation count and what each evaluation
+costs — not just the word; that is what lets the next reader re-derive the class when the conf's
+budget changes.
+
+**Call the column `run cost`, not `scale`.** In `pybnf-jobs/` the word *scale* is already taken —
+PEtab's observable measurement scale (`lin`/`log10`/`ln`), which the Grein subset tabulates per
+slug and which is load-bearing for how its objective constants are restored. `models/` has no
+such conflict and uses `scale:` there.
 
 | scale | can I run this on a laptop? | budget for a full fit |
 |---|---|---|

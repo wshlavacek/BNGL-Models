@@ -1,5 +1,7 @@
 # v3_2_0 — RPE-1 cell-cycle model, full fused v3.2.0 parameter fit (PyBNF edition-2 job)
 
+**Run cost: `cluster`** — 1,062,000 evaluations (354 × 3,000 `de`) over **177 free parameters** — the corpus's largest job by three orders of magnitude, and the budget a converged fit needs is larger still (the authors used cooperative scatter search on a cluster).
+
 A PyBNF edition-2 parameter-fitting job that captures the **headline parameter-estimation
 problem** of Lang et al. (2024): fit **177 of 205 parameters** of the full fused, rule-based
 RPE-1 cell-cycle model to **8 nuclear single-cell observables** over ~2 cell cycles, derived from:

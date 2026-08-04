@@ -1,5 +1,7 @@
 # Rahman_MBS2016
 
+**Run cost: `minutes`** — 10,000 evaluations (20 × 500 `gntr`) on a 16-reaction ODE model.
+
 PyBNF fitting job imported from the [Benchmark-Models-PEtab](https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab) collection, as used
 in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 

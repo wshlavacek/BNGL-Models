@@ -41,10 +41,10 @@ and audited by the `validate-pybnf-job` skill.
 
 Each job is an **edition-2 primary** slug plus its **edition-1 legacy twin** (`*_legacy/`):
 
-| slug (edition-2 primary) | legacy twin | analysis | free params | objective | reproduces | confidence |
-|---|---|---|---|---|---|---|
-| [`mek_isoform_de`](mek_isoform_de/) | [`mek_isoform_de_legacy`](mek_isoform_de_legacy/) | global MLE by differential evolution (data fusion) | 31 (28 rates + 3 scales) | `sos` = F_quant + F_qual | Table 3 best-fit; Fig 1B; Fig 2 (obj 24.0) | **92** |
-| [`mek_isoform_amcmc`](mek_isoform_amcmc/) | [`mek_isoform_amcmc_legacy`](mek_isoform_amcmc_legacy/) | Bayesian UQ by adaptive MCMC on d3, u3 | 6 (d3, u3, σ, 3 scales) | `chi_sq_dynamic` | (d3,u3) posterior; Fig 5–7; Table 4 | **85** |
+| slug (edition-2 primary) | run cost | legacy twin | analysis | free params | objective | reproduces | confidence |
+|---|---|---|---|---|---|---|---|
+| [`mek_isoform_de`](mek_isoform_de/) | `cluster` | [`mek_isoform_de_legacy`](mek_isoform_de_legacy/) | global MLE by differential evolution (data fusion) | 31 (28 rates + 3 scales) | `sos` = F_quant + F_qual | Table 3 best-fit; Fig 1B; Fig 2 (obj 24.0) | **92** |
+| [`mek_isoform_amcmc`](mek_isoform_amcmc/) | `cluster` | [`mek_isoform_amcmc_legacy`](mek_isoform_amcmc_legacy/) | Bayesian UQ by adaptive MCMC on d3, u3 | 6 (d3, u3, σ, 3 scales) | `chi_sq_dynamic` | (d3,u3) posterior; Fig 5–7; Table 4 | **85** |
 
 The two jobs are **distinct analyses** (the DE fits all 31 parameters; the aMCMC samples 2 rate
 constants around K&L's original baseline), so they are separate slugs — see each slug's `VALIDATION.md`.

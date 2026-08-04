@@ -1,5 +1,7 @@
 # Sneyd_PNAS2002 — IP₃-receptor Ca²⁺ gating (PEtab benchmark, PyBNF gntr)
 
+**Run cost: `minutes`** — 3,000 evaluations (10 × 300 `gntr`) on a 10-reaction ODE model.
+
 A PyBNF **edition-2, PEtab-imported SBML** fitting job for the `Sneyd_PNAS2002` problem, scored against
 the **Grein et al. 2026** optimizer benchmark. See [`../README.md`](../README.md) for the collection,
 scoring, and fidelity methodology. This is the collection's **multi-condition** exemplar (9 conditions,

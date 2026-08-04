@@ -31,6 +31,7 @@ files:
       and require double phosphorylation for activation. 85 species, 487
       reactions (BioNetGen 2.9.3).
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: scaffolded_mapk_cascade_kocieniewski2012_scaff11.bngl
     role: variant
@@ -39,6 +40,7 @@ files:
       phospho-residue (R1). 33 species, 127 reactions (BioNetGen 2.9.3).
       Corrects the Appendix A rule-7 typo.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: verify_kocieniewski2012.ipynb
     role: verification

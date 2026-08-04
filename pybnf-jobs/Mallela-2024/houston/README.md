@@ -1,5 +1,7 @@
 # houston — Houston MSA COVID-19 with vaccination and variants, ODE (PyBNF edition-2 job)
 
+**Run cost: `trivial`** — 60 evaluations (3 × 20 `lbfgs`), 2 free parameters.
+
 A PyBNF edition-2 parameter-fitting job that fits **daily new detected COVID-19 case counts** for
 the Houston MSA (Houston-The Woodlands-Sugar Land, TX) over 2020-01-21..2021-10-30, using the vaccination-and-variants
 compartmental model of:

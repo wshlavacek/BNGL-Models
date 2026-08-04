@@ -53,9 +53,11 @@ files:
       non-identifiable (paper Fig S2), so the reproduced isotherm -- not the
       individual constants -- is the identifiable check.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: run_monine2010.py
     role: verification
+    scale: minutes
     description: >
       Self-contained driver. `reference` reproduces Monine 2010 Fig 2a: the
       network-free NFsim parameter_scan (-bscb) over the 12 doses at the Table-1

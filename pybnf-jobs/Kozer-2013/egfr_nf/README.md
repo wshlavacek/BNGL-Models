@@ -1,5 +1,7 @@
 # egfr_nf — EGFR higher-order clustering, network-free NFsim (PyBNF edition-2 job)
 
+**Run cost: `hours`** — 600 evaluations (12 × 50 `ss`) — but every one is a **network-free NFsim** run, two to three orders of magnitude above an ODE evaluation.
+
 A PyBNF edition-2, parameter-fitting job setup. The **network-free NFsim model** is the
 PyBioNetFit / BioNetFit-1 **"example 2"** model (`example2_starting_point.bngl`, edited by
 B. R. Thomas, W. S. Hlavacek, and E. D. Mitra) — an **unbounded** network-free reformulation of

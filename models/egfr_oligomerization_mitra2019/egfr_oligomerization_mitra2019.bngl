@@ -359,6 +359,18 @@ begin actions
   #  network-free algorithms (BioNetGen NFsim and RuleMonkey, both -bscb; see
   #  run_mitra2019.py), not by legacy NFsim alone.
 
+  #@runtime_expectation: |
+  #  Hours for the two protocols below on one core -- an estimate from particle
+  #  count, not a measured wall time. NFsim charges per particle event, and the
+  #  cost here is dominated by free EGF: LT_nM runs to 100 nM, which in the
+  #  f=0.01 subvolume is ~1e6 EGF particles against only ~900 receptors, so the
+  #  top two points of the six-point log scan cost more than everything else in
+  #  the file combined (hence gml at the 32-bit max). The bottom four points and
+  #  the 30 nM time course are each minutes. run_mitra2019.py multiplies this by
+  #  its replicate count, and its RuleMonkey arm -- exact, stepping every one of
+  #  those EGF particles -- is why that cross-check is run only at the
+  #  tractable 0.1/1/10 nM doses.
+
   saveConcentrations()
 
   # EGFR cluster density & phospho-EGFR vs EGF dose

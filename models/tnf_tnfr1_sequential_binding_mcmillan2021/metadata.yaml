@@ -25,6 +25,7 @@ files:
       0.22 nM microscopic dissociation constants and an active Figure 1b
       receptor-titration protocol.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: tnf_tnfr1_sequential_binding_mcmillan2021_ucb0595.bngl
     role: variant
@@ -32,6 +33,7 @@ files:
       UCB-0595-bound TNF variant with the published 0.04, 0.19, and 9612 nM
       microscopic dissociation constants and the matching Figure 1b protocol.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: verify_mcmillan2021.ipynb
     role: verification

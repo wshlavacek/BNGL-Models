@@ -1,5 +1,7 @@
 # egfr_ode — EGFR higher-order oligomerisation & phosphorylation, ODE (PyBNF edition-2 job)
 
+**Run cost: `minutes`** — 600 evaluations (12 × 50 `de`) on the tetramer-capped ODE model.
+
 A PyBNF edition-2, parameter-fitting job setup derived from:
 
 > Kozer N, Barua D, Orchard S, Nice EC, Burgess AW, Hlavacek WS, Clayton AHA.

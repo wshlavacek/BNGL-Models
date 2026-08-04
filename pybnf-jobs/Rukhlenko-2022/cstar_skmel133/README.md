@@ -1,5 +1,7 @@
 # cstar_skmel133 — cSTAR SKMEL-133 melanoma inhibitor-panel fit (PyBNF edition-2 job)
 
+**Run cost: `minutes`** — 600 evaluations (12 × 50 `de`), 8 free parameters.
+
 Third cSTAR example, and a **different flavor** from the two Trk time-course fits: a
 **steady-state inhibitor-perturbation panel** on a RAF-inhibitor-resistant melanoma line.
 

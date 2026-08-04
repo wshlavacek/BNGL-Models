@@ -27,14 +27,17 @@ files:
       j-2 = koff.  Requires -bscb and -utl 5.  The verification
       notebook runs three doses by modifying LT_per_cell.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: ">2.9.3"
   - name: blbr_rings_posner1995_no_rings.bngl
     role: variant
+    scale: minutes
     description: >
       No-ring variant: capture, crosslink, and dissociation only.
       Validated against Posner ODEs (eqs 14a-14i with jp=0).
   - name: blbr_rings_posner1995_alt_formulation.bngl
     role: variant
+    scale: minutes
     description: >
       Bidirectional ring variant with independent ring opening rate
       parameter jm (defaults to koff).  Unlike the primary model,
@@ -77,6 +80,7 @@ files:
       of the size-2 ring model.
   - name: size2-ring-posner-validation/size2_ring_posner_validation.bngl
     role: variant
+    scale: minutes
     description: >
       BNGL file used by the size2-ring-posner-validation suite.
   - name: reference/blbr_rings_posner1995_nfr.gdat

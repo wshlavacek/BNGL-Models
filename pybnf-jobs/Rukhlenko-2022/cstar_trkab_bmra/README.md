@@ -1,5 +1,7 @@
 # cstar_trkab_bmra — the joint TrkA + TrkB fit (BMRA-CI-constrained, **sign** approximation)
 
+**Run cost: `minutes`** — 1,000 evaluations (20 × 50 `ss`) over two models, 38 free parameters.
+
 > ## ⚠️ DEPRECATED — superseded by [`../cstar_trkab_bmra_exact`](../cstar_trkab_bmra_exact)
 > This slug constrains only the **sign** of each BMRA connection (a robust approximation). The
 > sibling **`_exact`** slug constrains the paper's real object — each model's exact **Eq. 14**

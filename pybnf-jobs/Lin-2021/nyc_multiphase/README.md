@@ -1,5 +1,7 @@
 # nyc_multiphase — New York City MSA COVID-19, TWO-PHASE model, ODE (PyBNF edition-2 job)
 
+**Run cost: `minutes`** — 4,800 evaluations (60 × 80 `de`), 10 free parameters.
+
 A PyBNF edition-2 parameter-fitting job that fits **daily new detected COVID-19 case counts** for
 the New York City MSA (NY-NJ-PA) over the first wave, using the **two-phase (n=1)** social-
 distancing model, derived from:

@@ -1,5 +1,7 @@
 # Perelson_Science1996 — HIV-1 viral decay dynamics (PEtab benchmark, PyBNF cmaes)
 
+**Run cost: `minutes`** — 12,000 evaluations (24 × 500 `cmaes`), 3 free parameters.
+
 A PyBNF **edition-2, PEtab-imported SBML** fitting job for the `Perelson_Science1996` problem, scored
 against the **Grein et al. 2026** optimizer benchmark. See [`../README.md`](../README.md) for the
 collection, scoring, and fidelity methodology. This is the collection's cleanest **log10-observable**

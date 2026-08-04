@@ -57,12 +57,12 @@ One slug per MSA, each a **gradient (L-BFGS-B) refinement of the published MAP i
 — β (transmission rate constant) and f<sub>D</sub> (detected fraction) — with every other
 parameter, including **every switch time**, pinned at the paper's value.
 
-| slug | MSA | S₀ | periods | fig | published MAP → fit | status |
-|---|---|---|---|---|---|---|
-| [`nyc`](nyc/) | New York-Newark-Jersey City, NY-NJ-PA | 19.2 M | 4 (n=3) | 4A | NLL **5313.95 → 5235.80** (−78) | ✅ tier-1 + guard + fit + reproduction · **85/100** ([VALIDATION](nyc/VALIDATION.md)) |
-| [`dallas`](dallas/) | Dallas-Fort Worth-Arlington, TX | 7.6 M | 5 (n=4) | 2A | NLL **4875.96 → 4762.00** (−114) | ✅ tier-1 + guard + fit + reproduction · **85/100** ([VALIDATION](dallas/VALIDATION.md)) |
-| [`houston`](houston/) | Houston-The Woodlands-Sugar Land, TX | 7.1 M | 4 (n=3) | 3A | NLL **4776.28 → 4650.97** (−125) | ✅ tier-1 + guard + fit + reproduction · **85/100** ([VALIDATION](houston/VALIDATION.md)) |
-| [`phoenix`](phoenix/) | Phoenix-Mesa-Scottsdale, AZ | 4.9 M | 5 (n=4) | 5A | NLL **6324.09 → 4523.99** (−1800) | ✅ tier-1 + guard + fit + reproduction · **85/100** ([VALIDATION](phoenix/VALIDATION.md)) |
+| slug | run cost | MSA | S₀ | periods | fig | published MAP → fit | status |
+|---|---|---|---|---|---|---|---|
+| [`nyc`](nyc/) | `trivial` | New York-Newark-Jersey City, NY-NJ-PA | 19.2 M | 4 (n=3) | 4A | NLL **5313.95 → 5235.80** (−78) | ✅ tier-1 + guard + fit + reproduction · **85/100** ([VALIDATION](nyc/VALIDATION.md)) |
+| [`dallas`](dallas/) | `trivial` | Dallas-Fort Worth-Arlington, TX | 7.6 M | 5 (n=4) | 2A | NLL **4875.96 → 4762.00** (−114) | ✅ tier-1 + guard + fit + reproduction · **85/100** ([VALIDATION](dallas/VALIDATION.md)) |
+| [`houston`](houston/) | `trivial` | Houston-The Woodlands-Sugar Land, TX | 7.1 M | 4 (n=3) | 3A | NLL **4776.28 → 4650.97** (−125) | ✅ tier-1 + guard + fit + reproduction · **85/100** ([VALIDATION](houston/VALIDATION.md)) |
+| [`phoenix`](phoenix/) | `trivial` | Phoenix-Mesa-Scottsdale, AZ | 4.9 M | 5 (n=4) | 5A | NLL **6324.09 → 4523.99** (−1800) | ✅ tier-1 + guard + fit + reproduction · **85/100** ([VALIDATION](phoenix/VALIDATION.md)) |
 
 **Every slug's 2-parameter fit lowers the paper's own objective**, most dramatically for Phoenix
 (−28 %, and the median relative error against the 7-day rolling mean halves from 50 % to 26 %).

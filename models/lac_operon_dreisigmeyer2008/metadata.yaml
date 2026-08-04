@@ -18,6 +18,7 @@ files:
   - name: lac_operon_dreisigmeyer2008.bngl
     role: primary
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: verify_dreisigmeyer2008.ipynb
     role: verification

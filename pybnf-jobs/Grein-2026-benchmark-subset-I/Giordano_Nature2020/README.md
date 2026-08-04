@@ -1,5 +1,7 @@
 # Giordano_Nature2020
 
+**Run cost: `minutes`** — 10,000 evaluations (20 × 500 `gntr`), 50 free parameters on a 13-reaction model.
+
 PyBNF fitting job imported from the [Benchmark-Models-PEtab](https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab) collection, as used
 in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 

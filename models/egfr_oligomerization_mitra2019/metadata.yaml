@@ -59,9 +59,11 @@ files:
       the sloppy/non-identifiable Mitra 2019 best fit; the reproduced curves -- not
       the individual constants -- are the identifiable check.
     documentation_target: standard
+    scale: hours
     min_bionetgen_version: "2.9.3"
   - name: run_mitra2019.py
     role: verification
+    scale: hours
     description: >
       Self-contained driver. `reference` reproduces Kozer 2013 Fig 2B/2D/3B/3D: the
       network-free NFsim protocol (-bscb -utl 5) at the best fit, replicate-averaged,

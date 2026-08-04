@@ -1,5 +1,7 @@
 # cstar_skmel133_bmra — the paper's SKMEL-133 fit (BMRA-CI-constrained, **sign** approximation)
 
+**Run cost: `minutes`** — 600 evaluations (12 × 50 `ss`) plus a `check` conf, 23 free parameters.
+
 > ## ⚠️ DEPRECATED — superseded by [`../cstar_skmel133_bmra_exact`](../cstar_skmel133_bmra_exact)
 > This slug constrains only the **sign** of each BMRA connection (a robust approximation). The
 > sibling **`_exact`** slug constrains the paper's real object — the model's exact **Eq. 14**

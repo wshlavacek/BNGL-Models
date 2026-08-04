@@ -15,7 +15,8 @@ end-to-end stochastic fit using `experiment: ... method: ssa` through BNGsim.
 
 ## Jobs
 
-**Stochastic (exact SSA) — the primary jobs:**
+**Stochastic (exact SSA) — the primary jobs:** run cost `hours` — 360 parameter sets
+× `smoothing = 200` = **72,000 exact SSA trajectories** each.
 
 - [`lacud5_ssa`](lacud5_ssa/): Jones Fig. 3A `lacUV5`, called `lacUD5` by Rijal;
   fits `r_over_gamma` and `gamma`; exact SSA with 200 trajectories/evaluation;
@@ -24,7 +25,9 @@ end-to-end stochastic fit using `experiment: ... method: ssa` through BNGsim.
   `gamma`; exact SSA with 200 trajectories/evaluation; reproduction and bounded-fit PARTIAL;
   confidence 70/100.
 
-**Deterministic twins (exact moment ODEs) — added as cross-checks, not replacements:**
+**Deterministic twins (exact moment ODEs) — added as cross-checks, not replacements:** run
+cost `trivial` — both are *measured* under a minute, because the moment equations carry no
+Monte Carlo error and need no replicates.
 
 - [`lacud5_ode`](lacud5_ode/): same data, same two parameters, moments from the exact moment
   equations; `gntr` gradient fit reaches the global optimum in 47 s; confidence 95/100.

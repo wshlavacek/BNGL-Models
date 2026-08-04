@@ -15,10 +15,10 @@ The model structure comes from Supplementary Software 1 (`version_test.bngl`),
 and the fit targets are copied exactly from the publisher's official Source
 Data workbook, sheet `Fig 1b`. No curve digitization is used.
 
-| job | fits | flavor | data source | verification target |
-|---|---|---|---|---|
-| [`tnfr1_apo`](tnfr1_apo/) | `Kd_1`, `Kd_2`, `Kd_3` for apo TNF | quantitative, PEtab v2 | Fig. 1b left | 0.01, 0.02, 0.22 nM |
-| [`tnfr1_ucb0595`](tnfr1_ucb0595/) | `Kd_1`, `Kd_2`, `Kd_3` for distorted TNF | quantitative, PEtab v2 | Fig. 1b right | 0.04, 0.19, 9612 nM |
+| job | run cost | fits | flavor | data source | verification target |
+|---|---|---|---|---|---|
+| [`tnfr1_apo`](tnfr1_apo/) | `minutes` | `Kd_1`, `Kd_2`, `Kd_3` for apo TNF | quantitative, PEtab v2 | Fig. 1b left | 0.01, 0.02, 0.22 nM |
+| [`tnfr1_ucb0595`](tnfr1_ucb0595/) | `minutes` | `Kd_1`, `Kd_2`, `Kd_3` for distorted TNF | quantitative, PEtab v2 | Fig. 1b right | 0.04, 0.19, 9612 nM |
 
 Both jobs use a 9-species, 24-reaction ODE network and a seven-dose parameter
 scan over the initial TNFR1 concentration. Each native `.conf` is intended to

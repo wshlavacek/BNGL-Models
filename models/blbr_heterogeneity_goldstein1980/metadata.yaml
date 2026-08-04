@@ -25,9 +25,11 @@ files:
       Excess-ligand approximation for high concentrations.
       Parameter scan reproduces Fig. 5 (X_T = 500 curve).
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: verify_goldstein1980.ipynb
     role: verification
+    scale: minutes
     description: >
       Compares NFsim ensemble (10 reps) against Goldstein & Wofsy
       (1980) Eqs. 13-14 for X_T = 500 (Fig. 5, bottom curve).

@@ -1,5 +1,7 @@
 # `micelle_addition` — on-to-off pathway switching, fatty acid added at 3 h and 24 h
 
+**Run cost: `hours`** — 18,000 evaluations (60 × 300 `ss`), 14 free parameters over an 80-reaction network.
+
 PyBNF edition-2 fitting job derived from:
 
 > Rana P, Bose P, Vaidya A, Rangachari V, Ghosh P.

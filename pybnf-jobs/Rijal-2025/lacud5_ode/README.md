@@ -1,5 +1,7 @@
 # lacud5_ode — exact moment-ODE twin of `lacud5_ssa`
 
+**Run cost: `trivial`** — **measured at 47 s** — 4,000 evaluations (20 × 200 `gntr`) of the exact moment ODEs, no Monte Carlo.
+
 Deterministic twin of [`lacud5_ssa`](../lacud5_ssa/). It fits the **same data** and the **same two
 parameters**, but obtains `E[m]` and `E[m²]` by integrating the process's *exact moment equations*
 rather than by averaging exact-SSA trajectories.

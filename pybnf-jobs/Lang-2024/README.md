@@ -42,9 +42,9 @@ PEtab v1.
 
 ## The jobs
 
-| slug | model | fits | flavor | status |
-|---|---|---|---|---|
-| [`v3_2_0`](v3_2_0/) | full fused **v3.2.0** (incl. p21/p27/Skp2), 205 params | 8 nuclear observables (cycA, cycB1, cycE, E2F1, pRB, Skp2, p21, p27), 1 wt condition, 2 cycles | ODE, **PEtab-exportable**, `sos`, `de` fit | 🔶 tier-1 + PEtab round-trip + short fit (SOS ~3e4) + reproduction (period/phase matched, amplitudes uncalibrated) · **82/100** ([VALIDATION](v3_2_0/VALIDATION.md)) |
+| slug | run cost | model | fits | flavor | status |
+|---|---|---|---|---|---|
+| [`v3_2_0`](v3_2_0/) | `cluster` | full fused **v3.2.0** (incl. p21/p27/Skp2), 205 params | 8 nuclear observables (cycA, cycB1, cycE, E2F1, pRB, Skp2, p21, p27), 1 wt condition, 2 cycles | ODE, **PEtab-exportable**, `sos`, `de` fit | 🔶 tier-1 + PEtab round-trip + short fit (SOS ~3e4) + reproduction (period/phase matched, amplitudes uncalibrated) · **82/100** ([VALIDATION](v3_2_0/VALIDATION.md)) |
 
 The 🔶 status marks a **heavy** (cluster-scale) job: it builds and runs through bngsim and
 round-trips through PEtab v2, but a *converged* 177-parameter fit needs a cluster, so it stays in

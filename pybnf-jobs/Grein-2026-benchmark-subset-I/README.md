@@ -167,31 +167,31 @@ Jacobian and is recorded but not asserted as a validation.)
 
 ## Coverage: all 23 subset-I problems
 
-| slug | J\* | scale | k | n | optimizer | OG | status |
-|---|---|---|---|---|---|---|---|
-| `Armistead_CellDeathDis2024` | −301.9161878 | lin | 14 | 58 | gntr | 5.8e−06 | ✅ **solved** |
-| `Bertozzi_PNAS2020` | 158.8642627 | lin | 8 | 22 | gntr | 5.4e−06 | ✅ **solved** |
-| `Blasi_CellSystems2016` | −1090.5618246 | ln | 9 | 252 | gntr | −4.3e−07 | ✅ **solved** |
-| `Boehm_JProteomeRes2014` | 138.2219682 | lin | 9 | 48 | gntr | 0.0012 | ✅ **solved** |
-| `Bruno_JExpBot2016` | −46.6881979 | lin | 13 | 77 | gntr | 1.1e−05 | ✅ **solved** |
-| `Crauste_CellSystems2017` | 190.4570655 | lin | 12 | 21 | gntr | 0.583 | ✅ **solved** |
-| `Fiedler_BMCSystBiol2016` | −58.5839553 | lin | 22 | 72 | gntr | −0.0022 † | 🟢 objective validated |
-| `Laske_PLOSComputBiol2019` | 276.0540613 | lin/ln | 13 | 42 | gntr | −1e−06 | ✅ **solved** |
-| `Perelson_Science1996` | 222.2807689 | log10 | 3 | 16 | cmaes | 5e−7 | ✅ **solved** |
-| `Rahman_MBS2016` | 21.1534861 | lin | 9 | 23 | gntr | 3.9e−06 † | 🟢 objective validated |
-| `Raia_CancerResearch2011` | 345.3097673 | lin | 39 | 205 | gntr | 0.78 † | 🟢 objective validated |
-| `SalazarCavazos_MBoC2020` | 366.8615730 | lin | 6 | 18 | gntr | 0.326 † | 🟢 objective validated |
-| `Sneyd_PNAS2002` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 | ✅ **solved** |
-| `Schwen_PONE2014` | 952.4217251 | log10 | 30 | 286 | gntr | −8.42 † | ⚪ setup only |
-| `Elowitz_Nature2000` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † | ⚪ setup only |
-| `Borghans_BiophysChem1997` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ⚪ setup only |
-| `Zhao_QuantBiol2020` | 501.2270538 | lin | 28 | 82 | gntr | 276 † | ⚪ setup only |
-| `Brannmark_JBC2010` | 141.8248543 | lin | 22 | 43 | gntr | 1.5e+03 † | ⚪ setup only |
-| `Giordano_Nature2020` | −3488.3414981 | lin | 50 | 313 | gntr | 3.8e+03 † | ⚪ setup only |
-| `Weber_BMC2015` | 296.2020025 | lin | 36 | 135 | gntr | 1.4e+04 † | ⚪ setup only |
-| `Okuonghae_ChaosSolitonsFractals2020` | 373.5476580 | lin | 16 | 92 | cmaes | 4.7e+05 † | ⚪ setup only |
-| `Oliveira_NatCommun2021` | 7904.9343174 | lin | 12 | 120 | gntr | 9.6e+06 † | ⚪ setup only |
-| `Smith_BMCSystBiol2013` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † | ⚪ setup only |
+| slug | run cost | J\* | scale | k | n | optimizer | OG | status |
+|---|---|---|---|---|---|---|---|---|
+| `Armistead_CellDeathDis2024` | `minutes` | −301.9161878 | lin | 14 | 58 | gntr | 5.8e−06 | ✅ **solved** |
+| `Bertozzi_PNAS2020` | `minutes` | 158.8642627 | lin | 8 | 22 | gntr | 5.4e−06 | ✅ **solved** |
+| `Blasi_CellSystems2016` | `minutes` | −1090.5618246 | ln | 9 | 252 | gntr | −4.3e−07 | ✅ **solved** |
+| `Boehm_JProteomeRes2014` | `minutes` | 138.2219682 | lin | 9 | 48 | gntr | 0.0012 | ✅ **solved** |
+| `Bruno_JExpBot2016` | `minutes` | −46.6881979 | lin | 13 | 77 | gntr | 1.1e−05 | ✅ **solved** |
+| `Crauste_CellSystems2017` | `minutes` | 190.4570655 | lin | 12 | 21 | gntr | 0.583 | ✅ **solved** |
+| `Fiedler_BMCSystBiol2016` | `minutes` | −58.5839553 | lin | 22 | 72 | gntr | −0.0022 † | 🟢 objective validated |
+| `Laske_PLOSComputBiol2019` | `hours` | 276.0540613 | lin/ln | 13 | 42 | gntr | −1e−06 | ✅ **solved** |
+| `Perelson_Science1996` | `minutes` | 222.2807689 | log10 | 3 | 16 | cmaes | 5e−7 | ✅ **solved** |
+| `Rahman_MBS2016` | `minutes` | 21.1534861 | lin | 9 | 23 | gntr | 3.9e−06 † | 🟢 objective validated |
+| `Raia_CancerResearch2011` | `minutes` | 345.3097673 | lin | 39 | 205 | gntr | 0.78 † | 🟢 objective validated |
+| `SalazarCavazos_MBoC2020` | `hours` | 366.8615730 | lin | 6 | 18 | gntr | 0.326 † | 🟢 objective validated |
+| `Sneyd_PNAS2002` | `minutes` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 | ✅ **solved** |
+| `Schwen_PONE2014` | `minutes` | 952.4217251 | log10 | 30 | 286 | gntr | −8.42 † | ⚪ setup only |
+| `Elowitz_Nature2000` | `hours` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † | ⚪ setup only |
+| `Borghans_BiophysChem1997` | `hours` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ⚪ setup only |
+| `Zhao_QuantBiol2020` | `minutes` | 501.2270538 | lin | 28 | 82 | gntr | 276 † | ⚪ setup only |
+| `Brannmark_JBC2010` | `minutes` | 141.8248543 | lin | 22 | 43 | gntr | 1.5e+03 † | ⚪ setup only |
+| `Giordano_Nature2020` | `minutes` | −3488.3414981 | lin | 50 | 313 | gntr | 3.8e+03 † | ⚪ setup only |
+| `Weber_BMC2015` | `minutes` | 296.2020025 | lin | 36 | 135 | gntr | 1.4e+04 † | ⚪ setup only |
+| `Okuonghae_ChaosSolitonsFractals2020` | `hours` | 373.5476580 | lin | 16 | 92 | cmaes | 4.7e+05 † | ⚪ setup only |
+| `Oliveira_NatCommun2021` | `minutes` | 7904.9343174 | lin | 12 | 120 | gntr | 9.6e+06 † | ⚪ setup only |
+| `Smith_BMCSystBiol2013` | `hours` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † | ⚪ setup only |
 
 `k` = free parameters, `n` = scored data points.
 **† = optimality gap at the PEtab nominal point, not from a fit.** Only the nine ✅ rows report an

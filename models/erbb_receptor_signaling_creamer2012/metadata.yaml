@@ -49,9 +49,11 @@ files:
       reporting phosphorylation time courses for 55 S/T/Y residues plus ERK and Akt
       (Fig. 4).
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: run_creamer2012.py
     role: verification
+    scale: hours
     description: >
       Self-contained driver. `reference` runs the committed model's faithful
       published protocol with standard BioNetGen NFsim (committed subvolume f=0.02)

@@ -18,6 +18,7 @@ files:
   - name: jak_stat_signaling_cheemalavagu2024.bngl
     role: primary
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: verify_cheemalavagu2024.ipynb
     role: verification

@@ -1,5 +1,7 @@
 # mek_isoform_de — MEK1/MEK2 isoform ERK cascade, global MLE by differential evolution (PyBNF, native-only)
 
+**Run cost: `cluster`** — 240,000 evaluations (24 × 10,000 `de`), each simulating **five** models — the authors used an HPC cluster.
+
 The **data-fusion** flagship of the Miller-2026 study: one global fit that leverages **quantitative**
 WT time-series **and** 90 **qualitative** up/down orderings (BPSL) to parameterize a MEK-isoform
 model of the ERK cascade, yielding maximum-likelihood estimates for 31 parameters.

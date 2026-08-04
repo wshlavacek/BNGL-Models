@@ -35,6 +35,7 @@ files:
       SSA protocol simulates the three-hour Fig. 7B response to 30 agonists;
       commented ODE and partitioned-leaping alternatives are also provided.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: verify_lipniacki2008.ipynb
     role: verification

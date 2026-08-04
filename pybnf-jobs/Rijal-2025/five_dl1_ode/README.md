@@ -1,5 +1,7 @@
 # five_dl1_ode — exact moment-ODE twin of `five_dl1_ssa`
 
+**Run cost: `trivial`** — **measured at 51 s** — 4,000 evaluations (20 × 200 `gntr`) of the exact moment ODEs, no Monte Carlo.
+
 Deterministic twin of [`five_dl1_ssa`](../five_dl1_ssa/). It fits the **same data** and the **same two
 parameters**, but obtains `E[m]` and `E[m²]` by integrating the process's *exact moment equations*
 rather than by averaging exact-SSA trajectories.

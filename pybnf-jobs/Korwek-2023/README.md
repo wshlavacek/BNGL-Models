@@ -34,9 +34,9 @@ TNFAIP3 transcription in the idiom of the authors' own `h_Mavs` / `h_Pkr_gene` /
 
 ## The jobs
 
-| slug | fits | flavor | data source | status |
-|---|---|---|---|---|
-| [`nfkb_tnfa`](nfkb_tnfa/) | the 15 NF-κB-module rate constants marked FITTED in table S1, against the TNF-α protocol; WT + A20 KO | quantitative, `chi_sq`, **PEtab-exportable** | **digitized** figs. S12A and S12B (111 points, 4 blots × 2 replicates) | ✅ tier-1 + PEtab round-trip + fit |
+| slug | run cost | fits | flavor | data source | status |
+|---|---|---|---|---|---|
+| [`nfkb_tnfa`](nfkb_tnfa/) | `hours` | the 15 NF-κB-module rate constants marked FITTED in table S1, against the TNF-α protocol; WT + A20 KO | quantitative, `chi_sq`, **PEtab-exportable** | **digitized** figs. S12A and S12B (111 points, 4 blots × 2 replicates) | ✅ tier-1 + PEtab round-trip + fit |
 
 The paper states that TNF-α "is used to calibrate kinetic rate constants in the NF-κB pathway
 module that follows Lipniacki et al. (2004) and Tay et al. (2010)", so `nfkb_tnfa` reproduces a

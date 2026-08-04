@@ -1,5 +1,7 @@
 # `on_pathway` — Aβ42 fibril formation with no fatty acid
 
+**Run cost: `minutes`** — 12,000 evaluations (48 × 250 `ss`), 5 free parameters on the 44-reaction sub-model.
+
 PyBNF edition-2 fitting job derived from:
 
 > Rana P, Bose P, Vaidya A, Rangachari V, Ghosh P.

@@ -1,5 +1,7 @@
 # reduced_combination — identifiable NF-κB model, COMBINATION experiment (PyBNF edition-2 job)
 
+**Run cost: `hours`** — 15,000 evaluations (100 × 150 `de`), each a **12-model** joint simulation over 914 points.
+
 The paper's **headline** fit (Fig 2). A PyBNF **edition-2** job that recovers the **13 parameters of
 the reduced 2023 NF-κB model** by refitting it to reproduce the original **Lipniacki-2004** model
 across the full **combination experiment** — a tonic protocol plus 5 pulsatile protocols, in WT and

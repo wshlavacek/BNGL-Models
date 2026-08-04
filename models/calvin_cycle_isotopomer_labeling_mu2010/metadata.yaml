@@ -36,6 +36,7 @@ files:
       on an unlabeled CO2 feed, then 200 time units after 10% of the feed is switched to
       13C.
     documentation_target: comprehensive
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: calvin_cycle_isotopomer_labeling_mu2010_published_fluxes.bngl
     role: variant
@@ -45,6 +46,7 @@ files:
       nominal size by t = 440 and decays exponentially thereafter with a time constant
       near 370, while CO2 grows without bound.
     documentation_target: comprehensive
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: independent_mu2010.py
     role: verification

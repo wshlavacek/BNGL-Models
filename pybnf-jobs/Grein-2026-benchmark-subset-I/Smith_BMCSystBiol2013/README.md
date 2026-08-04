@@ -1,5 +1,7 @@
 # Smith_BMCSystBiol2013
 
+**Run cost: `hours`** — 64,000 evaluations (32 × 2,000 `cmaes`) over a 367-reaction network — the subset's most expensive product of budget and model size.
+
 PyBNF fitting job imported from the [Benchmark-Models-PEtab](https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab) collection, as used
 in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 

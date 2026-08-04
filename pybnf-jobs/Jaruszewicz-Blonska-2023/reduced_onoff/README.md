@@ -1,5 +1,7 @@
 # reduced_onoff — identifiable NF-κB model, ON-OFF protocol (PyBNF edition-2 job)
 
+**Run cost: `hours`** — 20,000 evaluations (100 × 200 `de`) over the two-genotype on-off protocol.
+
 A PyBNF **edition-2** parameter-fitting job that recovers the **13 parameters of the reduced 2023
 NF-κB model** by refitting it to reproduce the original **Lipniacki-2004** model under the paper's
 proposed identifiability-optimal **on-off** stimulation protocol (2 h TNF on, 10 h off), derived

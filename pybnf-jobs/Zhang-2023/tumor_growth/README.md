@@ -1,5 +1,7 @@
 # tumor_growth — angiogenesis-driven tumor growth, ODE (PyBNF edition-2 job)
 
+**Run cost: `minutes`** — 18,000 evaluations (60 × 300 `de`), but the model is 2 reactions.
+
 A PyBNF edition-2 parameter-fitting job that fits the **six parameters the Methods name as
 fitted** in the angiogenesis-driven tumor growth model of:
 

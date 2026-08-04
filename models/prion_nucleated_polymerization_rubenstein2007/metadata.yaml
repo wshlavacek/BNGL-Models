@@ -27,6 +27,7 @@ files:
       Table 1 parameterization; seeded SSA over one year plus a scan of the
       three aggregate clearance rates of Fig. 2. 41 species, 483 reactions.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: prion_nucleated_polymerization_rubenstein2007_benchmark.bngl
     role: variant
@@ -35,6 +36,7 @@ files:
       higher PrPC production and a 120-subunit chain cap, run over ten days.
       121 species, 3843 reactions.
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: verify_rubenstein2007.ipynb
     role: verification

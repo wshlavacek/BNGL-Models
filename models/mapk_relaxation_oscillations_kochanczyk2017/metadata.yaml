@@ -35,6 +35,7 @@ files:
       a tested one-hour partitioned-leaping protocol is included as a
       commented stochastic alternative.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: mapk_relaxation_oscillations_kochanczyk2017_noisy_egfr.bngl
     role: variant
@@ -50,6 +51,7 @@ files:
       CVODE steps over burst windows and then fails, both documented in the
       file and demonstrated in the notebook.
     documentation_target: standard
+    scale: hours
     min_bionetgen_version: "2.9.3"
   - name: verify_kochanczyk2017.ipynb
     role: verification

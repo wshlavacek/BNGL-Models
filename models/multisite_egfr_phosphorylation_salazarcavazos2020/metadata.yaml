@@ -40,6 +40,7 @@ files:
       #@figure Fig 2C) and a 25 nM time course (suffix ode, #@figure Fig 2D);
       an SSA stub is included commented out (feasible but slow at ~1e6 EGF copies).
     documentation_target: standard
+    scale: minutes
     min_bionetgen_version: "2.9.3"
   - name: verify_salazarcavazos2020.ipynb
     role: verification

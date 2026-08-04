@@ -1,5 +1,7 @@
 # `nfkb_tnfa` — NF-κB module of the innate immune response, refit to the TNF-α data
 
+**Run cost: `hours`** — 14,400 evaluations (48 × 300 `de`), each integrating a stiff 96-reaction network out to 2.6e6 s.
+
 PyBNF edition-2 fitting job derived from:
 
 > Korwek Z, Czerkies M, Jaruszewicz-Błońska J, Prus W, Kosiuk I, Kochańczyk M, Lipniacki T.

@@ -25,9 +25,11 @@ files:
       PIP3, and degranulation. Pulse/wash protocol with 5
       quiescence intervals (5-240 min) reproducing Fig. 4.
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: antigen_pulses_harmon2017_simplified.bngl
     role: variant
+    scale: trivial
     description: >
       Simplified receptor occupancy submodel. Monovalent
       antigen binding to IgE-FcεRI with escalating-dose

@@ -1,5 +1,7 @@
 # phosphoswitch_bpsl — S90 phosphoswitch / p38 recruitment BPSL job (PyBNF, native-only)
 
+**Run cost: `minutes`** — 600 evaluations (12 × 50 `de`) plus a one-shot `check` conf.
+
 The constraint-bearing sibling of [`../fig7b_timecourse`](../fig7b_timecourse), and the
 one example in this set that exercises PyBNF's **signature capability — BPSL** (the
 Biological Property Specification Language). Instead of fitting numbers, it fits the

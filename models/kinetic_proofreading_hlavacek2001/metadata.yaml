@@ -18,11 +18,13 @@ files:
   - name: kinetic_proofreading_hlavacek2001.bngl
     role: primary
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: kinetic_proofreading_hlavacek2001_messenger.bngl
     role: variant
     description: Adds cytosolic messenger relay downstream of receptor modification
     documentation_target: standard
+    scale: trivial
     min_bionetgen_version: "2.9.3"
   - name: verify_hlavacek2001.ipynb
     role: verification

@@ -1,5 +1,7 @@
 # tlbr — trivalent-ligand / bivalent-receptor aggregation, network-free NFsim (PyBNF edition-2 job)
 
+**Run cost: `hours`** — 2,500 parameter sets × `smoothing = 3` = 7,500 **network-free NFsim** replicate runs.
+
 A PyBNF edition-2, parameter-fitting job setup. The **network-free model, the fit data, and the
 fitted parameters** all come from one paper:
 

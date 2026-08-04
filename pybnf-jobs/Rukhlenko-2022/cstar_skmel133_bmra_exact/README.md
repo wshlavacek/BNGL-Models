@@ -1,5 +1,7 @@
 # cstar_skmel133_bmra_exact — the paper's SKMEL-133 fit with the EXACT Eq.14 BMRA constraints
 
+**Run cost: `minutes`** — 600 evaluations (12 × 50 `ss`) plus a one-shot `check` conf, 43 free parameters.
+
 The PAPER-EXACT reconstruction of the SKMEL-133 fit: the model's **Eq.14 connection coefficients
 `r_ij`** constrained TWO-SIDED inside the BMRA confidence intervals (Table S10, with_MYC) — the
 paper's actual constraint object. The sibling [`../cstar_skmel133_bmra`](../cstar_skmel133_bmra)

@@ -1,5 +1,7 @@
 # SalazarCavazos_MBoC2020
 
+**Run cost: `hours`** — 10,000 evaluations (20 × 500 `gntr`), but each one integrates a **618-reaction** network — the largest model in the subset.
+
 PyBNF fitting job imported from the [Benchmark-Models-PEtab](https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab) collection, as used
 in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 

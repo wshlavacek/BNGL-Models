@@ -45,10 +45,10 @@ Two slugs fit the **same NYC daily case data** with two model complexities. Toge
 complete story: the single-phase model needs a correction and doesn't fully reproduce, while the
 two-phase model reproduces the published fit exactly — and explains why.
 
-| slug | model | fits | flavor | status |
-|---|---|---|---|---|
-| [`nyc`](nyc/) | **single-phase** (n=0), Mallela-2023 per-MSA, 6 params | Daily detected cases, first wave (t=50..151) | ODE, **native-only** (neg_bin), `de` fit | ✅ tier-1 + guard + fit (nll 839.9) + reproduction (median **16.3 %**) · **78/100** ([VALIDATION](nyc/VALIDATION.md)) |
-| [`nyc_multiphase`](nyc_multiphase/) | **two-phase** (n=1), Lin-2021 forecasting ("BigApple"), 10 params | Daily detected cases, t=0..170 | ODE, **native-only** (neg_bin), `de` fit | ✅ tier-1 + guard + fit + **published-MAP reproduction** (median **15.9 %**, peak within 9 %) · gold-standard **90/100** ([VALIDATION](nyc_multiphase/VALIDATION.md)) |
+| slug | run cost | model | fits | flavor | status |
+|---|---|---|---|---|---|
+| [`nyc`](nyc/) | `minutes` | **single-phase** (n=0), Mallela-2023 per-MSA, 6 params | Daily detected cases, first wave (t=50..151) | ODE, **native-only** (neg_bin), `de` fit | ✅ tier-1 + guard + fit (nll 839.9) + reproduction (median **16.3 %**) · **78/100** ([VALIDATION](nyc/VALIDATION.md)) |
+| [`nyc_multiphase`](nyc_multiphase/) | `minutes` | **two-phase** (n=1), Lin-2021 forecasting ("BigApple"), 10 params | Daily detected cases, t=0..170 | ODE, **native-only** (neg_bin), `de` fit | ✅ tier-1 + guard + fit + **published-MAP reproduction** (median **15.9 %**, peak within 9 %) · gold-standard **90/100** ([VALIDATION](nyc_multiphase/VALIDATION.md)) |
 
 The authors' published setup is **adaptive-MCMC Bayesian sampling** (`fit_type = am`,
 `objfunc = neg_bin_dynamic`); both jobs build a plain **`de` optimization** instead — cheaper and

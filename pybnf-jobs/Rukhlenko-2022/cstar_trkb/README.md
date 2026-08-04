@@ -1,5 +1,7 @@
 # cstar_trkb — cSTAR TrkB/BDNF signalling fit (PyBNF edition-2 job)
 
+**Run cost: `minutes`** — 600 evaluations (12 × 50 `de`), 8 free parameters.
+
 Twin of [`../cstar_trka`](../cstar_trka), for the **TrkB / BDNF** variant of the cSTAR
 core signalling network. Same paper, same method, same verification discipline.
 
