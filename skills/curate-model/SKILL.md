@@ -21,8 +21,12 @@ If the user supplies only a folder name such as `Faeder2003`, infer
 
 Before creating or editing model artifacts:
 
-1. Read `skills/bngl/skill.md`; treat it as the authoritative workflow and
-   house-style contract.
+1. Read `skills/bngl/skill.md`. It is authoritative for **content** — `.bngl`
+   structure and formatting, naming, units, annotation, the `metadata.yaml`
+   schema, the overlay-plot style (§2), and the lint rules (§9). **This skill is
+   authoritative for the workflow**: which artifacts exist, the two verification
+   levels, the verification-artifact shape, and the completion criteria. Where
+   the two ever disagree on process, this skill wins.
 2. Read `skills/bngl/rating.md` for trust, annotation, formatting, and reference
    data expectations.
 3. Read `skills/bngl/templates/model_skeleton.bngl` before writing a new BNGL
@@ -117,6 +121,12 @@ independent implementation, check it against the reported data, emit
 **Notebook (default).** `verify_<author><year>.ipynb`, committed **with its outputs**
 so a reader sees the numbers without rerunning. Use it whenever the campaign fits
 in a notebook run.
+
+Either shape emits `verify_<author><year>.png`, and the figure follows the overlay
+convention in `skills/bngl/skill.md` §2: BioNetGen output as solid lines, the
+independent solution as open markers subsampled every ~15th point, and a legend or
+subtitle stating the convention. Perfect agreement must be *visible* as markers
+sitting on lines, not as one curve hiding another.
 
 **Driver script.** `run_<author><year>.py` plus the committed PNG, and no notebook.
 Use this when the campaign cannot reasonably live in a notebook — a network-free
