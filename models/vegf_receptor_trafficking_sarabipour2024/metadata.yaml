@@ -1,0 +1,100 @@
+# metadata.yaml — vegf_receptor_trafficking_sarabipour2024
+id: vegf_receptor_trafficking_sarabipour2024
+created: 2026-08-04
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, ai_assisted]
+  description: >
+    Rewritten in house style from Unligated_VEGFR_model_20230831.bngl, the
+    BioNetGen model distributed with Sarabipour et al. (2024), PLoS Computational
+    Biology 20(2):e1011798, DOI 10.1371/journal.pcbi.1011798, at
+    https://github.com/SSarabipour/VEGFR-Trafficking-Projects. The paper itself
+    supplies only S1 Table (reactions) and S2 Table (molecular species) in
+    dev/papers/Sarabipour2024; the rate constants come from Fig. 5A of the paper
+    and, at full precision, from SSfit2023.csv in the authors' repository, and the
+    protocols follow UnligandedHUVECExperimentsAll.m in the same repository. The
+    curated rules reproduce the paper's 32-species, 85-reaction network exactly.
+    Reported simulation data are the authors' own tabulated figure data, so no
+    curve digitization was used.
+
+files:
+  - name: vegf_receptor_trafficking_sarabipour2024.bngl
+    role: primary
+    description: >
+      Unperturbed HUVEC model with the median optimized trafficking parameter
+      set. The active protocol relaxes to steady state over 200 simulated days
+      and then chases with cycloheximide for 4 h, reproducing Fig. 5B and
+      Fig. 5C.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: vegf_receptor_trafficking_sarabipour2024_rab_knockdown.bngl
+    role: variant
+    description: >
+      Adds the dimensionless activity factors f_si_rab4 and f_si_rab11 to the
+      Rab4a recycling and Rab4a-to-Rab11a transfer rate constants. The active
+      protocol relaxes to steady state and then applies an 80% depletion of both
+      Rab proteins for 24 h, reproducing the double-knockdown bars of Fig. 5E and
+      Fig. 5F; setting one factor back to 1 gives the single knockdowns.
+    documentation_target: standard
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: verify_sarabipour2024.ipynb
+    role: verification
+    description: >
+      Runs both BNGL files in temporary directories, integrates a hand-written
+      32-species SciPy implementation built from S1 and S2 Tables rather than from
+      the generated network, and confirms agreement to 8.3e-8 across all four
+      protocols. It then compares the BioNetGen output with the authors' tabulated
+      simulation data for Fig. 5B (9 values, 2.8e-4), Fig. 5C (147 points,
+      4.2e-5), Fig. 5E and Fig. 5F (18 values, 1.8e-4) and Fig. 7C transport
+      rates (15 values, 3.1e-4), and regression-checks the committed reference
+      .gdat files.
+  - name: verify_sarabipour2024.png
+    role: figure
+    description: >
+      Six panels: relaxation to steady state, steady-state localization,
+      cycloheximide chase, surface and whole-cell levels after Rab knockdown, and
+      a parity plot of the steady-state transport rates.
+  # Reported simulation data from the authors' repository
+  - name: reference/sarabipour2024_fig5b_localization.csv
+    role: reference
+    description: Fig. 5B surface, Rab4a/5a and Rab11a percentages, simulated and measured.
+  - name: reference/sarabipour2024_fig5c_chx_timecourse.csv
+    role: reference
+    description: Fig. 5C whole-cell receptor levels every 5 min for 4 h after cycloheximide.
+  - name: reference/sarabipour2024_fig5ef_rab_knockdown.csv
+    role: reference
+    description: Fig. 5E and Fig. 5F surface and whole-cell levels after the three siRNA conditions.
+  - name: reference/sarabipour2024_fig7c_transport_rates.csv
+    role: reference
+    description: Fig. 7C steady-state transport rates for each trafficking step.
+  - name: reference/sarabipour2024_ssfit2023_parameters.csv
+    role: reference
+    description: >
+      The 18 optimized trafficking and production rate constants of Fig. 5A at
+      full precision, in the order given by Paramlist.txt in the authors'
+      repository.
+  # BioNetGen reference outputs
+  - name: reference/vegf_receptor_trafficking_sarabipour2024.net
+    role: reference
+  - name: reference/vegf_receptor_trafficking_sarabipour2024_ode.net
+    role: reference
+  - name: reference/vegf_receptor_trafficking_sarabipour2024_ode.cdat
+    role: reference
+  - name: reference/vegf_receptor_trafficking_sarabipour2024_ode.gdat
+    role: reference
+  - name: reference/vegf_receptor_trafficking_sarabipour2024_rab_knockdown.net
+    role: reference
+  - name: reference/vegf_receptor_trafficking_sarabipour2024_rab_knockdown_ode.net
+    role: reference
+  - name: reference/vegf_receptor_trafficking_sarabipour2024_rab_knockdown_ode.cdat
+    role: reference
+  - name: reference/vegf_receptor_trafficking_sarabipour2024_rab_knockdown_ode.gdat
+    role: reference

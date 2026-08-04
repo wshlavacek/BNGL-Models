@@ -1,0 +1,355 @@
+begin model
+
+#@title: VEGF receptor trafficking in endothelial cells (Sarabipour et al., 2024)
+
+#@description: |
+#  Mechanistic model of ligand-independent trafficking of the three principal VEGF
+#  receptors of human endothelial cells: VEGFR1 (the membrane-integral FLT1 isoform),
+#  VEGFR2 (KDR), and the co-receptor neuropilin-1 (NRP1). Receptors are synthesized at
+#  constant rates directly into the plasma membrane, internalize into Rab4a/5a early
+#  endosomes, and from there are degraded, recycled directly to the surface, or
+#  transferred to Rab11a recycling endosomes for a second, slower recycling route.
+#  In each of the three live locations VEGFR1 and VEGFR2 homodimerize reversibly and
+#  VEGFR1 binds NRP1; three coupling rules per location generate the seven coupling
+#  reactions and the eight distinct molecular species of Sarabipour et al. (2024).
+#  Association rate constants are single-site values divided by the membrane area of
+#  the location in which coupling occurs. All kinetics are mass action, and every
+#  complex traffics with the rate constants of its VEGFR1 or VEGFR2 content; the
+#  degraded pool is cumulative and is excluded from whole-cell aggregates.
+#  Network generation reproduces the 32 coupled ODEs of the paper.
+#  The model is monostable. Starting from surface-only monomers it relaxes to a single
+#  steady state carrying 1800 VEGFR1, 4900 VEGFR2, and 68000 NRP1 per cell on the
+#  surface, which is 9.1%, 50.7%, and 69.3% of the corresponding whole-cell pools:
+#  VEGFR1 is overwhelmingly intracellular, VEGFR2 is evenly split, and NRP1 is biased
+#  to the surface. Relaxation is slow, taking about 200 simulated days, because the
+#  very stable NRP1 pool turns over with a time constant near 9 days. Shutting off
+#  synthesis (cycloheximide) then drives whole-cell VEGFR1 and VEGFR2 down to 4.9%
+#  and 9.7% of control within 4 h, while NRP1 falls by only about 2%.
+
+#@keyword: |
+#  receptor trafficking, endocytosis, recycling, endosome, angiogenesis, VEGF,
+#  VEGFR1, VEGFR2, neuropilin-1, receptor dimerization, mass action, monostable,
+#  steady state, cycloheximide chase, Homo sapiens
+
+#@reference: |
+#  Sarabipour S, Kinghorn K, Quigley KM, Kovacs-Kasa A, Annex BH, Bautch VL,
+#  Mac Gabhann F (2024). Trafficking dynamics of VEGFR1, VEGFR2, and NRP1 in human
+#  endothelial cells. PLoS Comput Biol 20(2):e1011798.
+#  doi:10.1371/journal.pcbi.1011798
+#  Source model: Unligated_VEGFR_model_20230831.bngl in
+#  https://github.com/SSarabipour/VEGFR-Trafficking-Projects
+
+#@note: |
+#  Rate constants are the median optimized HUVEC parameter set (Fig. 5A and S6 Table
+#  in Sarabipour et al. (2024)), taken at the precision recorded in SSfit2023.csv of
+#  the authors' repository rather than the two-digit values printed in Fig. 5A.
+#  The .bngl file in that repository hard-codes each per-location association rate
+#  constant to three significant figures, whereas the MATLAB driver that produced the
+#  published figures divides the areal constants by the compartment areas exactly.
+#  The exact quotients are used here; relative to the distributed .bngl this changes
+#  steady-state NRP1 by about 1e-4 and leaves VEGFR1 and VEGFR2 unchanged to 3e-9.
+#  The paper's model treats subcellular location as a receptor attribute rather than
+#  as a BioNetGen compartment: the only place location enters the kinetics is through
+#  the membrane area that scales the coupling rate constants. That implicit treatment
+#  is preserved here, so no compartments block is used.
+#  Only ODE actions are provided. Both stochastic modes are infeasible: the protocol
+#  needs about 200 simulated days of relaxation before the perturbation, over which
+#  the surface pools alone turn over tens of millions of times, and partial scaling
+#  additionally fails on the zeroth-order synthesis rules.
+
+begin parameters
+  # Avogadro constant
+  NA        6.02214076e23  # molecules/mol
+
+  # Membrane area of each location, per cell; see S4 Table and S1 File in
+  # Sarabipour et al. (2024). Coupling rate constants are divided by these areas.
+  A_pm      1000           # um^2/cell
+  A_ee      950            # um^2/cell
+  A_re      325            # um^2/cell
+
+  # Membrane-adjacent shell used for surface-density to concentration conversion
+  h_mem     1e-8           # m
+
+  # Reference volume: that shell over the plasma membrane of one cell
+  V_ref     A_pm*h_mem*1e-9  # L/cell
+
+  # Measured endogenous cell-surface receptor levels on HUVECs, used both as the
+  # initial condition and as the fitting target for the production rate constants;
+  # see S4 Table in Sarabipour et al. (2024) and Imoukhuede and Popel (2011).
+  VEGFR1_0  1800           # molecules/cell
+  VEGFR2_0  4900           # molecules/cell
+  NRP1_0    68000          # molecules/cell
+
+  # Single-site association rate constants for ligand-independent receptor coupling,
+  # expressed per unit membrane area; see S3 Table and S1 File in Sarabipour et al.
+  # (2024). R1R1 and N1R1 share a value; with koff = 0.01 /s the surface dissociation
+  # constants are 12500 molecules/cell for VEGFR1-VEGFR1 and VEGFR1-NRP1 and
+  # 5000 molecules/cell for VEGFR2-VEGFR2.
+  kc_R1R1   8e-4           # um^2/molecule/s
+  kc_R2R2   2e-3           # um^2/molecule/s
+  kc_N1R1   8e-4           # um^2/molecule/s
+
+  # Single-site dissociation rate constants, identical for the three interactions
+  koff_R1R1 0.01           # /s
+  koff_R2R2 0.01           # /s
+  koff_N1R1 0.01           # /s
+
+  # Location-specific association rate constants obtained by dividing the areal
+  # constants above by the membrane area of the location
+  kon_R1R1_pm  kc_R1R1/A_pm   # cell/molecule/s
+  kon_R1R1_ee  kc_R1R1/A_ee   # cell/molecule/s
+  kon_R1R1_re  kc_R1R1/A_re   # cell/molecule/s
+  kon_R2R2_pm  kc_R2R2/A_pm   # cell/molecule/s
+  kon_R2R2_ee  kc_R2R2/A_ee   # cell/molecule/s
+  kon_R2R2_re  kc_R2R2/A_re   # cell/molecule/s
+  kon_N1R1_pm  kc_N1R1/A_pm   # cell/molecule/s
+  kon_N1R1_ee  kc_N1R1/A_ee   # cell/molecule/s
+  kon_N1R1_re  kc_N1R1/A_re   # cell/molecule/s
+
+  # Internalization, plasma membrane to Rab4a/5a early endosome. VEGFR1-NRP1
+  # complexes are assumed to traffic with the VEGFR1 rate constants (S2 Table).
+  kint_R1     1.35e-2      # /s
+  kint_R2     2.30e-4      # /s
+  kint_N1     2.68e-4      # /s
+  kint_R1N1   1.35e-2      # /s
+
+  # Recycling from the Rab4a/5a early endosome directly to the plasma membrane
+  krec4_R1    5.37e-4      # /s
+  krec4_R2    1.19e-6      # /s
+  krec4_N1    2.13e-2      # /s
+  krec4_R1N1  5.37e-4      # /s
+
+  # Transfer from the Rab4a/5a early endosome to the Rab11a recycling endosome
+  k4to11_R1   5.91e-4      # /s
+  k4to11_R2   1.49e-6      # /s
+  k4to11_N1   7.02e-2      # /s
+  k4to11_R1N1 5.91e-4      # /s
+
+  # Recycling from the Rab11a recycling endosome to the plasma membrane
+  krec11_R1   1.00e-1      # /s
+  krec11_R2   8.93e-2      # /s
+  krec11_N1   7.86e-4      # /s
+  krec11_R1N1 1.00e-1      # /s
+
+  # Degradation, modeled as irreversible transfer out of the Rab4a/5a endosome into
+  # a cumulative degraded pool that stands for lysosomal and other degradative routes
+  kdeg_R1     2.29e-4      # /s
+  kdeg_R2     2.34e-4      # /s
+  kdeg_N1     1.23e-6      # /s
+  kdeg_R1N1   2.29e-4      # /s
+
+  # Zeroth-order synthesis of new monomeric receptors into the plasma membrane
+  kprod_R1    4.1007       # molecules/cell/s
+  kprod_R2    1.1142       # molecules/cell/s
+  kprod_N1    0.4587       # molecules/cell/s
+end parameters
+
+begin molecule types
+  # Location is carried by every receptor as the internal state loc:
+  #   pm = plasma membrane (cell surface)   ee = Rab4a/5a early endosome
+  #   re = Rab11a recycling endosome        dg = degraded (cumulative pool)
+  # VEGFR1, the membrane-integral FLT1 isoform (HGNC:3763, UniProt P17948);
+  # d couples two VEGFRs and n binds NRP1
+  VEGFR1(d,n,loc~pm~ee~re~dg)
+  # VEGFR2 (HGNC:6307 KDR, UniProt P35968); it homodimerizes but does not bind
+  # NRP1 in the absence of ligand
+  VEGFR2(d,loc~pm~ee~re~dg)
+  # Neuropilin-1 co-receptor (HGNC:8004, UniProt O14786); v binds VEGFR1 site n
+  NRP1(v,loc~pm~ee~re~dg)
+end molecule types
+
+begin seed species
+  # The simulation starts with free monomers on the cell surface only; the internal
+  # pools fill in as the model relaxes to steady state.
+  VEGFR1(d,n,loc~pm)  VEGFR1_0  # molecules/cell
+  VEGFR2(d,loc~pm)    VEGFR2_0  # molecules/cell
+  NRP1(v,loc~pm)      NRP1_0    # molecules/cell
+end seed species
+
+begin observables
+  # Whole-cell receptor levels. Degraded receptors are excluded, following the
+  # aggregation convention of Sarabipour et al. (2024); a complex carrying two copies
+  # of a receptor contributes twice.
+  Molecules Obs_Tot_VEGFR1  VEGFR1(loc~pm) VEGFR1(loc~ee) VEGFR1(loc~re)
+  Molecules Obs_Tot_VEGFR2  VEGFR2(loc~pm) VEGFR2(loc~ee) VEGFR2(loc~re)
+  Molecules Obs_Tot_NRP1    NRP1(loc~pm) NRP1(loc~ee) NRP1(loc~re)
+
+  # Cell-surface pools, the fraction accessible to extracellular ligand
+  Molecules Obs_Surf_VEGFR1  VEGFR1(loc~pm)
+  Molecules Obs_Surf_VEGFR2  VEGFR2(loc~pm)
+  Molecules Obs_Surf_NRP1    NRP1(loc~pm)
+
+  # Rab4a/5a early endosomal pools, the sorting crossroads of the model
+  Molecules Obs_Rab4_VEGFR1  VEGFR1(loc~ee)
+  Molecules Obs_Rab4_VEGFR2  VEGFR2(loc~ee)
+  Molecules Obs_Rab4_NRP1    NRP1(loc~ee)
+
+  # Rab11a recycling endosomal pools
+  Molecules Obs_Rab11_VEGFR1  VEGFR1(loc~re)
+  Molecules Obs_Rab11_VEGFR2  VEGFR2(loc~re)
+  Molecules Obs_Rab11_NRP1    NRP1(loc~re)
+
+  # Cumulative degraded receptors, which only ever increase
+  Molecules Obs_Deg_VEGFR1  VEGFR1(loc~dg)
+  Molecules Obs_Deg_VEGFR2  VEGFR2(loc~dg)
+  Molecules Obs_Deg_NRP1    NRP1(loc~dg)
+
+  # Receptors held in ligand-independent complexes, counted over live locations only
+  Molecules Obs_Cplx_VEGFR1_dimer  VEGFR1(d!+,loc~pm) VEGFR1(d!+,loc~ee) \
+    VEGFR1(d!+,loc~re)
+  Molecules Obs_Cplx_VEGFR2_dimer  VEGFR2(d!+,loc~pm) VEGFR2(d!+,loc~ee) \
+    VEGFR2(d!+,loc~re)
+  Molecules Obs_Cplx_NRP1_VEGFR1   NRP1(v!+,loc~pm) NRP1(v!+,loc~ee) NRP1(v!+,loc~re)
+end observables
+
+begin reaction rules
+  # Ligand-independent coupling at the plasma membrane. Only three rules are written
+  # per location; BioNetGen generates the four remaining coupling reactions of
+  # S1 Table in Sarabipour et al. (2024), including the statistical factor of two for
+  # NRP1 binding to either arm of a VEGFR1 dimer.
+  R_couple_R1R1_pm: VEGFR1(d,loc~pm) + VEGFR1(d,loc~pm) <-> \
+    VEGFR1(d!1,loc~pm).VEGFR1(d!1,loc~pm)  kon_R1R1_pm,koff_R1R1
+  R_couple_R2R2_pm: VEGFR2(d,loc~pm) + VEGFR2(d,loc~pm) <-> \
+    VEGFR2(d!1,loc~pm).VEGFR2(d!1,loc~pm)  kon_R2R2_pm,koff_R2R2
+  R_couple_N1R1_pm: VEGFR1(n,loc~pm) + NRP1(v,loc~pm) <-> \
+    VEGFR1(n!1,loc~pm).NRP1(v!1,loc~pm)  kon_N1R1_pm,koff_N1R1
+
+  # The same three couplings inside Rab4a/5a early endosomes
+  R_couple_R1R1_ee: VEGFR1(d,loc~ee) + VEGFR1(d,loc~ee) <-> \
+    VEGFR1(d!1,loc~ee).VEGFR1(d!1,loc~ee)  kon_R1R1_ee,koff_R1R1
+  R_couple_R2R2_ee: VEGFR2(d,loc~ee) + VEGFR2(d,loc~ee) <-> \
+    VEGFR2(d!1,loc~ee).VEGFR2(d!1,loc~ee)  kon_R2R2_ee,koff_R2R2
+  R_couple_N1R1_ee: VEGFR1(n,loc~ee) + NRP1(v,loc~ee) <-> \
+    VEGFR1(n!1,loc~ee).NRP1(v!1,loc~ee)  kon_N1R1_ee,koff_N1R1
+
+  # The same three couplings inside Rab11a recycling endosomes
+  R_couple_R1R1_re: VEGFR1(d,loc~re) + VEGFR1(d,loc~re) <-> \
+    VEGFR1(d!1,loc~re).VEGFR1(d!1,loc~re)  kon_R1R1_re,koff_R1R1
+  R_couple_R2R2_re: VEGFR2(d,loc~re) + VEGFR2(d,loc~re) <-> \
+    VEGFR2(d!1,loc~re).VEGFR2(d!1,loc~re)  kon_R2R2_re,koff_R2R2
+  R_couple_N1R1_re: VEGFR1(n,loc~re) + NRP1(v,loc~re) <-> \
+    VEGFR1(n!1,loc~re).NRP1(v!1,loc~re)  kon_N1R1_re,koff_N1R1
+
+  # Internalization of each of the eight molecular species from the plasma membrane
+  # into Rab4a/5a early endosomes. Every molecule of a complex must change location
+  # together, so the eight species are enumerated explicitly here and in each of the
+  # four trafficking blocks that follow.
+  R_int_R1: VEGFR1(d,n,loc~pm) -> VEGFR1(d,n,loc~ee)  kint_R1
+  R_int_R2: VEGFR2(d,loc~pm) -> VEGFR2(d,loc~ee)  kint_R2
+  R_int_N1: NRP1(v,loc~pm) -> NRP1(v,loc~ee)  kint_N1
+  R_int_R1R1: VEGFR1(d!1,n,loc~pm).VEGFR1(d!1,n,loc~pm) -> \
+    VEGFR1(d!1,n,loc~ee).VEGFR1(d!1,n,loc~ee)  kint_R1
+  R_int_R2R2: VEGFR2(d!1,loc~pm).VEGFR2(d!1,loc~pm) -> \
+    VEGFR2(d!1,loc~ee).VEGFR2(d!1,loc~ee)  kint_R2
+  R_int_N1R1: VEGFR1(d,n!1,loc~pm).NRP1(v!1,loc~pm) -> \
+    VEGFR1(d,n!1,loc~ee).NRP1(v!1,loc~ee)  kint_R1N1
+  R_int_N1R1R1: NRP1(v!1,loc~pm).VEGFR1(d!2,n!1,loc~pm).VEGFR1(d!2,n,loc~pm) -> \
+    NRP1(v!1,loc~ee).VEGFR1(d!2,n!1,loc~ee).VEGFR1(d!2,n,loc~ee)  kint_R1N1
+  R_int_N1R1R1N1: \
+    NRP1(v!1,loc~pm).VEGFR1(d!2,n!1,loc~pm).VEGFR1(d!2,n!3,loc~pm).NRP1(v!3,loc~pm) -> \
+    NRP1(v!1,loc~ee).VEGFR1(d!2,n!1,loc~ee).VEGFR1(d!2,n!3,loc~ee).NRP1(v!3,loc~ee) \
+    kint_R1N1
+
+  # Rab4a-dependent recycling from early endosomes back to the plasma membrane
+  R_rec4_R1: VEGFR1(d,n,loc~ee) -> VEGFR1(d,n,loc~pm)  krec4_R1
+  R_rec4_R2: VEGFR2(d,loc~ee) -> VEGFR2(d,loc~pm)  krec4_R2
+  R_rec4_N1: NRP1(v,loc~ee) -> NRP1(v,loc~pm)  krec4_N1
+  R_rec4_R1R1: VEGFR1(d!1,n,loc~ee).VEGFR1(d!1,n,loc~ee) -> \
+    VEGFR1(d!1,n,loc~pm).VEGFR1(d!1,n,loc~pm)  krec4_R1
+  R_rec4_R2R2: VEGFR2(d!1,loc~ee).VEGFR2(d!1,loc~ee) -> \
+    VEGFR2(d!1,loc~pm).VEGFR2(d!1,loc~pm)  krec4_R2
+  R_rec4_N1R1: VEGFR1(d,n!1,loc~ee).NRP1(v!1,loc~ee) -> \
+    VEGFR1(d,n!1,loc~pm).NRP1(v!1,loc~pm)  krec4_R1N1
+  R_rec4_N1R1R1: NRP1(v!1,loc~ee).VEGFR1(d!2,n!1,loc~ee).VEGFR1(d!2,n,loc~ee) -> \
+    NRP1(v!1,loc~pm).VEGFR1(d!2,n!1,loc~pm).VEGFR1(d!2,n,loc~pm)  krec4_R1N1
+  R_rec4_N1R1R1N1: \
+    NRP1(v!1,loc~ee).VEGFR1(d!2,n!1,loc~ee).VEGFR1(d!2,n!3,loc~ee).NRP1(v!3,loc~ee) -> \
+    NRP1(v!1,loc~pm).VEGFR1(d!2,n!1,loc~pm).VEGFR1(d!2,n!3,loc~pm).NRP1(v!3,loc~pm) \
+    krec4_R1N1
+
+  # Transfer from Rab4a/5a early endosomes to Rab11a recycling endosomes
+  R_4to11_R1: VEGFR1(d,n,loc~ee) -> VEGFR1(d,n,loc~re)  k4to11_R1
+  R_4to11_R2: VEGFR2(d,loc~ee) -> VEGFR2(d,loc~re)  k4to11_R2
+  R_4to11_N1: NRP1(v,loc~ee) -> NRP1(v,loc~re)  k4to11_N1
+  R_4to11_R1R1: VEGFR1(d!1,n,loc~ee).VEGFR1(d!1,n,loc~ee) -> \
+    VEGFR1(d!1,n,loc~re).VEGFR1(d!1,n,loc~re)  k4to11_R1
+  R_4to11_R2R2: VEGFR2(d!1,loc~ee).VEGFR2(d!1,loc~ee) -> \
+    VEGFR2(d!1,loc~re).VEGFR2(d!1,loc~re)  k4to11_R2
+  R_4to11_N1R1: VEGFR1(d,n!1,loc~ee).NRP1(v!1,loc~ee) -> \
+    VEGFR1(d,n!1,loc~re).NRP1(v!1,loc~re)  k4to11_R1N1
+  R_4to11_N1R1R1: NRP1(v!1,loc~ee).VEGFR1(d!2,n!1,loc~ee).VEGFR1(d!2,n,loc~ee) -> \
+    NRP1(v!1,loc~re).VEGFR1(d!2,n!1,loc~re).VEGFR1(d!2,n,loc~re)  k4to11_R1N1
+  R_4to11_N1R1R1N1: \
+    NRP1(v!1,loc~ee).VEGFR1(d!2,n!1,loc~ee).VEGFR1(d!2,n!3,loc~ee).NRP1(v!3,loc~ee) -> \
+    NRP1(v!1,loc~re).VEGFR1(d!2,n!1,loc~re).VEGFR1(d!2,n!3,loc~re).NRP1(v!3,loc~re) \
+    k4to11_R1N1
+
+  # Rab11a-dependent recycling from recycling endosomes back to the plasma membrane
+  R_rec11_R1: VEGFR1(d,n,loc~re) -> VEGFR1(d,n,loc~pm)  krec11_R1
+  R_rec11_R2: VEGFR2(d,loc~re) -> VEGFR2(d,loc~pm)  krec11_R2
+  R_rec11_N1: NRP1(v,loc~re) -> NRP1(v,loc~pm)  krec11_N1
+  R_rec11_R1R1: VEGFR1(d!1,n,loc~re).VEGFR1(d!1,n,loc~re) -> \
+    VEGFR1(d!1,n,loc~pm).VEGFR1(d!1,n,loc~pm)  krec11_R1
+  R_rec11_R2R2: VEGFR2(d!1,loc~re).VEGFR2(d!1,loc~re) -> \
+    VEGFR2(d!1,loc~pm).VEGFR2(d!1,loc~pm)  krec11_R2
+  R_rec11_N1R1: VEGFR1(d,n!1,loc~re).NRP1(v!1,loc~re) -> \
+    VEGFR1(d,n!1,loc~pm).NRP1(v!1,loc~pm)  krec11_R1N1
+  R_rec11_N1R1R1: NRP1(v!1,loc~re).VEGFR1(d!2,n!1,loc~re).VEGFR1(d!2,n,loc~re) -> \
+    NRP1(v!1,loc~pm).VEGFR1(d!2,n!1,loc~pm).VEGFR1(d!2,n,loc~pm)  krec11_R1N1
+  R_rec11_N1R1R1N1: \
+    NRP1(v!1,loc~re).VEGFR1(d!2,n!1,loc~re).VEGFR1(d!2,n!3,loc~re).NRP1(v!3,loc~re) -> \
+    NRP1(v!1,loc~pm).VEGFR1(d!2,n!1,loc~pm).VEGFR1(d!2,n!3,loc~pm).NRP1(v!3,loc~pm) \
+    krec11_R1N1
+
+  # Degradation out of Rab4a/5a early endosomes into the cumulative degraded pool
+  R_deg_R1: VEGFR1(d,n,loc~ee) -> VEGFR1(d,n,loc~dg)  kdeg_R1
+  R_deg_R2: VEGFR2(d,loc~ee) -> VEGFR2(d,loc~dg)  kdeg_R2
+  R_deg_N1: NRP1(v,loc~ee) -> NRP1(v,loc~dg)  kdeg_N1
+  R_deg_R1R1: VEGFR1(d!1,n,loc~ee).VEGFR1(d!1,n,loc~ee) -> \
+    VEGFR1(d!1,n,loc~dg).VEGFR1(d!1,n,loc~dg)  kdeg_R1
+  R_deg_R2R2: VEGFR2(d!1,loc~ee).VEGFR2(d!1,loc~ee) -> \
+    VEGFR2(d!1,loc~dg).VEGFR2(d!1,loc~dg)  kdeg_R2
+  R_deg_N1R1: VEGFR1(d,n!1,loc~ee).NRP1(v!1,loc~ee) -> \
+    VEGFR1(d,n!1,loc~dg).NRP1(v!1,loc~dg)  kdeg_R1N1
+  R_deg_N1R1R1: NRP1(v!1,loc~ee).VEGFR1(d!2,n!1,loc~ee).VEGFR1(d!2,n,loc~ee) -> \
+    NRP1(v!1,loc~dg).VEGFR1(d!2,n!1,loc~dg).VEGFR1(d!2,n,loc~dg)  kdeg_R1N1
+  R_deg_N1R1R1N1: \
+    NRP1(v!1,loc~ee).VEGFR1(d!2,n!1,loc~ee).VEGFR1(d!2,n!3,loc~ee).NRP1(v!3,loc~ee) -> \
+    NRP1(v!1,loc~dg).VEGFR1(d!2,n!1,loc~dg).VEGFR1(d!2,n!3,loc~dg).NRP1(v!3,loc~dg) \
+    kdeg_R1N1
+
+  # Constant synthesis of new monomeric receptors into the plasma membrane
+  R_prod_R1: 0 -> VEGFR1(d,n,loc~pm)  kprod_R1
+  R_prod_R2: 0 -> VEGFR2(d,loc~pm)  kprod_R2
+  R_prod_N1: 0 -> NRP1(v,loc~pm)  kprod_N1
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 32 species, 85 reactions
+
+  # Steady-state localization and cycloheximide chase
+
+  #@protocol: |
+  #  Phase 1 relaxes the cell from surface-only monomers to its unperturbed steady
+  #  state over 200 simulated days (17,280,000 s). The long horizon is set by the
+  #  slowest mode of the system, turnover of the highly stable NRP1 pool, whose time
+  #  constant is about 9 days; VEGFR1 and VEGFR2 settle within a day. The end of this
+  #  phase gives the surface, Rab4a/5a, and Rab11a distributions of Fig. 5B.
+  #  Phase 2 sets the three production rate constants to zero, representing 50 ug/mL
+  #  cycloheximide, and follows whole-cell receptor levels for 4 h at 5-min
+  #  resolution. Expressed as a percentage of the phase-1 endpoint, whole-cell
+  #  VEGFR1 and VEGFR2 fall to 4.9% and 9.7% of control by 240 min while NRP1 drops
+  #  only to 98.1%, which is Fig. 5C.
+
+  #@figure: Fig. 5B and Fig. 5C in Sarabipour et al. (2024)
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>17280000,n_steps=>200,\
+    atol=>1e-8,rtol=>1e-8})
+  setParameter("kprod_R1",0)
+  setParameter("kprod_R2",0)
+  setParameter("kprod_N1",0)
+  simulate({method=>"ode",suffix=>"ode",t_end=>17294400,n_steps=>48,continue=>1,\
+    atol=>1e-8,rtol=>1e-8})
+end actions

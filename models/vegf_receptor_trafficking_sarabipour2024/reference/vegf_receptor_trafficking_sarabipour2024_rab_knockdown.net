@@ -1,0 +1,201 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA                     6.02214076e23  # Constant
+    2 A_pm                   1000  # Constant
+    3 A_ee                   950  # Constant
+    4 A_re                   325  # Constant
+    5 h_mem                  1e-8  # Constant
+    6 V_ref                  (A_pm*h_mem)*1e-9  # ConstantExpression
+    7 VEGFR1_0               1800  # Constant
+    8 VEGFR2_0               4900  # Constant
+    9 NRP1_0                 68000  # Constant
+   10 f_si_rab4              1.0  # Constant
+   11 f_si_rab11             1.0  # Constant
+   12 kc_R1R1                8e-4  # Constant
+   13 kc_R2R2                2e-3  # Constant
+   14 kc_N1R1                8e-4  # Constant
+   15 koff_R1R1              0.01  # Constant
+   16 koff_R2R2              0.01  # Constant
+   17 koff_N1R1              0.01  # Constant
+   18 kon_R1R1_pm            kc_R1R1/A_pm  # ConstantExpression
+   19 kon_R1R1_ee            kc_R1R1/A_ee  # ConstantExpression
+   20 kon_R1R1_re            kc_R1R1/A_re  # ConstantExpression
+   21 kon_R2R2_pm            kc_R2R2/A_pm  # ConstantExpression
+   22 kon_R2R2_ee            kc_R2R2/A_ee  # ConstantExpression
+   23 kon_R2R2_re            kc_R2R2/A_re  # ConstantExpression
+   24 kon_N1R1_pm            kc_N1R1/A_pm  # ConstantExpression
+   25 kon_N1R1_ee            kc_N1R1/A_ee  # ConstantExpression
+   26 kon_N1R1_re            kc_N1R1/A_re  # ConstantExpression
+   27 kint_R1                1.35e-2  # Constant
+   28 kint_R2                2.30e-4  # Constant
+   29 kint_N1                2.68e-4  # Constant
+   30 kint_R1N1              1.35e-2  # Constant
+   31 krec4_R1               5.37e-4  # Constant
+   32 krec4_R2               1.19e-6  # Constant
+   33 krec4_N1               2.13e-2  # Constant
+   34 krec4_R1N1             5.37e-4  # Constant
+   35 krec4_R1_eff           krec4_R1*f_si_rab4  # ConstantExpression
+   36 krec4_R2_eff           krec4_R2*f_si_rab4  # ConstantExpression
+   37 krec4_N1_eff           krec4_N1*f_si_rab4  # ConstantExpression
+   38 krec4_R1N1_eff         krec4_R1N1*f_si_rab4  # ConstantExpression
+   39 k4to11_R1              5.91e-4  # Constant
+   40 k4to11_R2              1.49e-6  # Constant
+   41 k4to11_N1              7.02e-2  # Constant
+   42 k4to11_R1N1            5.91e-4  # Constant
+   43 k4to11_R1_eff          k4to11_R1*f_si_rab11  # ConstantExpression
+   44 k4to11_R2_eff          k4to11_R2*f_si_rab11  # ConstantExpression
+   45 k4to11_N1_eff          k4to11_N1*f_si_rab11  # ConstantExpression
+   46 k4to11_R1N1_eff        k4to11_R1N1*f_si_rab11  # ConstantExpression
+   47 krec11_R1              1.00e-1  # Constant
+   48 krec11_R2              8.93e-2  # Constant
+   49 krec11_N1              7.86e-4  # Constant
+   50 krec11_R1N1            1.00e-1  # Constant
+   51 kdeg_R1                2.29e-4  # Constant
+   52 kdeg_R2                2.34e-4  # Constant
+   53 kdeg_N1                1.23e-6  # Constant
+   54 kdeg_R1N1              2.29e-4  # Constant
+   55 kprod_R1               4.1007  # Constant
+   56 kprod_R2               1.1142  # Constant
+   57 kprod_N1               0.4587  # Constant
+end parameters
+begin species
+    1 VEGFR1(d,loc~pm,n) VEGFR1_0
+    2 VEGFR2(d,loc~pm) VEGFR2_0
+    3 NRP1(loc~pm,v) NRP1_0
+    4 VEGFR1(d!1,loc~pm,n).VEGFR1(d!1,loc~pm,n) 0
+    5 VEGFR2(d!1,loc~pm).VEGFR2(d!1,loc~pm) 0
+    6 NRP1(loc~pm,v!1).VEGFR1(d,loc~pm,n!1) 0
+    7 VEGFR1(d,loc~ee,n) 0
+    8 VEGFR2(d,loc~ee) 0
+    9 NRP1(loc~ee,v) 0
+   10 NRP1(loc~pm,v!1).VEGFR1(d!2,loc~pm,n!1).VEGFR1(d!2,loc~pm,n) 0
+   11 NRP1(loc~pm,v!1).NRP1(loc~pm,v!2).VEGFR1(d!3,loc~pm,n!1).VEGFR1(d!3,loc~pm,n!2) 0
+   12 VEGFR1(d!1,loc~ee,n).VEGFR1(d!1,loc~ee,n) 0
+   13 VEGFR2(d!1,loc~ee).VEGFR2(d!1,loc~ee) 0
+   14 NRP1(loc~ee,v!1).VEGFR1(d,loc~ee,n!1) 0
+   15 VEGFR1(d,loc~re,n) 0
+   16 VEGFR2(d,loc~re) 0
+   17 NRP1(loc~re,v) 0
+   18 VEGFR1(d,loc~dg,n) 0
+   19 VEGFR2(d,loc~dg) 0
+   20 NRP1(loc~dg,v) 0
+   21 NRP1(loc~ee,v!1).VEGFR1(d!2,loc~ee,n!1).VEGFR1(d!2,loc~ee,n) 0
+   22 NRP1(loc~ee,v!1).NRP1(loc~ee,v!2).VEGFR1(d!3,loc~ee,n!1).VEGFR1(d!3,loc~ee,n!2) 0
+   23 VEGFR1(d!1,loc~re,n).VEGFR1(d!1,loc~re,n) 0
+   24 VEGFR2(d!1,loc~re).VEGFR2(d!1,loc~re) 0
+   25 NRP1(loc~re,v!1).VEGFR1(d,loc~re,n!1) 0
+   26 VEGFR1(d!1,loc~dg,n).VEGFR1(d!1,loc~dg,n) 0
+   27 VEGFR2(d!1,loc~dg).VEGFR2(d!1,loc~dg) 0
+   28 NRP1(loc~dg,v!1).VEGFR1(d,loc~dg,n!1) 0
+   29 NRP1(loc~re,v!1).VEGFR1(d!2,loc~re,n!1).VEGFR1(d!2,loc~re,n) 0
+   30 NRP1(loc~re,v!1).NRP1(loc~re,v!2).VEGFR1(d!3,loc~re,n!1).VEGFR1(d!3,loc~re,n!2) 0
+   31 NRP1(loc~dg,v!1).VEGFR1(d!2,loc~dg,n!1).VEGFR1(d!2,loc~dg,n) 0
+   32 NRP1(loc~dg,v!1).NRP1(loc~dg,v!2).VEGFR1(d!3,loc~dg,n!1).VEGFR1(d!3,loc~dg,n!2) 0
+end species
+begin reactions
+    1 1,1 4 0.5*kon_R1R1_pm #R_couple_R1R1_pm
+    2 2,2 5 0.5*kon_R2R2_pm #R_couple_R2R2_pm
+    3 1,3 6 kon_N1R1_pm #R_couple_N1R1_pm
+    4 1 7 kint_R1 #R_int_R1
+    5 2 8 kint_R2 #R_int_R2
+    6 3 9 kint_N1 #R_int_N1
+    7 0 1 kprod_R1 #R_prod_R1
+    8 0 2 kprod_R2 #R_prod_R2
+    9 0 3 kprod_N1 #R_prod_N1
+   10 1,6 10 kon_R1R1_pm #R_couple_R1R1_pm
+   11 6,6 11 0.5*kon_R1R1_pm #R_couple_R1R1_pm
+   12 4 1,1 koff_R1R1 #_reverse_R_couple_R1R1_pm
+   13 5 2,2 koff_R2R2 #_reverse_R_couple_R2R2_pm
+   14 3,4 10 2*kon_N1R1_pm #R_couple_N1R1_pm
+   15 6 1,3 koff_N1R1 #_reverse_R_couple_N1R1_pm
+   16 7,7 12 0.5*kon_R1R1_ee #R_couple_R1R1_ee
+   17 8,8 13 0.5*kon_R2R2_ee #R_couple_R2R2_ee
+   18 7,9 14 kon_N1R1_ee #R_couple_N1R1_ee
+   19 4 12 kint_R1 #R_int_R1R1
+   20 5 13 kint_R2 #R_int_R2R2
+   21 6 14 kint_R1N1 #R_int_N1R1
+   22 7 1 krec4_R1_eff #R_rec4_R1
+   23 8 2 krec4_R2_eff #R_rec4_R2
+   24 9 3 krec4_N1_eff #R_rec4_N1
+   25 7 15 k4to11_R1_eff #R_4to11_R1
+   26 8 16 k4to11_R2_eff #R_4to11_R2
+   27 9 17 k4to11_N1_eff #R_4to11_N1
+   28 7 18 kdeg_R1 #R_deg_R1
+   29 8 19 kdeg_R2 #R_deg_R2
+   30 9 20 kdeg_N1 #R_deg_N1
+   31 10 1,6 koff_R1R1 #_reverse_R_couple_R1R1_pm
+   32 11 6,6 koff_R1R1 #_reverse_R_couple_R1R1_pm
+   33 3,10 11 kon_N1R1_pm #R_couple_N1R1_pm
+   34 10 3,4 koff_N1R1 #_reverse_R_couple_N1R1_pm
+   35 11 3,10 2*koff_N1R1 #_reverse_R_couple_N1R1_pm
+   36 7,14 21 kon_R1R1_ee #R_couple_R1R1_ee
+   37 14,14 22 0.5*kon_R1R1_ee #R_couple_R1R1_ee
+   38 12 7,7 koff_R1R1 #_reverse_R_couple_R1R1_ee
+   39 13 8,8 koff_R2R2 #_reverse_R_couple_R2R2_ee
+   40 9,12 21 2*kon_N1R1_ee #R_couple_N1R1_ee
+   41 14 7,9 koff_N1R1 #_reverse_R_couple_N1R1_ee
+   42 15,15 23 0.5*kon_R1R1_re #R_couple_R1R1_re
+   43 16,16 24 0.5*kon_R2R2_re #R_couple_R2R2_re
+   44 15,17 25 kon_N1R1_re #R_couple_N1R1_re
+   45 10 21 kint_R1N1 #R_int_N1R1R1
+   46 11 22 kint_R1N1 #R_int_N1R1R1N1
+   47 12 4 krec4_R1_eff #R_rec4_R1R1
+   48 13 5 krec4_R2_eff #R_rec4_R2R2
+   49 14 6 krec4_R1N1_eff #R_rec4_N1R1
+   50 12 23 k4to11_R1_eff #R_4to11_R1R1
+   51 13 24 k4to11_R2_eff #R_4to11_R2R2
+   52 14 25 k4to11_R1N1_eff #R_4to11_N1R1
+   53 15 1 krec11_R1 #R_rec11_R1
+   54 16 2 krec11_R2 #R_rec11_R2
+   55 17 3 krec11_N1 #R_rec11_N1
+   56 12 26 kdeg_R1 #R_deg_R1R1
+   57 13 27 kdeg_R2 #R_deg_R2R2
+   58 14 28 kdeg_R1N1 #R_deg_N1R1
+   59 21 7,14 koff_R1R1 #_reverse_R_couple_R1R1_ee
+   60 22 14,14 koff_R1R1 #_reverse_R_couple_R1R1_ee
+   61 9,21 22 kon_N1R1_ee #R_couple_N1R1_ee
+   62 21 9,12 koff_N1R1 #_reverse_R_couple_N1R1_ee
+   63 22 9,21 2*koff_N1R1 #_reverse_R_couple_N1R1_ee
+   64 15,25 29 kon_R1R1_re #R_couple_R1R1_re
+   65 25,25 30 0.5*kon_R1R1_re #R_couple_R1R1_re
+   66 23 15,15 koff_R1R1 #_reverse_R_couple_R1R1_re
+   67 24 16,16 koff_R2R2 #_reverse_R_couple_R2R2_re
+   68 17,23 29 2*kon_N1R1_re #R_couple_N1R1_re
+   69 25 15,17 koff_N1R1 #_reverse_R_couple_N1R1_re
+   70 21 10 krec4_R1N1_eff #R_rec4_N1R1R1
+   71 22 11 krec4_R1N1_eff #R_rec4_N1R1R1N1
+   72 21 29 k4to11_R1N1_eff #R_4to11_N1R1R1
+   73 22 30 k4to11_R1N1_eff #R_4to11_N1R1R1N1
+   74 23 4 krec11_R1 #R_rec11_R1R1
+   75 24 5 krec11_R2 #R_rec11_R2R2
+   76 25 6 krec11_R1N1 #R_rec11_N1R1
+   77 21 31 kdeg_R1N1 #R_deg_N1R1R1
+   78 22 32 kdeg_R1N1 #R_deg_N1R1R1N1
+   79 29 15,25 koff_R1R1 #_reverse_R_couple_R1R1_re
+   80 30 25,25 koff_R1R1 #_reverse_R_couple_R1R1_re
+   81 17,29 30 kon_N1R1_re #R_couple_N1R1_re
+   82 29 17,23 koff_N1R1 #_reverse_R_couple_N1R1_re
+   83 30 17,29 2*koff_N1R1 #_reverse_R_couple_N1R1_re
+   84 29 10 krec11_R1N1 #R_rec11_N1R1R1
+   85 30 11 krec11_R1N1 #R_rec11_N1R1R1N1
+end reactions
+begin groups
+    1 Obs_Tot_VEGFR1       1,2*4,6,7,2*10,2*11,2*12,14,15,2*21,2*22,2*23,25,2*29,2*30
+    2 Obs_Tot_VEGFR2       2,2*5,8,2*13,16,2*24
+    3 Obs_Tot_NRP1         3,6,9,10,2*11,14,17,21,2*22,25,29,2*30
+    4 Obs_Surf_VEGFR1      1,2*4,6,2*10,2*11
+    5 Obs_Surf_VEGFR2      2,2*5
+    6 Obs_Surf_NRP1        3,6,10,2*11
+    7 Obs_Rab4_VEGFR1      7,2*12,14,2*21,2*22
+    8 Obs_Rab4_VEGFR2      8,2*13
+    9 Obs_Rab4_NRP1        9,14,21,2*22
+   10 Obs_Rab11_VEGFR1     15,2*23,25,2*29,2*30
+   11 Obs_Rab11_VEGFR2     16,2*24
+   12 Obs_Rab11_NRP1       17,25,29,2*30
+   13 Obs_Deg_VEGFR1       18,2*26,28,2*31,2*32
+   14 Obs_Deg_VEGFR2       19,2*27
+   15 Obs_Deg_NRP1         20,28,31,2*32
+   16 Obs_Cplx_VEGFR1_dimer 2*4,2*10,2*11,2*12,2*21,2*22,2*23,2*29,2*30
+   17 Obs_Cplx_VEGFR2_dimer 2*5,2*13,2*24
+   18 Obs_Cplx_NRP1_VEGFR1 6,10,2*11,14,21,2*22,25,29,2*30
+end groups
