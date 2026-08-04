@@ -79,7 +79,10 @@ Before creating or editing model artifacts:
    implement the paper's equations or expected dynamics in Python/SciPy, compare
    BioNetGen output against that independent implementation quantitatively,
    compare the curated simulation against the reported simulation data
-   quantitatively, and save `verify_<author><year>.png`.
+   quantitatively, and save `verify_<author><year>.png` — which must make that
+   agreement *readable*, per "The Verification Figure": both comparisons shown,
+   residuals or parity as well as overlays, the metrics printed on the figure, and
+   the verdict stated.
 8. Create `metadata.yaml` following `skills/bngl/skill.md` section 5. List every
    deliverable, including all reference files. A scan output directory may be
    listed as a single `reference/<prefix>_scan/` entry rather than one entry per
@@ -145,6 +148,76 @@ Commit reference output for every uncommented simulation protocol — `.gdat`/`.
 `simulate`/`parameter_scan`, the `.net` for any generate-first protocol, the `.xml` for any
 network-free one, and the per-point files in scan subdirectories. Reference data for
 commented-out protocols is welcome but not required.
+
+## The Verification Figure
+
+`verify_<author><year>.png` exists to answer exactly one question: **is the BioNetGen
+output correct?** A reader must be able to answer it *from the figure alone*, without
+opening the notebook. A figure that shows what the model does, rather than that the
+model is right, has failed — however many panels it has.
+
+### Required content
+
+1. **Both comparisons must be visible and labeled as such.**
+   - **BioNetGen vs. the independent implementation** (verification level 1)
+   - **BioNetGen vs. the reported data** (verification level 2)
+
+   If the notebook performs a level, the figure must show it. Computing a comparison
+   and then leaving it out of the PNG is the most common defect in the collection —
+   `innate_immune_response_korwek2023` ships `independent_korwek2023.py` and a
+   sixteen-panel figure in which the independent implementation appears nowhere.
+   Where a level genuinely cannot be performed, say so *in the figure*, not only in
+   the notebook.
+
+2. **Show the disagreement, not just the overlay.** Two curves drawn on top of each
+   other look identical whether the error is 1e-6 or 5%, so an overlay alone proves
+   nothing. Every comparison needs one of:
+   - a **residual panel** — difference or relative difference against the reference,
+     with the tolerance drawn as a horizontal band;
+   - a **parity plot** — model against reference with the identity line, when the
+     comparison is over many points rather than a time course;
+   - an **inset** on the overlay, when space is tight.
+
+3. **Put the numbers on the figure.** Every metric the notebook asserts belongs in the
+   PNG — as a per-panel annotation (`max rel err 1.3e-6`) or a summary block. A reader
+   should never have to open the notebook to learn how well it agreed.
+
+4. **State the verdict.** Name the tolerance and whether it was met. One line is
+   enough: `BNG vs SciPy: max rel err 1.3e-6 (tol 1e-4) PASS · BNG vs Fig 2A: median
+   rel err 8.8% (tol 15%) PASS`.
+
+### Layout
+
+The default that satisfies the above:
+
+```text
+row 1   overlay: BNG + independent          overlay: BNG + reported data
+row 2   residual vs independent (+ tol band) residual vs reported (+ tol band)
+footer  metrics and verdict
+```
+
+Behavior panels — dose-response shapes, mechanism illustrations, anything that shows
+what the model *does* — are optional, go last, and must not crowd out the four
+verification panels. If the figure is getting wide, drop a behavior panel, never a
+residual.
+
+### When the paper has many panels
+
+Reproducing a sixteen-panel published figure panel-for-panel dilutes the verification
+into sixteen eyeball judgements. Keep the per-panel overlays if they are informative,
+but **add one aggregate agreement panel** that collapses every point into a single
+readable claim: a parity plot of all model values against all reference values with
+the identity line, coloured by panel, annotated with the pooled metric. That one panel
+is what makes correctness a glance instead of a survey.
+
+### Worked examples
+
+`mapk_adaptive_resistance_frohlich2023` is the closest current example of required
+content 1 — one axes carrying curated BioNetGen, the independent SciPy integration,
+the authors' own source-model trajectory, and the Fig. 2A measurements, each labeled.
+It still lacks a residual view and prints no metric, so the reader cannot tell that
+the SciPy agreement is 1.3e-6 rather than merely close; add rows 2 and the footer and
+it would be exemplary.
 
 ## Verification Artifact Shape
 
@@ -261,6 +334,9 @@ The task is not complete until:
 - the verification artifact — notebook or driver script — regenerates the PNG and
   reports quantitative agreement between BioNetGen and the independent
   implementation;
+- **the PNG itself shows both comparisons, shows the disagreement (residual or
+  parity, not overlay alone), prints the metrics, and states the verdict** — a
+  reader must be able to judge correctness without opening the notebook;
 - it reports quantitative agreement between BioNetGen output and the reported
   simulation data for the reproduced figure, or explicitly documents why reported
   simulation data could not be extracted;
