@@ -40,13 +40,20 @@ Before creating or editing model artifacts:
    whenever the simulation protocol is SSA or NFsim. A stochastic model is not
    verified by comparing trajectories, and that reference fixes what to compare
    instead, the independence rule, and the tolerances in current use.
-6. Read `references/when-the-paper-is-wrong.md` as soon as anything fails to
+6. Read `references/network-free-verification.md` whenever the model is simulated
+   network-free — NFsim or RuleMonkey — rather than from a generated network.
+   There is no network to integrate independently, so level 1 is established by
+   cross-checking NFsim against the exact method, RuleMonkey; that reference fixes
+   the three-arm protocol, ensemble sizing, the z-score metric and why `max|z| < 3`
+   is the wrong acceptance test, the `-bscb`/`-utl` determination, and the
+   driver-script campaign shape.
+7. Read `references/when-the-paper-is-wrong.md` as soon as anything fails to
    reproduce. A published result that will not reproduce is a finding, not a
    blocker; that reference gives the triage, the five permitted responses, and the
    house wording. Read it *before* changing any published value.
-7. Review existing `models/` folders for naming, metadata, verification notebook,
+8. Review existing `models/` folders for naming, metadata, verification notebook,
    PNG, reference-data, and README conventions.
-8. Read all relevant files in the requested `dev/papers/<folder>/`, including the
+9. Read all relevant files in the requested `dev/papers/<folder>/`, including the
    PDF and any existing source BNGL or model files.
 
 ## Workflow

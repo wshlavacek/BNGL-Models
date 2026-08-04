@@ -11,6 +11,10 @@ Roughly a sixth of the collection is in this class. The protocol below is genera
 `noise_induced_bistable_futile_cycle_samoilov2005`, `demographic_noise_predator_prey_cycles_mckane2005`,
 and `bursty_autoregulated_gene_expression_lin2016`.
 
+All five run a *finite* reaction network, which is what makes an FSP or an independent Gillespie
+available as the exact check. A model simulated network-free has neither, and establishes level 1
+a different way — see `network-free-verification.md`.
+
 ## Contents
 1. The independence rule
 2. Choosing the independent check

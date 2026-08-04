@@ -152,6 +152,11 @@ Two things this catches that a single engine cannot:
 
 State which engine produced the committed reference, and why it is the reference.
 
+This section is the mechanism. The curation protocol built on it — the three arms, how to reduce
+a protocol so the exact arm is affordable, ensemble sizing, why `max|z| < 3` is the wrong
+acceptance test, and the driver-script campaign shape — is
+`skills/curate-model/references/network-free-verification.md`.
+
 ## Reference
 
 Read [references/flags-and-molecularity.md](references/flags-and-molecularity.md) when you need source-level confirmation for `-cb`, `-bscb`, species observables, or the size-2 ring validation workflow.
