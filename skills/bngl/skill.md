@@ -5,6 +5,7 @@ Define a consistent, enforceable house style for BioNetGen Language (BNGL) model
 - File organization and formatting
 - Naming conventions
 - Annotation conventions (structured comments)
+- Folder metadata, including the runnable-scale class (§5.6)
 - Minimal required observables
 - Antimony → BNGL conversion policy (SSA-first)
 - Acceptance criteria (lint rules)
@@ -654,6 +655,8 @@ files:                  # REQUIRED — manifest of all files in the folder
     description: <string>  # OPTIONAL — what this file is or how it differs
     documentation_target: <enum>  # OPTIONAL — none | minimal | standard | extra | comprehensive
     min_bionetgen_version: <string>  # OPTIONAL — minimum compatible BNG version (per-file)
+    scale: <enum>         # REQUIRED on .bngl entries — trivial | minutes | hours | cluster
+                          #   what it costs to run this file's committed protocols (§5.6)
 ```
 
 ### 5.2 Source tag vocabulary
@@ -730,11 +733,13 @@ files:
     role: primary
     documentation_target: standard
     min_bionetgen_version: "2.9.3"
+    scale: trivial          # 4 reactions; a 100-point scan over a 4-reaction network
   - name: genetic_toggle_switch_gardner2000_iptg.bngl
     role: variant
     description: Adds IPTG induction mechanism
     documentation_target: standard
     min_bionetgen_version: ">2.9.3"
+    scale: trivial
   - name: verify_gardner2000.ipynb
     role: verification
   - name: verify_gardner2000.png
@@ -747,6 +752,89 @@ files:
   - name: reference/genetic_toggle_switch_gardner2000_scan.scan
     role: reference
 ```
+
+### 5.6 Runnable scale vocabulary (`scale:`; REQUIRED on `.bngl` entries)
+
+`scale:` answers one question for a reader who has never opened the folder: **what machine do I
+need to run this?** It is REQUIRED on every `.bngl` entry in the `files` manifest and MAY be set
+on any other entry whose execution is expensive (a driver script that runs an ensemble, a
+notebook that runs a scan).
+
+| `scale:` | Can I run it on a laptop? | Cost of running this file's committed protocols once |
+|---|---|---|
+| `trivial` | Yes — right now, while you watch | ≲ 1 minute, 1 core, < 1 GB |
+| `minutes` | Yes — start it and walk away | ≲ 1 hour, 1–4 cores, < 8 GB |
+| `hours` | Technically, but painfully | ≲ 1 day, **or** 8–64 cores, **or** > 8 GB |
+| `cluster` | No — it needs a scheduler | > 1 day serial-equivalent, or many-node parallel |
+
+The four values are **ordered**. `hours` and `cluster` together are what the rest of this
+repository calls **heavy** — a model or job that does not belong in any routine, executable, or
+CI tier. `heavy` is a derived predicate, never a stored field: a curator sets `scale:` and
+`heavy` follows.
+
+**Scope of the class.** `scale:` describes the *committed protocols of that one file* — every
+`simulate*()` and `parameter_scan()` in its actions block, plus the network generation they
+require, taken together — not the folder, and not the verification campaign built on top of it.
+Scale is per file precisely because sibling files diverge: `blbr_dembo1978` ships a
+network-free file and a `_with_rings` ODE file; `mapk_relaxation_oscillations_kochanczyk2017`
+ships an ODE file and an SSA file whose own `#@runtime_expectation:` measures it at 1.6 hours.
+A folder's scale, when one is needed (for the root `README.md` table), is the **maximum over its
+files**.
+
+#### 5.6.1 Assigning the class (REQUIRED procedure; static, no timing runs)
+
+Do **not** time the model to classify it. Timing is unreproducible across machines, and the
+static proxies below separate the classes by orders of magnitude, which is all the resolution
+four buckets need. Start from the base class, then apply the multiplier.
+
+**Step 1 — base class from the heaviest protocol in the file.**
+
+*Finite network (`ode`, `ssa`, `psa` — anything preceded by `generate_network`).* Use the
+reaction count of the committed `.net`; if none is committed, use the count reported in the
+model's `#@description:` or generate one. Reaction count sets both network-generation cost and
+ODE right-hand-side cost.
+
+| generated reactions | ODE base | SSA base |
+|---|---|---|
+| < 10³ | `trivial` | `trivial`, unless step count is large — see below |
+| 10³ – 10⁴ | `minutes` | `minutes` |
+| ≥ 10⁴ | `minutes` — generation dominates and is minutes, not hours | `hours` |
+
+For `ssa`, cost tracks **total firings ≈ (molecule count) × (turnover rate) × `t_end`**, not
+network size, so check it independently and take the worse of the two: a 67-reaction network
+can be the most expensive file in the collection. Treat ≳ 10⁹ firings as `hours`.
+
+*Network-free (`nf` — NFsim or RuleMonkey).* There is no network to count; cost tracks
+**particles × `t_end`**. A few thousand particles over a short `t_end` is seconds; ~10⁵ particles
+or a long `t_end` is minutes to hours. **RuleMonkey is exact and steps every particle**, so a
+RuleMonkey cross-check is routinely an order of magnitude above the NFsim run it validates (see
+`skills/nfsim/SKILL.md`).
+
+**Step 2 — campaign multiplier.** A committed `parameter_scan()` of *N* points, or a protocol run
+as an ensemble of *M* replicates, multiplies the base by *N·M*. This is what actually pushes
+files over the line: several in the collection carry scans of 100–400 points over a base that is
+individually a second or two.
+
+**Step 3 — bucket the total, then apply the floor.** Bucket `base × N·M` directly against the
+cost column of the §5.6 table — do **not** bump the base class once per multiplier, which
+double-counts against the floor below and will land a routine 18-point scan in `cluster`. Then:
+a network-free file is never `trivial`, because the engine pays per particle event even on a
+short run.
+
+**Step 4 — sanity check the boundaries.** If the result is `hours` or `cluster`, say why in
+`#@runtime_expectation:` (§6.3); a class with no explanation is not actionable. If it is
+`trivial` for a file with a four-figure reaction count, re-check step 1.
+
+#### 5.6.2 What the class is not
+
+- It is **not** a quality signal. `cluster` does not mean "better", and `trivial` does not mean
+  "toy" — the collection's `trivial` models include its most-cited ones.
+- It is **not** a promise about *your* machine. It is a bucket, assigned from static proxies on
+  the curation workstation's scale. A reader deciding between "now" and "overnight" is served;
+  a reader wanting a wall-clock number should read `#@runtime_expectation:`, which is where
+  measured numbers go.
+- It does **not** cover the verification artifact. A `trivial` model can carry a `run_*.py`
+  ensemble campaign that is `hours`; record that on the script's own manifest entry.
 
 ---
 
@@ -851,6 +939,24 @@ Use YAML-style multi-line values (`#@note: |` with `#  ...` lines).
 ### 6.3 Entity-level structured annotations (OPTIONAL; use sparingly)
 Entity-level annotations MAY be used when they add value (provenance, non-obvious mappings, unit conversions). Use `#@entity:` and optional keys like `#@provenance:`, `#@ids:`, `#@note:`. The general-purpose `#@note:` tag (§3.2.1) is available for extended commentary at any level — header, entity, or protocol.
 
+**`#@runtime_expectation:` (OPTIONAL; the narrative behind `scale:`).** This tag is explicitly permitted at this level and is **not** a deferred verbose-mode header key — §6.1.2 governs §6.1.1's header block, not this one. It carries what a four-value bucket cannot: the measured number, and *why* the cost is what it is.
+
+- It MAY appear **in the header** (when the cost characterizes the whole file) or **attached to a specific `simulate*()` / `parameter_scan()` call** (PREFERRED, because it names the protocol it describes). Both placements are in current use and both are compliant.
+- Write it whenever `scale:` is `hours` or `cluster` (§7.1), and whenever a file is surprisingly cheap or expensive for its size.
+- State the number, the machine, and the dominant cost. "Slow" is not a runtime expectation.
+
+```
+  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>432000,n_steps=>7200,\
+    seed=>38244,print_functions=>1})
+
+  #@runtime_expectation: |
+  #  The exact SSA protocol above takes about 1.6 hours. Most of that is spent in
+  #  the receptor-rich stretches, where ERK cycles rapidly through three million
+  #  molecules; the long quiescent intervals cost almost nothing.
+```
+
+`scale:` and `#@runtime_expectation:` are complements, not competitors: the machine-readable class lives in `metadata.yaml` (§5.6) so tooling can filter on it, and the human explanation lives here, next to the protocol it explains.
+
 ### 6.4 Provenance vocabulary (RECOMMENDED)
 Suggested values for `#@provenance:`:
 `handwritten`, `from_antimony`, `from_sbml`, `from_paper`, `fitted`, `assumed`, `computed`, `placeholder`.
@@ -863,8 +969,28 @@ Suggested values for `#@provenance:`:
 
 ## 7. House Requirements for Pedagogical and Benchmark Models
 
-### 7.1 Practical runtime expectation (non-binding)
-Models SHOULD run typical simulations in ~1 minute or less; if not, document why in `#@runtime_expectation:`.
+### 7.1 Runnable scale (REQUIRED declaration; no runtime target)
+
+There is **no house runtime target.** An earlier version of this section asked for ~1 minute and
+sent everything else to `#@runtime_expectation:` — a key that §6.1.2 simultaneously forbade. Both
+halves were wrong: the collection is full of legitimate models that cannot run in a minute (a
+17,516-reaction network, a 1.6-hour exact SSA trajectory, network-free ensembles), and a
+one-minute bar reads them as defects rather than as what they are. What a reader needs is not a
+target the model met or missed, but an honest declaration of what it will cost them.
+
+Therefore:
+
+- **REQUIRED:** every `.bngl` file declares `scale:` in its folder's `metadata.yaml` (§5.6),
+  assigned by the static procedure in §5.6.1. This is the machine-readable class, and it is the
+  only place the class is stored.
+- **REQUIRED when `scale:` is `hours` or `cluster`:** a `#@runtime_expectation:` (§6.3) giving
+  the measured cost, the machine, and what dominates it. A heavy model with no explanation is not
+  acceptable; a heavy model with one is.
+- **RECOMMENDED:** where an expensive protocol has a cheap counterpart that answers the same
+  question (a shortened `t_end`, a reduced scan, a smaller ensemble), ship it as a sibling file
+  or a commented alternative and say so, so a reader without the hardware still has a way in.
+- **Never** treat `scale:` as a reason to reject or simplify a model. Faithfulness to the source
+  outranks cheapness; the class exists to set expectations, not to gate curation.
 
 ### 7.2 Required observables (REQUIRED minimal set)
 Every model MUST define at minimum:
@@ -966,9 +1092,12 @@ Severity levels:
 - **ERROR**: `source.tags` is a non-empty list and all tags use values from the controlled vocabulary (§5.2).
 - **ERROR**: exactly one file has `role: primary`; its stem matches the folder name.
 - **ERROR**: all file roles use values from the controlled vocabulary (§5.3).
+- **ERROR**: every `.bngl` entry declares `scale:`, using a value from the controlled vocabulary (§5.6).
 - **WARN**: `.bngl`, `.ipynb`, and image files in the folder are not listed in the `files` manifest.
-- **WARN**: `.bngl` file entry missing `documentation_target`; grader will auto-detect.
-- **INFO**: `rating` field should not be manually edited; it is computed by the grader.
+- **WARN**: `.bngl` file entry missing `documentation_target`.
+- **WARN**: `scale: hours` or `scale: cluster` declared with no `#@runtime_expectation:` anywhere in the corresponding `.bngl` file (§7.1).
+- **WARN**: `scale:` disagrees with the file's committed evidence — `trivial` on a file whose `.net` has ≥ 10³ reactions, or on a network-free file (§5.6.1 floors those at `minutes`).
+- **ERROR**: `rating:` present. The field was removed 2026-08-04; use `documentation_target:`.
 
 ### 9.5 Naming and reserved identifiers
 - **ERROR**: identifiers satisfy §4.1.
@@ -1055,3 +1184,9 @@ Breaking changes SHOULD provide at least one MINOR release of deprecation when p
 
 ### 11.4 Model compliance policy (REQUIRED)
 A model is compliant if it satisfies the minimal header requirements (§6.1.1) and lint rules for the current style version.
+
+### 11.5 Change log (append-only)
+
+| Version | Date | Change | Migration |
+|---|---|---|---|
+| 1.0 | 2026-08-05 | **Runnable scale.** New REQUIRED per-file `scale:` key on `.bngl` entries in `metadata.yaml` (§5.6), with the static assignment procedure (§5.6.1) and lint rules (§9.4a). §7.1 rewritten: the ~1-minute runtime target is withdrawn, and `#@runtime_expectation:` is explicitly permitted at header or protocol level under §6.3, resolving its collision with the deferred §6.1.2. | All 54 model folders annotated in the same change; new curations set `scale:` per `curate-model` step 4. |

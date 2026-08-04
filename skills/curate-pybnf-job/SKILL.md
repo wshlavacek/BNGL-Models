@@ -245,9 +245,10 @@ than guessing.
 8. **Write the slug `README.md`.** It is the entry point and must stand alone: what the job fits
    and why; the model and where it came from; the training data and its figure/table provenance;
    the free parameters; the archetype and its consequences (PEtab-exportable? native-only?);
-   **the status line — J\*, its tier, OG, and the badge**; the exact run command; and a link to
-   `VALIDATION.md` once `validate-pybnf-job` has been run. Update the paper-level README's slug
-   table and the root `README.md` if the job pairs with a curated model.
+   **the status line — J\*, its tier, OG, the badge, and the scale (see below)**; the exact run
+   command; and a link to `VALIDATION.md` once `validate-pybnf-job` has been run. Update the
+   paper-level README's slug table — including its **Scale** column — and the root `README.md` if
+   the job pairs with a curated model.
 
 9. **Report — and close the loop upstream.** Summarize the new slug, the verification results
    (tier-1; PEtab round-trip *or* BPSL `check`; **OG and status**; the paper-reproduction metric),
@@ -269,6 +270,54 @@ mark it `†` and say so. A job that imports, simulates and scores but whose nom
 the published optimum and which has not been driven to `OG < 1.92` is **setup only** — a
 legitimate, useful deliverable, but it must not be described as reproducing the paper's fit. The
 old bar ("a real bngsim fit reaches a finite objective") passes a broken model and is retired.
+
+## Declare the scale — and that is where `heavy` comes from
+
+Every slug states what it costs to run, in the README status line and in the paper-level slug
+table's **Scale** column. Same four-value vocabulary as `models/` (`skills/bngl/skill.md` §5.6),
+so one word means one thing across the repository:
+
+| scale | can I run this on a laptop? | budget for a full fit |
+|---|---|---|
+| `trivial` | yes, right now | ≲ 1 min · a `job_type = check` or `sim` conf, ~1 evaluation |
+| `minutes` | yes, walk away | ≲ 1 core-hour |
+| `hours` | technically, painfully | ≲ 48 core-hours — a workstation, or overnight |
+| `cluster` | no — it needs a scheduler | > 48 core-hours, or many-node islands |
+
+**`heavy` is not a field. `heavy ≡ scale ∈ {hours, cluster}`.** That is the whole definition. The
+manifest's `heavy=True`, and the tier-2 exclusion it drives
+(`references/real-world-anatomy.md`), are *consequences* of the class rather than a separate
+boolean a curator can forget to flip — which is exactly how the flag went missing before.
+
+**Assign it statically — never by running the fit to convergence to find out.**
+
+```text
+core-hours  ≈  evaluations × seconds-per-evaluation / 3600
+evaluations  =  population_size × max_iterations   (× smoothing, for SSA/NF replicates)
+```
+
+- **`population_size` × `max_iterations` is the number that matters.** It spans four orders of
+  magnitude across this corpus — 60 for a `Mallela-2024` lbfgs slug, 1,062,000 for
+  `Lang-2024/v3_2_0`. Read it straight off the conf.
+- **Seconds per evaluation** comes from the model, not the optimizer: inherit the `models/` entry's
+  `scale:` when the paper has a curated sibling, otherwise use its reaction count and method by
+  §5.6.1. Anchor: `Suofu-2017/mito_camp` records 39,000 evaluations in 28 minutes on 16 cores —
+  **0.69 s/evaluation** for a 30-reaction ODE model. Network-free and SSA evaluations are one to
+  three orders of magnitude worse, and `smoothing = N` multiplies every one of them by *N*.
+- **`wall_time_sim` is a ceiling you declared, not a measurement.** Half this corpus sets it to
+  3600 as a safety net on jobs that finish in seconds. Use it to break a tie, never to classify.
+- **Free-parameter count is the honest tiebreaker at the top.** A 177-parameter problem is
+  `cluster` even under a generous per-evaluation estimate, because the budget it *needs* to
+  converge is not the budget the conf currently declares.
+
+Sanity check your assignment against the two slugs the corpus already calls heavy in prose:
+`Lang-2024/v3_2_0` (1.06M evaluations, 177 free parameters) and both `Miller-2026` slugs
+(240k–300k evaluations; "the authors used an HPC cluster"). If your procedure does not put those
+in `cluster`, it is miscalibrated.
+
+Two costs, stated separately when they differ: a `cluster` fit whose **reproduction** script
+replays committed best-fit parameters in seconds should say so, because that is the part a reader
+without a cluster can actually run.
 
 ## Guardrails that bite
 
@@ -333,6 +382,10 @@ Not complete until:
   and its tolerance are stated;
 - the slug `README.md` and the paper-level `README.md` exist, agree with the conf and the shipped
   artifacts, and use the corpus's one canonical `<FirstAuthor>-<Year>` key for this paper;
+- **the scale is declared** in the slug README status line and the paper-level slug table, from
+  `population_size × max_iterations` and the model's per-evaluation cost — and if it comes out
+  `hours` or `cluster` (i.e. `heavy`), the README says what a reader without that hardware can
+  still run;
 - the conf banner cites the paper (PMCID/DOI) and the figure/table each `.exp` (and any
   qualitative property) came from;
 - any bngsim/PyBNF defect this curation exposed is filed and cited.

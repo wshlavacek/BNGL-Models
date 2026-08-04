@@ -4,6 +4,11 @@
 # The test cross-checks: resolved model.stochastic == stochastic (True iff ssa/nf);
 # simulator drives the NF-only guards; heavy=True excludes it from the executable tier-2
 # set. `observables` are the .exp column names (functions listed WITHOUT parentheses).
+#
+# heavy is DERIVED, not judged here: heavy = (scale in {'hours', 'cluster'}), using the
+# scale already declared in the slug README status line and the paper-level slug table.
+# Copy it across; if the slug has no declared scale, go assign one first (SKILL.md,
+# "Declare the scale").
 
 # --- ODE, experimental data (minimal) ---
 RealWorldExample(
@@ -16,7 +21,7 @@ RealWorldExample(
 #     folder='<name>', conf='<name>.conf', simulator='nf',   # or 'ssa'
 #     observables=('<obs1>',),
 #     system='<biology> (<First-author Year>, PMC#######); NFsim, <protocol>',
-#     stochastic=True, heavy=True),                            # heavy if cluster-scale
+#     stochastic=True, heavy=True),                            # heavy iff scale hours/cluster
 
 # --- Optional parameter-recovery targets (paper's reported best-fit values) ---
 # ..., recover={'<param>': <published_value>}, tol=0.5),

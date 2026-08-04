@@ -89,9 +89,23 @@ Before creating or editing model artifacts:
    file inside it; list everything else individually. Declare each file's intended
    annotation depth with `documentation_target:`; there is no numeric `rating:`
    field — it was removed 2026-08-04, having never been computed.
+8a. **Declare the runnable scale.** Every `.bngl` entry gets `scale:` —
+   `trivial` | `minutes` | `hours` | `cluster` — assigned by the static procedure
+   in `skills/bngl/skill.md` §5.6.1 (reaction count, simulation method, particle
+   count, campaign multiplier). **Do not time the model to classify it**; you have
+   just run it in step 5, so you know roughly what it cost, but the class is
+   assigned from the static proxies so it means the same thing on every machine.
+   Set `scale:` on the verification script or notebook too when *it* is the
+   expensive artifact — an ensemble campaign over a `trivial` model is common.
+   If the class comes out `hours` or `cluster`, §7.1 requires a
+   `#@runtime_expectation:` in the `.bngl` giving the measured number, the
+   machine, and what dominates the cost. Write it now, while you still remember;
+   a heavy model with no explanation is not a finished curation.
 9. After all curation artifacts are complete and verified, update the Models table
    in `README.md` with the new collection. Include the folder and BNGL file names,
-   a concise description of the primary model, and source reference(s).
+   the folder's scale (the **maximum** over its files, matching the Scale column's
+   vocabulary), a concise description of the primary model, and source
+   reference(s).
 10. **Link the fitting-job sibling, if there is one.** Check `pybnf-jobs/` for a
     `<FirstAuthor>-<Year>/` directory from the same paper. When one exists, name it
     in this model's README row and in `metadata.yaml`, and add the reverse link to
@@ -378,7 +392,11 @@ The task is not complete until:
   `reference/` and listed in `metadata.yaml`, together with the `digitize_`/
   `extract_` script that produced them when they were derived;
 - `metadata.yaml` is complete and includes a user-supplied point of contact;
-- `README.md` includes the completed model collection in the Models table.
+- **every `.bngl` entry in `metadata.yaml` declares `scale:`**, and any file
+  classed `hours` or `cluster` carries a `#@runtime_expectation:` stating the
+  measured cost, the machine, and what dominates it;
+- `README.md` includes the completed model collection in the Models table, with
+  its Scale column filled in.
 
 If a required artifact cannot be produced, state exactly which artifact is
 missing and why.

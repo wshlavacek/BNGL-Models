@@ -202,7 +202,7 @@ Each promoted example registers one frozen `RealWorldExample` in `EXAMPLES`
 | `observables` | tuple | data-bound observable/function names (the `.exp` columns; functions without parens) | yes |
 | `system` | str | one-line biology + **paper mapping** (cite the paper here) | yes |
 | `stochastic` | bool (False) | `True` iff simulator is `ssa`/`nf`; **cross-checked in tier-1** | default |
-| `heavy` | bool (False) | cluster-scale build/fit; **excludes from the executable tier-2 set** | default |
+| `heavy` | bool (False) | **derived, not decided here**: `True` iff the slug's declared scale is `hours` or `cluster` (SKILL.md, "Declare the scale"); **excludes from the executable tier-2 set** | default |
 | `blocked` | str (`''`) | non-empty ⇒ can't complete through bngsim, with reason | default |
 | `recover` | dict (`{}`) | optional `{param: truth}` for parameter-recovery assertion | default |
 | `tol` | float (0.5) | relative tolerance for the `recover` check | default |
@@ -214,9 +214,9 @@ RealWorldExample(
     observables=('<obs1>', '<obs2>'),
     system='<biology> (<First-author Year>, PMCID); ODE, <protocol>'),
 ```
-For SSA/NF add `stochastic=True`; add `heavy=True` if a single build/fit is
-cluster-scale. Entries are grouped by simulator with section comments
-(`_manifest.py:54,68,75`).
+For SSA/NF add `stochastic=True`; add `heavy=True` iff the slug's declared scale is
+`hours` or `cluster` — copy the class you already assigned, do not re-judge it here.
+Entries are grouped by simulator with section comments (`_manifest.py:54,68,75`).
 
 **`recover` for paper-derived (real-data) examples:** there's no synthetic truth, but
 you *can* seed `recover` with the paper's reported best-fit values and a loose `tol`
@@ -245,9 +245,10 @@ fit (`max_iterations=2, population_size=6`) it asserts models build, and
 `trajectory.best_score()` is finite (the whole simulate→score→propose loop ran). If
 `recover` is set, each recovered param is within `tol` of truth.
 
-To land in the ✅ executable tier: keep `heavy=False`, ensure the model builds fast
-through BNG2.pl, and ensure a finite objective. If cluster-scale, set `heavy=True`;
-it then stays backend-free-only (🔶).
+To land in the ✅ executable tier a slug must be scale `trivial` or `minutes` (so
+`heavy=False`), build fast through BNG2.pl, and reach a finite objective. Scale
+`hours` or `cluster` ⇒ `heavy=True` ⇒ backend-free-only (🔶). The class is decided
+once, when the slug is curated; this is where it is copied, not where it is argued.
 
 ---
 
