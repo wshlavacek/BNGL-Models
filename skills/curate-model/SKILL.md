@@ -30,9 +30,18 @@ Before creating or editing model artifacts:
 4. Read `skills/nfsim/SKILL.md` when NFsim behavior, crosslinking, molecularity,
    species observables, cyclic complexes, or network-free simulation may affect
    correctness.
-5. Review existing `models/` folders for naming, metadata, verification notebook,
+5. Read `references/stochastic-verification.md` when the model's defining result is
+   noise — a stationary distribution, switching statistics, a spectrum, bursts — or
+   whenever the simulation protocol is SSA or NFsim. A stochastic model is not
+   verified by comparing trajectories, and that reference fixes what to compare
+   instead, the independence rule, and the tolerances in current use.
+6. Read `references/when-the-paper-is-wrong.md` as soon as anything fails to
+   reproduce. A published result that will not reproduce is a finding, not a
+   blocker; that reference gives the triage, the five permitted responses, and the
+   house wording. Read it *before* changing any published value.
+7. Review existing `models/` folders for naming, metadata, verification notebook,
    PNG, reference-data, and README conventions.
-6. Read all relevant files in the requested `dev/papers/<folder>/`, including the
+8. Read all relevant files in the requested `dev/papers/<folder>/`, including the
    PDF and any existing source BNGL or model files.
 
 ## Workflow
