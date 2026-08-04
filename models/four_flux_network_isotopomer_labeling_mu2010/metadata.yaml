@@ -1,0 +1,84 @@
+# metadata.yaml — four_flux_network_isotopomer_labeling_mu2010
+id: four_flux_network_isotopomer_labeling_mu2010
+created: 2026-08-04
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, ai_assisted]
+  description: >
+    House-style transcription of the BioNetGen input file printed in Sec. 15.3.3 of
+    Mu F, Bauer AL, Faeder JR, Hlavacek WS (2010), "Using systems biology techniques to
+    determine metabolic fluxes and metabolite pool sizes", in Handbook of
+    Chemoinformatics Algorithms (Faulon J-L, Bender A, eds.), Chapman and Hall/CRC,
+    Boca Raton, pp. 399-422, ISBN 9781420082920. The chapter's four-flux example is the
+    pedagogical introduction to BNGL-encoded carbon atom fate maps for 13C metabolic
+    flux analysis; the same authors' fate-map database and BNGL encoding are described
+    in Mu et al. (2007), Bioinformatics 23:3193-3199. Four corrections to the printed
+    listing are documented in the file's #@note tags, the substantive one being that the
+    printed rules block contains two S -> M1 steps and leaves S without a source, where
+    Eqs. 15.19-15.22 give S a source at flux v_vs from the feed. Fluxes, pool sizes, and
+    the 10% feed enrichment are as published.
+
+files:
+  - name: four_flux_network_isotopomer_labeling_mu2010.bngl
+    role: primary
+    description: >
+      Isotopomer labeling of the four-flux network of Fig. 15.3. Four ODE protocols
+      reproduce the four curves of Fig. 15.4: the reference condition, two alternative
+      M2 pool sizes, and a redistribution of flux between the two branches.
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: independent_mu2010.py
+    role: verification
+    description: >
+      Independent implementation of the isotopomer balance equations by the isotopomer
+      mapping matrix method of Sec. 15.2.1 and Sec. 15.3.2, using the matrices of
+      Eqs. 15.15-15.18 rather than the BNGL carbon fate maps. Also supplies the
+      closed-form isotopic steady state and the alternative initial condition in which
+      the substrate pool starts unlabeled.
+  - name: digitize_mu2010.py
+    role: verification
+    description: >
+      Recovers the four trajectories of Fig. 15.4 from the vector geometry of the
+      published panel and writes the reference CSV. Requires the poppler pdftocairo
+      executable and a copy of the source PDF, which is not part of this repository.
+  - name: verify_mu2010.ipynb
+    role: verification
+    description: >
+      Three-level verification - BioNetGen against the isotopomer mapping matrix
+      construction, both against the closed-form isotopic steady state, and both against
+      the digitized Fig. 15.4.
+  - name: verify_mu2010.png
+    role: figure
+  # Reference simulation data
+  - name: reference/four_flux_network_isotopomer_labeling_mu2010.net
+    role: reference
+  - name: reference/four_flux_network_isotopomer_labeling_mu2010_ode.gdat
+    role: reference
+    description: Reference condition, pool size of M2 = 1; Fig. 15.4, solid line.
+  - name: reference/four_flux_network_isotopomer_labeling_mu2010_ode_m2low.gdat
+    role: reference
+    description: Pool size of M2 = 0.5; Fig. 15.4, dash-dot line.
+  - name: reference/four_flux_network_isotopomer_labeling_mu2010_ode_m2high.gdat
+    role: reference
+    description: Pool size of M2 = 2; Fig. 15.4, dashed line.
+  - name: reference/four_flux_network_isotopomer_labeling_mu2010_ode_altflux.gdat
+    role: reference
+    description: >
+      Redistributed branch fluxes at uniform pool sizes; Fig. 15.4, dotted line.
+  # Reported simulation data digitized from the source figure
+  - name: reference/mu2010_fig15_4_digitized.csv
+    role: reference
+    description: >
+      The four P01 trajectories of Fig. 15.4, one row per sampled point, with the
+      plotted stroke dash pattern and the matching simulation protocol. Recovered from
+      the vector paths of the published panel rather than from pixels, and calibrated on
+      the axis box of the same rendering; the three interior x tick marks and four
+      interior y tick marks are used as an independent check of that calibration.
+      Regenerate with digitize_mu2010.py.

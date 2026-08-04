@@ -1,0 +1,269 @@
+begin model
+
+#@title: Four-flux network isotopomer labeling (Mu et al., 2010)
+
+#@description: |
+#  Dynamic 13C isotopomer labeling in the four-flux metabolic network used by
+#  Mu et al. (2010) to introduce BNGL-encoded carbon atom fate maps. A
+#  two-carbon substrate S is fed from outside the system at flux v_vs, is
+#  converted to two intermediates M1 and M2 at fluxes v_v1 and v_v2, and both
+#  intermediates drain into a common product P at fluxes v_v3 and v_v4; M1, M2,
+#  and P also leave the system at fluxes v_vm1, v_vm2, and v_vp. The two
+#  branches differ only in their carbon atom fate map: S -> M1 preserves carbon
+#  order, while S -> M2 transposes the two carbons, so a feed labeled only at
+#  carbon 1 reaches carbon 2 of P through M2 alone.
+#
+#  Every molecule carries two components C1 and C2 whose states are 0 for 12C
+#  and 1 for 13C, so a metabolite pool is resolved into its four isotopomers.
+#  The fate maps are written with BNGL component labels (%1, %2), which force
+#  the reactant-to-product atom mapping; BioNetGen expands them into the
+#  isotopomer balance equations of Eqs. 15.19-15.34 in Mu et al. (2010),
+#  generating only what the labeled feed can actually populate: 9 of the 16
+#  isotopomers of S, M1, M2, and P, plus the two precursor states, for 11
+#  species in all. Every rule is pseudo-first order with rate
+#  constant flux/(pool size), so total pool sizes stay at their specified
+#  values and each species amount is a pool-size-weighted isotopomer fraction.
+#
+#  The internal pools start fully unlabeled and the feed switches at t = 0 to
+#  10% 13C at carbon position 1. P01, the fraction of P labeled at carbon 2,
+#  rises monotonically to 0.05 with a time constant set by the M2 pool:
+#  enlarging M2 slows the approach without moving the steady state, which is
+#  the chapter's point that dynamic labeling data carry pool-size information
+#  that steady-state labeling data do not. Redistributing flux between the two
+#  branches instead moves the plateau, to v_v4*f_label/v_vp = 0.0375 for
+#  v_v3 = 0.5 and v_v4 = 0.3.
+
+#@keyword: |
+#  metabolic flux analysis, 13C labeling, isotopomer, carbon fate map,
+#  atom mapping, metabolic network, isotopically nonstationary labeling,
+#  metabolite pool size, mass action, ordinary differential equations,
+#  dimensionless, generic
+
+#@reference: |
+#  Mu F, Bauer AL, Faeder JR, Hlavacek WS (2010). Using systems biology
+#  techniques to determine metabolic fluxes and metabolite pool sizes. In:
+#  Handbook of Chemoinformatics Algorithms, Faulon J-L, Bender A, eds.
+#  Chapman and Hall/CRC, Boca Raton, pp. 399-422.
+#  ISBN 9781420082920. Sec. 15.3.3 and Fig. 15.4.
+#  Mu F, Williams RF, Unkefer CJ, Unkefer PJ, Faeder JR, Hlavacek WS (2007).
+#  Carbon-fate maps for metabolic reactions. Bioinformatics 23:3193-3199.
+#  doi:10.1093/bioinformatics/btm498
+
+#@note: |
+#  Units are arbitrary but consistent: pool sizes are amounts (a.u.), fluxes
+#  are amounts per unit time, and a flux divided by a pool size is a first-order
+#  rate constant. Only the ratios flux/(pool size) matter, so the amount unit
+#  cancels and the time unit is whatever the fluxes are expressed in. Species
+#  amounts are continuous isotopomer fractions scaled by pool size, and the
+#  precursor pool proS is a fixed fractional composition, so molecule counts are
+#  not meaningful and the model is ODE-only.
+
+#@note: |
+#  Transcribed from the BioNetGen input file printed in Sec. 15.3.3 of Mu et al.
+#  (2010) with these corrections and adaptations:
+#  - The printed rules block opens with
+#      pros(C1%1,C2%2) -> M1(C1%1,C2%2)   v_v1/V_S
+#      S(C1%1,C2%2) -> M1(C1%1,C2%2)      v_v1/V_S
+#      S(C1%1,C2%2) -> M2(C1%2,C2%1)      v_v2/V_S
+#    which contains two S -> M1 steps at the same flux and leaves S with no
+#    source at all, so S would simply drain away. Eqs. 15.19-15.22 give S a
+#    source of flux v_vs from the feed, so the first rule is written here as
+#    that feed step, proS -> S.
+#  - The printed seed species block is closed by "end parameters", and the four
+#    simulate commands appear as "imulate_ode", "simulate_yode",
+#    "n{_}ysteps", and "setParameter(V_yM2, ...)".
+#  - The printed observables divide a pattern by V_P, which BNGL does not
+#    allow; the division is done here by the functions P00 through P11.
+#  - The sink species NULL of the printed listing is BioNetGen's null species 0.
+
+#@note: |
+#  S is seeded at the feed composition rather than fully unlabeled, and this is
+#  what reproduces Fig. 15.4 rather than a curve shifted to the right of it.
+#  Mu et al. (2010) describe the experiment as a step change of the input feed
+#  at t = 0, and in this network S is the input: Eq. 15.4 makes
+#  v_vs = v_v1 + v_v2, so the S balances of Eqs. 15.19-15.22 reduce to
+#  dS/dt = 0 and S holds the feed composition for all time. Only the internal
+#  pools M1, M2, and P start unlabeled. Seeding S unlabeled instead would
+#  insert a first-order lag of V_S/(v_v1 + v_v2) = 1 time unit ahead of the two
+#  branches, which moves the plotted P01 curves away from the published ones by
+#  as much as a quarter of the plotted range. The verification notebook
+#  measures both readings against the digitized panel: this one tracks every
+#  published curve to a median well under one stroke width of the figure, the
+#  other misses them by tens of stroke widths.
+
+begin parameters
+  # Metabolite pool sizes; S, M1, and P are held at 1 and V_M2 is varied in
+  # Fig. 15.4 of Mu et al. (2010)
+  V_S    1.0  # a.u.
+  V_M1   1.0  # a.u.
+  V_M2   1.0  # a.u.
+  V_P    1.0  # a.u.
+
+  # Input flux feeding the substrate pool S; see Fig. 15.3 in Mu et al. (2010)
+  v_vs   1.0  # a.u./time
+
+  # Internal fluxes S -> M1, S -> M2, M1 -> P, and M2 -> P
+  v_v1   0.5  # a.u./time
+  v_v2   0.5  # a.u./time
+  v_v3   0.4  # a.u./time
+  v_v4   0.4  # a.u./time
+
+  # Output fluxes draining M1, M2, and P out of the system
+  v_vm1  0.1  # a.u./time
+  v_vm2  0.1  # a.u./time
+  v_vp   0.8  # a.u./time
+
+  # Fraction of the feed that is 13C labeled at carbon position 1
+  f_label 0.1  # dimensionless
+end parameters
+
+begin molecule types
+  # Precursor supplying the substrate pool; held at a fixed labeling composition
+  proS(C1~0~1,C2~0~1)
+  # Two-carbon substrate; state 0 is 12C and state 1 is 13C at that position
+  S(C1~0~1,C2~0~1)
+  # Intermediate reached from S with the carbon order preserved
+  M1(C1~0~1,C2~0~1)
+  # Intermediate reached from S with the two carbons transposed
+  M2(C1~0~1,C2~0~1)
+  # Product pool fed by both intermediates
+  P(C1~0~1,C2~0~1)
+end molecule types
+
+begin seed species
+  # Feed composition after the t = 0 switch: 90% unlabeled, 10% labeled at C1.
+  # Constant species, so the feed is not depleted by the reactions it drives.
+  $proS(C1~0,C2~0)  1-f_label  # dimensionless
+  $proS(C1~1,C2~0)  f_label    # dimensionless
+
+  # The substrate pool is the input and steps to the feed composition at t = 0;
+  # with v_vs = v_v1 + v_v2 it then holds that composition, see the note above
+  S(C1~0,C2~0)  V_S*(1-f_label)  # a.u.
+  S(C1~1,C2~0)  V_S*f_label      # a.u.
+
+  # The internal pools start fully unlabeled at the metabolic steady state
+  M1(C1~0,C2~0)  V_M1  # a.u.
+  M2(C1~0,C2~0)  V_M2  # a.u.
+  P(C1~0,C2~0)   V_P   # a.u.
+end seed species
+
+begin observables
+  # Isotopomer amounts of the product; the two subscripts are the labeling
+  # states of C1 and C2, so P01 is the species labeled at carbon 2 only
+  Molecules Obs_P00 P(C1~0,C2~0)
+  Molecules Obs_P01 P(C1~0,C2~1)
+  Molecules Obs_P10 P(C1~1,C2~0)
+  Molecules Obs_P11 P(C1~1,C2~1)
+
+  # Total pool sizes; each stays at its specified value because the fluxes
+  # in Eqs. 15.4-15.7 of Mu et al. (2010) are balanced
+  Molecules Obs_Tot_S  S()
+  Molecules Obs_Tot_M1 M1()
+  Molecules Obs_Tot_M2 M2()
+  Molecules Obs_Tot_P  P()
+end observables
+
+begin functions
+  # Isotopomer fractions of the product, the quantities plotted in Fig. 15.4
+  # of Mu et al. (2010) and the quantities an experiment measures
+  P00() Obs_P00/V_P
+  P01() Obs_P01/V_P
+  P10() Obs_P10/V_P
+  P11() Obs_P11/V_P
+end functions
+
+begin reaction rules
+  # Feed of the substrate pool from the labeled precursor; source term of the
+  # S isotopomer balances, Eqs. 15.19-15.22 in Mu et al. (2010). The component
+  # labels %1 and %2 carry the precursor labeling pattern into S unchanged.
+  R_feed_S: proS(C1%1,C2%2) -> S(C1%1,C2%2) v_vs
+
+  # S -> M1 at flux v_v1, carbon order preserved (IMM_S>M1, Eq. 15.15)
+  R_conv_S_M1: S(C1%1,C2%2) -> M1(C1%1,C2%2) v_v1/V_S
+
+  # S -> M2 at flux v_v2, the two carbons transposed (IMM_S>M2, Eq. 15.16).
+  # This is the only route by which a feed labeled at C1 can label C2.
+  R_conv_S_M2: S(C1%1,C2%2) -> M2(C1%2,C2%1) v_v2/V_S
+
+  # M1 -> P at flux v_v3, carbon order preserved (IMM_M1>P, Eq. 15.17)
+  R_conv_M1_P: M1(C1%1,C2%2) -> P(C1%1,C2%2) v_v3/V_M1
+
+  # M2 -> P at flux v_v4, carbon order preserved (IMM_M2>P, Eq. 15.18)
+  R_conv_M2_P: M2(C1%1,C2%2) -> P(C1%1,C2%2) v_v4/V_M2
+
+  # Efflux of the three internal pools out of the system
+  R_efflux_M1: M1() -> 0 v_vm1/V_M1
+  R_efflux_M2: M2() -> 0 v_vm2/V_M2
+  R_efflux_P:  P()  -> 0 v_vp/V_P
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 11 species, 17 reactions
+  saveConcentrations()
+
+  # Reference labeling transient, M2 pool size 1
+
+  #@protocol: |
+  #  Start the internal pools M1, M2, and P fully unlabeled, step the feed at
+  #  t = 0 to 10% 13C at carbon position 1, then follow the product isotopomer
+  #  fractions for 20 time units. P01 rises monotonically to 0.05 and P11 stays
+  #  at zero, because the feed is labeled at one position only.
+
+  #@figure: Fig. 15.4, solid line, in Mu et al. (2010)
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>20,n_steps=>40,\
+    print_functions=>1})
+
+  # Same fluxes with a smaller M2 pool
+
+  #@protocol: |
+  #  Halve the pool size of M2 to 0.5, leaving all fluxes and the other three
+  #  pools unchanged. The plateau of P01 is unmoved at 0.05 but is reached in
+  #  about half the time, because P01 is fed through M2 alone and the
+  #  relaxation time of that pool is V_M2/(v_v4 + v_vm2).
+
+  #@figure: Fig. 15.4, dash-dot line, in Mu et al. (2010)
+
+  resetConcentrations()
+  setParameter("V_M2",0.5)
+  simulate({method=>"ode",suffix=>"ode_m2low",t_start=>0,t_end=>20,n_steps=>40,\
+    print_functions=>1})
+
+  # Same fluxes with a larger M2 pool
+
+  #@protocol: |
+  #  Double the pool size of M2 to 2. P01 again approaches 0.05, but has not
+  #  quite arrived by t = 20; pool size affects the labeling transient and not
+  #  the steady-state labeling pattern.
+
+  #@figure: Fig. 15.4, dashed line, in Mu et al. (2010)
+
+  resetConcentrations()
+  setParameter("V_M2",2.0)
+  simulate({method=>"ode",suffix=>"ode_m2high",t_start=>0,t_end=>20,n_steps=>40,\
+    print_functions=>1})
+
+  # Redistributed branch fluxes at uniform pool sizes
+
+  #@protocol: |
+  #  Restore all four pool sizes to 1 and send more flux through the
+  #  order-preserving branch: v_v1 = 0.6, v_v2 = 0.4, v_v3 = 0.5, v_v4 = 0.3,
+  #  which still satisfies the stoichiometric balances of Eqs. 15.4-15.7 in
+  #  Mu et al. (2010). Less label now reaches carbon 2 of P, so the plateau of
+  #  P01 drops from 0.05 to v_v4*f_label/v_vp = 0.0375. This is the flux
+  #  dependence that 13C metabolic flux analysis exploits.
+
+  #@figure: Fig. 15.4, dotted line, in Mu et al. (2010)
+
+  resetConcentrations()
+  setParameter("V_M2",1.0)
+  setParameter("v_v1",0.6)
+  setParameter("v_v2",0.4)
+  setParameter("v_v3",0.5)
+  setParameter("v_v4",0.3)
+  simulate({method=>"ode",suffix=>"ode_altflux",t_start=>0,t_end=>20,n_steps=>40,\
+    print_functions=>1})
+end actions

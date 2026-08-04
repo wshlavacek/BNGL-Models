@@ -1,0 +1,85 @@
+# metadata.yaml — calvin_cycle_isotopomer_labeling_mu2010
+id: calvin_cycle_isotopomer_labeling_mu2010
+created: 2026-08-04
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, bug_fix, ai_assisted]
+  description: >
+    House-style transcription of the BioNetGen input file printed in Sec. 15.4 of
+    Mu F, Bauer AL, Faeder JR, Hlavacek WS (2010), "Using systems biology techniques to
+    determine metabolic fluxes and metabolite pool sizes", in Handbook of
+    Chemoinformatics Algorithms (Faulon J-L, Bender A, eds.), Chapman and Hall/CRC,
+    Boca Raton, pp. 399-422, ISBN 9781420082920. It is the chapter's detailed example of
+    BNGL-encoded carbon atom fate maps at scale: 13 internal reactions identified by
+    KEGG reaction number, six exchange reactions, and 562 isotopomers. The carbon
+    indices follow the InChI atom ordering of the authors' fate-map database, described
+    in Mu et al. (2007), Bioinformatics 23:3193-3199. The fate maps, pool sizes, and the
+    10% CO2 feed enrichment are as published. Two of the twenty-six published fluxes are
+    lowered by one unit in their last reported digit - v_R01529_b from 0.82 to 0.81 and
+    vs_R5P from 0.05 to 0.04 - because the printed set leaves the X5P balance 0.01 out
+    of true, which in a specified-pool isotopomer model drains the whole network during
+    the chapter's own equilibration. The correction is the smallest one available; the
+    _published_fluxes variant keeps the printed values and shows the washout.
+
+files:
+  - name: calvin_cycle_isotopomer_labeling_mu2010.bngl
+    role: primary
+    description: >
+      Calvin cycle labeling dynamics with a stoichiometrically consistent flux set. Two
+      ODE protocols follow steps 4 and 5 of the recipe in Sec. 15.4: 10,000 time units
+      on an unlabeled CO2 feed, then 200 time units after 10% of the feed is switched to
+      13C.
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: calvin_cycle_isotopomer_labeling_mu2010_published_fluxes.bngl
+    role: variant
+    description: >
+      The same model with the flux values exactly as printed. Runs the equilibration
+      protocol alone and shows that every metabolite pool falls below 1/e of its
+      nominal size by t = 440 and decays exponentially thereafter with a time constant
+      near 370, while CO2 grows without bound.
+    documentation_target: comprehensive
+    rating:
+    min_bionetgen_version: "2.9.3"
+  - name: independent_mu2010.py
+    role: verification
+    description: >
+      Independent expansion of the published carbon fate maps into isotopomer balance
+      equations by explicit enumeration and integer bit arithmetic rather than by
+      BioNetGen's rule-based graph rewriting; backward fate maps are derived by
+      inverting the forward ones. Also supplies the stoichiometric matrix used to locate
+      the unbalanced pool and to enumerate the minimal repairs, and the closed-form
+      binomial isotopic steady state.
+  - name: verify_mu2010.ipynb
+    role: verification
+    description: >
+      Four-level verification - BioNetGen against the independent isotopomer expansion
+      in both structure and trajectories, conservation of the specified pool sizes, the
+      closed-form binomial isotopic steady state of all fourteen pools, and the
+      stoichiometric analysis of the published flux set. Also checks the quantities
+      Sec. 15.4 reports: 13 internal reactions, six exchange reactions, 562 isotopomers.
+  - name: verify_mu2010.png
+    role: figure
+  # Reference simulation data
+  - name: reference/calvin_cycle_isotopomer_labeling_mu2010.net
+    role: reference
+  - name: reference/calvin_cycle_isotopomer_labeling_mu2010_ode_equil.gdat
+    role: reference
+    description: Equilibration on an unlabeled CO2 feed; step 4 of Sec. 15.4.
+  - name: reference/calvin_cycle_isotopomer_labeling_mu2010_ode.gdat
+    role: reference
+    description: Labeling transient after the 10% 13C feed switch; step 5 of Sec. 15.4.
+  - name: reference/calvin_cycle_isotopomer_labeling_mu2010_published_fluxes.net
+    role: reference
+  - name: reference/calvin_cycle_isotopomer_labeling_mu2010_published_fluxes_ode_equil.gdat
+    role: reference
+    description: >
+      Washout of the metabolic steady state under the printed flux values, sampled at
+      1000 points over the chapter's 10,000-unit equilibration.

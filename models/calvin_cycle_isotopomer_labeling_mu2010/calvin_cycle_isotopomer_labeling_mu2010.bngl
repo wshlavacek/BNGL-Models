@@ -1,0 +1,353 @@
+begin model
+
+#@title: Calvin cycle isotopomer labeling (Mu et al., 2010)
+
+#@description: |
+#  Dynamic 13C isotopomer labeling of the Calvin cycle, the worked example of
+#  Sec. 15.4 in Mu et al. (2010). Thirteen internal reactions, identified by
+#  KEGG reaction number, connect fourteen metabolite pools: RuBisCO (R00024)
+#  fixes CO2 onto D-ribulose 1,5-bisphosphate to give two molecules of
+#  3-phospho-D-glycerate, the reductive branch (R01512, R01063, R01015) carries
+#  those to triose phosphates, and the regenerative branch (aldolases R01068
+#  and R01829, phosphatases R00762 and R01845, transketolases R01067 and
+#  R01641, epimerase R01529, isomerase R01056, and kinase R01523) rebuilds
+#  D-ribulose 1,5-bisphosphate through the four-, five-, six-, and
+#  seven-carbon sugar phosphates. Six exchange reactions close the system: a
+#  CO2 input flux and sinks draining T3P, F6P, R5P, E4P, and G3P.
+#
+#  Every metabolite carries one component per carbon, in the InChI atom
+#  ordering of the fate-map database of Mu et al. (2007), with state 0 for 12C
+#  and 1 for 13C. Each rule states the carbon atom fate map explicitly using
+#  BNGL component labels (%1, %2, ...), which force the reactant-to-product
+#  atom mapping; the transketolases and aldolases split and recombine carbon
+#  skeletons, and the epimerase, isomerase, and kinase steps permute them.
+#  BioNetGen expands the eighteen rules into the isotopomer balance equations
+#  and generates all 562 isotopomers of the network. Rate laws are
+#  flux/(pool size) for each reactant pool, so each rule carries its specified
+#  flux and pool sizes are preserved; all pool sizes are set to 1.
+#
+#  The system is equilibrated on an unlabeled CO2 feed and then 10% of the
+#  incoming CO2 is switched to 13C at t = 0. Because CO2 is the network's only
+#  carbon input, every carbon in every intermediate eventually equilibrates to
+#  the feed enrichment: the T3P mass isotopomer fractions relax from
+#  (1, 0, 0, 0) to the binomial distribution (0.729, 0.243, 0.027, 0.001) and
+#  are within a few percent of it by t = 200, with the heavier mass isotopomers
+#  appearing progressively later as label accumulates. Steady-state labeling of
+#  a single-carbon-input network is therefore uninformative about the internal
+#  fluxes, which is why the chapter analyzes the transient.
+
+#@keyword: |
+#  metabolic flux analysis, 13C labeling, isotopomer, carbon fate map,
+#  atom mapping, Calvin cycle, carbon fixation, photosynthesis, RuBisCO,
+#  transketolase, pentose phosphate, isotopically nonstationary labeling,
+#  mass action, ordinary differential equations, dimensionless
+
+#@reference: |
+#  Mu F, Bauer AL, Faeder JR, Hlavacek WS (2010). Using systems biology
+#  techniques to determine metabolic fluxes and metabolite pool sizes. In:
+#  Handbook of Chemoinformatics Algorithms, Faulon J-L, Bender A, eds.
+#  Chapman and Hall/CRC, Boca Raton, pp. 399-422.
+#  ISBN 9781420082920. Sec. 15.4 and Fig. 15.5.
+#  Mu F, Williams RF, Unkefer CJ, Unkefer PJ, Faeder JR, Hlavacek WS (2007).
+#  Carbon-fate maps for metabolic reactions. Bioinformatics 23:3193-3199.
+#  doi:10.1093/bioinformatics/btm498
+
+#@note: |
+#  Units are arbitrary but consistent: pool sizes are amounts (a.u.), fluxes
+#  are amounts per unit time, and a flux divided by the pool sizes of its
+#  reactants is a rate constant. Species amounts are continuous isotopomer
+#  fractions scaled by pool size, so molecule counts are not meaningful and the
+#  model is ODE-only.
+
+#@note: |
+#  Metabolite abbreviations follow Fig. 15.5 in Mu et al. (2010): R5P is
+#  D-ribulose 5-phosphate, R5DP is D-ribulose 1,5-bisphosphate, Ri5P is
+#  D-ribose 5-phosphate, X5P is D-xylulose 5-phosphate, G3P is
+#  3-phospho-D-glycerate, P13G is 3-phospho-D-glyceroyl phosphate, T3P is
+#  D-glyceraldehyde 3-phosphate, DHAP is glycerone phosphate, F16P and F6P are
+#  D-fructose 1,6-bisphosphate and 6-phosphate, E4P is D-erythrose
+#  4-phosphate, and S17P and S7P are D-sedoheptulose 1,7-bisphosphate and
+#  7-phosphate. The abbreviation list in the caption of Fig. 15.5 glosses R5P
+#  twice; the phosphoribulokinase step R01523, R5P -> R5DP, fixes R5P as
+#  D-ribulose 5-phosphate.
+
+#@note: |
+#  Transcribed from the BioNetGen input file printed in Sec. 15.4 of Mu et al.
+#  (2010) with two adaptations:
+#  - The CO2 feed is written there as a pair of rules I -> I + CO2 driven by an
+#    inert species I held at 1. BioNetGen's null species is used here instead,
+#    so the generated network contains exactly the 562 isotopomers the chapter
+#    reports rather than those plus I.
+#  - The printed observables divide a pattern by V_T3P, which BNGL does not
+#    allow; the division is done here by the functions T3P_M0 through T3P_M3.
+
+#@note: |
+#  Two of the published fluxes are adjusted by one unit in their last reported
+#  digit so that the flux set satisfies the steady-state balances exactly:
+#  v_R01529_b is 0.81 here and 0.82 in print, and vs_R5P is 0.04 here and 0.05
+#  in print. Everything else is as published.
+#
+#  The reason is that these fluxes are reported to two decimals and, at that
+#  precision, thirteen of the fourteen pool balances close but X5P does not:
+#  in print its inflow v_R01067_f + v_R01641_f + v_R01529_f = 1.03 is 0.01 short
+#  of its outflow v_R01067_b + v_R01641_b + v_R01529_b = 1.04, and the five
+#  sinks drain 1.05 carbon per unit time against a CO2 input of 1.00 (the same
+#  0.01 counted over the five carbons of X5P). Specified pool sizes make this
+#  fatal rather than cosmetic: every rate law is flux/(pool size), so the pool
+#  vector is a null eigenvector of the network only when the balances close
+#  exactly. With the printed values it is not, and the whole network washes out
+#  to zero over the chapter's own 10,000-unit equilibration while CO2 grows
+#  without bound, leaving the labeling fractions undefined. The variant file
+#  calvin_cycle_isotopomer_labeling_mu2010_published_fluxes.bngl keeps the
+#  printed values and shows this.
+#
+#  The correction is the smallest possible one. Sinks touch a single pool and
+#  no sink drains X5P, so at least one internal flux must move; of the three
+#  reactions that touch X5P, only R01529 (R5P <-> X5P) touches a second pool
+#  that has a sink of its own, so two changes are needed and two suffice.
+#  Lowering the backward flux of R01529 rather than raising its forward flux
+#  leaves the exchange flux min(v_f, v_b) = 0.10 unchanged, which matters
+#  because exchange fluxes are the weakly determined parameters of a 13C
+#  experiment (Eqs. 15.39 and 15.40 in Mu et al. (2010)). After the correction
+#  all fourteen balances close and carbon efflux equals the CO2 input at 1.00.
+
+begin parameters
+  # Metabolite pool sizes; Mu et al. (2010) use the default pool size of one
+  V_R5P   1.0  # a.u.
+  V_R5DP  1.0  # a.u.
+  V_CO2   1.0  # a.u.
+  V_G3P   1.0  # a.u.
+  V_P13G  1.0  # a.u.
+  V_T3P   1.0  # a.u.
+  V_DHAP  1.0  # a.u.
+  V_F16P  1.0  # a.u.
+  V_F6P   1.0  # a.u.
+  V_E4P   1.0  # a.u.
+  V_X5P   1.0  # a.u.
+  V_Ri5P  1.0  # a.u.
+  V_S17P  1.0  # a.u.
+  V_S7P   1.0  # a.u.
+
+  # Internal fluxes, by KEGG reaction number; _f and _b are the forward and
+  # backward fluxes of a reaction treated as reversible
+  v_R00024    1.00  # a.u./time
+  v_R01512    1.95  # a.u./time
+  v_R01063_f  0.05  # a.u./time
+  v_R01063_b  2.00  # a.u./time
+  v_R01015_f  0.86  # a.u./time
+  v_R01015_b  0.10  # a.u./time
+  v_R01068_f  0.15  # a.u./time
+  v_R01068_b  0.58  # a.u./time
+  v_R00762    0.43  # a.u./time
+  v_R01067_f  0.50  # a.u./time
+  v_R01067_b  0.12  # a.u./time
+  v_R01829_f  0.20  # a.u./time
+  v_R01829_b  0.53  # a.u./time
+  v_R01845    0.33  # a.u./time
+  v_R01641_f  0.43  # a.u./time
+  v_R01641_b  0.10  # a.u./time
+  v_R01529_f  0.10  # a.u./time
+  # 0.82 in print; lowered to close the X5P balance, see the note above
+  v_R01529_b  0.81  # a.u./time
+  v_R01056_f  0.50  # a.u./time
+  v_R01056_b  0.17  # a.u./time
+  v_R01523    1.00  # a.u./time
+
+  # Sink fluxes draining the five pools that feed central metabolism.
+  # vs_R5P is 0.05 in print; lowered to close the R5P balance once v_R01529_b
+  # is corrected, see the note above.
+  vs_T3P  0.05  # a.u./time
+  vs_F6P  0.05  # a.u./time
+  vs_R5P  0.04  # a.u./time
+  vs_E4P  0.05  # a.u./time
+  vs_G3P  0.05  # a.u./time
+
+  # CO2 input flux, split into its unlabeled and 13C-labeled parts. The
+  # labeling protocol switches these to 0.9 and 0.1.
+  v_vi_CO2_unlabeled  1  # a.u./time
+  v_vi_CO2_labeled    0  # a.u./time
+end parameters
+
+begin molecule types
+  # One component per carbon, indexed in InChI order; state 0 is 12C, 1 is 13C
+  CO2(C1~0~1)
+  # Three-carbon intermediates of the reductive branch
+  G3P(C1~0~1,C2~0~1,C3~0~1)
+  P13G(C1~0~1,C2~0~1,C3~0~1)
+  T3P(C1~0~1,C2~0~1,C3~0~1)
+  DHAP(C1~0~1,C2~0~1,C3~0~1)
+  # Four-carbon sugar phosphate of the regenerative branch
+  E4P(C1~0~1,C2~0~1,C3~0~1,C4~0~1)
+  # Five-carbon sugar phosphates; R5DP is the RuBisCO substrate
+  R5P(C1~0~1,C2~0~1,C3~0~1,C4~0~1,C5~0~1)
+  R5DP(C1~0~1,C2~0~1,C3~0~1,C4~0~1,C5~0~1)
+  Ri5P(C1~0~1,C2~0~1,C3~0~1,C4~0~1,C5~0~1)
+  X5P(C1~0~1,C2~0~1,C3~0~1,C4~0~1,C5~0~1)
+  # Six-carbon sugar phosphates
+  F16P(C1~0~1,C2~0~1,C3~0~1,C4~0~1,C5~0~1,C6~0~1)
+  F6P(C1~0~1,C2~0~1,C3~0~1,C4~0~1,C5~0~1,C6~0~1)
+  # Seven-carbon sugar phosphates
+  S17P(C1~0~1,C2~0~1,C3~0~1,C4~0~1,C5~0~1,C6~0~1,C7~0~1)
+  S7P(C1~0~1,C2~0~1,C3~0~1,C4~0~1,C5~0~1,C6~0~1,C7~0~1)
+end molecule types
+
+begin seed species
+  # Every pool starts fully unlabeled at its specified pool size
+  CO2(C1~0)  V_CO2  # a.u.
+  G3P(C1~0,C2~0,C3~0)   V_G3P   # a.u.
+  P13G(C1~0,C2~0,C3~0)  V_P13G  # a.u.
+  T3P(C1~0,C2~0,C3~0)   V_T3P   # a.u.
+  DHAP(C1~0,C2~0,C3~0)  V_DHAP  # a.u.
+  E4P(C1~0,C2~0,C3~0,C4~0)  V_E4P  # a.u.
+  R5P(C1~0,C2~0,C3~0,C4~0,C5~0)   V_R5P   # a.u.
+  R5DP(C1~0,C2~0,C3~0,C4~0,C5~0)  V_R5DP  # a.u.
+  Ri5P(C1~0,C2~0,C3~0,C4~0,C5~0)  V_Ri5P  # a.u.
+  X5P(C1~0,C2~0,C3~0,C4~0,C5~0)   V_X5P   # a.u.
+  F16P(C1~0,C2~0,C3~0,C4~0,C5~0,C6~0)  V_F16P  # a.u.
+  F6P(C1~0,C2~0,C3~0,C4~0,C5~0,C6~0)   V_F6P   # a.u.
+  S17P(C1~0,C2~0,C3~0,C4~0,C5~0,C6~0,C7~0)  V_S17P  # a.u.
+  S7P(C1~0,C2~0,C3~0,C4~0,C5~0,C6~0,C7~0)   V_S7P   # a.u.
+end seed species
+
+begin observables
+  # T3P mass isotopomers, the readout chosen in Sec. 15.4 of Mu et al. (2010);
+  # M0 through M3 group the eight T3P isotopomers by number of 13C atoms
+  Molecules Obs_T3P_M0 T3P(C1~0,C2~0,C3~0)
+  Molecules Obs_T3P_M1 T3P(C1~1,C2~0,C3~0),T3P(C1~0,C2~1,C3~0),\
+    T3P(C1~0,C2~0,C3~1)
+  Molecules Obs_T3P_M2 T3P(C1~1,C2~1,C3~0),T3P(C1~1,C2~0,C3~1),\
+    T3P(C1~0,C2~1,C3~1)
+  Molecules Obs_T3P_M3 T3P(C1~1,C2~1,C3~1)
+
+  # 13C atoms in the T3P and F6P pools; one match per labeled carbon
+  Molecules Obs_C13_T3P T3P(C1~1),T3P(C2~1),T3P(C3~1)
+  Molecules Obs_C13_F6P F6P(C1~1),F6P(C2~1),F6P(C3~1),F6P(C4~1),F6P(C5~1),\
+    F6P(C6~1)
+
+  # Pool sizes; each stays at 1 for the whole simulation because the corrected
+  # flux set satisfies every steady-state balance exactly
+  Molecules Obs_Tot_CO2  CO2()
+  Molecules Obs_Tot_T3P  T3P()
+  Molecules Obs_Tot_F6P  F6P()
+  Molecules Obs_Tot_X5P  X5P()
+  Molecules Obs_Tot_R5DP R5DP()
+end observables
+
+begin functions
+  # T3P mass isotopomer fractions, the observables of Sec. 15.4 in Mu et al.
+  # (2010). At isotopic steady state these approach the binomial distribution
+  # for three carbons at the feed enrichment.
+  T3P_M0() Obs_T3P_M0/V_T3P
+  T3P_M1() Obs_T3P_M1/V_T3P
+  T3P_M2() Obs_T3P_M2/V_T3P
+  T3P_M3() Obs_T3P_M3/V_T3P
+
+  # Fractional 13C labeling per carbon. CO2 is the only carbon input, so both
+  # approach the enrichment of the CO2 feed.
+  FL_T3P() Obs_C13_T3P/(3*Obs_Tot_T3P)
+  FL_F6P() Obs_C13_F6P/(6*Obs_Tot_F6P)
+end functions
+
+begin reaction rules
+  # CO2 input flux, split into unlabeled and 13C-labeled feed
+  R_source_CO2_unlabeled: 0 -> CO2(C1~0) v_vi_CO2_unlabeled
+  R_source_CO2_labeled:   0 -> CO2(C1~1) v_vi_CO2_labeled
+
+  # R00024, ribulose-bisphosphate carboxylase: the carbon fixation step.
+  # The CO2 carbon (%6) and three carbons of R5DP form one G3P; the other
+  # two R5DP carbons form the second G3P.
+  R00024: R5DP(C1%1,C2%2,C3%3,C4%4,C5%5) + CO2(C1%6) -> \
+    G3P(C1%2,C2%4,C3%6) + G3P(C1%1,C2%3,C3%5) v_R00024/(V_R5DP*V_CO2)
+
+  # R01512, phosphoglycerate kinase; carbon order preserved
+  R01512: G3P(C1%1,C2%2,C3%3) -> P13G(C1%1,C2%2,C3%3) v_R01512/V_G3P
+
+  # R01063, glyceraldehyde-3-phosphate dehydrogenase; carbons cycled
+  R01063: T3P(C1%1,C2%2,C3%3) <-> P13G(C1%2,C2%3,C3%1) \
+    v_R01063_f/V_T3P, v_R01063_b/V_P13G
+
+  # R01015, triose-phosphate isomerase; carbon order preserved
+  R01015: T3P(C1%1,C2%2,C3%3) <-> DHAP(C1%1,C2%2,C3%3) \
+    v_R01015_f/V_T3P, v_R01015_b/V_DHAP
+
+  # R01068, fructose-bisphosphate aldolase; splits a hexose into two trioses
+  R01068: F16P(C1%1,C2%2,C3%3,C4%4,C5%5,C6%6) <-> \
+    DHAP(C1%5,C2%2,C3%6) + T3P(C1%4,C2%1,C3%3) \
+    v_R01068_f/V_F16P, v_R01068_b/(V_DHAP*V_T3P)
+
+  # R00762, fructose-1,6-bisphosphatase; carbon order preserved
+  R00762: F16P(C1%1,C2%2,C3%3,C4%4,C5%5,C6%6) -> \
+    F6P(C1%1,C2%2,C3%3,C4%4,C5%5,C6%6) v_R00762/V_F16P
+
+  # R01067, transketolase; moves a two-carbon unit from F6P onto T3P
+  R01067: F6P(C1%1,C2%2,C3%3,C4%4,C5%5,C6%6) + T3P(C1%7,C2%8,C3%9) <-> \
+    E4P(C1%5,C2%1,C3%4,C4%3) + X5P(C1%2,C2%8,C3%6,C4%9,C5%7) \
+    v_R01067_f/(V_F6P*V_T3P), v_R01067_b/(V_E4P*V_X5P)
+
+  # R01829, sedoheptulose-bisphosphate aldolase; splits a heptose
+  R01829: S17P(C1%1,C2%2,C3%3,C4%4,C5%5,C6%6,C7%7) <-> \
+    DHAP(C1%6,C2%2,C3%4) + E4P(C1%7,C2%1,C3%5,C4%3) \
+    v_R01829_f/V_S17P, v_R01829_b/(V_DHAP*V_E4P)
+
+  # R01845, sedoheptulose-bisphosphatase; carbons permuted pairwise
+  R01845: S17P(C1%1,C2%2,C3%3,C4%4,C5%5,C6%6,C7%7) -> \
+    S7P(C1%2,C2%1,C3%4,C4%3,C5%6,C6%5,C7%7) v_R01845/V_S17P
+
+  # R01641, transketolase; moves a two-carbon unit from S7P onto T3P
+  R01641: S7P(C1%1,C2%2,C3%3,C4%4,C5%5,C6%6,C7%7) + T3P(C1%8,C2%9,C3%10) <-> \
+    Ri5P(C1%2,C2%4,C3%6,C4%7,C5%5) + X5P(C1%1,C2%9,C3%3,C4%10,C5%8) \
+    v_R01641_f/(V_S7P*V_T3P), v_R01641_b/(V_Ri5P*V_X5P)
+
+  # R01529, ribulose-phosphate 3-epimerase; carbon order preserved
+  R01529: R5P(C1%1,C2%2,C3%3,C4%4,C5%5) <-> X5P(C1%1,C2%2,C3%3,C4%4,C5%5) \
+    v_R01529_f/V_R5P, v_R01529_b/V_X5P
+
+  # R01056, ribose-5-phosphate isomerase; carbons permuted
+  R01056: Ri5P(C1%1,C2%2,C3%3,C4%4,C5%5) <-> \
+    R5P(C1%5,C2%1,C3%4,C4%2,C5%3) v_R01056_f/V_Ri5P, v_R01056_b/V_R5P
+
+  # R01523, phosphoribulokinase; regenerates the RuBisCO substrate
+  R01523: R5P(C1%11,C2%12,C3%13,C4%14,C5%15) -> \
+    R5DP(C1%12,C2%11,C3%14,C4%13,C5%15) v_R01523/V_R5P
+
+  # Sinks feeding central metabolism; see Fig. 15.5 in Mu et al. (2010)
+  R_sink_T3P: T3P() -> 0 vs_T3P/V_T3P
+  R_sink_F6P: F6P() -> 0 vs_F6P/V_F6P
+  R_sink_R5P: R5P() -> 0 vs_R5P/V_R5P
+  R_sink_E4P: E4P() -> 0 vs_E4P/V_E4P
+  R_sink_G3P: G3P() -> 0 vs_G3P/V_G3P
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 562 species, 4042 reactions
+
+  # Metabolic steady state on an unlabeled CO2 feed
+
+  #@protocol: |
+  #  Step 4 of the recipe in Sec. 15.4 of Mu et al. (2010). Integrate for
+  #  10,000 time units with the whole CO2 feed unlabeled. Nothing is labeled
+  #  yet, so this is a check rather than a relaxation: every Obs_Tot_
+  #  observable must hold at 1 for the full 10,000 units, which it does only
+  #  because the corrected flux set closes all fourteen balances exactly.
+
+  simulate({method=>"ode",suffix=>"ode_equil",t_start=>0,t_end=>10000,\
+    n_steps=>10,print_functions=>1})
+
+  # 13C labeling transient after switching 10% of the feed to 13C
+
+  #@protocol: |
+  #  Step 5 of the recipe in Sec. 15.4 of Mu et al. (2010). Continuing from the
+  #  metabolic steady state, relabel the CO2 feed as 90% 12C and 10% 13C at
+  #  t = 0 and follow the labeling dynamics for 200 time units. The T3P mass
+  #  isotopomer fractions leave (1, 0, 0, 0) and approach the binomial
+  #  distribution (0.729, 0.243, 0.027, 0.001) expected once every carbon in
+  #  the network carries the enrichment of the feed, reaching
+  #  (0.739, 0.234, 0.025, 0.0009) by t = 200.
+
+  setParameter("v_vi_CO2_unlabeled",0.9)
+  setParameter("v_vi_CO2_labeled",0.1)
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>200,n_steps=>200,\
+    print_functions=>1})
+end actions
