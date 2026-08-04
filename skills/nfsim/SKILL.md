@@ -1,6 +1,6 @@
 ---
 name: nfsim
-description: Use when working on BNGL or NFsim models whose behavior depends on NFsim-specific flags, molecularity bookkeeping, species observables, raw `simulate_nf` parameters, or validation of BNGL dynamics against analytic theory or notebooks.
+description: Use when working on BNGL models simulated network-free — with NFsim or RuleMonkey, through BNG2.pl or bngsim — where the result can change because of engine choice or execution details rather than the reaction rules alone. Covers NFsim-specific flags (`-bscb`, `-utl`, `gml`), molecularity bookkeeping, species observables, `+` versus `.` pattern semantics, raw `simulate_nf` parameters, constructs NFsim rejects that network generation accepts (`DeleteMolecules`, functions referencing functions, declared `PLUS`/`MINUS` integer states), cross-engine agreement between NFsim and RuleMonkey, and validation of network-free dynamics against analytic theory.
 ---
 
 # NFsim
@@ -13,6 +13,23 @@ Use this skill for BNGL/NFsim work where the result can change because of NFsim 
 2. Check observables and outputs. Species observables and some function outputs depend on complex bookkeeping.
 3. Choose the NFsim flags deliberately instead of assuming BNGL defaults are enough.
 4. For stochastic validation, compare ensemble means to theory. Do not judge correctness from a single NFsim seed when copy numbers are small.
+
+## Engines: NFsim, RuleMonkey, and bngsim
+
+Network-free is not one algorithm. Two **independent** methods are in use — not versions of each other:
+
+- **NFsim** (Yang et al., 2008) — rejection-based particle simulation. Fast, scales to large copy numbers, and is what most published network-free models were run with.
+- **RuleMonkey** (Colvin et al., 2009, 2010) — an *exact* network-free method that steps every particle. No rejection sampling, but tractable only at modest copy numbers, so it is usually the low-dose arm of a cross-check rather than the production engine.
+
+Three runnable stacks, and they are not interchangeable:
+
+| stack | what it is |
+|---|---|
+| `BNG2.pl` `simulate_nf` / `simulate({method=>"nf"})` | the **legacy NFsim v1.14.3 binary** bundled with BioNetGen |
+| bngsim `NfsimSession` | bngsim's own NFsim core |
+| bngsim `RuleMonkeySession` | bngsim's RuleMonkey core |
+
+**The legacy binary is not the reference of record.** On `egfr_oligomerization_mitra2019` it reads **~12% lower on pEGFR** than the other two. That is a binary-version difference, not a traversal-limit artifact — the discriminating test is that `-utl 4`, `5`, and `6` all give the same means, so raising the UTL does not close the gap. Establish parity as **bngsim-NFsim ≡ RuleMonkey**, and report a legacy-binary number as a contrast rather than a target. `tlbr_steric_monine2010` and `erbb_receptor_signaling_creamer2012` both run the full three-engine check.
 
 ## Flag Semantics
 
@@ -64,6 +81,32 @@ simulate({method=>"nf",...,gml=>2147483647,param=>"-bscb -utl 5"})
 
 If `gml` is omitted, BioNetGen defaults to 200000, which can silently cap molecule creation in models with large copy numbers.
 
+## What NFsim Rejects That Network Generation Accepts
+
+A model that is correct and runnable under ODE or SSA can be **rejected outright** by NFsim, or silently mis-evaluated. Three cases have bitten this collection. All three fixes are behavior-preserving — confirm that by checking the ODE output is unchanged.
+
+### Deleting a molecule out of a complex needs `DeleteMolecules`
+
+A rule whose product drops a molecule from a bonded complex is handled by network generation but **rejected by NFsim without the keyword**:
+
+```bngl
+R_P1_deg_CII:  CII(p!1).P1(s!1) -> P1(s)  k10  DeleteMolecules
+```
+
+`lambda_switch_arkin1998`'s four CII/CIII protease rules are exactly this shape; adding `DeleteMolecules` made the model network-free-runnable under both NFsim and RuleMonkey, and the generated network did not change (ODE output byte-identical to the committed reference). If a model runs under ODE but NFsim refuses it, check the deletion rules first.
+
+### A function that references another function will not evaluate
+
+BioNetGen exports a parameter defined as a chained expression as an XML `<Function>` element, and **NFsim ≥1.14 cannot evaluate a function that references another function.** `erbb_receptor_signaling_creamer2012` had 33 detailed-balance parameters defined this way; each is folded to a numeric literal with its original expression kept as a comment.
+
+A function that references only **observables** is fine — that is the normal case and it evaluates. `egfr_oligomerization_mitra2019`'s `Clusters()` sums twenty oligomer observables and runs; its *scaled conversions*, which reference other functions, do not. Fold the chain, keep the algebra in a comment.
+
+### Integer states: `PLUS`/`MINUS` may not be *declared*
+
+NFsim's integer increment/decrement operators are usable in a rule, but **NFsim ≥1.14.3 aborts when `PLUS`/`MINUS` appear as declared allowed states** on a molecule type. `p53_nhej_dolan2015`'s published senescence counter was `Sen(int~1~10~PLUS~MINUS)`; it is re-encoded as an explicit ten-level integer counter, dynamically identical.
+
+The distinction is declaration versus use: `lambda_switch_arkin1998` drives its RNAP-elongation model with a `~PLUS` state increment and runs fine, because the operator appears in the rules rather than in the molecule type's allowed-state list.
+
 ## Practical Rules
 
 - Do not use reversible shorthand if the reverse reading adds a nonphysical restriction. Write the forward binding rule and dissociation rule explicitly instead.
@@ -97,6 +140,17 @@ NFsim -xml model.xml -sim 600 -oSteps 240 -ogf -bscb -utl 5 -gml 2147483647 -o m
   - deterministic or analytic time course from theory,
   - NFsim ensemble mean from the BNGL model.
 - If the BNGL single-run trajectory looks noisy, increase the number of NFsim seeds before concluding the model is wrong.
+
+### Cross-engine agreement
+
+Where no analytic result exists, **agreement between independent engines is the substitute for theory**. Run the same rules through bngsim `NfsimSession` and bngsim `RuleMonkeySession` — a rejection method and an exact one — and quantify agreement as the **pairwise z-score of ensemble means**, not by eye. RuleMonkey steps every particle, so pick doses it can reach; the check is only meaningful where both engines are tractable.
+
+Two things this catches that a single engine cannot:
+
+- an engine-specific defect (the ~12% legacy-binary gap above);
+- a flag whose effect you assumed. `tlbr_steric_monine2010` runs default NFsim, `-bscb`, and `-bscb -utl` variants side by side: without `-bscb` the acyclic rules admit ring closure and λ shifts, which is visible only because the other engines disagree with it.
+
+State which engine produced the committed reference, and why it is the reference.
 
 ## Reference
 
