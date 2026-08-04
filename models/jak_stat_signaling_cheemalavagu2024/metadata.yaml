@@ -1,0 +1,39 @@
+# metadata.yaml — jak_stat_signaling_cheemalavagu2024
+id: jak_stat_signaling_cheemalavagu2024
+created: 2026-08-03
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, refinement, ai_assisted]
+  description: >
+    House-style curation of the authors' BNGL JAK-STAT model and supplied fitted
+    ensemble at STAT_models commit 28874f0801077f479526157300f70fdccb672013.
+
+files:
+  - name: jak_stat_signaling_cheemalavagu2024.bngl
+    role: primary
+    documentation_target: standard
+    min_bionetgen_version: "2.9.3"
+  - name: verify_cheemalavagu2024.ipynb
+    role: verification
+  - name: verify_cheemalavagu2024.png
+    role: figure
+  - name: reference/cheemalavagu2024_author_il6_10_ensemble1817.csv
+    role: reference
+    description: Authors' rounded IL-6 10 ng/mL trajectory for selected ensemble member 1817
+  - name: reference/cheemalavagu2024_fig2b_pooled.csv
+    role: reference
+    description: Pooled and normalized six-condition pSTAT data underlying Figure 2B
+  - name: reference/jak_stat_signaling_cheemalavagu2024.net
+    role: reference
+  - name: reference/jak_stat_signaling_cheemalavagu2024_ode.net
+    role: reference
+  - name: reference/jak_stat_signaling_cheemalavagu2024_ode.gdat
+    role: reference
+  - name: reference/jak_stat_signaling_cheemalavagu2024_ode.cdat
+    role: reference

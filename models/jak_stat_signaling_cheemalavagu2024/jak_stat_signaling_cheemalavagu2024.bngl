@@ -1,0 +1,263 @@
+begin model
+
+#@title: JAK-STAT signaling (Cheemalavagu et al., 2024)
+
+#@description: |
+#  A rule-based ODE model of IL-6- and IL-10-driven STAT1 and STAT3 phosphorylation in
+#  mouse bone-marrow-derived macrophages. Ligand-specific receptor complexes recruit JAK1
+#  and JAK2, phosphorylate STATs, and induce SOCS1/SOCS3 negative feedback. The published
+#  ensemble member used here produces transient IL-6 responses and more sustained IL-10
+#  pSTAT3 signaling over 90 minutes. Amounts are normalized and noninteger, so the model is
+#  ODE-only; the default condition is 10 ng/mL IL-6.
+
+#@keyword: |
+#  cytokine signaling, JAK-STAT, STAT1, STAT3, SOCS feedback, transient response,
+#  ordinary differential equations, Mus musculus, dimensionless
+
+#@reference: |
+#  Cheemalavagu N, Baliban RC, Darville T, Lee REC (2024). Predicting gene level
+#  sensitivity to JAK-STAT signaling perturbation using a mechanistic-to-machine learning
+#  framework. Cell Systems 15:37-48.e4. doi:10.1016/j.cels.2023.12.002
+#  Source model: https://github.com/ncheemalavagu/STAT_models/tree/
+#  28874f0801077f479526157300f70fdccb672013/pSTAT_mechanistic_model
+
+#@note: |
+#  Kinetic and initial-condition values are ensemble member 1817 (rows 10902-10907) in
+#  param_sets.csv. It was selected reproducibly as the member with the lowest pooled
+#  six-condition discrepancy to the authors' normalized pSTAT1/pSTAT3 data. Ligand amounts
+#  follow the paper's numerical 1 and 10 ng/mL encodings; all other amounts are normalized.
+
+begin parameters
+  # IL-6 receptor assembly and JAK recruitment
+  il6_il6r_binding             27.247       # /min
+  il6_il6r_unbinding           0.0027917    # /min
+  il6r_gp130_binding           749.36       # /min
+  il6r_gp130_unbinding         2.03e-8      # /min
+  il6_complex_jak1_binding     0.0029402    # /min
+  il6_complex_jak1_unbinding   0.071887     # /min
+  il6_complex_jak2_binding     0.016687     # /min
+  il6_complex_jak2_unbinding   1.16e-6      # /min
+
+  # SOCS3 inhibition of the IL-6 receptor complex
+  SOCS3_il6r_binding           5243.2       # /min
+  SOCS3_il6r_unbinding         0.035516     # /min
+  SOCS3_gp130_binding          5718.8       # /min
+  SOCS3_gp130_unbinding        1.53e-7      # /min
+
+  # IL-6/JAK-dependent STAT phosphorylation
+  il6_jak1_med_STAT3_act       4.12e-5      # /min
+  il6_jak1_med_STAT1_act       0.0024274    # /min
+  il6_jak2_med_STAT3_act       0.57942      # /min
+  il6_jak2_med_STAT1_act       0.049845     # /min
+
+  # IL-10 receptor assembly, JAK1 recruitment, and STAT phosphorylation
+  il10_il10r1_binding          0.065732     # /min
+  il10_il10r1_unbinding        938.84       # /min
+  il10r1_il10r2_binding        0.075443     # /min
+  il10r1_il10r2_unbinding      1.85e-5      # /min
+  il10_complex_jak1_binding    832.06       # /min
+  il10_complex_jak1_unbinding  1.0765       # /min
+  il10_jak1_med_STAT3_act      0.52222      # /min
+  il10_jak1_med_STAT1_act      0.02273      # /min
+
+  # Shared inhibition, receptor release, and phosphatase activity
+  SOCS1_jak1_binding           5282.3       # /min
+  SOCS1_jak1_unbinding         92.854       # /min
+  pSTAT3_rec_dissoc            0.048237     # /min
+  pSTAT1_rec_dissoc            0.20151      # /min
+  PTP_med_STAT3_deact          0.85542      # /min
+  PTP_med_STAT1_deact          0.0001357    # /min
+
+  # Phospho-STAT-dependent SOCS synthesis and SOCS degradation
+  STAT3_SOCS3_ind              3055.0       # /min
+  STAT3_SOCS1_ind              3571.4       # /min
+  STAT1_SOCS3_ind              47.838       # /min
+  STAT1_SOCS1_ind              19.863       # /min
+  SOCS3_degrad                 1.26e-8      # /min
+  SOCS1_degrad                 4.85e-7      # /min
+
+  # Ligand inputs: default is the paper's 10 ng/mL IL-6 condition
+  L1_0                         10           # dimensionless
+  L2_0                         0            # dimensionless
+
+  # Receptors, kinases, phosphatases, feedback proteins, and STAT pools
+  IL6R_0                       2202.8       # dimensionless
+  GP130_0                      8852.1       # dimensionless
+  IL10R1_0                     4727.9       # dimensionless
+  IL10R2_0                     0.95282      # dimensionless
+  JAK1_0                       14.643       # dimensionless
+  JAK2_0                       1.2892       # dimensionless
+  SOCS3_0                      0            # dimensionless
+  SOCS1_0                      0            # dimensionless
+  PTP3_0                       5259.5       # dimensionless
+  PTP1_0                       847.49       # dimensionless
+  S3_0                         0.12188      # dimensionless
+  S1_0                         0.014845     # dimensionless
+end parameters
+
+begin molecule types
+  # IL-6 and its two receptor chains
+  IL6(il6r)
+  IL6R(il6,gp130,jak1,socs3,stat)
+  GP130(il6r,jak2,socs3,stat)
+
+  # IL-10 and its two receptor chains
+  IL10(il10r1)
+  IL10R1(il10,il10r2,jak1,stat)
+  IL10R2(il10r1)
+
+  # Janus kinases and suppressors of cytokine signaling
+  JAK1(rec,socs1)
+  JAK2(gp130)
+  SOCS3(il6r,gp130)
+  SOCS1(jak1)
+
+  # Generic STAT3- and STAT1-directed phosphatases
+  PTP3()
+  PTP1()
+
+  # STAT3 Y705 and STAT1 Y701 phosphorylation states
+  STAT3(y~u~p)
+  STAT1(y~u~p)
+end molecule types
+
+begin seed species
+  IL6(il6r)                              L1_0     # dimensionless
+  IL6R(il6,gp130,jak1,socs3,stat)        IL6R_0   # dimensionless
+  GP130(il6r,jak2,socs3,stat)            GP130_0  # dimensionless
+  IL10(il10r1)                           L2_0     # dimensionless
+  IL10R1(il10,il10r2,jak1,stat)          IL10R1_0 # dimensionless
+  IL10R2(il10r1)                         IL10R2_0 # dimensionless
+  JAK1(rec,socs1)                        JAK1_0   # dimensionless
+  JAK2(gp130)                            JAK2_0   # dimensionless
+  SOCS3(il6r,gp130)                      SOCS3_0  # dimensionless
+  SOCS1(jak1)                            SOCS1_0  # dimensionless
+  PTP3()                                 PTP3_0   # dimensionless
+  PTP1()                                 PTP1_0   # dimensionless
+  STAT3(y~u)                             S3_0     # dimensionless
+  STAT1(y~u)                             S1_0     # dimensionless
+end seed species
+
+begin observables
+  # Total phosphorylated STAT3, including free and receptor-bound forms
+  Molecules  Obs_pSTAT3  STAT3(y~p),STAT3(y~p!+)
+
+  # Total phosphorylated STAT1, including free and receptor-bound forms
+  Molecules  Obs_pSTAT1  STAT1(y~p),STAT1(y~p!+)
+end observables
+
+begin reaction rules
+  # IL-6 binds to receptor
+  IL6R(il6,gp130,jak1,socs3,stat) + IL6(il6r) <-> IL6R(il6!1,gp130,jak1,socs3,stat).IL6(il6r!1) il6_il6r_binding,il6_il6r_unbinding
+
+  # IL-6 receptor complex forms
+  IL6R(il6!1,gp130,jak1,socs3,stat).IL6(il6r!1) + GP130(il6r,jak2,socs3,stat) <-> IL6R(il6!1,gp130!2,jak1,socs3,stat).IL6(il6r!1).GP130(il6r!2,jak2,socs3,stat) il6r_gp130_binding,il6r_gp130_unbinding
+
+  # IL-6 receptor complex binds jak1 (this can happen before/after jak2)
+  IL6R(il6!1,gp130!2,jak1,socs3,stat).IL6(il6r!1).GP130(il6r!2) + JAK1(rec,socs1) <-> IL6R(il6!1,gp130!2,jak1!3,socs3,stat).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1) il6_complex_jak1_binding,il6_complex_jak1_unbinding
+
+  # IL-6 receptor complex binds jak2 (this can happen before/after jak1)
+  IL6R(il6!1,gp130!2).IL6(il6r!1).GP130(il6r!2,jak2,socs3,stat) + JAK2(gp130) <-> IL6R(il6!1,gp130!2).IL6(il6r!1).GP130(il6r!2,jak2!4,socs3,stat).JAK2(gp130!4) il6_complex_jak2_binding,il6_complex_jak2_unbinding
+
+  # SOCS3-mediated Jak1 inhibition
+  IL6R(il6!1,gp130!2,jak1!3,socs3,stat).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1) + SOCS3(il6r,gp130) <-> IL6R(il6!1,gp130!2,jak1!3,socs3!5,stat).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1).SOCS3(il6r!5,gp130) SOCS3_il6r_binding,SOCS3_il6r_unbinding
+
+  # SOCS3-mediated Jak2 inhibition
+  IL6R(il6!1,gp130!2).IL6(il6r!1).GP130(il6r!2,jak2!4,socs3,stat).JAK2(gp130!4) + SOCS3(il6r,gp130) <-> IL6R(il6!1,gp130!2).IL6(il6r!1).GP130(il6r!2,jak2!4,socs3!6,stat).JAK2(gp130!4).SOCS3(il6r,gp130!6) SOCS3_gp130_binding,SOCS3_gp130_unbinding
+
+  # SOCS1-mediated IL-6-Jak1 inhibition
+  IL6R(il6!1,gp130!2,jak1!3,socs3,stat).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1) + SOCS1(jak1) <-> IL6R(il6!1,gp130!2,jak1!3,socs3,stat).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1!7).SOCS1(jak1!7) SOCS1_jak1_binding,SOCS1_jak1_unbinding
+
+  # IL-6/Jak1-mediated STAT3 activation
+  # this rule means that STAT will always get phosphorylated when it binds; only dissociates to induce SOCS
+  IL6R(il6!1,gp130!2,jak1!3,socs3,stat).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1) + STAT3(y~u) -> IL6R(il6!1,gp130!2,jak1!3,socs3,stat!8).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1).STAT3(y~p!8) il6_jak1_med_STAT3_act
+
+  # IL-6/Jak1 activated pSTAT3 unbinding
+  IL6R(il6!1,gp130!2,jak1!3,socs3,stat!8).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1).STAT3(y~p!8) -> IL6R(il6!1,gp130!2,jak1!3,socs3,stat).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1) + STAT3(y~p) pSTAT3_rec_dissoc
+
+  # IL-6/Jak1-mediated STAT1 activation
+  # this rule means that STAT will always get phosphorylated when it binds; only dissociates to induce SOCS
+  IL6R(il6!1,gp130!2,jak1!3,socs3,stat).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1) + STAT1(y~u) -> IL6R(il6!1,gp130!2,jak1!3,socs3,stat!9).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1).STAT1(y~p!9) il6_jak1_med_STAT1_act
+
+  # IL-6/Jak1 activated pSTAT1 unbinding
+  IL6R(il6!1,gp130!2,jak1!3,socs3,stat!9).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1).STAT1(y~p!9) -> IL6R(il6!1,gp130!2,jak1!3,socs3,stat).IL6(il6r!1).GP130(il6r!2).JAK1(rec!3,socs1) + STAT1(y~p) pSTAT1_rec_dissoc
+
+  # IL-6/Jak2-mediated STAT3 activation
+  # this rule means that STAT will always get phosphorylated when it binds; only dissociates to induce SOCS
+  IL6R(il6!1,gp130!2).IL6(il6r!1).GP130(il6r!2,jak2!4,socs3,stat).JAK2(gp130!4) + STAT3(y~u) -> IL6R(il6!1,gp130!2).IL6(il6r!1).GP130(il6r!2,jak2!4,socs3,stat!10).JAK2(gp130!4).STAT3(y~p!10) il6_jak2_med_STAT3_act
+
+  # IL-6/Jak2 activated pSTAT3 unbinding
+  IL6R(il6!1,gp130!2).IL6(il6r!1).GP130(il6r!2,jak2!4,socs3,stat!10).JAK2(gp130!4).STAT3(y~p!10) -> IL6R(il6!1,gp130!2).IL6(il6r!1).GP130(il6r!2,jak2!4,socs3,stat).JAK2(gp130!4) + STAT3(y~p) pSTAT3_rec_dissoc
+
+  # IL-6/Jak2-mediated STAT1 activation
+  # this rule means that STAT will always get phosphorylated when it binds; only dissociates to induce SOCS
+  IL6R(il6!1,gp130!2).IL6(il6r!1).GP130(il6r!2,jak2!4,socs3,stat).JAK2(gp130!4) + STAT1(y~u) -> IL6R(il6!1,gp130!2).IL6(il6r!1).GP130(il6r!2,jak2!4,socs3,stat!11).JAK2(gp130!4).STAT1(y~p!11) il6_jak2_med_STAT1_act
+
+  # IL-6/Jak2 activated pSTAT1 unbinding
+  IL6R(il6!1,gp130!2).IL6(il6r!1).GP130(il6r!2,jak2!4,socs3,stat!11).JAK2(gp130!4).STAT1(y~p!11) -> IL6R(il6!1,gp130!2).IL6(il6r!1).GP130(il6r!2,jak2!4,socs3,stat).JAK2(gp130!4) + STAT1(y~p) pSTAT1_rec_dissoc
+
+  # IL-10 binds to receptor
+  IL10R1(il10,il10r2,jak1,stat) + IL10(il10r1) <-> IL10R1(il10!1,il10r2,jak1,stat).IL10(il10r1!1) il10_il10r1_binding,il10_il10r1_unbinding
+
+  # IL-10 receptor complex forms
+  IL10R1(il10!1,il10r2,jak1,stat).IL10(il10r1!1) + IL10R2(il10r1) <-> IL10R1(il10!1,il10r2!2,jak1,stat).IL10(il10r1!1).IL10R2(il10r1!2) il10r1_il10r2_binding,il10r1_il10r2_unbinding
+
+  # IL-10 receptor complex binds jak1
+  IL10R1(il10!1,il10r2!2,jak1,stat).IL10(il10r1!1).IL10R2(il10r1!2) + JAK1(rec,socs1) <-> IL10R1(il10!1,il10r2!2,jak1!3,stat).IL10(il10r1!1).IL10R2(il10r1!2).JAK1(rec!3,socs1) il10_complex_jak1_binding,il10_complex_jak1_unbinding
+
+  # SOCS1-mediated IL-10-Jak1 inhibition
+  IL10R1(il10!1,il10r2!2,jak1!3,stat).IL10(il10r1!1).IL10R2(il10r1!2).JAK1(rec!3,socs1) + SOCS1(jak1) <-> IL10R1(il10!1,il10r2!2,jak1!3,stat).IL10(il10r1!1).IL10R2(il10r1!2).JAK1(rec!3,socs1!4).SOCS1(jak1!4) SOCS1_jak1_binding,SOCS1_jak1_unbinding
+
+  # IL-10/Jak1-mediated STAT3 activation
+  IL10R1(il10!1,il10r2!2,jak1!3,stat).IL10(il10r1!1).IL10R2(il10r1!2).JAK1(rec!3,socs1) + STAT3(y~u) -> IL10R1(il10!1,il10r2!2,jak1!3,stat!5).IL10(il10r1!1).IL10R2(il10r1!2).JAK1(rec!3,socs1).STAT3(y~p!5) il10_jak1_med_STAT3_act
+
+  # IL-10/Jak1 activated pSTAT3 unbinding
+  IL10R1(il10!1,il10r2!2,jak1!3,stat!5).IL10(il10r1!1).IL10R2(il10r1!2).JAK1(rec!3,socs1).STAT3(y~p!5) -> IL10R1(il10!1,il10r2!2,jak1!3,stat).IL10(il10r1!1).IL10R2(il10r1!2).JAK1(rec!3,socs1) + STAT3(y~p) pSTAT3_rec_dissoc
+
+  # IL-10/Jak1-mediated STAT1 activation
+  IL10R1(il10!1,il10r2!2,jak1!3,stat).IL10(il10r1!1).IL10R2(il10r1!2).JAK1(rec!3,socs1) + STAT1(y~u) -> IL10R1(il10!1,il10r2!2,jak1!3,stat!6).IL10(il10r1!1).IL10R2(il10r1!2).JAK1(rec!3,socs1).STAT1(y~p!6) il10_jak1_med_STAT1_act
+
+  # IL-10/Jak1 activated pSTAT1 unbinding
+  IL10R1(il10!1,il10r2!2,jak1!3,stat!6).IL10(il10r1!1).IL10R2(il10r1!2).JAK1(rec!3,socs1).STAT1(y~p!6) -> IL10R1(il10!1,il10r2!2,jak1!3,stat).IL10(il10r1!1).IL10R2(il10r1!2).JAK1(rec!3,socs1) + STAT1(y~p) pSTAT1_rec_dissoc
+
+  # PTP3-mediated STAT3 deactivation
+  PTP3() + STAT3(y~p) -> PTP3() + STAT3(y~u) PTP_med_STAT3_deact
+
+  # PTP1-mediated STAT1 deactivation
+  PTP1() + STAT1(y~p) -> PTP1() + STAT1(y~u) PTP_med_STAT1_deact
+
+  # STAT3 SOCS3 protein production
+  STAT3(y~p) -> STAT3(y~p) + SOCS3(il6r,gp130) STAT3_SOCS3_ind
+
+  # STAT3 SOCS1 protein production
+  STAT3(y~p) -> STAT3(y~p) + SOCS1(jak1) STAT3_SOCS1_ind
+
+  # STAT1 SOCS3 protein production
+  STAT1(y~p) -> STAT1(y~p) + SOCS3(il6r,gp130) STAT1_SOCS3_ind
+
+  # STAT1 SOCS1 protein production
+  STAT1(y~p) -> STAT1(y~p) + SOCS1(jak1) STAT1_SOCS1_ind
+
+  # SOCS3 protein degradation
+  SOCS3(il6r,gp130) -> 0 SOCS3_degrad
+
+  # SOCS1 protein degradation
+  SOCS1(jak1) -> 0 SOCS1_degrad
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 53 species, 122 reactions
+
+  # Published six-condition trajectory protocol, represented by its IL-6 10 ng/mL member
+
+  #@protocol: |
+  #  Simulate the representative fitted ensemble member for 90 minutes at one-minute
+  #  intervals under 10 ng/mL IL-6. The verification notebook additionally runs all six
+  #  fitted cytokine conditions by changing L1_0 and L2_0 before network generation.
+
+  #@figure: Fig. 2B in Cheemalavagu et al. (2024)
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>90,n_steps=>90,atol=>1e-10})
+end actions
