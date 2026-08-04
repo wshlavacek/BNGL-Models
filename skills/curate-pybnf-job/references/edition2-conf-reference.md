@@ -80,15 +80,34 @@ explanatory error, not a silent reinterpret, if used without `edition = 2`
 | `sa` | optimizer | Simulated Annealing *(deprecated)* |
 | `sim` | optimizer | Nelder–Mead Simplex (also the default `refine` polisher) |
 | `powell` | optimizer | Powell |
-| `cmaes` | optimizer | CMA-ES |
-| `trf` | optimizer | Trust-Region Reflective least-squares (**gradient; needs `bngl_backend = bngsim`**) |
+| `cmaes` | optimizer | CMA-ES (IPOP restarts, ADR-0070) |
+| `gntr` | optimizer | **Fisher/Gauss-Newton Trust Region** — EFIM Hessian through `trf`'s Coleman–Li core (#481, ADR-0068). **Gradient; needs bngsim.** The one gradient method that handles an **estimated** noise scale |
+| `trf` | optimizer | Trust-Region Reflective least-squares (**gradient; needs `bngl_backend = bngsim`**). Requires an exact least-squares residual with a **fixed** noise scale — it refuses an estimated `sigma`; use `gntr` there |
 | `lbfgs` | optimizer | L-BFGS-B (**gradient; needs bngsim**) |
 | `profile_likelihood` | optimizer | Profile-likelihood confidence intervals |
-| `mh` / `pt` / `am` / `dream` / `p_dream` / `hmc` | sampler | Bayesian posteriors (MCMC/HMC) |
+| `pt` / `am` / `dream` / `p_dream` / `hmc` | sampler | Bayesian posteriors (MCMC/HMC) |
+| `mh` | sampler | Metropolis-Hastings MCMC *(deprecated)* |
 | `check` | checker | Model checking against BPSL `.prop` constraints (no fitting) |
 
-For a first paper fit, prefer a global metaheuristic (`de`, `ss`, `pso`) — that is
-what the 2019-paper corpus uses (`examples/real-world/*/*.conf`).
+**Choose by running candidates, not by assumption.** What the `pybnf-jobs/` corpus actually
+uses: `de` 25, `gntr` 20, `ss` 10, `check` 6, `cmaes` 5, `lbfgs` 4, `am` 1. Defaults that
+have earned their place:
+
+- **`gntr`** — the gradient workhorse, and the default for a likelihood objective with a
+  fitted `sigma`.
+- **`cmaes`** — where the gradient path refuses the problem, or the landscape is strongly
+  multimodal (a local method from a few starts lands in the wrong basin).
+- **`de` / `ss`** — a first global sweep on a small model.
+- **`am`** — when the paper reports posteriors rather than point estimates.
+
+Gradient methods need differentiable dynamics: a model with **discrete events** is refused
+(`_require_differentiable_dynamics`, #461), because forward output sensitivities go stale
+across a jump.
+
+**Budget is part of the result.** 20 starts × 500 is a *default*, not a tuned setting; in the
+corpus, `Laske_PLOSComputBiol2019` needs 100 × 1000 to reach its reference optimum, and
+`SalazarCavazos_MBoC2020` at 20 starts converged *worse* than its own nominal point. Ship the
+budget the job needs and say so in the slug README.
 
 ---
 
@@ -113,6 +132,16 @@ Under edition 2, `objfunc` is rejected (`config.py:2131-2138`). Set **exactly on
 (`banana`, `gaussian`, …) also exist but are **not PEtab-exportable** (except `sos`,
 `chi_sq`, `sod`, `norm_sos`, `ave_norm_sos`, and per-observable Gaussian/Laplace) — see
 `petab-compliance.md`. Keep real-world job setups inside the exportable subset.
+
+> **Scoreability — what `sos` actually resolves to.** Under **edition 2**, `objective = sos` is
+> *not* the legacy `SumOfSquaresObjective`: it resolves to a `LikelihoodObjective` with
+> `Gaussian(sigma = 1)`, so it **supports a per-point log-likelihood, writes
+> `Results/information_criteria.txt` after a fit, and can be scored**. Its reduced value is
+> `½Σr²` — the Gaussian reduced term `r²/(2σ²)` (`noise/gaussian.py:60`) already carries the ½,
+> unlike edition-1 `objfunc = sos`, which is `Σr²` (`objective.py:1628`) and is **not** a
+> likelihood. For a fixed σ the identity `−lnL = reduced + (N/2)log(2π)` holds exactly.
+> `likelihood_information_criteria` returning `None` (`objective.py:73-96`) is therefore a
+> **legacy edition-1** condition in practice. Full rules: `og-acceptance.md` §2.
 
 ### `noise_model = <family>, …` — assemble a likelihood (see §6). `profile_objective = kl|wasserstein` — column-joint shape objectives (not exportable).
 

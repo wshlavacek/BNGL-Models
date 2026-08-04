@@ -1,0 +1,5 @@
+7609.0785447361795
+# tier T2 -- PyBNF objective at the model's shipped nominal (published) parameters
+# scale: -log_likelihood (native, from likelihood_information_criteria)
+# k = 177, n = 4800, objective = sos
+# regenerate: skills/curate-pybnf-job/scripts/make_jstar.py <this dir> --write

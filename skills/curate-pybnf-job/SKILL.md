@@ -1,16 +1,14 @@
 ---
 name: curate-pybnf-job
-description: Use when turning a published systems-biology / rule-based modeling paper (a PubMed Central article, PMCID/DOI, or a dev/papers/ folder) into a PyBNF edition-2 (new-era), PEtab.v2-compliant parameter-fitting job setup for lanl/pybnf's examples/real-world/ collection. Reconstructs the BNGL model from the paper, extracts the fitting data into .exp files (and qualitative properties into BPSL .prop/.con constraint files), authors the annotated .conf, verifies it end-to-end (tier-1 parse, PEtab export/lint/import round-trip for quantitative jobs or a job_type=check satisfaction pass for constraint-bearing ones, a bounded bngsim fit, and reproduction of the paper's reported fit), and registers it in _manifest.py + README + tests. Trigger whenever the user wants to add a real-world PyBNF fitting example from a paper, expand examples/real-world/, build a PEtab v2 parameterization problem from a model + data, fit qualitative/BPSL constraints, or "make a job setup" from a paper — even if they don't say "PEtab", "edition 2", or "constraints".
+description: Use when turning a published systems-biology / rule-based modeling paper (a PubMed Central article, PMCID/DOI, a dev/papers/ folder, or a PEtab problem) into a PyBNF edition-2 parameter-fitting job under pybnf-jobs/<FirstAuthor>-<Year>/<slug>/. Picks the archetype (hand-built BNGL, PEtab/SBML-imported, or BPSL constraint-bearing), reconstructs the model, extracts the fit data into .exp files (and qualitative claims into BPSL .prop constraints), authors the annotated .conf, and clears the acceptance bar — a declared reference objective J* plus a measured optimality gap OG = J_paper - J*, recorded in jstar.txt / nominal_check.json — then ships the slug README, make_reproduction.py and reproduction PNG. Trigger whenever the user wants to add a PyBNF fitting job from a paper, expand pybnf-jobs/, build a PEtab parameterization problem from a model + data, fit qualitative/BPSL constraints, score a job against a benchmark optimum, or "make a job setup" from a paper — even if they don't say "PEtab", "edition 2", "optimality gap", or "constraints".
 ---
 
 # Curate PyBNF Job
 
-Use this skill to turn a published model + data into a **PyBNF edition-2 (new-era),
-PEtab.v2-compliant parameter-fitting job setup**, and add it as a self-contained
-example under `~/Code/PyBNF/examples/real-world/`. It is the fitting-job sibling of
-`curate-model`: same "point at a paper, reconstruct faithfully, verify quantitatively"
-discipline, but the deliverable is a runnable PyBNF fit rather than a static reference
-simulation.
+Turn a published model + data into a **PyBNF edition-2 parameter-fitting job** and add it to
+the corpus at `pybnf-jobs/`. It is the fitting-job sibling of `curate-model`: same "point at a
+paper, reconstruct faithfully, verify quantitatively" discipline, but the deliverable is a
+runnable fit whose quality is a **measured number**, not a claim.
 
 Prefer an explicit source in the request — a PMCID/URL, a DOI, or a local paper folder:
 
@@ -20,262 +18,305 @@ Use curate-pybnf-job for PMC5334499  (or: for dev/papers/<Folder>)
 
 ## Inputs & where things go
 
-- **Input:** a paper in PubMed Central (PMCID or URL), a DOI, or a local paper folder
-  (e.g. `dev/papers/<Folder>` with a PDF + any author-provided model/data files).
-- **Output:** job folders are **filed by source paper under a `<FirstAuthor>-<Year>/`
-  directory** — one such directory per paper, holding one or more job **slugs**, because a
-  single paper often yields several fitting problems (e.g.
-  `Rukhlenko-2022/{cstar_trka, cstar_trkb, cstar_skmel133, cstar_skmel133_bpsl}/`). Unless
-  the user names another location, create it under the PyBNF repo's real-world corpus:
-  `~/Code/PyBNF/examples/real-world/<FirstAuthor>-<Year>/<slug>/`, plus edits to that repo's
-  `_manifest.py`, `README.md`, and test suite. Do **not** commit or push unless asked; leave
-  a clean, PR-ready set of changes.
-- **Paper-level landing README:** when the grouping directory holds more than one slug, add
-  a `<FirstAuthor>-<Year>/README.md` that ties them together — the full paper citation, the
-  shared model (what was reconstructed, from which supplementary file), a one-row-per-slug
-  table (what each fits · flavor · data source · verification status), and the source-file
-  links. It complements the corpus-level coverage matrix, and *is* the entry point when the
-  output is a self-contained per-folder set (the pattern below).
+- **Input:** a paper in PubMed Central (PMCID or URL), a DOI, a local paper folder
+  (`dev/papers/<FirstAuthor>-<Year>/` with a PDF + any author-provided model/data files), or an
+  upstream PEtab problem.
+- **Output — this repo is the corpus.** Jobs are filed by source paper under
+  `pybnf-jobs/<FirstAuthor>-<Year>/<slug>/`, one directory per paper holding one or more job
+  **slugs**, because a single paper often yields several fitting problems (e.g.
+  `Rukhlenko-2022/{cstar_trka, cstar_trkb, cstar_skmel133, cstar_skmel133_bmra}/`). Each slug is
+  **self-contained and self-documenting**: it carries its own `README.md`, its reproduction
+  script and PNG, and its scoring provenance.
+- **Upstreaming to PyBNF is a separate, optional, final step** (step 9). `~/Code/PyBNF/examples/
+  real-world/` is a small teaching subset of this corpus, not its home. Do not write a new job
+  there first, and do not treat `_manifest.py` as the registry — the corpus registry is the
+  paper-level README plus this repo's root `README.md`.
+- **Paper-level landing README:** every `<FirstAuthor>-<Year>/` directory gets a `README.md` —
+  the full citation, the shared model (what was reconstructed, from which supplementary file),
+  a one-row-per-slug table (what each fits · archetype · data source · **J\*, OG, status**), and
+  the source links. When the paper also has a curated entry in `models/`, link it, and link back
+  from that model's README row.
+- **Never commit the PDFs.** `dev/` is git-ignored; it is the parking garage, not a deliverable.
+
+## Pick the archetype first — it sets everything downstream
+
+| | **A · hand-built BNGL** | **B · PEtab/SBML-imported** | **C · BPSL constraint-bearing** |
+|---|---|---|---|
+| when | the paper's model is rule-based, or you reconstruct it | an upstream PEtab problem exists (e.g. a benchmark collection) | the paper asserts *qualitative* facts a time series can't carry |
+| model file | `<slug>.bngl` you author | `model_<slug>.xml` copied verbatim from upstream | `<slug>.bngl` (+ per-mutant variants) |
+| conf | `bngl_backend = bngsim` | `sbml_backend = bngsim` | `bngl_backend = bngsim` |
+| data | `.exp` you extract/digitize | `.exp` + `_measparams.tsv` emitted by the importer | `.prop` (± `.exp` for data fusion) |
+| PEtab export | in-subset ⇒ round-trips | it *came from* PEtab | **refused** — native-only, by design |
+| extra provenance | — | `upstream.json` pinning the source commit + per-file sha256 | — |
+| acceptance | OG vs. J\* | OG vs. the benchmark's published J\* | OG **and** `job_type = check` satisfaction |
+
+Archetypes B and C are not exotic: B is a third of the corpus (23 of 75 confs), C is the
+capability that makes PyBNF worth benchmarking. A paper can yield slugs of more than one kind —
+prefer that over collapsing them.
 
 ## Required reading
 
 Before authoring anything, read (they are the source of truth, not your memory):
 
-1. `references/edition2-conf-reference.md` — the full edition-2 `.conf` surface
-   (`job_type`, `objective`, `experiment:`/`condition:`, `*_var` free params). What is
-   **[E2]** vs rejected **[LEGACY]**.
-2. `references/real-world-anatomy.md` — exactly what a real-world folder,
-   `_manifest.py` entry, and the two test tiers require.
-3. `references/petab-compliance.md` — what "PEtab.v2-compliant" means (a *verified
-   round-trip property* of the native conf) and the **PEtab-exportable subset** you
-   must stay inside.
-4. `references/bpsl-constraints.md` — BPSL `.prop`/`.con` constraint files: the
-   grammar, how to attach them (data fusion or constraint-only), `job_type = check`,
-   and the fact that a constraint-bearing job is **native-only (not PEtab-exportable)**.
-   Read this whenever the paper reports *qualitative* facts (orderings, thresholds,
-   monotonic dose-response, "peaks before", bistability) — BPSL is PyBNF's signature
-   capability and a strong reason to add an example.
-5. `skills/bngl/skill.md` and `skills/bngl/templates/model_skeleton.bngl` — house style
-   for the BNGL model you reconstruct. Read `skills/nfsim/SKILL.md` if the model is
-   network-free (crosslinking, aggregation, cyclic complexes).
-6. Two or three existing examples for the idioms to imitate:
-   `examples/real-world/receptor/` (simplest: ODE + pre-equilibration + `sos`),
-   `examples/real-world/egfr_ode/` (time course + dose-response scan + `chi_sq`), and,
-   for a stochastic paper, `examples/real-world/tlbr/` (NFsim scan).
+1. `references/og-acceptance.md` — **the acceptance bar.** What J\* is, the three provenance
+   tiers it can come from, how OG is computed, the `OG < 1.92` threshold, the status vocabulary,
+   and what to do when the objective has no likelihood. Read this *before* you choose an
+   objective, because the choice determines whether the job can be scored at all.
+2. `references/edition2-conf-reference.md` — the full edition-2 `.conf` surface
+   (`job_type`, `objective`/`noise_model`, `experiment:`/`condition:`, `*_var` free params).
+   What is **[E2]** vs. rejected **[LEGACY]**.
+3. `references/real-world-anatomy.md` — exactly what a slug folder contains, file by file.
+4. `references/petab-compliance.md` — what "PEtab.v2-compliant" means (a *verified round-trip
+   property* of the native conf) and the **PEtab-exportable subset** you must stay inside for
+   archetype A.
+5. `references/bpsl-constraints.md` — BPSL `.prop`/`.con` files: the grammar, how to attach them,
+   `job_type = check`, and the fact that a constraint-bearing job is **native-only**. Read this
+   whenever the paper reports orderings, thresholds, monotonic dose-response, "peaks before",
+   bistability, or oscillation.
+6. `skills/bngl/skill.md` + `skills/bngl/templates/model_skeleton.bngl` — house style for any
+   BNGL you author. Read `skills/nfsim/SKILL.md` if the model is network-free.
+7. Two or three existing slugs for the idioms to imitate — pick by archetype:
+   `Kozer-2013/egfr_ode/` (A: time course + dose-response scan, retained network cap),
+   `Grein-2026-benchmark-subset-I/Bertozzi_PNAS2020/` (B: the complete OG provenance set),
+   `Rukhlenko-2022/cstar_skmel133_bmra/` (C: data fusion + `check` conf).
+
+`validate-pybnf-job` is the auditor sibling. It grounds a finished job in the primary literature
+and writes `VALIDATION.md`. **Do not write `VALIDATION.md` from this skill** — curation produces
+the job and its score; validation earns the confidence. Hand off when this skill's completion
+criteria are met.
 
 ## Environment
 
-The verification scripts and `pybnf` run in the **PyBNF** environment. Use its
-interpreter and set `BNGPATH` (BNG2.pl is needed even to parse a model). The scripts
-`chdir` into the conf's folder themselves, so they may be invoked from anywhere with
-absolute paths:
+The scripts and `pybnf` run in the **PyBNF** environment. `BNGPATH` is needed even to parse a
+model. `scripts/*` `chdir` into the conf's folder themselves, so they take absolute paths from
+anywhere:
 
 ```bash
 export BNGPATH="$HOME/Simulations/BioNetGen-2.9.3"   # folder containing BNG2.pl
 PY=~/Code/PyBNF/.venv/bin/python
-SKILL=~/Code/BNGL-Models/skills/curate-pybnf-job     # this skill's directory
-CONF=~/Code/PyBNF/examples/real-world/<FirstAuthor>-<Year>/<slug>/<slug>.conf
+SKILL=~/Code/BNGL-Models/skills/curate-pybnf-job
+JOB=~/Code/BNGL-Models/pybnf-jobs/<FirstAuthor>-<Year>/<slug>
 ```
 
-If BNGPATH/BNG2.pl or the PyBNF venv can't be found, ask the user rather than guessing.
+Run `pybnf` itself **from inside the slug folder** — `model:`, `data:` and `output_dir` resolve
+against the working directory. If BNGPATH/BNG2.pl or the PyBNF venv can't be found, ask rather
+than guessing.
 
 ## Workflow
 
-1. **Read the paper and extract the fitting problem.** Identify: the biochemical model
-   (species, rules, parameters, initial conditions); the **data to fit** and which
-   figure/table it lives in; the **experimental design** (time course? dose-response?
-   pre-equilibration/washout?); the **observables** (what each measured quantity maps to
-   in the model); the **free parameters** and their published values / plausible search
-   ranges; whether the dynamics are deterministic (ODE), stochastic (SSA), or
-   network-free (NFsim); and any **qualitative properties** the paper asserts that a
-   time-series doesn't capture (orderings, thresholds, steady-state levels, monotonic
-   dose-response, "peaks before", bistability, oscillation) — these become BPSL `.prop`
-   constraints. Write this down before building.
+1. **Read the paper and extract the fitting problem.** Identify: the model (species, rules,
+   parameters, initial conditions); the **data to fit** and which figure/table it lives in; the
+   **experimental design** (time course? dose-response? pre-equilibration/washout?); the
+   **observables** (what each measured quantity maps to in the model); the **free parameters**
+   and their published values / plausible ranges; whether the dynamics are ODE, SSA, or NFsim;
+   any **qualitative properties** the paper asserts; and — critically — **what the paper reports
+   about the fit itself**: an objective value, a parameter table, confidence intervals, a
+   figure. Write this down before building. Then pick the archetype from the table above.
 
-   Then **decide the example's flavor**, because it sets the verification path
-   (`references/bpsl-constraints.md`):
-   - **quantitative** (`.exp` only) → PEtab-exportable → the full PEtab round-trip applies;
-   - **data fusion** (`.exp` + `.prop`) or **constraint-only** (`.prop` only) → uses BPSL →
-     **native-only, not PEtab-exportable** → verify with `job_type = check` instead.
-   Prefer capturing the paper's qualitative claims as constraints when they carry real
-   information — a BPSL example is often a *more* compelling addition than a plain fit.
+2. **Declare J\* and the reproduction target *before* you fit.** This is the discipline change:
+   decide what "the paper's result" is while you still have the paper open, not after you have a
+   number you like. Per `references/og-acceptance.md`, J\* comes from one of three tiers —
+   **T1** a published/benchmark objective value, **T2** PyBNF's objective evaluated at the
+   paper's published best-fit parameters, or **T3** the corpus's own best-known objective
+   (a regression anchor, not an optimality claim). Record the tier; it is what the status badge
+   means. A job whose J\* provenance you cannot state is a job you cannot score.
 
-2. **Name and create the folder.** File the job under its source paper: a
-   `<FirstAuthor>-<Year>/` directory (e.g. `Rukhlenko-2022/`) holding a short, descriptive
-   slug like the corpus (`receptor`, `egfr_ode`, `tlbr`) — e.g. `Rukhlenko-2022/cstar_trka/`.
-   One author-year directory per paper; for each additional fitting problem the same paper
-   yields (a second cell line, a dose-response, a BPSL landscape job, …) add a new slug
-   *beside* the others in the same directory. Append `b`/`c` to the year (`Smith-2020b`) only
-   to disambiguate two papers sharing a first author and year. Create the folder at the
-   output location from "Inputs & where things go". Once the directory holds more than one
-   slug, add (or update) the paper-level `<FirstAuthor>-<Year>/README.md` landing page
-   described in "Inputs & where things go".
+3. **Name and create the folder.** `pybnf-jobs/<FirstAuthor>-<Year>/<slug>/`, with a short
+   descriptive slug (`egfr_ode`, `tlbr`, `cstar_trka`). One author-year directory per paper; each
+   additional fitting problem the paper yields becomes a new slug *beside* the others. Append
+   `b`/`c` to the year (`Smith-2020b`) only to disambiguate two papers sharing first author and
+   year. **Use one canonical `<FirstAuthor>-<Year>` key per paper across `models/`,
+   `pybnf-jobs/`, and `dev/papers/`** — check for an existing spelling before inventing one.
+   Create or update the paper-level `README.md`.
 
-3. **Reconstruct the BNGL model from scratch**, fitting-ready and on the edition-2
-   surface (differences from a curate-model reference model):
+4. **Build the model, fitting-ready and on the edition-2 surface.**
+
+   *Archetype A — reconstruct the BNGL from scratch:*
    - **Strip the *simulation* actions, but KEEP *network-definition* directives.** Remove
-     `simulate`/`parameter_scan`/`setConcentration` (synthesized from the conf), but
-     **retain a `generate_network({...,max_stoich=>{...}})` line** whenever the model's
-     network is only finite under a `max_stoich`/`max_agg`/`max_iter` cap. That cap is part
-     of the *model*, not the experiment: strip it and pybnf defaults to a bare
-     `generate_network({overwrite=>1})` (`pset.py:638`) → **unbounded network → silent hang**
-     (or a wrong finite network). pybnf captures a retained `generate_network` line
-     (`pset.py:617`) and the job stays PEtab-exportable. Network-free (NFsim) models keep no
-     actions block. See `references/real-world-anatomy.md` §2 and the
-     `Kozer-2013-2014/egfr_ode` example.
-   - Fitted rate constants are bare `id nominal` declarations; the free-parameter names
-     in the conf bind to these ids **by name** (no `__FREE` alias, ADR-0034).
-   - **Observable/function names are the contract with the `.exp` header *and* any
-     `.prop` constraint** — a `Molecules`/`Species` observable is a plain name; a
-     `functions` entry appears **with parentheses** in the exp header. Every name a
-     `.prop` references must exist as a model observable.
-   - For pre-equilibration, add a boolean gate parameter (e.g. `Ligand_isPresent 0`)
-     toggled by two `condition:` states.
-   Follow `skills/bngl/skill.md` house style throughout. Confirm the model builds
-   through BNG2.pl and behaves as the paper describes (an independent check of the
-   network/dynamics, in the spirit of curate-model's model-specification verification).
+     `simulate`/`parameter_scan`/`setConcentration` (synthesized from the conf), but **retain a
+     `generate_network({...,max_stoich=>{...}})` line** whenever the network is only finite under
+     a `max_stoich`/`max_agg`/`max_iter` cap. That cap is part of the *model*, not the
+     experiment: strip it and pybnf falls back to a bare `generate_network({overwrite=>1})`
+     (`pset.py:638`) → **unbounded network → silent hang**, or a wrong finite network. pybnf
+     captures a retained line (`pset.py:617`) and the job stays PEtab-exportable. Network-free
+     (NFsim) models keep no actions block.
+   - Fitted rate constants are bare `id nominal` declarations; conf free-parameter names bind to
+     these ids **by name** (no `__FREE` alias, ADR-0034).
+   - **Observable/function names are the contract with the `.exp` header *and* any `.prop`** — a
+     `Molecules`/`Species` observable is a plain name; a `functions` entry appears **with
+     parentheses** in the exp header. Every name a `.prop` references must exist as an observable.
+   - For pre-equilibration, add a boolean gate parameter (e.g. `Ligand_isPresent 0`) toggled by
+     two `condition:` states.
+   - Follow `skills/bngl/skill.md` house style. Confirm the model builds through BNG2.pl and
+     behaves as the paper describes.
 
-4. **Extract the data into `.exp` file(s).** First column is the independent variable
-   (`time` for a time course; the **model-parameter name** for a dose/scan column);
-   remaining columns are observables named exactly as in the model. Add `<obs>_SD`
-   columns only if the paper reports per-point uncertainty (they switch the objective to
-   `chi_sq`); use `NaN` for missing points. Prefer source tabular/supplementary data;
-   if only plotted curves exist, **digitize** the panel (record figure/panel, extraction
-   method, axis calibration, any legend scale factors) exactly as `curate-model`
-   prescribes — the digitized fit-target data is what "reproducing the paper" is measured
+   *Archetype B — import, don't author:* run PyBNF's PEtab importer, copy the SBML **verbatim**,
+   and write `upstream.json` pinning the source commit plus a per-file sha256 of LF-normalized
+   content. Never edit an upstream file; everything you author sits beside it. State in the slug
+   README which bytes are copied and which are yours.
+
+5. **Extract the data into `.exp` file(s).** First column is the independent variable (`time`
+   for a time course; the **model-parameter name** for a dose/scan column); remaining columns are
+   observables named exactly as in the model. Add `<obs>_SD` columns only if the paper reports
+   per-point uncertainty; use `NaN` for missing points. Prefer source tabular/supplementary data;
+   if only plotted curves exist, **digitize** the panel — record figure/panel, extraction method,
+   axis calibration, and any legend scale factors, exactly as `curate-model` prescribes, and
+   commit the extraction script. The digitized target is what "reproducing the paper" is measured
    against, so keep it faithful and documented.
 
-   **If the example uses BPSL** (data-fusion or constraint-only), also author the
-   `.prop` file(s): one qualitative statement per line in the BPSL grammar
-   (`<obs> <op> <obs|const> <always|once|at …|between …> weight <w>`), using dotted
-   `suffix.obs` to compare across experiments/mutants. Translate each qualitative claim
-   in the paper into one line; weight stronger claims higher. Full grammar and real
-   examples: `references/bpsl-constraints.md`.
+   **If the job uses BPSL** (archetype C), also author the `.prop` file(s): one qualitative
+   statement per line in the BPSL grammar (`<obs> <op> <obs|const> <always|once|at …|between …>
+   weight <w>`), using dotted `suffix.obs` to compare across experiments/mutants. Translate each
+   qualitative claim in the paper into one line; weight stronger claims higher.
 
-5. **Author `<name>.conf`** from `templates/job_setup.conf`, on the edition-2 surface:
-   `edition = 2`, `bngl_backend = bngsim`, `model:`, the `condition:`/`experiment:`
-   lines that encode the design, a `job_type` (a global metaheuristic — `de`/`ss`/`pso`
-   — for a first paper fit), the `objective` (`sos` without `_SD`, `chi_sq` with), a
-   search budget, and one `*_var` free parameter per fitted id, bracketing the published
-   value. Open the conf with a banner comment citing the paper (PMCID/DOI) and the figure
-   each `.exp` came from.
-   - **Quantitative example:** bind only `.exp` (`experiment: <name>, data: <name>.exp`)
-     and **stay inside the PEtab-exportable subset** — no `normalization`, `cumulative`,
-     `neg_bin`/`lognormal` noise (`references/petab-compliance.md`).
-   - **BPSL example:** attach the constraints via the experiment's `data:` — data fusion
-     (`experiment: <name>, data: <name>.exp, <name>.prop`) or constraint-only
-     (`experiment: <name>, t_end: <T>, n_steps: <N>, data: <name>.prop`, where `t_end` is
-     required). Optionally set `constraint_scale` to balance the qualitative penalty
-     against the quantitative objective. This job is native-only — that's expected, not a
-     defect (`references/bpsl-constraints.md`).
+6. **Author `<slug>.conf`** from `templates/job_setup.conf`. Open it with a banner comment citing
+   the paper (PMCID/DOI), the figure each `.exp` came from, and the declared J\* and its tier.
+   Then:
+   - **Objective — a modeling choice; check it is scoreable.** Under edition 2, `objective = sos`
+     resolves to a Gaussian likelihood with σ ≡ 1, so it is scoreable as-is — use it when the
+     paper's fit is unweighted least squares. Use `chi_sq` when the `.exp` carries `_SD`, and a
+     fitted `sigma` (`noise_model = normal, sigma = fit sd_<obs>`) when the noise scale is
+     unknown. What is *not* scoreable is a resolved objective with no per-point log-likelihood
+     (`objective.py:73-96`) — in practice the **legacy edition-1** `objfunc = sos` path, which
+     resolves to `SumOfSquaresObjective`. Confirm with `make_jstar.py`, which gates on the
+     resolved object rather than the token. Stay inside the PEtab-exportable subset for archetype
+     A — no `normalization`, no `cumulative`, no `neg_bin`/`lognormal`.
+   - **`job_type` — choose by running candidates, not by assumption.** The corpus uses `de` (25),
+     `gntr` (20), `ss` (10), `check` (6), `cmaes` (5), `lbfgs` (4), `am` (1). Defaults that have
+     earned their place: **`gntr`** (Fisher/Gauss-Newton trust region, ADR-0068) is the gradient
+     workhorse and the one method that handles an **estimated** noise scale — plain `trf` refuses
+     it; **`cmaes`** with IPOP restarts where the gradient path refuses the problem or the
+     landscape is strongly multimodal; **`de`/`ss`** for a first global sweep on a small model;
+     **`am`** when the paper reports posteriors rather than point estimates; **`check`** for a
+     constraint-satisfaction job. Gradient methods need `bngsim` and differentiable dynamics —
+     a model with discrete events will be refused (`_require_differentiable_dynamics`).
+   - **Budget is part of the result.** The collection default (20 starts × 500) is *not* tuned.
+     If a slug needs 100 × 1000 to reach its basin, ship that budget and say so in the README.
+   - **Free parameters:** one `*_var` per fitted id, bracketing the published value.
+   - **BPSL:** attach constraints via the experiment's `data:` — fusion (`data: <n>.exp, <n>.prop`)
+     or constraint-only (`data: <n>.prop` with a required `t_end:`). Ship a companion
+     `<slug>_check.conf` with `job_type = check`.
 
-6. **Verify end-to-end** (the completion bar), with BNGPATH set. The `scripts/*`
-   (`check_conf.py`, `petab_roundtrip.py`) `chdir` into the conf's folder themselves, so run
-   them from anywhere with an absolute `$CONF`. Run `pybnf` itself **from inside the job
-   folder** (`cd <FirstAuthor>-<Year>/<slug>`), since its relative paths — `model:`, `data:`,
-   `output_dir` — resolve against the working directory:
-   - **Tier-1 (parses & well-formed):** `$PY $SKILL/scripts/check_conf.py $CONF`
-     — edition 2, `job_type` resolves, data and/or constraints bound, free params bind by
-     id. It reports whether the job carries BPSL constraints (i.e. is native-only).
-   - **PEtab.v2 compliance — *quantitative examples only* (the round-trip):**
-     `$PY $SKILL/scripts/petab_roundtrip.py $CONF --job-type <jt>`
-     — export → `petab.v2` lint clean → import. If it reports a *non-exportable feature*
-     (e.g. `normalization`), rework the conf (step 5). If it reports *BPSL constraint
-     data*, that is expected for a BPSL example — skip this check and use the `check`
-     verification below instead.
-   - **BPSL satisfaction — *constraint-bearing examples only* (`job_type = check`):** run
-     a `check` job at the fitted (or published) parameters and confirm it prints
-     `Satisfied M out of M constraints` (or document which the paper itself does not
-     require). This is the native-only analog of the PEtab round-trip.
-   - **A real bngsim fit reaches a finite objective:** run a short bounded fit
-     (`pybnf -c <name>.conf` with a small `max_iterations`/`population_size`, or the
-     recovery-tier path in `test_real_world_examples.py`) and confirm the
-     simulate→score→propose loop yields a finite score. If the network is cluster-scale
-     (minutes to generate, or NFsim on ~10³ molecules), don't force a full fit — mark the
-     example `heavy=True` and document it.
-   - **Reproduce the paper's reported fit:** compare the fitted model against the
-     digitized/extracted target data quantitatively (curate-model metrics: max/median
-     relative error, peak amplitude/timing, or nearest-curve distance), and — when the
-     paper reports point estimates — check the recovered parameters land in the right
-     ballpark. State the tolerance and justify it from the data precision. Keep this
-     verification (a short notebook/script + a PNG) in your scratchpad workspace and
-     summarize the result; it is evidence for the PR, not a committed real-world file.
+7. **Verify, and score.** With BNGPATH set:
+   - **Tier-1 (parses & well-formed):** `$PY $SKILL/scripts/check_conf.py $JOB/<slug>.conf` —
+     edition 2, `job_type` resolves, data and/or constraints bound, free params bind by id.
+   - **PEtab round-trip — archetype A only:**
+     `$PY $SKILL/scripts/petab_roundtrip.py $JOB/<slug>.conf --job-type <jt>` (export → `petab.v2`
+     lint clean → import). A reported *non-exportable feature* means rework the conf; a report of
+     *BPSL constraint data* means you are archetype C and this check does not apply.
+   - **BPSL satisfaction — archetype C only:** run the `check` conf at the fitted (or published)
+     parameters and confirm `Satisfied M out of M constraints`, or document which the paper
+     itself does not require.
+   - **The acceptance bar — run the fit and measure OG:**
+     ```bash
+     cd $JOB && pybnf -c <slug>.conf
+     $PY $SKILL/scripts/score.py $JOB output
+     ```
+     `score.py` reads `jstar.txt` and the run's `Results/information_criteria.txt`, computes
+     `J_paper = -log_likelihood` and `OG = J_paper - J*`, and reports **solved** iff `OG < 1.92`
+     (χ², α=0.05, 1 dof). Commit the provenance it depends on: `jstar.txt`,
+     `best_fit_params.txt`, `information_criteria.txt`, and `nominal_check.json` recording the
+     tier, the numbers, and a one-paragraph interpretation. Full rules, including what to do when
+     OG is large and when a J\*-at-nominal check is the honest claim, are in
+     `references/og-acceptance.md`.
+   - **Reproduce the paper's figure:** write `make_reproduction.py` that simulates at the fitted
+     (and, where the paper reports them, the published) parameters and overlays the target data,
+     saving `<slug>_reproduction.png`. Report a quantitative metric — max/median relative error,
+     peak amplitude/timing, or nearest-curve distance — and justify the tolerance from the data's
+     precision. Both script and PNG are **committed** slug files, not scratchpad evidence.
 
-7. **Register the example (PR-ready).**
-   - Add the `_manifest.py` entry (`templates/manifest_entry.py`): `folder`, `conf`,
-     `simulator`, `observables` (the `.exp` columns; functions without parens),
-     `system` (biology + paper mapping; for a BPSL example, note the constraints), and
-     `stochastic` (True iff ssa/nf), `heavy` if cluster-scale, optional
-     `recover={param: published_value}` + `tol`.
-   - Update `README.md`: add the coverage-matrix row (status ✅ if it runs in the
-     recovery tier, 🔶 if too heavy for routine CI); add a Known-limitations bullet if
-     heavy. For a BPSL example, note in the row that it is native-only (not
-     PEtab-exportable).
-   - Add a **test assertion** for the new example (the gap the research flagged):
-     - *Quantitative example:* a PEtab export/lint check — extend
-       `tests/test_real_world_examples.py` (or a sibling) with a parametrized test that
-       runs `pybnf.petab.export_job` + `petab.v2` `lint_problem`, mirroring
-       `scripts/petab_roundtrip.py`. Gate it on the `petab` extra being present.
-     - *BPSL example:* **do not** assert PEtab (it will correctly refuse). Assert instead
-       that `export_job` raises `NotImplementedError` (a guard that the constraint stays
-       native-only), and/or that a `check` run reports the expected satisfaction.
+8. **Write the slug `README.md`.** It is the entry point and must stand alone: what the job fits
+   and why; the model and where it came from; the training data and its figure/table provenance;
+   the free parameters; the archetype and its consequences (PEtab-exportable? native-only?);
+   **the status line — J\*, its tier, OG, and the badge**; the exact run command; and a link to
+   `VALIDATION.md` once `validate-pybnf-job` has been run. Update the paper-level README's slug
+   table and the root `README.md` if the job pairs with a curated model.
 
-8. **Report.** Summarize the new folder, the verification results (tier-1; PEtab
-   round-trip *or* BPSL `check` satisfaction; fit objective; paper-reproduction metric),
-   and the exact `_manifest.py` / `README.md` / test edits — everything needed to open
-   the PR to lanl/pybnf.
+9. **Report — and close the loop upstream.** Summarize the new slug, the verification results
+   (tier-1; PEtab round-trip *or* BPSL `check`; **OG and status**; the paper-reproduction metric),
+   and the README edits. **If curating this job exposed a bngsim or PyBNF defect, file it and cite
+   the issue number in the slug README and `nominal_check.json`** — that is the corpus doing its
+   job, and it is the single most valuable output after the job itself. Optionally, if the job is
+   small, fast, and pedagogically clean, propose promoting it to `~/Code/PyBNF/examples/
+   real-world/` with a `_manifest.py` entry (`templates/manifest_entry.py`) — a separate PR
+   against a separate repo, never a substitute for landing it here.
 
-## Two guardrails that bite
+## The acceptance bar, in one paragraph
 
-- **PEtab-exportable subset (quantitative examples).** `export_job` fails loud on
-  features PEtab v2 can't express. The frequent trap: `normalization = init/peak/…` is
-  **not** exportable (the shipped `igf1r.conf` uses it and is non-compliant). If the
-  paper's data is relative-to-a-reference, encode the reference in the model/observable
-  instead. Full list and substitutions: `references/petab-compliance.md`.
-- **BPSL constraints are native-only.** Any `.prop`/`.con` on an experiment's `data:`
-  makes the job non-exportable — `export_job` raises `NotImplementedError`, and there is
-  no round-trip. This is a *property of the flavor you chose*, not a bug: verify a BPSL
-  example with `job_type = check`, not `petab_roundtrip.py`, and register it as
-  native-only. Full grammar and rationale: `references/bpsl-constraints.md`.
+A job is not done when it runs. It is done when it has a **declared reference objective J\*** with
+a stated provenance tier, and a **measured optimality gap** `OG = J_paper − J*` where
+`J_paper = −log_likelihood` from `Results/information_criteria.txt`. `OG < 1.92` is **solved**.
+An OG measured at the model's nominal point rather than from a fit is **objective validated** —
+it validates the model, the observables and the objective, and claims nothing about the optimizer;
+mark it `†` and say so. A job that imports, simulates and scores but whose nominal point is not
+the published optimum and which has not been driven to `OG < 1.92` is **setup only** — a
+legitimate, useful deliverable, but it must not be described as reproducing the paper's fit. The
+old bar ("a real bngsim fit reaches a finite objective") passes a broken model and is retired.
+
+## Guardrails that bite
+
+- **A missing `information_criteria.txt` does not mean "unscoreable".** PyBNF writes it at the end
+  of a *fit*, so a job never run has none whatever its objective — in the Grein subset both
+  `Smith_BMCSystBiol2013` (`sos`) and `Weber_BMC2015` (`chi_sq`) lack it because both are ⚪
+  setup-only. Genuine unscoreability means the *resolved* objective carries no per-point
+  log-likelihood, which under edition 2 essentially never happens: `objective = sos` resolves to
+  `Gaussian(sigma=1)`. See `references/og-acceptance.md` §2.
+- **PEtab-exportable subset (archetype A).** `export_job` fails loud on features PEtab v2 can't
+  express. The frequent trap: `normalization = init/peak/…` is **not** exportable. If the paper's
+  data is relative to a reference, encode the reference in the model/observable instead.
+- **BPSL constraints are native-only.** Any `.prop`/`.con` on an experiment's `data:` makes the
+  job non-exportable — `export_job` raises `NotImplementedError`. That is a property of the
+  archetype you chose, not a defect: verify with `job_type = check`, register it native-only.
+- **A stripped network cap is a silent hang, not an error.** See step 4.
+- **Untuned budgets mislead in both directions.** A default-budget run that lands far from J\*
+  says nothing about PyBNF's optimizers; a slug in the corpus converged *worse* than its own
+  nominal point on 20 starts. Tune, or label the row honestly.
 
 ## Deliverables
 
 ```text
-~/Code/PyBNF/examples/real-world/<FirstAuthor>-<Year>/       # e.g. Rukhlenko-2022/
-├── README.md            # paper-level landing page (when >1 slug): citation, shared model,
-│                        #   one-row-per-slug table (fits · flavor · data · status), sources
-└── <slug>/                                                  # e.g. cstar_trka/
-    ├── <slug>.bngl      # edition-2, fitting-ready; no *simulation* actions, but KEEP a
-    │                    #   generate_network(...max_stoich...) directive if the net needs it
-    ├── <slug>.conf      # edition-2 job setup, banner-commented
-    ├── <data>.exp       # column headers == model observable names (quantitative / fusion)
-    └── <slug>.prop      # optional: BPSL constraints (data-fusion or constraint-only example)
-# plus, in the PyBNF repo:
-#   _manifest.py         # one RealWorldExample(...) entry
-#   README.md            # coverage-matrix row (+ limitations if heavy; note native-only if BPSL)
-#   tests/…              # a PEtab export/lint assertion (quantitative) OR an export-refused /
-#                        # check-satisfaction assertion (BPSL)
-# plus, in your scratchpad (evidence, not committed to PyBNF):
-#   verification notebook/script + PNG comparing the fit to the paper
+pybnf-jobs/<FirstAuthor>-<Year>/                 # e.g. Rukhlenko-2022/
+├── README.md                    # paper landing page: citation, shared model, slug table
+│                                #   (fits · archetype · data · J* · OG · status), source links
+└── <slug>/                                      # e.g. cstar_trka/
+    ├── README.md                # stands alone; carries the status line
+    ├── <slug>.bngl              # archetype A/C — no simulation actions; KEEP a needed
+    │                            #   generate_network(...max_stoich...) directive
+    ├── model_<slug>.xml         # archetype B — SBML verbatim from upstream
+    ├── upstream.json            # archetype B — pinned commit + per-file sha256 (LF-normalized)
+    ├── <slug>.conf              # edition-2 job setup, banner-commented with paper + J* tier
+    ├── <slug>_check.conf        # archetype C — job_type = check companion
+    ├── <data>.exp               # headers == model observable names (A/B, and C data fusion)
+    ├── <slug>.prop              # archetype C — BPSL constraints
+    ├── make_<data>.py           # data extraction / digitization script, when data was derived
+    ├── make_reproduction.py     # simulates at fitted/published params, overlays the target
+    ├── <slug>_reproduction.png  # the overlay
+    ├── jstar.txt                # the declared reference objective J*
+    ├── best_fit_params.txt      # the fit that produced the reported OG
+    ├── information_criteria.txt # k, n, log_likelihood, AIC/BIC/AICc from that fit
+    └── nominal_check.json       # J* tier, J_paper, OG, k, n, optimizer, interpretation
+# VALIDATION.md is written later, by validate-pybnf-job — not by this skill.
 ```
 
 ## Completion criteria
 
 Not complete until:
-- `scripts/check_conf.py` passes (edition 2, job_type resolves, data and/or constraints
-  bound, free params bind by id with no `__FREE`);
-- **either** `scripts/petab_roundtrip.py` passes (quantitative example: export → lint
-  clean → import) **or** a `job_type = check` run reports the intended constraint
-  satisfaction (BPSL example) and the example is registered native-only;
-- a real bngsim fit reaches a finite objective, **or** the example is justifiably marked
-  `heavy=True` with the reason documented;
-- the fit is compared quantitatively to the paper's reported data/parameters, with the
-  metric and tolerance stated (or it is explicitly documented why the reported data
-  could not be extracted);
-- the `_manifest.py` entry, `README.md` coverage row, and the matching test assertion
-  (PEtab-lint for quantitative, export-refused/`check` for BPSL) are added and consistent
-  with the folder;
-- the conf header and manifest `system` field cite the source paper (PMCID/DOI) and the
-  figure/table the data (and any qualitative properties) came from.
+- the archetype is stated, and the folder matches its column in the archetype table;
+- `scripts/check_conf.py` passes (edition 2, job_type resolves, data and/or constraints bound,
+  free params bind by id with no `__FREE`);
+- **either** `scripts/petab_roundtrip.py` passes (A: export → lint clean → import) **or** a
+  `job_type = check` run reports the intended satisfaction (C) and the slug is registered
+  native-only;
+- **`jstar.txt` exists, its provenance tier is stated, and `scripts/score.py` reports an OG**,
+  with the status badge (solved / objective validated / setup only) recorded in
+  `nominal_check.json`, the slug README, and the paper-level slug table — **or** it is documented
+  precisely why no J\* can be declared for this paper;
+- `make_reproduction.py` and `<slug>_reproduction.png` are committed, and the reproduction metric
+  and its tolerance are stated;
+- the slug `README.md` and the paper-level `README.md` exist, agree with the conf and the shipped
+  artifacts, and use the corpus's one canonical `<FirstAuthor>-<Year>` key for this paper;
+- the conf banner cites the paper (PMCID/DOI) and the figure/table each `.exp` (and any
+  qualitative property) came from;
+- any bngsim/PyBNF defect this curation exposed is filed and cited.
 
 If a required artifact cannot be produced, state exactly which one and why.

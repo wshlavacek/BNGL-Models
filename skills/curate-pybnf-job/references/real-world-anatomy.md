@@ -1,43 +1,72 @@
-# Anatomy of a `examples/real-world/` job-setup folder
+# Anatomy of a `pybnf-jobs/` slug folder
 
-What a new example under `~/Code/PyBNF/examples/real-world/` must contain to (a) run
-and (b) pass the two committed test tiers. Grounded in the PyBNF source (v1.6.0); every
-schema claim cites `file:line`. The corpus is the 2019 PyBNF-paper case studies
-re-expressed on the edition-2 surface; a new paper-derived example follows the same
-mold.
+What a slug under `pybnf-jobs/<FirstAuthor>-<Year>/<slug>/` must contain to (a) run, (b) be
+scored against its reference objective, and (c) stand alone for a reader. Grounded in the PyBNF
+source; every schema claim cites `file:line`.
 
-A new example = **a folder of `{model, conf, exp}` + one `_manifest.py` entry + two
-`README.md` edits** (+ a PEtab test assertion, per the skill's completion bar).
+A slug is **self-contained and self-documenting**: `{model, conf, data}` + its own `README.md` +
+the reproduction pair + the OG provenance set. It is not an entry in a central manifest — the
+corpus registry is the paper-level `README.md` beside it.
+
+> **On `~/Code/PyBNF/examples/real-world/`.** That directory is a small teaching subset of this
+> corpus (8 papers, against 20 here), not its home. Its `_manifest.py` + two-test-tier machinery
+> is documented in the **Appendix** and applies only when you *promote* a finished slug there —
+> a separate PR against a separate repo. Do not author a new job there.
 
 ## Contents
 1. File inventory
 2. File formats (with the `receptor` template)
-3. The `_manifest.py` entry (field-by-field)
-4. What the two test tiers require
-5. README + manifest + test update steps
+3. The slug `README.md`
+4. Appendix: promoting a slug to PyBNF's `examples/real-world/`
+   (the `_manifest.py` entry, the two test tiers, the README edits)
 
 ---
 
 ## 1. File inventory
 
-Each example lives in its own self-contained slug folder, **grouped by source paper under
-a `<FirstAuthor>-<Year>/` directory** (e.g. `Rukhlenko-2022/cstar_trka/`; one paper's
-several jobs sit side by side there — see the skill's "Name and create the folder" step).
-All paths inside the `.conf` resolve relative to the slug folder (`README.md:98`; the test
-`chdir`s in before parsing — `test_real_world_examples.py:57-60`), so the grouping directory
-is transparent to the conf. Where a `_manifest.py`/README/test row names the folder, use the
-paper-relative path `<FirstAuthor>-<Year>/<slug>`.
+Each slug lives in its own folder, **grouped by source paper under a `<FirstAuthor>-<Year>/`
+directory** (e.g. `Rukhlenko-2022/cstar_trka/`; one paper's several jobs sit side by side there).
+All paths inside the `.conf` resolve relative to the slug folder, so run `pybnf` from inside it.
+
+**Core — every slug:**
 
 | file | role | required |
 |---|---|---|
-| `<name>.bngl` | the BioNetGen model — **no *simulation* actions** (`simulate`/`parameter_scan`; synthesized from the conf). **RETAIN network-generation directives** (`generate_network` with `max_stoich`/`max_agg`/`max_iter`) when the model's network is only finite/correct under them — see §2 | yes |
-| `<name>.conf` | the edition-2 job setup (this *is* the test input) | yes |
-| `<data>.exp` | ≥1 data file; each `experiment:` line binds one; column headers ARE model observable/function names | yes, unless the example is constraint-only |
-| `<data>.prop` | BPSL constraint file(s) for a data-fusion or constraint-only example; attached on an `experiment:`'s `data:`. Makes the job native-only (not PEtab-exportable). See `bpsl-constraints.md` | only for BPSL examples |
-| `*_ground_truth.bngl` | only for synthetic-data examples: the model at known-true params (documentation; not referenced by conf/tests) | no |
+| `README.md` | the entry point: what is fit, the model, the data provenance, free params, archetype, **the status line (J\*, tier, OG, badge)**, the run command | yes |
+| `<slug>.conf` | the edition-2 job setup, banner-commented with the paper and the J\* tier | yes |
+| `jstar.txt` | the declared reference objective (see `og-acceptance.md`) | yes |
+| `nominal_check.json` | J\* tier + source, `J_paper`, `OG`, `k`, `n`, optimizer, status, and a prose `interpretation` | yes |
+| `best_fit_params.txt` · `information_criteria.txt` | the fit that produced the reported OG, and its `k`/`n`/`log_likelihood` | yes, once a fit has been run |
+| `make_reproduction.py` · `<slug>_reproduction.png` | simulate at fitted/published params, overlay the target data | yes |
+| `make_<data>.py` | the extraction/digitization script, when the data was derived rather than transcribed | when data was derived |
+| `VALIDATION.md` | written later by `validate-pybnf-job`, **not** by curation | no |
 
-There is **no per-folder README**; documentation lives in `examples/real-world/README.md`
-and metadata in `examples/real-world/_manifest.py`.
+**Archetype A — hand-built BNGL:**
+
+| file | role |
+|---|---|
+| `<slug>.bngl` | the model — **no *simulation* actions** (`simulate`/`parameter_scan`; synthesized from the conf). **RETAIN network-generation directives** (`generate_network` with `max_stoich`/`max_agg`/`max_iter`) when the network is only finite/correct under them — see §2 |
+| `<data>.exp` | ≥1 data file; each `experiment:` binds one; column headers ARE model observable/function names |
+| `*_ground_truth.bngl` | synthetic-data jobs only: the model at known-true params (documentation) |
+
+**Archetype B — PEtab/SBML-imported:**
+
+| file | role |
+|---|---|
+| `model_<slug>.xml` | the SBML, **copied verbatim** from upstream — never edited |
+| `upstream.json` | the pinned upstream commit + per-file sha256 of LF-normalized content, so a re-copy cannot silently drift. `.gitattributes` stores `*.xml` as LF for exactly this reason |
+| `<data>.exp` · `<data>_measparams.tsv` | PyBNF-format translations of the upstream measurement tables, emitted by the importer |
+
+There is no `<slug>.bngl`: the model is the SBML, and the conf uses `sbml_backend = bngsim`.
+State in the README which bytes are copied and which are yours.
+
+**Archetype C — BPSL constraint-bearing:**
+
+| file | role |
+|---|---|
+| `<slug>.prop` (`.con`) | BPSL constraint file(s), attached on an `experiment:`'s `data:`. Makes the job **native-only** (not PEtab-exportable). See `bpsl-constraints.md` |
+| `<slug>_check.conf` | the `job_type = check` companion that reports constraint satisfaction |
+| `<variant>.bngl` | per-mutant/per-condition model variants when constraints compare across them |
 
 ---
 
@@ -103,9 +132,66 @@ Two real headers:
 
 ---
 
-## 3. The `_manifest.py` entry
+## 3. The slug `README.md`
 
-Each example registers one frozen `RealWorldExample` in `EXAMPLES`
+The slug README is the deliverable a reader meets first, and it must stand alone — assume they
+have neither the paper nor this skill open. The corpus converged on this shape:
+
+```markdown
+# <slug> — <one-line biology>, <ODE|SSA|NFsim> (PyBNF edition-2 job)
+
+<2-4 sentences: what this job fits and why it is worth having.>
+
+## Status
+J* = <value>  (tier <T1|T2|T3>, <source>) · OG = <value> · <✅ solved | 🟢 objective validated †
+| 🔁 regression-anchored | ⚪ setup only> · <PEtab-exportable | native-only (BPSL)> · <heavy?>
+
+## Reference
+<full citation, PMCID/DOI, and which figure/table the data came from>
+
+## The model
+<what it is, where it came from (author file? reconstructed? imported?), size, key mechanisms>
+
+## What is fit
+<the experimental design: time course / dose-response / pre-equilibration; the observables and
+ how they map to the paper's measured quantities>
+
+## Free parameters (<k>)
+<table or list: id, published value, search range, note>
+
+## Optimizer
+<job_type and WHY — which candidates were tried, what the budget is, what it costs>
+
+## Verification
+<tier-1, PEtab round-trip or BPSL check, the OG, the reproduction metric + tolerance;
+ link to VALIDATION.md once validate-pybnf-job has run>
+
+## Run
+<the exact commands, from inside the slug folder>
+```
+
+Two rules that the corpus enforces and that reviews catch:
+
+- **The README must agree with the conf and the shipped artifacts.** A README claiming `de` while
+  the conf says `gntr`, or quoting a budget the conf does not carry, is a defect — the whole
+  corpus was swept for exactly this in "Make every slug README agree with its own conf and
+  artifacts".
+- **Never let a declared number read as a measured one.** An OG evaluated at the nominal point
+  carries a `†` and says so in words. See `og-acceptance.md` §4.
+
+The paper-level `<FirstAuthor>-<Year>/README.md` above it carries the citation, the shared model,
+and a one-row-per-slug table (what each fits · archetype · data source · J\* · OG · status).
+
+---
+
+## 4. Appendix: promoting a slug to PyBNF's `examples/real-world/`
+
+Optional, and only for a slug that is small, fast, and pedagogically clean. This is a PR against
+`lanl/PyBNF`, not part of landing the job here. Nothing below governs `pybnf-jobs/`.
+
+### The `_manifest.py` entry
+
+Each promoted example registers one frozen `RealWorldExample` in `EXAMPLES`
 (`_manifest.py:35-94`):
 
 | field | type | meaning | required |
@@ -139,7 +225,7 @@ comparison in the PR. Prefer populating it when the paper reports point estimate
 
 ---
 
-## 4. What the two test tiers require (`tests/test_real_world_examples.py`)
+### What the two test tiers require (`tests/test_real_world_examples.py`)
 
 **Tier 1 — backend-free, default CI** (`test_real_world_conf_is_wellformed`,
 `:85-108`). Needs only `BNGPATH` set (to locate BNG2.pl for model parsing), no
@@ -165,9 +251,9 @@ it then stays backend-free-only (🔶).
 
 ---
 
-## 5. README + manifest + test update steps
+### README + manifest + test update steps
 
-Adding an example touches the new folder plus:
+Promoting an example touches the copied folder plus:
 
 1. **`_manifest.py`** — one `RealWorldExample(...)` in the right simulator group. The
    test imports `EXAMPLES` dynamically, so both tiers pick it up automatically.
