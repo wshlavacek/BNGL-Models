@@ -23,7 +23,7 @@ begin model
 #@note: |
 #  TODO optional — delete this tag if unused. Declare the simulation intent here
 #  or in the protocol: population-based (molecule counts), or concentration-based
-#  with conversion through NA and a volume (§1.3.4).
+#  with conversion through NA and a volume (§1.3, item 4).
 
 begin parameters
   # --- Required conversion constants (use when applicable) ---

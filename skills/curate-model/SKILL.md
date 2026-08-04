@@ -64,8 +64,8 @@ Before creating or editing model artifacts:
    inline unit comment (`skills/bngl/skill.md` §1.3.1, `# /s`, `# M`,
    `# dimensionless`), and the header **declares the simulation intent** — whether
    the model is population-based (molecule counts) or concentration-based with
-   conversion through `NA` and a volume (§1.3.4). About half the collection is
-   missing the second one; do not add to that.
+   conversion through `NA` and a volume (§1.3, item 4). About half the collection
+   is missing the second one; do not add to that.
 5. Run the BNGL file or files with BioNetGen. Copy generated reference outputs
    (`.gdat`, `.cdat`, `.net`, `.scan`, `.xml`, `.species`, and scan output
    directories) into `reference/`.
