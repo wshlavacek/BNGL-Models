@@ -1,0 +1,866 @@
+begin model
+
+#@title: Adaptive MAPK signaling under vemurafenib (Fröhlich et al., 2023)
+
+#@description: |
+#  Condition-specific MARM2.0 energy-pattern model of EGFR-RAS-RAF-MEK-ERK
+#  signaling in BRAF(V600E) melanoma cells. The seed populations are the
+#  state reached after 24 h adaptation to 1 uM vemurafenib; the active ODE
+#  protocol applies 100 ng/mL EGF and reproduces the pulse in Fig. 2A.
+#  Feedback includes ERK-dependent DUSP, SPRY, and EGFR transcription,
+#  receptor internalization/recycling, SOS1 and RAF phosphorylation, and
+#  allosteric RAF dimer/drug interactions.
+
+#@keyword: |
+#  MAPK signaling, adaptive resistance, transient, mass action,
+#  energy patterns, transcriptional feedback, Homo sapiens
+
+#@reference: |
+#  Fröhlich F, Gerosa L, Muhlich JL, Sorger PK (2023). Mechanistic model of
+#  MAPK signaling reveals how allostery and rewiring contribute to drug
+#  resistance. Molecular Systems Biology 19:e10988.
+#  doi:10.15252/msb.202210988.
+
+#@note: |
+#  This is a concentration-based deterministic model. NA and V_ref provide
+#  the source model's molecules/cell-to-uM conversion. Its compartment sizes
+#  are normalized topological factors, while h_mem records the membrane-layer
+#  convention needed for population conversion. ODE simulation is the source
+#  protocol; discrete simulation is not appropriate for the normalized
+#  compartments or the high cellular copy numbers.
+
+# Concentrations are uM, time is h, transcripts are FPKM, and the four
+# compartments retain the normalized sizes and topology of the source PySB
+# model. Protein abundance parameters are molecules/cell and V_ref supplies
+# the molecules-to-uM conversion. RAFi denotes vemurafenib in this protocol.
+
+begin parameters
+  NA                                          6.02214076e23  # molecules/mol
+  V_ref                                       1e-12  # L/cell
+  h_mem                                       1e-8  # m
+  m_Da_EGF                                   6200  # g/mol
+  RAFi_0                                     1  # uM
+  EGF_0                                      100  # ng/mL
+  bind_EGF_EGFR_kf                           2479887.4705101908  # /uM/h
+  bind_EGF_EGFR_dG                           -7.666702426562372  # dimensionless
+  bind_EGF_EGFR_phi                          0  # dimensionless
+  bind_EGFR_EGFR_kf                          182112.67384580092  # /uM/h
+  bind_EGFR_EGFR_dG                          -3.6689392953597451  # dimensionless
+  bind_EGFR_EGFR_phi                         0  # dimensionless
+  ep_EGFR_EGFR_mod_EGF_single_ddG            -6.4793523791267678  # dimensionless
+  catalyze_EGFR_EGFR_p_kcat                  72500.581192466168  # /h
+  catalyze_EGFR_u_kcatr                      0.00035374586466669998  # dimensionless
+  bind_pEGFR_GRB2_kf                         39410.062949845182  # /uM/h
+  bind_pEGFR_GRB2_dG                         -4.6897112710080542  # dimensionless
+  bind_pEGFR_GRB2_phi                        0  # dimensionless
+  bind_CBL_GRB2_kf                           6745988.4507277021  # /uM/h
+  bind_CBL_GRB2_dG                           -2.7551021219047485  # dimensionless
+  bind_CBL_GRB2_phi                          0  # dimensionless
+  catalyze_CBL_EGFR_ub_kcat                  31018.87449432908  # /h
+  catalyze_EGFR_dub_kcatr                    0.0018046834268667  # dimensionless
+  catalyze_EGFR_endo_kcat                    3047.2216505482729  # /h
+  catalyze_EGFR_deg_kM                       0.55484544179844064  # uM
+  catalyze_EGFR_recycl_kcat                  1386.3395435837365  # /h
+  catalyze_EGFR_deg_kcat                     280.29166504322831  # /h
+  bind_GRB2_SOS1_kf                          30385.865566380358  # /uM/h
+  bind_GRB2_SOS1_dG                          -5.3087942447554273  # dimensionless
+  bind_GRB2_SOS1_phi                         0  # dimensionless
+  bind_SOS1_RAS_kf                           374481.43973849952  # /uM/h
+  bind_SOS1_RAS_dG                           -5.438518111982285  # dimensionless
+  catalyze_SOS1_RAS_gtp_kcat                 19256.026183987778  # /h
+  catalyze_NF1_RAS_gdp_kcatr                 0.0020668423117604002  # dimensionless
+  bind_RAF_RAF_kf                            251.70953072238015  # /uM/h
+  bind_RAF_RAF_dG                            3.7614090351321599  # dimensionless
+  bind_RAF_RAF_phi                           0  # dimensionless
+  bind_RASgtp_RAF_kf                         58472.336475601638  # /uM/h
+  bind_RASgtp_RAF_dG                         -3.9814457167799482  # dimensionless
+  bind_RASgtp_RAF_phi                        0  # dimensionless
+  ep_RAF_RAF_mod_RASgtp_double_ddG           -22.994307063805536  # dimensionless
+  bind_RAFi_RAF_kf                           1.44313736835185  # /uM/h
+  bind_RAFi_RAF_dG                           -3.8342770796809642  # dimensionless
+  bind_RAFi_RAF_phi                          0  # dimensionless
+  ep_RAF_RAF_mod_RAFi_single_ddG             -10.736604588029971  # dimensionless
+  ep_RAF_RAF_mod_RAFi_double_ddG             10.5711021521333  # dimensionless
+  catalyze_pERK_CRAF_pS642_kcat              16476.188075697737  # /h
+  catalyze_pERK_BRAF_pT753_kcat              70.086482213675964  # /h
+  catalyze_phosphatase_CRAF_uS642_kcatr      0.0011959607351606999  # dimensionless
+  catalyze_phosphatase_BRAF_uT753_kcatr      0.0029839293511634002  # dimensionless
+  ep_RAF_RAS_mod_pRAF_ddG                    -0.74832567698459795  # dimensionless
+  ep_RAF_RAF_mod_pRAF_ddG                    5.2577145370789893  # dimensionless
+  bind_RAF_uMEK_kf                           1168.0216446773491  # /uM/h
+  bind_RAF_uMEK_dG                           -4.52490216776234  # dimensionless
+  bind_RAF_uMEK_phi                          0  # dimensionless
+  catalyze_RAF_RAFrafiNone_MEK_p_kcat        11702.957751517424  # /h
+  catalyze_RAFrafiNone_MEKmekiNone_p_kcat    422.10086658396273  # /h
+  catalyze_PP2A_MEK_u_kcatr                  0.0061331153577737002  # dimensionless
+  bind_MEK_uERK_kf                           24232.183711174355  # /uM/h
+  bind_MEK_uERK_dG                           -1.4392948865155151  # dimensionless
+  bind_MEK_uERK_phi                          0  # dimensionless
+  catalyze_MEKmekiNone_phosphop_ERK_p_kcat   23078.750926157529  # /h
+  mSPRY_eq                                   14.928376688138959  # FPKM
+  SPRY_eq                                    12329.981647129938  # molecules/cell
+  synthesize_pERK_SPRY_ERK_gexpslope         1457.5242164744905  # dimensionless
+  msynthesize_pERK_SPRY_kdeg                 1.3862383731898511  # /h
+  psynthesize_pERK_SPRY_kdeg                 0.30432771663644148  # /h
+  synthesize_pERK_SPRY_ERK_kM                1.1324789622933713  # uM
+  bind_SPRY_GRB2_kf                          4995.1075033921779  # /uM/h
+  bind_SPRY_GRB2_dG                          -6.1725161248813629  # dimensionless
+  bind_SPRY_GRB2_phi                         0  # dimensionless
+  catalyze_pERK_SOS1_pS1134_kbase            5.3666316228303055  # dimensionless
+  catalyze_pERK_SOS1_pS1134_kcat             1145.9775100183924  # /h
+  catalyze_phosphatase_SOS1_uS1134_kcatr     0.048760841133466702  # dimensionless
+  ep_SOS1S1134p_GRB2_ddG                     4.7119249302024757  # dimensionless
+  mEGFR_eq                                   18.48804946920416  # FPKM
+  EGFR_eq                                    9001.2997420588817  # molecules/cell
+  synthesize_pERK_EGFR_ERK_gexpslope         3.0982665771348361  # dimensionless
+  msynthesize_pERK_EGFR_kdeg                 0.27020436306041817  # /h
+  psynthesize_pERK_EGFR_kdeg                 0.2018498014994797  # /h
+  EGFR_crispr                                1  # dimensionless
+  synthesize_pERK_EGFR_ERK_kM                0.050315931886568098  # uM
+  mDUSP_eq                                   264.39763874219835  # FPKM
+  DUSP_eq                                    7352.3590372212284  # molecules/cell
+  synthesize_pERK_DUSP_ERK_gexpslope         27.856573798662048  # dimensionless
+  msynthesize_pERK_DUSP_kdeg                 1.2790922385131449  # /h
+  psynthesize_pERK_DUSP_kdeg                 0.31624736735996439  # /h
+  synthesize_pERK_DUSP_ERK_kM                0.25052419110129781  # uM
+  bind_DUSP_pERK_kf                          607209.12732434494  # /uM/h
+  bind_DUSP_pERK_dG                          -14.14536186956154  # dimensionless
+  bind_DUSP_pERK_phi                         0  # dimensionless
+  catalyze_DUSP_ERK_u_kcatr                  0.0072789291562344004  # dimensionless
+  BRAF_0                                     1116.0863989547629  # molecules/cell
+  CRAF_0                                     13103.648497460768  # molecules/cell
+  RAS_0                                      102196.47889865216  # molecules/cell
+  MEK_0                                      136106.2194645016  # molecules/cell
+  ERK_0                                      137676.37304289374  # molecules/cell
+  GRB2_0                                     47331.602362945341  # molecules/cell
+  SOS1_0                                     6469.7102941344501  # molecules/cell
+  CBL_0                                      16903.466895471614  # molecules/cell
+  pMEK_IF_scale                              51.614510330361377  # arbitrary units
+  pMEK_IF_offset                             0.096961641226766995  # arbitrary units
+  pERK_IF_scale                              1.9005626697169409  # arbitrary units
+  pERK_IF_offset                             0.081048230598595006  # arbitrary units
+  Ea0_bind_RASgtp_BRAF                       -ln(bind_RASgtp_RAF_kf) - bind_RASgtp_RAF_dG*bind_RASgtp_RAF_phi  # dimensionless
+  Ea0_bind_RASgtp_CRAF                       -ln(bind_RASgtp_RAF_kf) - bind_RASgtp_RAF_dG*bind_RASgtp_RAF_phi  # dimensionless
+  Ea0_bind_RAF_RAF                           -ln(bind_RAF_RAF_kf) - bind_RAF_RAF_dG*bind_RAF_RAF_phi  # dimensionless
+  Ea0_bind_RAFi_RAF                          -ln(bind_RAFi_RAF_kf) - bind_RAFi_RAF_dG*bind_RAFi_RAF_phi  # dimensionless
+  ep_RAF_RAF_mod_RAFi_double_Gf              -ep_RAF_RAF_mod_RAFi_single_ddG + ep_RAF_RAF_mod_RAFi_double_ddG  # dimensionless
+  Ea0_bind_BRAF_uMEK                         -ln(bind_RAF_uMEK_kf) - bind_RAF_uMEK_dG*bind_RAF_uMEK_phi  # dimensionless
+  Ea0_bind_CRAF_uMEK                         -ln(bind_RAF_uMEK_kf) - bind_RAF_uMEK_dG*bind_RAF_uMEK_phi  # dimensionless
+  Ea0_bind_MEK_uERK                          -ln(bind_MEK_uERK_kf) - bind_MEK_uERK_dG*bind_MEK_uERK_phi  # dimensionless
+  Ea0_bind_DUSP_pERK                         -ln(bind_DUSP_pERK_kf) - bind_DUSP_pERK_dG*bind_DUSP_pERK_phi  # dimensionless
+  msynthesize_pERK_DUSP_kbase                mDUSP_eq*psynthesize_pERK_DUSP_kdeg  # FPKM/h
+  psynthesize_pERK_DUSP_kbase                1000000.0*DUSP_eq*psynthesize_pERK_DUSP_kdeg/(NA*mDUSP_eq*V_ref)  # uM/FPKM/h
+  psynthesize_pERK_DUSP_ksyn                 psynthesize_pERK_DUSP_kbase  # uM/FPKM/h
+  Ea0_bind_EGF_EGFR                          -ln(bind_EGF_EGFR_kf) - bind_EGF_EGFR_dG*bind_EGF_EGFR_phi  # dimensionless
+  Ea0_bind_EGFR_EGFR                         -ln(bind_EGFR_EGFR_kf) - bind_EGFR_EGFR_dG*bind_EGFR_EGFR_phi  # dimensionless
+  catalyze_EGFR_u_kcat                       catalyze_EGFR_EGFR_p_kcat*catalyze_EGFR_u_kcatr  # /h
+  msynthesize_pERK_EGFR_kbase                mEGFR_eq*psynthesize_pERK_EGFR_kdeg  # FPKM/h
+  psynthesize_pERK_EGFR_kbase                1000000.0*EGFR_eq*psynthesize_pERK_EGFR_kdeg/(NA*mEGFR_eq*V_ref)  # uM/FPKM/h
+  psynthesize_pERK_EGFR_ksyn                 psynthesize_pERK_EGFR_kbase  # uM/FPKM/h
+  Ea0_bind_pEGFR_GRB2                        -ln(bind_pEGFR_GRB2_kf) - bind_pEGFR_GRB2_dG*bind_pEGFR_GRB2_phi  # dimensionless
+  Ea0_bind_SPRY_GRB2                         -ln(bind_SPRY_GRB2_kf) - bind_SPRY_GRB2_dG*bind_SPRY_GRB2_phi  # dimensionless
+  msynthesize_pERK_SPRY_kbase                mSPRY_eq*psynthesize_pERK_SPRY_kdeg  # FPKM/h
+  psynthesize_pERK_SPRY_kbase                1000000.0*SPRY_eq*psynthesize_pERK_SPRY_kdeg/(NA*mSPRY_eq*V_ref)  # uM/FPKM/h
+  psynthesize_pERK_SPRY_ksyn                 psynthesize_pERK_SPRY_kbase  # uM/FPKM/h
+  Ea0_bind_GRB2_SOS1                         -ln(bind_GRB2_SOS1_kf) - bind_GRB2_SOS1_dG*bind_GRB2_SOS1_phi  # dimensionless
+  bind_SOS1_RAS_kr                           bind_SOS1_RAS_kf*exp(bind_SOS1_RAS_dG)  # /h
+  Ea0_bind_CBL_GRB2                          -ln(bind_CBL_GRB2_kf) - bind_CBL_GRB2_dG*bind_CBL_GRB2_phi  # dimensionless
+  catalyze_EGFR_dub_kcat                     catalyze_CBL_EGFR_ub_kcat*catalyze_EGFR_dub_kcatr  # /h
+  catalyze_PP2A_MEK_u_kcat                   catalyze_PP2A_MEK_u_kcatr*catalyze_RAF_RAFrafiNone_MEK_p_kcat  # /h
+  catalyze_DUSP_ERK_u_kcat                   catalyze_DUSP_ERK_u_kcatr*catalyze_MEKmekiNone_phosphop_ERK_p_kcat  # /h
+  catalyze_phosphatase_CRAF_uS642_kcat       catalyze_pERK_CRAF_pS642_kcat*catalyze_phosphatase_CRAF_uS642_kcatr  # /h
+  catalyze_phosphatase_BRAF_uT753_kcat       catalyze_pERK_BRAF_pT753_kcat*catalyze_phosphatase_BRAF_uT753_kcatr  # /h
+  catalyze_phosphatase_SOS1_uS1134_kcat      catalyze_pERK_SOS1_pS1134_kcat*catalyze_phosphatase_SOS1_uS1134_kcatr  # /h
+  catalyze_NF1_RAS_gdp_kcat                  catalyze_NF1_RAS_gdp_kcatr*catalyze_SOS1_RAS_gtp_kcat  # /h
+  initBRAF                                   1000000.0*BRAF_0/(NA*V_ref)  # uM
+  initCRAF                                   1000000.0*CRAF_0/(NA*V_ref)  # uM
+  initRAS                                    1000000.0*RAS_0/(NA*V_ref)  # uM
+  initMEK                                    1000000.0*MEK_0/(NA*V_ref)  # uM
+  initERK                                    1000000.0*ERK_0/(NA*V_ref)  # uM
+  initEGF                                    6.02214076208112e+23*EGF_0/(NA*m_Da_EGF)  # uM
+  initGRB2                                   1000000.0*GRB2_0/(NA*V_ref)  # uM
+  initSOS1                                   1000000.0*SOS1_0/(NA*V_ref)  # uM
+  initCBL                                    1000000.0*CBL_0/(NA*V_ref)  # uM
+end parameters
+
+begin compartments
+  # Unit-size topological compartments from the source PySB model; V_ref is
+  # the physical cell volume used by all molecule-to-concentration conversions.
+  EC  3  1.0
+  PM  2  1.0  EC
+  CP  3  1.0  PM
+  EM  2  1.0  CP
+end compartments
+
+begin molecule types
+  # BRAF(V600E) kinase with RAS, MEK, RAF-dimer, inhibitor, and feedback sites.
+  BRAF(AA600~E,RBD,mek,raf,rafi,T753~u~p)
+  # CRAF kinase with RAS, MEK, RAF-dimer, inhibitor, and feedback sites.
+  CRAF(RBD,mek,raf,rafi,S642~u~p)
+  # RAS nucleotide state and binding sites for SOS1 and RAF.
+  RAS(raf,sos1,state~gdp~gtp)
+  # Vemurafenib, represented as a generic ATP-competitive RAF inhibitor.
+  RAFi(raf)
+  # Pan-RAF inhibitor type retained from the source type system; absent here.
+  PRAFi(raf)
+  # MEK kinase with RAF, ERK, and inhibitor interaction sites.
+  MEK(Dsite,meki,phospho~p~u,raf)
+  # MEK inhibitor type retained from the source type system; absent here.
+  MEKi(mek)
+  # ERK kinase with MEK/DUSP docking and phosphorylation state.
+  ERK(CD,phospho~p~u)
+  # ERK-induced dual-specificity phosphatase.
+  DUSP(erk)
+  # DUSP transcript in FPKM units.
+  mDUSP()
+  # Fixed extracellular EGF input.
+  EGF(rtk)
+  # EGFR with ligand, dimerization, phosphorylation, and ubiquitin states.
+  EGFR(KD,Tyr~p~u,rtkf,ub~false~true)
+  # EGFR transcript in FPKM units.
+  mEGFR()
+  # GRB2 adaptor with SH2 and SH3 interaction sites.
+  GRB2(SH2,SH3)
+  # ERK-induced SPRY feedback inhibitor.
+  SPRY(SH3m)
+  # SPRY transcript in FPKM units.
+  mSPRY()
+  # SOS1 exchange factor with feedback phosphorylation and RAS binding.
+  SOS1(S1134~p~u,SH3m,ras)
+  # CBL ubiquitin ligase recruited through GRB2.
+  CBL(SH3m)
+end molecule types
+
+begin seed species
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf,rafi)  9.309414497451e-06  # uM
+  @CP::CRAF(RBD,S642~u,mek,raf,rafi)  4.706246275751e-06  # uM
+  @CP::RAS(raf,sos1,state~gdp)  0.1697012457388  # uM
+  @CP::$RAFi(raf)  1  # uM
+  @CP::MEK(Dsite,meki,phospho~u,raf)  0.1278180883862  # uM
+  @CP::ERK(CD,phospho~u)  0.1402403784248  # uM
+  @CP::$EGF(rtk)  initEGF  # uM
+  @CP::GRB2(SH2,SH3)  0.03266985372965  # uM
+  @CP::SOS1(S1134~u,SH3m,ras)  0.001256759111697  # uM
+  @CP::CBL(SH3m)  0.01854374891282  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi)  1.007524285188e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).CRAF(RBD,S642~u,mek,raf!1,rafi)  1.018680139992e-12  # uM
+  @CP::CRAF(RBD,S642~u,mek,raf!1,rafi).CRAF(RBD,S642~u,mek,raf!1,rafi)  2.574898570874e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf,rafi!1).RAFi(raf!1)  3.40039036833e-05  # uM
+  @CP::CRAF(RBD,S642~u,mek,raf,rafi!1).RAFi(raf!1)  0.0002177074660268  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf,rafi).MEK(Dsite,meki,phospho~u,raf!1)  3.214690689974e-06  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf,rafi).MEK(Dsite,meki,phospho~u,raf!1)  5.551435780153e-05  # uM
+  @CP::ERK(CD!1,phospho~u).MEK(Dsite!1,meki,phospho~u,raf)  0.07560293687458  # uM
+  @CP::mDUSP()  97.09278627895  # FPKM
+  @PM::mEGFR()  17.26617389381  # FPKM
+  @CP::mSPRY()  21.93848104228  # FPKM
+  @CP::GRB2(SH2,SH3!1).SOS1(S1134~u,SH3m!1,ras)  0.007792934097181  # uM
+  @CP::SOS1(S1134~p,SH3m,ras)  0.001594360379647  # uM
+  @CP::CBL(SH3m!1).GRB2(SH2,SH3!1)  0.009525118237792  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).RAFi(raf!2)  3.379761232988e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1)  6.958289161117e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!3).RAFi(raf!2).RAFi(raf!3)  5.373210953592e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  1.172100877086e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek!3,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3)  1.201404257437e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).CRAF(RBD,S642~u,mek,raf!1,rafi!2).RAFi(raf!2)  2.168822663206e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).CRAF(RBD,S642~u,mek!2,raf!1,rafi).MEK(Dsite,meki,phospho~u,raf!2)  1.20162376687e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek,raf!1,rafi).RAFi(raf!2)  1.711113423109e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek,raf!1,rafi!3).RAFi(raf!2).RAFi(raf!3)  4.461866699249e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek!3,raf!1,rafi).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!2)  2.018410368767e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1)  3.517666741494e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  7.485027490334e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3)  4.149400576846e-12  # uM
+  @CP::CRAF(RBD,S642~u,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek,raf!1,rafi).RAFi(raf!2)  1.096144237007e-06  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1)  6.074643450033e-12  # uM
+  @CP::CRAF(RBD,S642~u,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek,raf!1,rafi!3).RAFi(raf!2).RAFi(raf!3)  6.501927456244e-10  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  1.292999554419e-05  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3)  3.582790936159e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf,rafi!2).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!2)  0.0003979096340351  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf,rafi!2).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!2)  0.002568053063298  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf,rafi).ERK(CD!2,phospho~u).MEK(Dsite!2,meki,phospho~u,raf!1)  1.901471800534e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!1)  4.115789634472e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!1)  2.080680462816e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf,rafi!2).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!1).RAFi(raf!2)  0.0002353614603166  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf,rafi).ERK(CD!2,phospho~u).MEK(Dsite!2,meki,phospho~u,raf!1)  3.283645130622e-05  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).CRAF(RBD,S642~u,mek!2,raf!1,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!2)  7.107541521109e-12  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!1)  3.593119721618e-12  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf,rafi!2).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!1).RAFi(raf!2)  0.001518989910074  # uM
+  @CP::MEK(Dsite,meki,phospho~p,raf)  0.0002136030269434  # uM
+  @CP::DUSP(erk)  0.001007452283762  # uM
+  @PM::EGFR(KD,Tyr~u,rtkf,ub~false)  0.00832132411454  # uM
+  @CP::SPRY(SH3m)  0.001872976966615  # uM
+  @CP::GRB2(SH2,SH3!1).SOS1(S1134~p,SH3m!1,ras)  9.915310818964e-05  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  3.964916225476e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  2.345227139723e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4).RAFi(raf!3)  7.918273896472e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  6.93291201151e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).RAFi(raf!4).RAFi(raf!3)  4.683617415301e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  1.368011956306e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1)  1.421247974919e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  8.091718928471e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi!5).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  1.892896709294e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  8.091715214694e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!5)  2.239276892723e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).ERK(CD!5,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).MEK(Dsite!5,meki,phospho~u,raf!3)  4.203301664918e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite!6,meki,phospho~u,raf!1).RAFi(raf!3)  4.786207084282e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).ERK(CD!7,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite!7,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  6.622602513995e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).CRAF(RBD,S642~u,mek!2,raf!1,rafi!3).MEK(Dsite,meki,phospho~u,raf!2).RAFi(raf!3)  2.558319099314e-05  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).CRAF(RBD,S642~u,mek!2,raf!1,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!2).RAFi(raf!3)  1.51323232146e-05  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek!3,raf!1,rafi!4).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!2).RAFi(raf!4)  5.263168348863e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek!3,raf!1,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).RAFi(raf!2)  1.193879140725e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek!3,raf!1,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).RAFi(raf!2).RAFi(raf!4)  3.11313645781e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!4)  8.829255204806e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1)  2.454348665596e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4)  5.22245811866e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  2.003721875995e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!4)  2.22406774792e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  2.363568046405e-05  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  2.623485586996e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  1.398038095697e-05  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!5)  1.551777956938e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  4.427352447793e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3)  2.454347539749e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!4)  5.222455721594e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).ERK(CD!5,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).MEK(Dsite!5,meki,phospho~u,raf!3)  1.451733689609e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite!6,meki,phospho~u,raf!3).RAFi(raf!4)  3.089055152436e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  1.185190974205e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!4)  1.315524375546e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  1.398038095545e-05  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  1.551777926645e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite!6,meki,phospho~u,raf!4).RAFi(raf!3)  8.26932196761e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).ERK(CD!7,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite!7,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  9.178685000469e-09  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  1.292999554419e-05  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  7.64802450916e-06  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4).RAFi(raf!3)  1.533920267052e-08  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  7.64802450916e-06  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).RAFi(raf!4).RAFi(raf!3)  9.073057881122e-09  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  0.0001525207898088  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1)  4.238404073272e-11  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  9.021524675919e-05  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  9.046976460082e-08  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  9.021524675919e-05  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!5)  1.070247819715e-07  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).ERK(CD!5,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).MEK(Dsite!5,meki,phospho~u,raf!3)  1.253496883325e-11  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite!6,meki,phospho~u,raf!1).RAFi(raf!3)  5.336184501813e-05  # uM
+  @CP::CRAF(RBD,S642~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).ERK(CD!7,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite!7,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  3.16522984408e-08  # uM
+  @CP::ERK(CD!1,phospho~u).MEK(Dsite!1,meki,phospho~p,raf)  2.534162259222e-05  # uM
+  @PM::EGFR(KD!1,Tyr~u,rtkf,ub~false).EGFR(KD,Tyr~u!1,rtkf,ub~false)  0.002714856068652  # uM
+  @CP::GRB2(SH2,SH3!1).SPRY(SH3m!1)  0.02850891566179  # uM
+  @CP::ERK(CD,phospho~p)  0.0009603404801842  # uM
+  @CP::DUSP(erk!1).ERK(CD!1,phospho~p)  0.003481502583295  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf,rafi)  1.747914404429e-05  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf,rafi!1).RAFi(raf!1)  0.0008085729101818  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf,rafi).MEK(Dsite,meki,phospho~u,raf!1)  0.0002061820397158  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf,rafi!2).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!2)  0.00953783614677  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf,rafi).ERK(CD!2,phospho~u).MEK(Dsite!2,meki,phospho~u,raf!1)  0.0001219555944707  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf,rafi!2).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!1).RAFi(raf!2)  0.005641580027274  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf,rafi)  1.384772733714e-05  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf,rafi!1).RAFi(raf!1)  5.02773641078e-05  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf,rafi).MEK(Dsite,meki,phospho~u,raf!1)  4.781863892662e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf,rafi!2).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!2)  0.0005921231067999  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf,rafi).ERK(CD!2,phospho~u).MEK(Dsite!2,meki,phospho~u,raf!1)  2.828446100355e-06  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf,rafi!2).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!1).RAFi(raf!2)  0.0003502377102653  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi)  1.560792867969e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).RAFi(raf!2)  2.604027346347e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1)  5.389692387073e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  3.070827508437e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!1)  3.187973300061e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  1.81637835586e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).RAFi(raf!2)  2.606333206158e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!3).RAFi(raf!3).RAFi(raf!2)  2.481673885129e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  9.000598594732e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4).RAFi(raf!3)  2.898365877997e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  5.323804392644e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).RAFi(raf!4).RAFi(raf!3)  1.714368206282e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).BRAF(AA600~E,RBD,T753~u,mek!2,raf!1,rafi).MEK(Dsite,meki,phospho~u,raf!2)  5.389669038483e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).BRAF(AA600~E,RBD,T753~u,mek!3,raf!1,rafi).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!2)  8.992427258568e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek!3,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1)  1.861147547567e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  1.060401400791e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3)  1.100858502305e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  6.272218636925e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).BRAF(AA600~E,RBD,T753~u,mek!2,raf!1,rafi!3).MEK(Dsite,meki,phospho~u,raf!2).RAFi(raf!3)  3.070465682797e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).BRAF(AA600~E,RBD,T753~u,mek!3,raf!1,rafi!4).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!4).RAFi(raf!2)  2.88001087668e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek!3,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4)  1.060278855786e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi!5).MEK(Dsite,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!5).RAFi(raf!3)  3.363121420198e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!4)  6.27149091284e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!5).RAFi(raf!3)  1.989268670465e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).BRAF(AA600~E,RBD,T753~u,mek!2,raf!1,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!2)  3.187959489492e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).BRAF(AA600~E,RBD,T753~u,mek!3,raf!1,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).RAFi(raf!2)  5.318971092343e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1)  1.100858502303e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  6.272215759779e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite!6,meki,phospho~u,raf!1).RAFi(raf!3)  3.709982705977e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).BRAF(AA600~E,RBD,T753~u,mek!2,raf!1,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!2).RAFi(raf!3)  1.816164337866e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).BRAF(AA600~E,RBD,T753~u,mek!3,raf!1,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).RAFi(raf!4).RAFi(raf!2)  1.703511319167e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4)  6.271493789551e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!5).RAFi(raf!3)  1.989268670274e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~u,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).MEK(Dsite!6,meki,phospho~u,raf!1).RAFi(raf!4)  3.70955396276e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).ERK(CD!7,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!4).MEK(Dsite!7,meki,phospho~u,raf!1).RAFi(raf!5).RAFi(raf!3)  1.176641978832e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).RAFi(raf!2)  2.019429651253e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~p,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  2.378414785664e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~p,mek,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  1.406819864022e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~p,mek,raf!2,rafi!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  6.973446117541e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~p,mek,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4).RAFi(raf!3)  2.214759877664e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).BRAF(AA600~E,RBD,T753~p,mek,raf!2,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  4.124754890548e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~p,mek,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).RAFi(raf!4).RAFi(raf!3)  1.310018844784e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~p,mek!4,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  8.213084702441e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~p,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  4.857996499995e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~p,mek!4,raf!2,rafi!5).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  1.304117886482e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~p,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  4.85799427168e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~p,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!5)  1.542757771929e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~p,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite!6,meki,phospho~u,raf!1).RAFi(raf!3)  2.8734781174e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).BRAF(AA600~E,RBD,T753~p,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).ERK(CD!7,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite!7,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  4.562665629234e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).CRAF(RBD,S642~p,mek,raf!1,rafi)  1.970093915193e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).CRAF(RBD,S642~p,mek,raf!1,rafi!2).RAFi(raf!2)  4.193096446468e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).CRAF(RBD,S642~p,mek!2,raf!1,rafi).MEK(Dsite,meki,phospho~u,raf!2)  2.323900877737e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).CRAF(RBD,S642~p,mek!2,raf!1,rafi!3).MEK(Dsite,meki,phospho~u,raf!2).RAFi(raf!3)  4.946129947023e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).CRAF(RBD,S642~p,mek!2,raf!1,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!2)  1.374575173599e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi).CRAF(RBD,S642~p,mek!2,raf!1,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!2).RAFi(raf!3)  2.925609906905e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek,raf!1,rafi).RAFi(raf!2)  3.289885159694e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek,raf!1,rafi!3).RAFi(raf!2).RAFi(raf!3)  3.959542793601e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek!3,raf!1,rafi).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!2)  3.880711955561e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek!3,raf!1,rafi!4).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!2).RAFi(raf!4)  4.670632654883e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek!3,raf!1,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).RAFi(raf!2)  2.295420756155e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek!3,raf!1,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).RAFi(raf!2).RAFi(raf!4)  2.762654704384e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1)  6.803051446144e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek,raf!2,rafi!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  1.4479399546e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3)  8.024803845676e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!4)  1.707973871426e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1)  4.746629361409e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4)  1.010257581685e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  3.875662666267e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!4)  4.594491347842e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  4.571688589306e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi!5).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  5.419610909747e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  2.704129808844e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!5)  3.205671411579e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek,raf!2,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!1)  4.023967382855e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek,raf!2,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  8.564484916452e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3)  4.746627184058e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!4)  1.010257118263e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).ERK(CD!5,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).MEK(Dsite!5,meki,phospho~u,raf!3)  2.80760506958e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite!6,meki,phospho~u,raf!3).RAFi(raf!4)  5.975617837318e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  2.292434127991e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!4)  2.717617520206e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  2.704129808792e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  3.205671410818e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite!6,meki,phospho~u,raf!4).RAFi(raf!3)  1.599478590917e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~u,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).ERK(CD!7,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite!7,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  1.896137816479e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).CRAF(RBD,S642~u,mek,raf!1,rafi)  7.890373371483e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).CRAF(RBD,S642~u,mek,raf!1,rafi!2).RAFi(raf!2)  1.67936034108e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).CRAF(RBD,S642~u,mek!2,raf!1,rafi).MEK(Dsite,meki,phospho~u,raf!2)  9.307396699343e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).CRAF(RBD,S642~u,mek!2,raf!1,rafi!3).MEK(Dsite,meki,phospho~u,raf!2).RAFi(raf!3)  1.980954786255e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).CRAF(RBD,S642~u,mek!2,raf!1,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!2)  5.505276303443e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).CRAF(RBD,S642~u,mek!2,raf!1,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!2).RAFi(raf!3)  1.171724360232e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).CRAF(RBD,S642~p,mek,raf!1,rafi!2).RAFi(raf!2)  3.247833815938e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).CRAF(RBD,S642~p,mek!2,raf!1,rafi).MEK(Dsite,meki,phospho~u,raf!2)  1.800019978825e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).CRAF(RBD,S642~p,mek!2,raf!1,rafi!3).MEK(Dsite,meki,phospho~u,raf!2).RAFi(raf!3)  3.831108658017e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).CRAF(RBD,S642~p,mek!2,raf!1,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!2)  1.064702371163e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi).CRAF(RBD,S642~p,mek!2,raf!1,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!2).RAFi(raf!3)  2.26608066597e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek,raf!1,rafi).RAFi(raf!2)  1.316444867979e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek,raf!1,rafi!3).RAFi(raf!2).RAFi(raf!3)  1.576403781795e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek!3,raf!1,rafi).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!2)  1.552863729286e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek!3,raf!1,rafi!4).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!2).RAFi(raf!4)  1.859508373651e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek!3,raf!1,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).RAFi(raf!2)  9.185107466104e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek!3,raf!1,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).RAFi(raf!2).RAFi(raf!4)  1.099889444514e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek,raf!1,rafi).RAFi(raf!2)  2.549003296428e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek,raf!1,rafi!3).RAFi(raf!2).RAFi(raf!3)  3.02436917475e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek!3,raf!1,rafi).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!2)  3.006775947198e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek!3,raf!1,rafi!4).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!2).RAFi(raf!4)  3.567512251879e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek!3,raf!1,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).RAFi(raf!2)  1.77849219353e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek!3,raf!1,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).RAFi(raf!2).RAFi(raf!4)  2.110164775065e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1)  2.724684752458e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  5.799106000696e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3)  3.214007839405e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!4)  6.840560960663e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1)  1.90106877024e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4)  4.046155909702e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek,raf!2,rafi!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  1.121534159532e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!4)  1.322949224729e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4)  7.825175237316e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  1.552410946048e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!4)  1.840852455744e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  1.83120669137e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  2.171449089152e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  1.083149147969e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!5)  1.284400740701e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  3.002128373434e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!4)  3.561680863986e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  3.541277249932e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi!5).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  4.201319146365e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  2.094646909092e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!5)  2.485058227003e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!1)  1.611635992947e-15  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  3.430139192869e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3)  1.901067898195e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!4)  4.046154053671e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).ERK(CD!5,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).MEK(Dsite!5,meki,phospho~u,raf!3)  1.124471685182e-14  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite!6,meki,phospho~u,raf!3).RAFi(raf!4)  2.393278888964e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek,raf!2,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  6.633812653702e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!4)  7.825171647806e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite!6,meki,phospho~u,raf!3).RAFi(raf!4)  4.628547964016e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  9.182429276973e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!4)  1.088854566822e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  1.083149147965e-07  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  1.284400740519e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite!6,meki,phospho~u,raf!4).RAFi(raf!3)  6.406770367706e-08  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).ERK(CD!7,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite!7,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  7.597162976199e-11  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  1.775743177998e-10  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!4)  2.106715539678e-13  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  2.094646909044e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  2.485058226943e-12  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite!6,meki,phospho~u,raf!4).RAFi(raf!3)  1.238972654217e-09  # uM
+  @CP::BRAF(AA600~E,RBD,T753~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).ERK(CD!7,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite!7,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  1.469898899918e-12  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi).CRAF(RBD,S642~u,mek,raf!1,rafi)  9.959538441435e-15  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek,raf!1,rafi).RAFi(raf!2)  2.119758669775e-08  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1)  1.17481608097e-13  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  2.500443758184e-07  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!1)  6.948975465853e-14  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  1.478999360906e-07  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi).CRAF(RBD,S642~u,mek,raf!1,rafi!2).RAFi(raf!2)  2.119756989879e-08  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek,raf!1,rafi!3).RAFi(raf!3).RAFi(raf!2)  2.514859428676e-11  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  2.500441776597e-07  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4).RAFi(raf!3)  2.966500220428e-10  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek,raf!2,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  1.478998188807e-07  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).RAFi(raf!4).RAFi(raf!3)  1.754669312509e-10  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi).CRAF(RBD,S642~u,mek!2,raf!1,rafi).MEK(Dsite,meki,phospho~u,raf!2)  1.17481608097e-13  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek!3,raf!1,rafi).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!2)  2.500443758184e-07  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1)  1.385799986839e-12  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  2.949495655798e-06  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3)  8.19693419686e-13  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  1.744611201768e-06  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi).CRAF(RBD,S642~u,mek!2,raf!1,rafi!3).MEK(Dsite,meki,phospho~u,raf!2).RAFi(raf!3)  2.500441776597e-07  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek!3,raf!1,rafi!4).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!4).RAFi(raf!2)  2.966500220428e-10  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4)  2.949493318341e-06  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).MEK(Dsite,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!5).RAFi(raf!3)  3.499250676781e-09  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3).RAFi(raf!4)  1.744609819174e-06  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!5).RAFi(raf!3)  2.069788411624e-09  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi).CRAF(RBD,S642~u,mek!2,raf!1,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!2)  6.948975465853e-14  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek!3,raf!1,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).RAFi(raf!2)  1.478999360906e-07  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1)  8.19693419686e-13  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  1.744611201768e-06  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).ERK(CD!5,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).MEK(Dsite!5,meki,phospho~u,raf!1)  4.848443560812e-13  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite!6,meki,phospho~u,raf!1).RAFi(raf!3)  1.031928370314e-06  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi).CRAF(RBD,S642~u,mek!2,raf!1,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!2).RAFi(raf!3)  1.478998188807e-07  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi!2).CRAF(RBD,S642~u,mek!3,raf!1,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).RAFi(raf!4).RAFi(raf!2)  1.754669312509e-10  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4)  1.744609819174e-06  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!5).RAFi(raf!3)  2.069788411624e-09  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~u,mek!3,raf!2,rafi!4).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!3).MEK(Dsite!6,meki,phospho~u,raf!1).RAFi(raf!4)  1.031927552517e-06  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~u,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).ERK(CD!7,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!4).MEK(Dsite!7,meki,phospho~u,raf!1).RAFi(raf!5).RAFi(raf!3)  1.224268983448e-09  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek,raf!1,rafi).RAFi(raf!2)  4.099543156184e-10  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1)  2.272055747956e-15  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  4.835775525983e-09  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek,raf!2,rafi).ERK(CD!3,phospho~u).MEK(Dsite!3,meki,phospho~u,raf!1)  1.343909051411e-15  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  2.860335845988e-09  # uM
+  @CP::CRAF(RBD,S642~p,mek,raf!1,rafi!2).CRAF(RBD,S642~p,mek,raf!1,rafi!3).RAFi(raf!2).RAFi(raf!3)  2.431829727251e-13  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek,raf!2,rafi!3).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  4.835775525983e-09  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek,raf!2,rafi!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!4).RAFi(raf!3)  5.737118615598e-12  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek,raf!2,rafi!3).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).RAFi(raf!3)  2.860335845988e-09  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek,raf!2,rafi!4).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).RAFi(raf!4).RAFi(raf!3)  3.393475553343e-12  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!3)  1.340045849141e-14  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi).MEK(Dsite,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  5.704227043547e-08  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!3).MEK(Dsite,meki,phospho~u,raf!1)  1.5852601747e-14  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3)  3.374020361087e-08  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi!5).MEK(Dsite,meki,phospho~u,raf!1).MEK(Dsite,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  3.383720665206e-11  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3)  3.374020361087e-08  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!4).MEK(Dsite,meki,phospho~u,raf!1).RAFi(raf!3).RAFi(raf!5)  4.002906032133e-11  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi).CRAF(RBD,S642~p,mek!3,raf!2,rafi).ERK(CD!4,phospho~u).ERK(CD!5,phospho~u).MEK(Dsite!4,meki,phospho~u,raf!1).MEK(Dsite!5,meki,phospho~u,raf!3)  4.688365370299e-15  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi).ERK(CD!5,phospho~u).ERK(CD!6,phospho~u).MEK(Dsite!5,meki,phospho~u,raf!4).MEK(Dsite!6,meki,phospho~u,raf!1).RAFi(raf!3)  1.995715337086e-08  # uM
+  @CP::CRAF(RBD,S642~p,mek!1,raf!2,rafi!3).CRAF(RBD,S642~p,mek!4,raf!2,rafi!5).ERK(CD!6,phospho~u).ERK(CD!7,phospho~u).MEK(Dsite!6,meki,phospho~u,raf!1).MEK(Dsite!7,meki,phospho~u,raf!4).RAFi(raf!3).RAFi(raf!5)  1.183848955593e-11  # uM
+end seed species
+
+begin observables
+  # Molecular total or state-resolved pattern count for modulation_synthesize_pERK_DUSP_ERK.
+  Molecules modulation_synthesize_pERK_DUSP_ERK   ERK(phospho~p)
+  # Molecular total or state-resolved pattern count for pEGFR_PM.
+  Molecules pEGFR_PM                              EGFR(Tyr~p)@PM
+  # Molecular total or state-resolved pattern count for modulation_synthesize_pERK_EGFR_ERK.
+  Molecules modulation_synthesize_pERK_EGFR_ERK   ERK(phospho~p)
+  # Molecular total or state-resolved pattern count for modulation_synthesize_pERK_SPRY_ERK.
+  Molecules modulation_synthesize_pERK_SPRY_ERK   ERK(phospho~p)
+  # Molecular total or state-resolved pattern count for tBRAF.
+  Molecules tBRAF                                 BRAF()
+  # Molecular total or state-resolved pattern count for tBRAF600E.
+  Molecules tBRAF600E                             BRAF(AA600~E)
+  # Molecular total or state-resolved pattern count for tCRAF.
+  Molecules tCRAF                                 CRAF()
+  # Molecular total or state-resolved pattern count for tRAS.
+  Molecules tRAS                                  RAS()
+  # Molecular total or state-resolved pattern count for gdpRAS.
+  Molecules gdpRAS                                RAS(state~gdp)
+  # Molecular total or state-resolved pattern count for gtpRAS.
+  Molecules gtpRAS                                RAS(state~gtp)
+  # Molecular total or state-resolved pattern count for tRAFi.
+  Molecules tRAFi                                 RAFi()
+  # Molecular total or state-resolved pattern count for tPRAFi.
+  Molecules tPRAFi                                PRAFi()
+  # Molecular total or state-resolved pattern count for tMEK.
+  Molecules tMEK                                  MEK()
+  # Molecular total or state-resolved pattern count for pMEK.
+  Molecules pMEK                                  MEK(phospho~p)
+  # Molecular total or state-resolved pattern count for tMEKi.
+  Molecules tMEKi                                 MEKi()
+  # Molecular total or state-resolved pattern count for tERK.
+  Molecules tERK                                  ERK()
+  # Molecular total or state-resolved pattern count for pERK.
+  Molecules pERK                                  ERK(phospho~p)
+  # Molecular total or state-resolved pattern count for tDUSP.
+  Molecules tDUSP                                 DUSP()
+  # Molecular total or state-resolved pattern count for tmDUSP.
+  Molecules tmDUSP                                mDUSP()
+  # Molecular total or state-resolved pattern count for tEGF.
+  Molecules tEGF                                  EGF()
+  # Molecular total or state-resolved pattern count for tEGFR.
+  Molecules tEGFR                                 EGFR()
+  # Molecular total or state-resolved pattern count for pEGFR.
+  Molecules pEGFR                                 EGFR(Tyr~p)
+  # Molecular total or state-resolved pattern count for tmEGFR.
+  Molecules tmEGFR                                mEGFR()
+  # Molecular total or state-resolved pattern count for tGRB2.
+  Molecules tGRB2                                 GRB2()
+  # Molecular total or state-resolved pattern count for tSPRY.
+  Molecules tSPRY                                 SPRY()
+  # Molecular total or state-resolved pattern count for tmSPRY.
+  Molecules tmSPRY                                mSPRY()
+  # Molecular total or state-resolved pattern count for tSOS1.
+  Molecules tSOS1                                 SOS1()
+  # Molecular total or state-resolved pattern count for pS1134SOS1.
+  Molecules pS1134SOS1                            SOS1(S1134~p)
+  # Molecular total or state-resolved pattern count for uS1134SOS1.
+  Molecules uS1134SOS1                            SOS1(S1134~u)
+  # Molecular total or state-resolved pattern count for tCBL.
+  Molecules tCBL                                  CBL()
+end observables
+
+begin functions
+  # Saturating ERK-dependent transcriptional modulation.
+  synthesize_pERK_DUSP_ERK_kmod()   1 + modulation_synthesize_pERK_DUSP_ERK*synthesize_pERK_DUSP_ERK_gexpslope/(modulation_synthesize_pERK_DUSP_ERK + synthesize_pERK_DUSP_ERK_kM)
+  # State-dependent transcript synthesis rate.
+  msynthesize_pERK_DUSP_ksyn()      1.0*msynthesize_pERK_DUSP_kbase*synthesize_pERK_DUSP_ERK_kmod
+  # Saturable pEGFR-dependent internalization rate.
+  catalyze_EGFR_kendo()             catalyze_EGFR_endo_kcat/(pEGFR_PM + catalyze_EGFR_deg_kM)
+  # Saturating ERK-dependent transcriptional modulation.
+  synthesize_pERK_EGFR_ERK_kmod()   1 + modulation_synthesize_pERK_EGFR_ERK*synthesize_pERK_EGFR_ERK_gexpslope/(modulation_synthesize_pERK_EGFR_ERK + synthesize_pERK_EGFR_ERK_kM)
+  # State-dependent transcript synthesis rate.
+  msynthesize_pERK_EGFR_ksyn()      msynthesize_pERK_EGFR_kbase*synthesize_pERK_EGFR_ERK_kmod*EGFR_crispr
+  # Saturating ERK-dependent transcriptional modulation.
+  synthesize_pERK_SPRY_ERK_kmod()   1 + modulation_synthesize_pERK_SPRY_ERK*synthesize_pERK_SPRY_ERK_gexpslope/(modulation_synthesize_pERK_SPRY_ERK + synthesize_pERK_SPRY_ERK_kM)
+  # State-dependent transcript synthesis rate.
+  msynthesize_pERK_SPRY_ksyn()      1.0*msynthesize_pERK_SPRY_kbase*synthesize_pERK_SPRY_ERK_kmod
+  # Output mapping for tBRAF.
+  tBRAF_obs()                       ln(1.0e-6*tBRAF*NA*V_ref)
+  # Output mapping for tCRAF.
+  tCRAF_obs()                       ln(1.0e-6*tCRAF*NA*V_ref)
+  # Output mapping for tRAS.
+  tRAS_obs()                        ln(1.0e-6*tRAS*NA*V_ref)
+  # Output mapping for tMEK.
+  tMEK_obs()                        ln(1.0e-6*tMEK*NA*V_ref)
+  # Output mapping for pMEK.
+  pMEK_obs()                        pMEK/tMEK
+  # Output mapping for pMEK IF.
+  pMEK_IF_obs()                     pMEK_obs*pMEK_IF_scale + pMEK_IF_offset
+  # Output mapping for tERK.
+  tERK_obs()                        ln(1.0e-6*tERK*NA*V_ref)
+  # Output mapping for pERK.
+  pERK_obs()                        pERK/tERK
+  # Output mapping for pERK IF.
+  pERK_IF_obs()                     pERK_obs*pERK_IF_scale + pERK_IF_offset
+  # Output mapping for tDUSP.
+  tDUSP_obs()                       ln(1.0e-6*tDUSP*NA*V_ref)
+  # Output mapping for tmDUSP.
+  tmDUSP_obs()                      ln(tmDUSP)
+  # Output mapping for tEGF.
+  tEGF_obs()                        ln(1.0e-6*tEGF*NA*V_ref)
+  # Output mapping for tEGFR.
+  tEGFR_obs()                       ln(1.0e-6*tEGFR*NA*V_ref)
+  # Output mapping for pEGFR.
+  pEGFR_obs()                       pEGFR/tEGFR
+  # Output mapping for tmEGFR.
+  tmEGFR_obs()                      ln(tmEGFR)
+  # Output mapping for tGRB2.
+  tGRB2_obs()                       ln(1.0e-6*tGRB2*NA*V_ref)
+  # Output mapping for tSPRY.
+  tSPRY_obs()                       ln(1.0e-6*tSPRY*NA*V_ref)
+  # Output mapping for tmSPRY.
+  tmSPRY_obs()                      ln(tmSPRY)
+  # Output mapping for tSOS1.
+  tSOS1_obs()                       ln(1.0e-6*tSOS1*NA*V_ref)
+  # Output mapping for pS1134SOS1.
+  pS1134SOS1_obs()                  pS1134SOS1/tSOS1
+  # Output mapping for tCBL.
+  tCBL_obs()                        ln(1.0e-6*tCBL*NA*V_ref)
+end functions
+
+begin energy patterns
+  ep_BRAF_BRAF_mod_RAS_double:  RAS(raf!2,state~gtp).BRAF(RBD!2,raf!1).BRAF(RBD!3,raf!1).RAS(raf!3,state~gtp)    ep_RAF_RAF_mod_RASgtp_double_ddG
+  ep_BRAF_CRAF_mod_RAS_double:  RAS(raf!2,state~gtp).BRAF(RBD!2,raf!1).CRAF(RBD!3,raf!1).RAS(raf!3,state~gtp)    ep_RAF_RAF_mod_RASgtp_double_ddG
+  ep_CRAF_CRAF_mod_RAS_double:  RAS(raf!2,state~gtp).CRAF(RBD!2,raf!1).CRAF(RBD!3,raf!1).RAS(raf!3,state~gtp)    ep_RAF_RAF_mod_RASgtp_double_ddG
+  ep_BRAF_RAF_mod_pRAF:         BRAF(raf!+,T753~p)    ep_RAF_RAF_mod_pRAF_ddG
+  ep_CRAF_RAF_mod_pRAF:         CRAF(raf!+,S642~p)    ep_RAF_RAF_mod_pRAF_ddG
+  ep_BRAF_RAS_mod_pRAF:         BRAF(RBD!+,T753~p)    ep_RAF_RAS_mod_pRAF_ddG
+  ep_CRAF_RAS_mod_pRAF:         CRAF(RBD!+,S642~p)    ep_RAF_RAS_mod_pRAF_ddG
+  ep_bind_RASgtp_BRAF:          RAS(raf!1,state~gtp).BRAF(RBD!1)    bind_RASgtp_RAF_dG
+  ep_bind_RASgtp_CRAF:          RAS(raf!1,state~gtp).CRAF(RBD!1)    bind_RASgtp_RAF_dG
+  ep_bind_BRAF_BRAF:            BRAF(raf!1).BRAF(raf!1)    bind_RAF_RAF_dG
+  ep_bind_BRAF_CRAF:            BRAF(raf!1).CRAF(raf!1)    bind_RAF_RAF_dG
+  ep_bind_CRAF_CRAF:            CRAF(raf!1).CRAF(raf!1)    bind_RAF_RAF_dG
+  ep_bind_RAFi_BRAF:            RAFi(raf!1).BRAF(rafi!1)    bind_RAFi_RAF_dG
+  ep_bind_RAFi_CRAF:            RAFi(raf!1).CRAF(rafi!1)    bind_RAFi_RAF_dG
+  ep_BRAF_BRAF_mod_RAFi_single:  BRAF(raf!1).BRAF(raf!1,rafi!2).RAFi(raf!2)    ep_RAF_RAF_mod_RAFi_single_ddG
+  ep_BRAF_CRAF_mod_RAFi_single:  BRAF(raf!1).CRAF(raf!1,rafi!2).RAFi(raf!2)    ep_RAF_RAF_mod_RAFi_single_ddG
+  ep_CRAF_BRAF_mod_RAFi_single:  CRAF(raf!1).BRAF(raf!1,rafi!2).RAFi(raf!2)    ep_RAF_RAF_mod_RAFi_single_ddG
+  ep_CRAF_CRAF_mod_RAFi_single:  CRAF(raf!1).CRAF(raf!1,rafi!2).RAFi(raf!2)    ep_RAF_RAF_mod_RAFi_single_ddG
+  ep_BRAF_BRAF_mod_RAFi_double:  RAFi(raf!2).BRAF(raf!1,rafi!2).BRAF(raf!1,rafi!3).RAFi(raf!3)    ep_RAF_RAF_mod_RAFi_double_Gf
+  ep_BRAF_CRAF_mod_RAFi_double:  RAFi(raf!2).BRAF(raf!1,rafi!2).CRAF(raf!1,rafi!3).RAFi(raf!3)    ep_RAF_RAF_mod_RAFi_double_Gf
+  ep_CRAF_CRAF_mod_RAFi_double:  RAFi(raf!2).CRAF(raf!1,rafi!2).CRAF(raf!1,rafi!3).RAFi(raf!3)    ep_RAF_RAF_mod_RAFi_double_Gf
+  ep_bind_BRAF_uMEK:            BRAF(mek!1).MEK(phospho~u,raf!1)    bind_RAF_uMEK_dG
+  ep_bind_CRAF_uMEK:            CRAF(mek!1).MEK(phospho~u,raf!1)    bind_RAF_uMEK_dG
+  ep_bind_EGF_EGFR:             EGF(rtk!1).EGFR(rtkf!1)    bind_EGF_EGFR_dG
+  ep_bind_EGFR_EGFR:            EGFR(KD!1).EGFR(Tyr!1)    bind_EGFR_EGFR_dG
+  ep_EGFR_EGFR_EGF:             EGF(rtk!1).EGFR(KD!+,rtkf!1)    ep_EGFR_EGFR_mod_EGF_single_ddG
+  ep_bind_pEGFR_GRB2:           EGFR(Tyr!1).GRB2(SH2!1)    bind_pEGFR_GRB2_dG
+  ep_bind_SPRY_GRB2:            SPRY(SH3m!1).GRB2(SH3!1)    bind_SPRY_GRB2_dG
+  ep_bind_GRB2_SOS1:            GRB2(SH3!1).SOS1(SH3m!1)    bind_GRB2_SOS1_dG
+  ep_SOS1S1134p_GRB2_single:    SOS1(S1134~p,SH3m!1).GRB2(SH3!1)    ep_SOS1S1134p_GRB2_ddG
+  ep_bind_CBL_GRB2:             CBL(SH3m!1).GRB2(SH3!1)    bind_CBL_GRB2_dG
+  ep_bind_DUSP_pERK:            DUSP(erk!1).ERK(CD!1,phospho~p)    bind_DUSP_pERK_dG
+  ep_bind_MEK_uERK:             MEK(Dsite!1).ERK(CD!1,phospho~u)    bind_MEK_uERK_dG
+end energy patterns
+
+begin reaction rules
+  # RASgtp and BRAF bind and dissociate.
+  RASgtp_and_BRAF_bind_and_dissociate:       RAS(raf,state~gtp) + BRAF(RBD) <-> RAS(raf!1,state~gtp).BRAF(RBD!1)    Arrhenius(bind_RASgtp_RAF_phi, Ea0_bind_RASgtp_BRAF)
+  # RASgtp and CRAF bind and dissociate.
+  RASgtp_and_CRAF_bind_and_dissociate:       RAS(raf,state~gtp) + CRAF(RBD) <-> RAS(raf!1,state~gtp).CRAF(RBD!1)    Arrhenius(bind_RASgtp_RAF_phi, Ea0_bind_RASgtp_CRAF)
+  # BRAF and BRAF bind and dissociate.
+  BRAF_and_BRAF_bind_and_dissociate:         BRAF(raf) + BRAF(raf) <-> BRAF(raf!1).BRAF(raf!1)    Arrhenius(bind_RAF_RAF_phi, Ea0_bind_RAF_RAF)
+  # BRAF and CRAF bind and dissociate.
+  BRAF_and_CRAF_bind_and_dissociate:         BRAF(raf) + CRAF(raf) <-> BRAF(raf!1).CRAF(raf!1)    Arrhenius(bind_RAF_RAF_phi, Ea0_bind_RAF_RAF)
+  # CRAF and CRAF bind and dissociate.
+  CRAF_and_CRAF_bind_and_dissociate:         CRAF(raf) + CRAF(raf) <-> CRAF(raf!1).CRAF(raf!1)    Arrhenius(bind_RAF_RAF_phi, Ea0_bind_RAF_RAF)
+  # RAFi and BRAF bind and dissociate.
+  RAFi_and_BRAF_bind_and_dissociate:         RAFi(raf) + BRAF(rafi) <-> RAFi(raf!1).BRAF(rafi!1)    Arrhenius(bind_RAFi_RAF_phi, Ea0_bind_RAFi_RAF)
+  # RAFi and CRAF bind and dissociate.
+  RAFi_and_CRAF_bind_and_dissociate:         RAFi(raf) + CRAF(rafi) <-> RAFi(raf!1).CRAF(rafi!1)    Arrhenius(bind_RAFi_RAF_phi, Ea0_bind_RAFi_RAF)
+  # BRAF and uMEK bind and dissociate.
+  BRAF_and_uMEK_bind_and_dissociate:         BRAF(mek) + MEK(phospho~u,raf) <-> BRAF(mek!1).MEK(phospho~u,raf!1)    Arrhenius(bind_RAF_uMEK_phi, Ea0_bind_BRAF_uMEK)
+  # CRAF and uMEK bind and dissociate.
+  CRAF_and_uMEK_bind_and_dissociate:         CRAF(mek) + MEK(phospho~u,raf) <-> CRAF(mek!1).MEK(phospho~u,raf!1)    Arrhenius(bind_RAF_uMEK_phi, Ea0_bind_CRAF_uMEK)
+  # BRAF BRAF phosphorylates MEK.
+  BRAF_BRAF_phosphorylates_MEK:              MEK(phospho~u,raf!1).BRAF(RBD!+,mek!1,raf!2,rafi).BRAF(RBD!+,raf!2) -> MEK(phospho~p,raf) + BRAF(RBD!+,mek,raf!2,rafi).BRAF(RBD!+,raf!2)    catalyze_RAF_RAFrafiNone_MEK_p_kcat
+  # BRAF CRAF phosphorylates MEK.
+  BRAF_CRAF_phosphorylates_MEK:              MEK(phospho~u,raf!1).BRAF(RBD!+,mek!1,raf!2,rafi).CRAF(RBD!+,raf!2) -> MEK(phospho~p,raf) + BRAF(RBD!+,mek,raf!2,rafi).CRAF(RBD!+,raf!2)    catalyze_RAF_RAFrafiNone_MEK_p_kcat
+  # CRAF BRAF phosphorylates MEK.
+  CRAF_BRAF_phosphorylates_MEK:              MEK(phospho~u,raf!1).CRAF(RBD!+,mek!1,raf!2,rafi).BRAF(RBD!+,raf!2) -> MEK(phospho~p,raf) + CRAF(RBD!+,mek,raf!2,rafi).BRAF(RBD!+,raf!2)    catalyze_RAF_RAFrafiNone_MEK_p_kcat
+  # CRAF CRAF phosphorylates MEK.
+  CRAF_CRAF_phosphorylates_MEK:              MEK(phospho~u,raf!1).CRAF(RBD!+,mek!1,raf!2,rafi).CRAF(RBD!+,raf!2) -> MEK(phospho~p,raf) + CRAF(RBD!+,mek,raf!2,rafi).CRAF(RBD!+,raf!2)    catalyze_RAF_RAFrafiNone_MEK_p_kcat
+  # BRAFV600E phosphorylates MEK unbound1.
+  BRAFV600E_phosphorylates_MEK_unbound1:     MEK(meki,phospho~u,raf!1).BRAF(AA600~E,mek!1,raf,rafi) -> MEK(meki,phospho~p,raf) + BRAF(AA600~E,mek,raf,rafi)    catalyze_RAFrafiNone_MEKmekiNone_p_kcat
+  # BRAFV600E phosphorylates MEK unbound2.
+  BRAFV600E_phosphorylates_MEK_unbound2:     MEK(meki,phospho~u,raf!1).BRAF(AA600~E,RBD,mek!1,raf!+,rafi) -> MEK(meki,phospho~p,raf) + BRAF(AA600~E,RBD,mek,raf!+,rafi)    catalyze_RAFrafiNone_MEKmekiNone_p_kcat
+  # BRAFV600E phosphorylates MEK unbound3.
+  BRAFV600E_phosphorylates_MEK_unbound3:     MEK(meki,phospho~u,raf!1).BRAF(AA600~E,RBD!+,mek!1,raf!2,rafi).BRAF(RBD,raf!2) -> MEK(meki,phospho~p,raf) + BRAF(AA600~E,RBD!+,mek,raf!2,rafi).BRAF(RBD,raf!2)    catalyze_RAFrafiNone_MEKmekiNone_p_kcat
+  # BRAFV600E phosphorylates MEK unbound4.
+  BRAFV600E_phosphorylates_MEK_unbound4:     MEK(meki,phospho~u,raf!1).BRAF(AA600~E,RBD!+,mek!1,raf!2,rafi).CRAF(RBD,raf!2) -> MEK(meki,phospho~p,raf) + BRAF(AA600~E,RBD!+,mek,raf!2,rafi).CRAF(RBD,raf!2)    catalyze_RAFrafiNone_MEKmekiNone_p_kcat
+  # MEK is dephosphorylated.
+  MEK_is_dephosphorylated:                   MEK(phospho~p) -> MEK(phospho~u)    catalyze_PP2A_MEK_u_kcat()
+  # bind MEK uERK.
+  bind_MEK_uERK:                             MEK(Dsite) + ERK(CD,phospho~u) <-> MEK(Dsite!1).ERK(CD!1,phospho~u)    Arrhenius(bind_MEK_uERK_phi, Ea0_bind_MEK_uERK)
+  # pMEK phosphorylates ERK.
+  pMEK_phosphorylates_ERK:                   ERK(CD!1,phospho~u).MEK(Dsite!1,meki,phospho~p) -> ERK(CD,phospho~p) + MEK(Dsite,meki,phospho~p)    catalyze_MEKmekiNone_phosphop_ERK_p_kcat
+  # bind DUSP pERK.
+  bind_DUSP_pERK:                            DUSP(erk) + ERK(CD,phospho~p) <-> DUSP(erk!1).ERK(CD!1,phospho~p)    Arrhenius(bind_DUSP_pERK_phi, Ea0_bind_DUSP_pERK)
+  # DUSP dephosphorylates ERK.
+  DUSP_dephosphorylates_ERK:                 ERK(CD!1,phospho~p).DUSP(erk!1) -> ERK(CD,phospho~u) + DUSP(erk)    catalyze_DUSP_ERK_u_kcat()
+  # synthesis mDUSP.
+  synthesis_mDUSP:                           0 -> mDUSP()@CP    msynthesize_pERK_DUSP_ksyn()
+  # basal degradation mDUSP.
+  basal_degradation_mDUSP:                   mDUSP() -> 0    msynthesize_pERK_DUSP_kdeg DeleteMolecules
+  # synthesis pDUSP.
+  synthesis_pDUSP:                           mDUSP()@CP -> mDUSP()@CP + DUSP(erk)@CP    psynthesize_pERK_DUSP_ksyn()
+  # basal degradation pDUSP.
+  basal_degradation_pDUSP:                   DUSP() -> 0    psynthesize_pERK_DUSP_kdeg DeleteMolecules
+  # EGF and EGFR bind and dissociate.
+  EGF_and_EGFR_bind_and_dissociate:          EGF(rtk) + EGFR(rtkf) <-> EGF(rtk!1).EGFR(rtkf!1)    Arrhenius(bind_EGF_EGFR_phi, Ea0_bind_EGF_EGFR)
+  # bind EGFR EGFRu.
+  bind_EGFR_EGFRu:                           EGFR(KD,Tyr~u) + EGFR(KD,Tyr~u) <-> EGFR(KD!1,Tyr~u).EGFR(KD,Tyr~u!1)    Arrhenius(bind_EGFR_EGFR_phi, Ea0_bind_EGFR_EGFR)
+  # bind EGFR EGFRp.
+  bind_EGFR_EGFRp:                           EGFR(KD,Tyr~p) + EGFR(KD,Tyr~u) <-> EGFR(KD!1,Tyr~p).EGFR(KD,Tyr~u!1)    Arrhenius(bind_EGFR_EGFR_phi, Ea0_bind_EGFR_EGFR)
+  # catalyze EGFR EGFR p.
+  catalyze_EGFR_EGFR_p:                      EGFR(KD!1,rtkf!+).EGFR(Tyr~u!1) -> EGFR(KD,rtkf!+) + EGFR(Tyr~p)    catalyze_EGFR_EGFR_p_kcat
+  # catalyze EGFR u.
+  catalyze_EGFR_u:                           EGFR(Tyr~p) -> EGFR(Tyr~u)    catalyze_EGFR_u_kcat()
+  # pEGFR is endocytosed.
+  pEGFR_is_endocytosed:                      EGFR(Tyr~p)@PM -> EGFR(Tyr~p)@EM    catalyze_EGFR_kendo() MoveConnected
+  # EGFR is recycled.
+  EGFR_is_recycled:                          EGFR()@EM -> EGFR()@PM    catalyze_EGFR_recycl_kcat MoveConnected
+  # ubEGFR is degraded.
+  ubEGFR_is_degraded:                        EGFR(ub~true)@EM -> 0    catalyze_EGFR_deg_kcat DeleteMolecules
+  # synthesis mEGFR.
+  synthesis_mEGFR:                           0 -> mEGFR()@PM    msynthesize_pERK_EGFR_ksyn()
+  # basal degradation mEGFR.
+  basal_degradation_mEGFR:                   mEGFR() -> 0    msynthesize_pERK_EGFR_kdeg DeleteMolecules
+  # synthesis pEGFR.
+  synthesis_pEGFR:                           mEGFR()@PM -> mEGFR()@PM + EGFR(KD,Tyr~u,rtkf,ub~false)@PM    psynthesize_pERK_EGFR_ksyn()
+  # basal degradation pEGFR.
+  basal_degradation_pEGFR:                   EGFR() -> 0    psynthesize_pERK_EGFR_kdeg DeleteMolecules
+  # bind pEGFR GRB2.
+  bind_pEGFR_GRB2:                           GRB2(SH2) + EGFR(Tyr~p) <-> GRB2(SH2!1).EGFR(Tyr~p!1)    Arrhenius(bind_pEGFR_GRB2_phi, Ea0_bind_pEGFR_GRB2)
+  # SPRY and GRB2 bind and dissociate.
+  SPRY_and_GRB2_bind_and_dissociate:         SPRY(SH3m) + GRB2(SH3) <-> SPRY(SH3m!1).GRB2(SH3!1)    Arrhenius(bind_SPRY_GRB2_phi, Ea0_bind_SPRY_GRB2)
+  # synthesis mSPRY.
+  synthesis_mSPRY:                           0 -> mSPRY()@CP    msynthesize_pERK_SPRY_ksyn()
+  # basal degradation mSPRY.
+  basal_degradation_mSPRY:                   mSPRY() -> 0    msynthesize_pERK_SPRY_kdeg DeleteMolecules
+  # synthesis pSPRY.
+  synthesis_pSPRY:                           mSPRY()@CP -> mSPRY()@CP + SPRY(SH3m)@CP    psynthesize_pERK_SPRY_ksyn()
+  # basal degradation pSPRY.
+  basal_degradation_pSPRY:                   SPRY() -> 0    psynthesize_pERK_SPRY_kdeg DeleteMolecules
+  # SOS1 is dephosphorylated.
+  SOS1_is_dephosphorylated:                  SOS1(S1134~p) -> SOS1(S1134~u)    catalyze_phosphatase_SOS1_uS1134_kcat()
+  # GRB2 and SOS1 bind and dissociate.
+  GRB2_and_SOS1_bind_and_dissociate:         GRB2(SH3) + SOS1(SH3m) <-> GRB2(SH3!1).SOS1(SH3m!1)    Arrhenius(bind_GRB2_SOS1_phi, Ea0_bind_GRB2_SOS1)
+  # SOS1 is phosphorylated.
+  SOS1_is_phosphorylated:                    SOS1(S1134~u) -> SOS1(S1134~p)    catalyze_pERK_SOS1_pS1134_kbase
+  # pERK phosphorylates SOS1.
+  pERK_phosphorylates_SOS1:                  ERK(phospho~p) + SOS1(S1134~u) -> ERK(phospho~p) + SOS1(S1134~p)    catalyze_pERK_SOS1_pS1134_kcat
+  # pERK phosphorylates CRAF.
+  pERK_phosphorylates_CRAF:                  ERK(phospho~p) + CRAF(raf,S642~u) -> ERK(phospho~p) + CRAF(raf,S642~p)    catalyze_pERK_CRAF_pS642_kcat
+  # CRAF is dephosphorylated.
+  CRAF_is_dephosphorylated:                  CRAF(raf,S642~p) -> CRAF(raf,S642~u)    catalyze_phosphatase_CRAF_uS642_kcat()
+  # pERK phosphorylates BRAF.
+  pERK_phosphorylates_BRAF:                  ERK(phospho~p) + BRAF(raf,T753~u) -> ERK(phospho~p) + BRAF(raf,T753~p)    catalyze_pERK_BRAF_pT753_kcat
+  # BRAF is dephosphorylated.
+  BRAF_is_dephosphorylated:                  BRAF(raf,T753~p) -> BRAF(raf,T753~u)    catalyze_phosphatase_BRAF_uT753_kcat()
+  # RTK and GRB2 bound SOS1 binds RASgdp.
+  RTK_and_GRB2_bound_SOS1_binds_RASgdp:      GRB2(SH2!+,SH3!1).SOS1(SH3m!1,ras) + RAS(sos1,state~gdp) -> GRB2(SH2!+,SH3!1).SOS1(SH3m!1,ras!2).RAS(sos1!2,state~gdp)    bind_SOS1_RAS_kf
+  # SOS1 dissociates from RAS.
+  SOS1_dissociates_from_RAS:                 SOS1(ras!1).RAS(sos1!1) -> SOS1(ras) + RAS(sos1)    bind_SOS1_RAS_kr()
+  # SOS1 catalyzes RAS guanosine exchange.
+  SOS1_catalyzes_RAS_guanosine_exchange:     SOS1(ras!1).RAS(sos1!1,state~gdp) -> SOS1(ras) + RAS(sos1,state~gtp)    catalyze_SOS1_RAS_gtp_kcat
+  # RAS hydrolysis GTP.
+  RAS_hydrolysis_GTP:                        RAS(raf,state~gtp) -> RAS(raf,state~gdp)    catalyze_NF1_RAS_gdp_kcat()
+  # GTP hydrolysis dissociates BRAF from RAS.
+  GTP_hydrolysis_dissociates_BRAF_from_RAS:  RAS(raf!1,state~gtp).BRAF(RBD!1) -> RAS(raf,state~gdp) + BRAF(RBD)    catalyze_NF1_RAS_gdp_kcat()
+  # GTP hydrolysis dissociates CRAF from RAS.
+  GTP_hydrolysis_dissociates_CRAF_from_RAS:  RAS(raf!1,state~gtp).CRAF(RBD!1) -> RAS(raf,state~gdp) + CRAF(RBD)    catalyze_NF1_RAS_gdp_kcat()
+  # CBL and GRB2 bind and dissociate.
+  CBL_and_GRB2_bind_and_dissociate:          CBL(SH3m) + GRB2(SH3) <-> CBL(SH3m!1).GRB2(SH3!1)    Arrhenius(bind_CBL_GRB2_phi, Ea0_bind_CBL_GRB2)
+  # catalyze CBL EGFR ub.
+  catalyze_CBL_EGFR_ub:                      EGFR(ub~false).CBL() -> EGFR(ub~true).CBL()    catalyze_CBL_EGFR_ub_kcat
+  # catalyze EGFR dub.
+  catalyze_EGFR_dub:                         EGFR(ub~true) -> EGFR(ub~false)    catalyze_EGFR_dub_kcat()
+end reaction rules
+
+end model
+
+begin actions
+  # Vemurafenib-adapted EGF pulse; ODE is the source model's simulation mode.
+  # The explicit adapted state avoids repeating the costly 24 h pre-equilibration.
+
+  #@protocol: 100 ng/mL EGF pulse after 24 h adaptation to 1 uM vemurafenib
+
+  #@figure: Fig. 2A in Fröhlich et al. (2023)
+
+  generate_network({overwrite=>1})  # 1612 species, 17516 reactions
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>2,n_steps=>200,\
+    print_functions=>1,atol=>1e-11,rtol=>1e-9})
+end actions

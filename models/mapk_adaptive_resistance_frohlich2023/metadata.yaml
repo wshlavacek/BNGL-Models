@@ -1,0 +1,61 @@
+# metadata.yaml — mapk_adaptive_resistance_frohlich2023
+id: mapk_adaptive_resistance_frohlich2023
+created: 2026-08-04
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, translation]
+  description: >
+    Condition-specific translation of the MARM2.0 PySB energy-pattern model
+    distributed with Fröhlich et al. (2023), Molecular Systems Biology
+    19:e10988. The primary file uses the best-ranked calibrated parameter set
+    and the source-model state after 24 h adaptation to 1 uM vemurafenib, then
+    applies the 100 ng/mL EGF pulse from Fig. 2A.
+
+files:
+  - name: mapk_adaptive_resistance_frohlich2023.bngl
+    role: primary
+    description: >
+      MARM2.0 EGFR-RAS-RAF-MEK-ERK energy-pattern model with transcriptional
+      and post-translational feedback. Its active ODE protocol reproduces the
+      two-hour EGF-induced pERK pulse after vemurafenib adaptation.
+    documentation_target: standard
+    min_bionetgen_version: "2.9.3"
+  - name: verify_frohlich2023.ipynb
+    role: verification
+    description: >
+      Reruns BioNetGen, independently parses and integrates the generated
+      1,612-species network with SciPy/BDF, compares the result with the
+      authors' supplementary source-model simulation, and overlays the
+      tabular Fig. 2A measurements.
+  - name: verify_frohlich2023.png
+    role: figure
+    description: >
+      Overlay of curated BioNetGen, independent SciPy, authors' source-model,
+      and Fig. 2A measurement trajectories.
+  - name: reference/frohlich2023_fig2a_vemurafenib1um_source_model.csv
+    role: reference
+    description: >
+      Tabular pERK trajectory regenerated from the authors' supplementary
+      RTKERK__pRAF.py model with calibrated parameter row 0 and the Fig. 2A
+      1 uM vemurafenib plus 100 ng/mL EGF condition.
+  - name: reference/frohlich2023_fig2a_vemurafenib1um_egf100ngml_measurements.csv
+    role: reference
+    description: >
+      Publisher-supplied processed experimental pERK means and standard
+      deviations for the Fig. 2A trajectory, extracted from rows 0-9 of the
+      supplementary processed_EGF_EGFR_MEKi_PRAFi_RAFi.csv file.
+  - name: reference/mapk_adaptive_resistance_frohlich2023.net
+    role: reference
+    description: Generated network with 1,612 species and 17,516 reactions.
+  - name: reference/mapk_adaptive_resistance_frohlich2023_ode.net
+    role: reference
+  - name: reference/mapk_adaptive_resistance_frohlich2023_ode.gdat
+    role: reference
+  - name: reference/mapk_adaptive_resistance_frohlich2023_ode.cdat
+    role: reference
