@@ -1,0 +1,432 @@
+begin model
+
+#@title: mTOR network activation by amino acids and insulin (Dalle Pezze et al., 2016)
+
+#@description: |
+#  The mTOR signalling network of C2C12 myoblasts, resolved as phosphorylation
+#  states of eleven nodes: the insulin receptor (IR), IRS1, two PI3K activities,
+#  Akt, mTORC1, mTORC2, AMPK, the TSC1-TSC2 complex, p70-S6K and PRAS40. The
+#  model is the paper's best-fit "Model 3" (AIC ~680): amino acids enter the
+#  network at FOUR points — mTORC1-S2448, IRS1, AMPK-T172 and mTORC2-S2481 —
+#  and p70-S6K carries an extended module in which PI3K/PDK1 phosphorylates
+#  T229 as well as mTORC1 phosphorylating T389.
+#
+#  How it works: every reaction is mass action. Interconversion between
+#  phosphostates is either first order (dephosphorylation, IR recycling,
+#  IRS1-pS636 turnover) or pseudo-first order in a modifier that is itself a
+#  network node, written here as a rate-law function of an observable. Akt,
+#  p70-S6K and PRAS40 are two-site molecules, and each of their four transitions
+#  carries its OWN rate constant: the published fit does not constrain the
+#  "first" and "second" modifications to be equal, and five of the twelve pairs
+#  differ by more than an order of magnitude (see #@note below). Feedback is
+#  negative and two-armed: doubly-phosphorylated p70-S6K drives IRS1 to the
+#  inactive pS636 state from BOTH the naive and the tyrosine-phosphorylated
+#  pool, and AMPK-pT172 inhibits mTORC1 through TSC1-TSC2-pS1387.
+#
+#  This is the amino-acid PLUS INSULIN condition, and it differs from the
+#  primary file by one seed amount: Ins_0 = 1 rather than 0. That single change
+#  switches on the whole insulin arm, which is inert in the primary file — the
+#  receptor cycle, the IR-driven activation of IRS1 and of the PI3K variant,
+#  and with them a twelfth readout, IR-pY1146, that has nothing to report when
+#  insulin is absent. It is the fuller network, not a perturbation of the
+#  primary one.
+#
+#  What it does: insulin makes the response biphasic where amino acids alone
+#  make it monotone. IR-pY1146 spikes within about a minute and then decays as
+#  receptor accumulates in the refractory state, and Akt-pT308 follows it with
+#  a sharp peak near 66 relative units that relaxes to a plateau near 39 — the
+#  signature of the negative feedback from p70-S6K onto IRS1. Readouts are an
+#  order of magnitude larger than in the aa-only condition and the axes of
+#  Fig. 2b are scaled accordingly.
+
+#@keyword: |
+#  signalling, mTOR, AMPK, amino acid sensing, phosphorylation cascade,
+#  negative feedback, mass action, monostable, dimensionless,
+#  Mus musculus
+
+#@reference: |
+#  Dalle Pezze P, Ruf S, Sonntag AG, Langelaar-Makkinje M, Hall P, Heberle AM,
+#  Razquin Navas P, van Eunen K, Tolle RC, Schwarz JJ, Wiese H, Warscheid B,
+#  Deitersen J, Stork B, Fassler E, Schauble S, Hahn U, Horvatovich P,
+#  Shanley DP, Thedieck K (2016). A systems study reveals concurrent activation
+#  of AMPK and mTOR by amino acids. Nature Communications 7:13254.
+#  doi:10.1038/ncomms13254
+#  Model source: BioModels BIOMD0000000640 (curated, CC0), the deposit of the
+#  paper's Supplementary Software 3.
+
+#@note: |
+#  SIMULATION INTENT. This model is dimensionless and ODE-only. Amounts are
+#  arbitrary relative units, not molecule counts and not concentrations: the
+#  authors fixed each unphosphorylated pool "to a value that avoided
+#  phosphorylation level saturation", and the readouts are immunoblot relative
+#  intensities that "cannot be compared among readouts" (Fig. 2 caption in
+#  Dalle Pezze et al., 2016). No volume appears anywhere in the paper and the
+#  deposited SBML declares no units, so per skills/bngl/skill.md §1.1 there is
+#  no NA, no V_ref, no compartments block and no SSA or NFsim protocol —
+#  stochastic simulation of a 20-unit PRAS40 pool would be meaningless, not
+#  merely non-preferred.
+
+#@note: |
+#  CONTEXT-SPECIFIC RATES, NOT A SYMMETRY. Akt, p70-S6K and PRAS40 each have
+#  two modifiable sites, so BNGL expresses their topology in four rules per
+#  site pair. The rate constants are NOT shared between contexts. The paper
+#  says it constrained "the parameter values of the corresponding first and
+#  second reactions" for Akt and PRAS40, but the deposited best-fit values are
+#  not equal even there, and p70-S6K was never covered by the constraint:
+#  Akt-S473 phosphorylation is 1.32e-5 on unmodified Akt against 0.159 on
+#  Akt-pT308 (1.2e4-fold), p70-S6K-pT229 dephosphorylation 1.0e-6 against 0.159
+#  (1.6e5-fold), p70-S6K-T389 phosphorylation 0.0026 against 0.111 (42-fold),
+#  p70-S6K-T229 phosphorylation 0.0134 against 1.0e-6, and PRAS40-S183
+#  phosphorylation 0.159 against 0.068. Collapsing each pair onto one constant
+#  changes ten of the twelve observables — Akt-pS473 falls by 99.8% of its peak
+#  and p70-S6K-pT229 rises ninefold — so the per-context rates are load-bearing
+#  and are transcribed one by one below.
+
+#@note: |
+#  NAMING. Node names follow the paper rather than MGI gene symbols. Six of the
+#  eleven are not single gene products (mTORC1, mTORC2 and TSC1-TSC2 are
+#  complexes; PI3K_PDK1 and PI3K_var are composite activities the authors
+#  introduced to separate two wortmannin-sensitive inputs), so the §4.2 symbol
+#  convention does not apply cleanly and renaming the remainder would make the
+#  file unreadable against the paper. Same deviation, same reason, as
+#  models/insulin_signalling_and_oxidative_stress_smith2013.
+
+#@note: |
+#  WORTMANNIN IS NOT A SPECIES. The deposited model contains no wortmannin and
+#  no inhibitor term; the string does not occur in BIOMD0000000640. Fig. 2a
+#  draws wortmannin because it is an SBGN diagram of the biology. Inhibition
+#  was simulated by reducing initial amounts — "for 10 levels of protein from
+#  10 to 100% (control) for mTORC1, mTORC2, PI3K and AMPK ... this was achieved
+#  by modifying initial amounts" (Methods) — which is what the level parameters
+#  do. The wortmannin condition of Fig. 2d is PI3K_level = 0.1, the paper's
+#  own "residual activity 10%" (Fig. 1d caption).
+
+begin parameters
+  # --- Initial pool sizes (arbitrary relative units; BIOMD0000000640 initial
+  # amounts). Every phosphorylated state starts at zero: "the initial amount
+  # for the phosphorylated states was fixed to 0" (Methods).
+  IR_0          50    # dimensionless
+  IRS_0        150    # dimensionless
+  PI3K_var_0    50    # dimensionless
+  PI3K_PDK1_0   50    # dimensionless
+  Akt_0        300    # dimensionless
+  mTORC2_0     100    # dimensionless
+  AMPK_0        50    # dimensionless
+  TSC_0         50    # dimensionless
+  mTORC1_0     100    # dimensionless
+  S6K_0        300    # dimensionless
+  PRAS40_0      20    # dimensionless
+
+  # --- Network inputs. Both are held constant over the simulated window; the
+  # deposited model drives them with piecewise rules that are flat for t >= 0.
+  # This file is the amino-acid PLUS INSULIN condition of Fig. 2b.
+  Ins_0          1    # dimensionless
+  AA_0           1    # dimensionless
+
+  # --- Node activity levels, as fractions of control. The paper's four
+  # perturbation experiments (scanned in the primary file) reduce the
+  # corresponding initial amounts (Methods); PI3K perturbation moves both PI3K
+  # activities together, which is what reproduces the wortmannin condition.
+  PI3K_level     1.0  # dimensionless
+  mTORC1_level   1.0  # dimensionless
+  mTORC2_level   1.0  # dimensionless
+  AMPK_level     1.0  # dimensionless
+
+  # --- Amino-acid inputs (the four that define this model; Table 1)
+  IRS_phos_by_Amino_Acids                      0.0331672   # /min
+  AMPK_T172_phos_by_Amino_Acids                17.6284     # /min
+  mTORC2_S2481_phos_by_Amino_Acids             0.0268658   # /min
+  mTORC1_S2448_activation_by_Amino_Acids       0.0156992   # /min
+
+  # --- Insulin receptor: activation, inactivation to a refractory state, and
+  # recycling. The refractory state is what makes IR signalling transient.
+  IR_beta_phos_by_Insulin                      0.0203796   # /min
+  IR_beta_pY1146_dephos                        0.493514    # /min
+  IR_beta_ready                                323.611     # /min
+
+  # --- IRS1, including the two arms of the p70-S6K negative feedback
+  IRS_phos_by_IR_beta_pY1146                   2.11894     # /min
+  IRS_p_phos_by_p70_S6K_pT229_pT389            0.338859859949792   # /min
+  IRS_phos_by_p70_S6K_pT229_pT389              0.0863775267376444  # /min
+  IRS_pS636_turnover                           25          # /min
+
+  # --- PI3K/PDK1 and the PI3K variant that feeds mTORC2
+  PI3K_PDK1_phos_by_IRS_p                      0.000187226757782201  # /min
+  PI3K_p_PDK1_dephos                           0.18913343080532      # /min
+  PI3K_variant_phos_by_IR_beta_pY1146          0.000549027801822575  # /min
+  PI3K_variant_p_dephos                        0.108074886441184     # /min
+
+  # --- AMPK
+  AMPK_T172_phos                               0.490602    # /min
+  AMPK_pT172_dephos                            165.704     # /min
+
+  # --- Akt. `_first` acts on Akt unmodified at the other site, `_second` on Akt
+  # already modified there; the two are independent fitted constants.
+  Akt_T308_phos_by_PI3K_p_PDK1_first           7.47437     # /min
+  Akt_T308_phos_by_PI3K_p_PDK1_second          7.47345     # /min
+  Akt_S473_phos_by_mTORC2_pS2481_first         1.31992e-5  # /min
+  Akt_S473_phos_by_mTORC2_pS2481_second        0.159093    # /min
+  Akt_pT308_dephos_first                       88.9654     # /min
+  Akt_pT308_dephos_second                      88.9639     # /min
+  Akt_pS473_dephos_first                       0.376999    # /min
+  Akt_pS473_dephos_second                      0.380005    # /min
+
+  # --- mTORC2
+  mTORC2_S2481_phos_by_PI3K_variant_p          0.120736    # /min
+  mTORC2_pS2481_dephos                         1.42511     # /min
+
+  # --- TSC1-TSC2. S1387 is the AMPK site, T1462 the Akt site; the doubly
+  # phosphorylated complex does not exist in the published model.
+  TSC1_TSC2_S1387_phos_by_AMPK_pT172           0.00175772  # /min
+  TSC1_TSC2_T1462_phos_by_Akt_pT308            1.52417     # /min
+  TSC1_TSC2_pS1387_dephos                      0.25319     # /min
+  TSC1_TSC2_pT1462_dephos                      147.239     # /min
+
+  # --- mTORC1. Only the S1387-phosphorylated and naive TSC species inhibit it;
+  # TSC-pT1462 (the Akt-inhibited form) does not.
+  mTORC1_pS2448_dephos_by_TSC1_TSC2            0.00869774  # /min
+
+  # --- p70-S6K, extended module. T389 is the mTORC1 site, T229 the PI3K/PDK1
+  # site added in this model.
+  p70_S6K_T389_phos_by_mTORC1_pS2448_first     0.00261303413778722  # /min
+  p70_S6K_T389_phos_by_mTORC1_pS2448_second    0.110720890919343    # /min
+  p70_S6K_T229_phos_by_PI3K_p_PDK1_first       0.0133520172873009   # /min
+  p70_S6K_T229_phos_by_PI3K_p_PDK1_second      1.00000002814509e-6  # /min
+  p70_S6K_pT389_dephos_first                   1.10036057608758     # /min
+  p70_S6K_pT389_dephos_second                  1.10215267954479     # /min
+  p70_S6K_pT229_dephos_first                   1.00000012897033e-6  # /min
+  p70_S6K_pT229_dephos_second                  0.159201353240651    # /min
+
+  # --- PRAS40. S183 is the mTORC1 site, T246 the Akt site.
+  PRAS40_S183_phos_by_mTORC1_pS2448_first      0.15881     # /min
+  PRAS40_S183_phos_by_mTORC1_pS2448_second     0.0683009   # /min
+  PRAS40_T246_phos_by_Akt_pT308_first          0.279344    # /min
+  PRAS40_T246_phos_by_Akt_pT308_second         0.279401    # /min
+  PRAS40_pS183_dephos_first                    1.8706      # /min
+  PRAS40_pS183_dephos_second                   1.88453     # /min
+  PRAS40_pT246_dephos_first                    11.8759     # /min
+  PRAS40_pT246_dephos_second                   11.876      # /min
+end parameters
+
+begin molecule types
+  # Insulin receptor beta chain: naive, Y1146-phosphorylated, refractory
+  IR(state~u~p~r)
+  # IRS1: naive, tyrosine-phosphorylated (active), S636-phosphorylated (feedback-inactivated)
+  IRS(state~u~p~pS636)
+  # PI3K activity upstream of mTORC2, driven by IR and not by IRS1
+  PI3K_var(s~u~p)
+  # The PI3K/PDK1 activity that phosphorylates Akt-T308 and p70-S6K-T229
+  PI3K_PDK1(s~u~p)
+  Akt(t308~u~p,s473~u~p)
+  mTORC2(s2481~u~p)
+  AMPK(t172~u~p)
+  # TSC1-TSC2 complex; three states only, the doubly modified form is not in the model
+  TSC(state~u~pS1387~pT1462)
+  mTORC1(s2448~u~p)
+  S6K(t229~u~p,t389~u~p)
+  PRAS40(s183~u~p,t246~u~p)
+  # Fixed network inputs, held constant by the `$` prefix in seed species
+  Ins()
+  AA()
+end molecule types
+
+begin seed species
+  # Every pool starts fully unphosphorylated. The four `*_level` factors are 1
+  # in this file and are what the perturbation scans move.
+  IR(state~u)                                IR_0                       # dimensionless
+  IRS(state~u)                               IRS_0                      # dimensionless
+  PI3K_var(s~u)                              PI3K_level*PI3K_var_0      # dimensionless
+  PI3K_PDK1(s~u)                             PI3K_level*PI3K_PDK1_0     # dimensionless
+  Akt(t308~u,s473~u)                         Akt_0                      # dimensionless
+  mTORC2(s2481~u)                            mTORC2_level*mTORC2_0      # dimensionless
+  AMPK(t172~u)                               AMPK_level*AMPK_0          # dimensionless
+  TSC(state~u)                               TSC_0                      # dimensionless
+  mTORC1(s2448~u)                            mTORC1_level*mTORC1_0      # dimensionless
+  S6K(t229~u,t389~u)                         S6K_0                      # dimensionless
+  PRAS40(s183~u,t246~u)                      PRAS40_0                   # dimensionless
+  $Ins()                                     Ins_0                      # dimensionless
+  $AA()                                      AA_0                       # dimensionless
+end seed species
+
+begin observables
+  # Network inputs, plotted as the first two panels of Fig. 2b-d
+  Molecules Obs_Insulin           Ins()
+  Molecules Obs_AminoAcids        AA()
+
+  # The twelve model readouts of Fig. 2. For the two-site nodes the paper's
+  # observable is the total phosphorylation of one site — "Akt-pS473-obs was
+  # associated to the sum of the species Akt-pS473 and Akt-pT308-pS473"
+  # (Methods) — which is exactly what a one-site BNGL pattern counts.
+  Molecules Obs_IR_pY1146         IR(state~p)
+  Molecules Obs_IRS_pS636         IRS(state~pS636)
+  Molecules Obs_AMPK_pT172        AMPK(t172~p)
+  Molecules Obs_Akt_pT308         Akt(t308~p)
+  Molecules Obs_Akt_pS473         Akt(s473~p)
+  Molecules Obs_TSC_pS1387        TSC(state~pS1387)
+  Molecules Obs_mTOR_pS2448       mTORC1(s2448~p)
+  Molecules Obs_mTOR_pS2481       mTORC2(s2481~p)
+  Molecules Obs_S6K_pT229         S6K(t229~p)
+  Molecules Obs_S6K_pT389         S6K(t389~p)
+  Molecules Obs_PRAS40_pT246      PRAS40(t246~p)
+  Molecules Obs_PRAS40_pS183      PRAS40(s183~p)
+
+  # Internal drivers. These are not paper readouts; they carry rate laws.
+  # IRS-p is the active adaptor, and doubly phosphorylated p70-S6K is the
+  # negative-feedback enzyme.
+  Molecules Obs_IRS_p             IRS(state~p)
+  Molecules Obs_PI3K_var_p        PI3K_var(s~p)
+  Molecules Obs_PI3K_PDK1_p       PI3K_PDK1(s~p)
+  Molecules Obs_S6K_pT229_pT389   S6K(t229~p,t389~p)
+  Molecules Obs_TSC_u             TSC(state~u)
+end observables
+
+begin functions
+  # Every function below is the modifier-dependent part of a pseudo-first-order
+  # rate law. BioNetGen supplies the substrate factor itself (§1.2.5), so these
+  # carry only the rate constant and its enzyme.
+
+  # Insulin receptor activation
+  f_IR_phos()             = IR_beta_phos_by_Insulin*Obs_Insulin
+
+  # IRS1 activation by the receptor and, independently, by amino acids
+  f_IRS_phos_by_IR()      = IRS_phos_by_IR_beta_pY1146*Obs_IR_pY1146
+  f_IRS_phos_by_AA()      = IRS_phos_by_Amino_Acids*Obs_AminoAcids
+
+  # p70-S6K negative feedback onto IRS1, acting on both the active and the
+  # naive pool
+  f_IRSp_to_pS636()       = IRS_p_phos_by_p70_S6K_pT229_pT389*Obs_S6K_pT229_pT389
+  f_IRSu_to_pS636()       = IRS_phos_by_p70_S6K_pT229_pT389*Obs_S6K_pT229_pT389
+
+  # The two PI3K activities
+  f_PI3K_var_phos()       = PI3K_variant_phos_by_IR_beta_pY1146*Obs_IR_pY1146
+  f_PI3K_PDK1_phos()      = PI3K_PDK1_phos_by_IRS_p*Obs_IRS_p
+
+  # Akt, per context
+  f_Akt_T308_first()      = Akt_T308_phos_by_PI3K_p_PDK1_first*Obs_PI3K_PDK1_p
+  f_Akt_T308_second()     = Akt_T308_phos_by_PI3K_p_PDK1_second*Obs_PI3K_PDK1_p
+  f_Akt_S473_first()      = Akt_S473_phos_by_mTORC2_pS2481_first*Obs_mTOR_pS2481
+  f_Akt_S473_second()     = Akt_S473_phos_by_mTORC2_pS2481_second*Obs_mTOR_pS2481
+
+  # mTORC2, from the PI3K variant and from amino acids
+  f_mTORC2_by_PI3K_var()  = mTORC2_S2481_phos_by_PI3K_variant_p*Obs_PI3K_var_p
+  f_mTORC2_by_AA()        = mTORC2_S2481_phos_by_Amino_Acids*Obs_AminoAcids
+
+  # AMPK, from active IRS1 and from amino acids
+  f_AMPK_phos_by_IRSp()   = AMPK_T172_phos*Obs_IRS_p
+  f_AMPK_phos_by_AA()     = AMPK_T172_phos_by_Amino_Acids*Obs_AminoAcids
+
+  # TSC1-TSC2
+  f_TSC_S1387()           = TSC1_TSC2_S1387_phos_by_AMPK_pT172*Obs_AMPK_pT172
+  f_TSC_T1462()           = TSC1_TSC2_T1462_phos_by_Akt_pT308*Obs_Akt_pT308
+
+  # mTORC1. Inhibition is by naive plus S1387-phosphorylated TSC only.
+  f_mTORC1_by_AA()        = mTORC1_S2448_activation_by_Amino_Acids*Obs_AminoAcids
+  f_mTORC1_dephos()       = mTORC1_pS2448_dephos_by_TSC1_TSC2*(Obs_TSC_u + Obs_TSC_pS1387)
+
+  # p70-S6K, per context
+  f_S6K_T389_first()      = p70_S6K_T389_phos_by_mTORC1_pS2448_first*Obs_mTOR_pS2448
+  f_S6K_T389_second()     = p70_S6K_T389_phos_by_mTORC1_pS2448_second*Obs_mTOR_pS2448
+  f_S6K_T229_first()      = p70_S6K_T229_phos_by_PI3K_p_PDK1_first*Obs_PI3K_PDK1_p
+  f_S6K_T229_second()     = p70_S6K_T229_phos_by_PI3K_p_PDK1_second*Obs_PI3K_PDK1_p
+
+  # PRAS40, per context
+  f_PRAS40_S183_first()   = PRAS40_S183_phos_by_mTORC1_pS2448_first*Obs_mTOR_pS2448
+  f_PRAS40_S183_second()  = PRAS40_S183_phos_by_mTORC1_pS2448_second*Obs_mTOR_pS2448
+  f_PRAS40_T246_first()   = PRAS40_T246_phos_by_Akt_pT308_first*Obs_Akt_pT308
+  f_PRAS40_T246_second()  = PRAS40_T246_phos_by_Akt_pT308_second*Obs_Akt_pT308
+end functions
+
+begin reaction rules
+  # --- Insulin receptor: a three-state cycle. Activation is insulin driven;
+  # the pY1146 form decays to a refractory state rather than straight back to
+  # naive, which is how the model makes the insulin response transient.
+  R_phos_IR_Y1146:        IR(state~u) -> IR(state~p)                    f_IR_phos()
+  R_inact_IR_refractory:  IR(state~p) -> IR(state~r)                    IR_beta_pY1146_dephos
+  R_recycle_IR:           IR(state~r) -> IR(state~u)                    IR_beta_ready
+
+  # --- IRS1. Two activating inputs and two feedback inputs converge on the
+  # same three states; the pS636 form turns over back to naive.
+  R_phos_IRS_by_IR:       IRS(state~u) -> IRS(state~p)                  f_IRS_phos_by_IR()
+  R_phos_IRS_by_AA:       IRS(state~u) -> IRS(state~p)                  f_IRS_phos_by_AA()
+  R_phos_IRSp_S636:       IRS(state~p) -> IRS(state~pS636)              f_IRSp_to_pS636()
+  R_phos_IRSu_S636:       IRS(state~u) -> IRS(state~pS636)              f_IRSu_to_pS636()
+  R_turnover_IRS_S636:    IRS(state~pS636) -> IRS(state~u)              IRS_pS636_turnover
+
+  # --- The two PI3K activities
+  R_phos_PI3K_var:        PI3K_var(s~u) -> PI3K_var(s~p)                f_PI3K_var_phos()
+  R_dephos_PI3K_var:      PI3K_var(s~p) -> PI3K_var(s~u)                PI3K_variant_p_dephos
+  R_phos_PI3K_PDK1:       PI3K_PDK1(s~u) -> PI3K_PDK1(s~p)              f_PI3K_PDK1_phos()
+  R_dephos_PI3K_PDK1:     PI3K_PDK1(s~p) -> PI3K_PDK1(s~u)              PI3K_p_PDK1_dephos
+
+  # --- Akt. Four phosphorylation and four dephosphorylation rules, one per
+  # context; the `_first`/`_second` constants are independent (see header note).
+  R_phos_Akt_T308_1:      Akt(t308~u,s473~u) -> Akt(t308~p,s473~u)      f_Akt_T308_first()
+  R_phos_Akt_T308_2:      Akt(t308~u,s473~p) -> Akt(t308~p,s473~p)      f_Akt_T308_second()
+  R_phos_Akt_S473_1:      Akt(s473~u,t308~u) -> Akt(s473~p,t308~u)      f_Akt_S473_first()
+  R_phos_Akt_S473_2:      Akt(s473~u,t308~p) -> Akt(s473~p,t308~p)      f_Akt_S473_second()
+  R_dephos_Akt_T308_1:    Akt(t308~p,s473~u) -> Akt(t308~u,s473~u)      Akt_pT308_dephos_first
+  R_dephos_Akt_T308_2:    Akt(t308~p,s473~p) -> Akt(t308~u,s473~p)      Akt_pT308_dephos_second
+  R_dephos_Akt_S473_1:    Akt(s473~p,t308~u) -> Akt(s473~u,t308~u)      Akt_pS473_dephos_first
+  R_dephos_Akt_S473_2:    Akt(s473~p,t308~p) -> Akt(s473~u,t308~p)      Akt_pS473_dephos_second
+
+  # --- mTORC2, with a direct amino-acid input alongside the PI3K-variant one
+  R_phos_mTORC2_PI3K:     mTORC2(s2481~u) -> mTORC2(s2481~p)            f_mTORC2_by_PI3K_var()
+  R_phos_mTORC2_AA:       mTORC2(s2481~u) -> mTORC2(s2481~p)            f_mTORC2_by_AA()
+  R_dephos_mTORC2:        mTORC2(s2481~p) -> mTORC2(s2481~u)            mTORC2_pS2481_dephos
+
+  # --- AMPK, with a direct amino-acid input alongside the IRS1 one. This is
+  # the paper's central claim: amino acids activate AMPK, not only mTOR.
+  R_phos_AMPK_IRSp:       AMPK(t172~u) -> AMPK(t172~p)                  f_AMPK_phos_by_IRSp()
+  R_phos_AMPK_AA:         AMPK(t172~u) -> AMPK(t172~p)                  f_AMPK_phos_by_AA()
+  R_dephos_AMPK:          AMPK(t172~p) -> AMPK(t172~u)                  AMPK_pT172_dephos
+
+  # --- TSC1-TSC2. Two independent modifications off the same naive state,
+  # each reverting directly to it.
+  R_phos_TSC_S1387:       TSC(state~u) -> TSC(state~pS1387)             f_TSC_S1387()
+  R_dephos_TSC_S1387:     TSC(state~pS1387) -> TSC(state~u)             TSC1_TSC2_pS1387_dephos
+  R_phos_TSC_T1462:       TSC(state~u) -> TSC(state~pT1462)             f_TSC_T1462()
+  R_dephos_TSC_T1462:     TSC(state~pT1462) -> TSC(state~u)             TSC1_TSC2_pT1462_dephos
+
+  # --- mTORC1: amino acids activate, TSC1-TSC2 inactivates
+  R_phos_mTORC1_AA:       mTORC1(s2448~u) -> mTORC1(s2448~p)            f_mTORC1_by_AA()
+  R_dephos_mTORC1_TSC:    mTORC1(s2448~p) -> mTORC1(s2448~u)            f_mTORC1_dephos()
+
+  # --- p70-S6K, extended module. T389 from mTORC1, T229 from PI3K/PDK1.
+  R_phos_S6K_T389_1:      S6K(t389~u,t229~u) -> S6K(t389~p,t229~u)      f_S6K_T389_first()
+  R_phos_S6K_T389_2:      S6K(t389~u,t229~p) -> S6K(t389~p,t229~p)      f_S6K_T389_second()
+  R_phos_S6K_T229_1:      S6K(t229~u,t389~u) -> S6K(t229~p,t389~u)      f_S6K_T229_first()
+  R_phos_S6K_T229_2:      S6K(t229~u,t389~p) -> S6K(t229~p,t389~p)      f_S6K_T229_second()
+  R_dephos_S6K_T389_1:    S6K(t389~p,t229~u) -> S6K(t389~u,t229~u)      p70_S6K_pT389_dephos_first
+  R_dephos_S6K_T389_2:    S6K(t389~p,t229~p) -> S6K(t389~u,t229~p)      p70_S6K_pT389_dephos_second
+  R_dephos_S6K_T229_1:    S6K(t229~p,t389~u) -> S6K(t229~u,t389~u)      p70_S6K_pT229_dephos_first
+  R_dephos_S6K_T229_2:    S6K(t229~p,t389~p) -> S6K(t229~u,t389~p)      p70_S6K_pT229_dephos_second
+
+  # --- PRAS40. S183 from mTORC1, T246 from Akt.
+  R_phos_PRAS40_S183_1:   PRAS40(s183~u,t246~u) -> PRAS40(s183~p,t246~u)  f_PRAS40_S183_first()
+  R_phos_PRAS40_S183_2:   PRAS40(s183~u,t246~p) -> PRAS40(s183~p,t246~p)  f_PRAS40_S183_second()
+  R_phos_PRAS40_T246_1:   PRAS40(t246~u,s183~u) -> PRAS40(t246~p,s183~u)  f_PRAS40_T246_first()
+  R_phos_PRAS40_T246_2:   PRAS40(t246~u,s183~p) -> PRAS40(t246~p,s183~p)  f_PRAS40_T246_second()
+  R_dephos_PRAS40_S183_1: PRAS40(s183~p,t246~u) -> PRAS40(s183~u,t246~u)  PRAS40_pS183_dephos_first
+  R_dephos_PRAS40_S183_2: PRAS40(s183~p,t246~p) -> PRAS40(s183~u,t246~p)  PRAS40_pS183_dephos_second
+  R_dephos_PRAS40_T246_1: PRAS40(t246~p,s183~u) -> PRAS40(t246~u,s183~u)  PRAS40_pT246_dephos_first
+  R_dephos_PRAS40_T246_2: PRAS40(t246~p,s183~p) -> PRAS40(t246~u,s183~p)  PRAS40_pT246_dephos_second
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 33 species, 48 reactions
+
+  # Amino-acid stimulation time course
+
+  #@protocol: |
+  #  Amino-acid readdition WITH insulin. All pools start fully
+  #  dephosphorylated; both inputs are held at 1 for the whole 120 min. The
+  #  insulin arm makes IR-pY1146 and Akt-pT308 transient rather than
+  #  monotone, so the full window is needed to see the peak and the plateau.
+
+  #@figure: Fig. 2b in Dalle Pezze et al. (2016)
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>120,n_steps=>1200,\
+    atol=>1e-10,rtol=>1e-8})
+end actions

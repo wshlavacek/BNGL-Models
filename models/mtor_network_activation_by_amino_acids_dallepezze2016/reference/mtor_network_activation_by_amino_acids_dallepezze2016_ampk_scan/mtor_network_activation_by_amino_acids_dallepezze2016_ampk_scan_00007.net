@@ -1,0 +1,208 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 IR_0                                       50  # Constant
+    2 IRS_0                                      150  # Constant
+    3 PI3K_var_0                                 50  # Constant
+    4 PI3K_PDK1_0                                50  # Constant
+    5 Akt_0                                      300  # Constant
+    6 mTORC2_0                                   100  # Constant
+    7 AMPK_0                                     50  # Constant
+    8 TSC_0                                      50  # Constant
+    9 mTORC1_0                                   100  # Constant
+   10 S6K_0                                      300  # Constant
+   11 PRAS40_0                                   20  # Constant
+   12 Ins_0                                      0  # Constant
+   13 AA_0                                       1  # Constant
+   14 PI3K_level                                 1  # Constant
+   15 mTORC1_level                               1.0  # Constant
+   16 mTORC2_level                               1  # Constant
+   17 AMPK_level                                 0.7  # Constant
+   18 IRS_phos_by_Amino_Acids                    0.0331672  # Constant
+   19 AMPK_T172_phos_by_Amino_Acids              17.6284  # Constant
+   20 mTORC2_S2481_phos_by_Amino_Acids           0.0268658  # Constant
+   21 mTORC1_S2448_activation_by_Amino_Acids     0.0156992  # Constant
+   22 IR_beta_phos_by_Insulin                    0.0203796  # Constant
+   23 IR_beta_pY1146_dephos                      0.493514  # Constant
+   24 IR_beta_ready                              323.611  # Constant
+   25 IRS_phos_by_IR_beta_pY1146                 2.11894  # Constant
+   26 IRS_p_phos_by_p70_S6K_pT229_pT389          0.338859859949792  # Constant
+   27 IRS_phos_by_p70_S6K_pT229_pT389            0.0863775267376444  # Constant
+   28 IRS_pS636_turnover                         25  # Constant
+   29 PI3K_PDK1_phos_by_IRS_p                    0.000187226757782201  # Constant
+   30 PI3K_p_PDK1_dephos                         0.18913343080532  # Constant
+   31 PI3K_variant_phos_by_IR_beta_pY1146        0.000549027801822575  # Constant
+   32 PI3K_variant_p_dephos                      0.108074886441184  # Constant
+   33 AMPK_T172_phos                             0.490602  # Constant
+   34 AMPK_pT172_dephos                          165.704  # Constant
+   35 Akt_T308_phos_by_PI3K_p_PDK1_first         7.47437  # Constant
+   36 Akt_T308_phos_by_PI3K_p_PDK1_second        7.47345  # Constant
+   37 Akt_S473_phos_by_mTORC2_pS2481_first       1.31992e-5  # Constant
+   38 Akt_S473_phos_by_mTORC2_pS2481_second      0.159093  # Constant
+   39 Akt_pT308_dephos_first                     88.9654  # Constant
+   40 Akt_pT308_dephos_second                    88.9639  # Constant
+   41 Akt_pS473_dephos_first                     0.376999  # Constant
+   42 Akt_pS473_dephos_second                    0.380005  # Constant
+   43 mTORC2_S2481_phos_by_PI3K_variant_p        0.120736  # Constant
+   44 mTORC2_pS2481_dephos                       1.42511  # Constant
+   45 TSC1_TSC2_S1387_phos_by_AMPK_pT172         0.00175772  # Constant
+   46 TSC1_TSC2_T1462_phos_by_Akt_pT308          1.52417  # Constant
+   47 TSC1_TSC2_pS1387_dephos                    0.25319  # Constant
+   48 TSC1_TSC2_pT1462_dephos                    147.239  # Constant
+   49 mTORC1_pS2448_dephos_by_TSC1_TSC2          0.00869774  # Constant
+   50 p70_S6K_T389_phos_by_mTORC1_pS2448_first   0.00261303413778722  # Constant
+   51 p70_S6K_T389_phos_by_mTORC1_pS2448_second  0.110720890919343  # Constant
+   52 p70_S6K_T229_phos_by_PI3K_p_PDK1_first     0.0133520172873009  # Constant
+   53 p70_S6K_T229_phos_by_PI3K_p_PDK1_second    1.00000002814509e-6  # Constant
+   54 p70_S6K_pT389_dephos_first                 1.10036057608758  # Constant
+   55 p70_S6K_pT389_dephos_second                1.10215267954479  # Constant
+   56 p70_S6K_pT229_dephos_first                 1.00000012897033e-6  # Constant
+   57 p70_S6K_pT229_dephos_second                0.159201353240651  # Constant
+   58 PRAS40_S183_phos_by_mTORC1_pS2448_first    0.15881  # Constant
+   59 PRAS40_S183_phos_by_mTORC1_pS2448_second   0.0683009  # Constant
+   60 PRAS40_T246_phos_by_Akt_pT308_first        0.279344  # Constant
+   61 PRAS40_T246_phos_by_Akt_pT308_second       0.279401  # Constant
+   62 PRAS40_pS183_dephos_first                  1.8706  # Constant
+   63 PRAS40_pS183_dephos_second                 1.88453  # Constant
+   64 PRAS40_pT246_dephos_first                  11.8759  # Constant
+   65 PRAS40_pT246_dephos_second                 11.876  # Constant
+   66 _InitialConc1                              PI3K_level*PI3K_var_0  # ConstantExpression
+   67 _InitialConc2                              PI3K_level*PI3K_PDK1_0  # ConstantExpression
+   68 _InitialConc3                              mTORC2_level*mTORC2_0  # ConstantExpression
+   69 _InitialConc4                              AMPK_level*AMPK_0  # ConstantExpression
+   70 _InitialConc5                              mTORC1_level*mTORC1_0  # ConstantExpression
+end parameters
+begin functions
+    1 f_IR_phos() IR_beta_phos_by_Insulin*Obs_Insulin
+    2 f_IRS_phos_by_IR() IRS_phos_by_IR_beta_pY1146*Obs_IR_pY1146
+    3 f_IRS_phos_by_AA() IRS_phos_by_Amino_Acids*Obs_AminoAcids
+    4 f_IRSp_to_pS636() IRS_p_phos_by_p70_S6K_pT229_pT389*Obs_S6K_pT229_pT389
+    5 f_IRSu_to_pS636() IRS_phos_by_p70_S6K_pT229_pT389*Obs_S6K_pT229_pT389
+    6 f_PI3K_var_phos() PI3K_variant_phos_by_IR_beta_pY1146*Obs_IR_pY1146
+    7 f_PI3K_PDK1_phos() PI3K_PDK1_phos_by_IRS_p*Obs_IRS_p
+    8 f_Akt_T308_first() Akt_T308_phos_by_PI3K_p_PDK1_first*Obs_PI3K_PDK1_p
+    9 f_Akt_T308_second() Akt_T308_phos_by_PI3K_p_PDK1_second*Obs_PI3K_PDK1_p
+   10 f_Akt_S473_first() Akt_S473_phos_by_mTORC2_pS2481_first*Obs_mTOR_pS2481
+   11 f_Akt_S473_second() Akt_S473_phos_by_mTORC2_pS2481_second*Obs_mTOR_pS2481
+   12 f_mTORC2_by_PI3K_var() mTORC2_S2481_phos_by_PI3K_variant_p*Obs_PI3K_var_p
+   13 f_mTORC2_by_AA() mTORC2_S2481_phos_by_Amino_Acids*Obs_AminoAcids
+   14 f_AMPK_phos_by_IRSp() AMPK_T172_phos*Obs_IRS_p
+   15 f_AMPK_phos_by_AA() AMPK_T172_phos_by_Amino_Acids*Obs_AminoAcids
+   16 f_TSC_S1387() TSC1_TSC2_S1387_phos_by_AMPK_pT172*Obs_AMPK_pT172
+   17 f_TSC_T1462() TSC1_TSC2_T1462_phos_by_Akt_pT308*Obs_Akt_pT308
+   18 f_mTORC1_by_AA() mTORC1_S2448_activation_by_Amino_Acids*Obs_AminoAcids
+   19 f_mTORC1_dephos() mTORC1_pS2448_dephos_by_TSC1_TSC2*(Obs_TSC_u+Obs_TSC_pS1387)
+   20 f_S6K_T389_first() p70_S6K_T389_phos_by_mTORC1_pS2448_first*Obs_mTOR_pS2448
+   21 f_S6K_T389_second() p70_S6K_T389_phos_by_mTORC1_pS2448_second*Obs_mTOR_pS2448
+   22 f_S6K_T229_first() p70_S6K_T229_phos_by_PI3K_p_PDK1_first*Obs_PI3K_PDK1_p
+   23 f_S6K_T229_second() p70_S6K_T229_phos_by_PI3K_p_PDK1_second*Obs_PI3K_PDK1_p
+   24 f_PRAS40_S183_first() PRAS40_S183_phos_by_mTORC1_pS2448_first*Obs_mTOR_pS2448
+   25 f_PRAS40_S183_second() PRAS40_S183_phos_by_mTORC1_pS2448_second*Obs_mTOR_pS2448
+   26 f_PRAS40_T246_first() PRAS40_T246_phos_by_Akt_pT308_first*Obs_Akt_pT308
+   27 f_PRAS40_T246_second() PRAS40_T246_phos_by_Akt_pT308_second*Obs_Akt_pT308
+end functions
+begin species
+    1 IR(state~u) IR_0
+    2 IRS(state~u) IRS_0
+    3 PI3K_var(s~u) _InitialConc1
+    4 PI3K_PDK1(s~u) _InitialConc2
+    5 Akt(s473~u,t308~u) Akt_0
+    6 mTORC2(s2481~u) _InitialConc3
+    7 AMPK(t172~u) _InitialConc4
+    8 TSC(state~u) TSC_0
+    9 mTORC1(s2448~u) _InitialConc5
+   10 S6K(t229~u,t389~u) S6K_0
+   11 PRAS40(s183~u,t246~u) PRAS40_0
+   12 $Ins() Ins_0
+   13 $AA() AA_0
+   14 IR(state~p) 0
+   15 IRS(state~p) 0
+   16 IRS(state~pS636) 0
+   17 PI3K_var(s~p) 0
+   18 PI3K_PDK1(s~p) 0
+   19 Akt(s473~u,t308~p) 0
+   20 Akt(s473~p,t308~u) 0
+   21 mTORC2(s2481~p) 0
+   22 AMPK(t172~p) 0
+   23 TSC(state~pS1387) 0
+   24 TSC(state~pT1462) 0
+   25 mTORC1(s2448~p) 0
+   26 S6K(t229~u,t389~p) 0
+   27 S6K(t229~p,t389~u) 0
+   28 PRAS40(s183~p,t246~u) 0
+   29 PRAS40(s183~u,t246~p) 0
+   30 IR(state~r) 0
+   31 Akt(s473~p,t308~p) 0
+   32 S6K(t229~p,t389~p) 0
+   33 PRAS40(s183~p,t246~p) 0
+end species
+begin reactions
+    1 1 14 f_IR_phos #R_phos_IR_Y1146
+    2 2 15 f_IRS_phos_by_IR #R_phos_IRS_by_IR
+    3 2 15 f_IRS_phos_by_AA #R_phos_IRS_by_AA
+    4 2 16 f_IRSu_to_pS636 #R_phos_IRSu_S636
+    5 3 17 f_PI3K_var_phos #R_phos_PI3K_var
+    6 4 18 f_PI3K_PDK1_phos #R_phos_PI3K_PDK1
+    7 5 19 f_Akt_T308_first #R_phos_Akt_T308_1
+    8 5 20 f_Akt_S473_first #R_phos_Akt_S473_1
+    9 6 21 f_mTORC2_by_PI3K_var #R_phos_mTORC2_PI3K
+   10 6 21 f_mTORC2_by_AA #R_phos_mTORC2_AA
+   11 7 22 f_AMPK_phos_by_IRSp #R_phos_AMPK_IRSp
+   12 7 22 f_AMPK_phos_by_AA #R_phos_AMPK_AA
+   13 8 23 f_TSC_S1387 #R_phos_TSC_S1387
+   14 8 24 f_TSC_T1462 #R_phos_TSC_T1462
+   15 9 25 f_mTORC1_by_AA #R_phos_mTORC1_AA
+   16 10 26 f_S6K_T389_first #R_phos_S6K_T389_1
+   17 10 27 f_S6K_T229_first #R_phos_S6K_T229_1
+   18 11 28 f_PRAS40_S183_first #R_phos_PRAS40_S183_1
+   19 11 29 f_PRAS40_T246_first #R_phos_PRAS40_T246_1
+   20 14 30 IR_beta_pY1146_dephos #R_inact_IR_refractory
+   21 15 16 f_IRSp_to_pS636 #R_phos_IRSp_S636
+   22 16 2 IRS_pS636_turnover #R_turnover_IRS_S636
+   23 17 3 PI3K_variant_p_dephos #R_dephos_PI3K_var
+   24 18 4 PI3K_p_PDK1_dephos #R_dephos_PI3K_PDK1
+   25 20 31 f_Akt_T308_second #R_phos_Akt_T308_2
+   26 19 31 f_Akt_S473_second #R_phos_Akt_S473_2
+   27 19 5 Akt_pT308_dephos_first #R_dephos_Akt_T308_1
+   28 20 5 Akt_pS473_dephos_first #R_dephos_Akt_S473_1
+   29 21 6 mTORC2_pS2481_dephos #R_dephos_mTORC2
+   30 22 7 AMPK_pT172_dephos #R_dephos_AMPK
+   31 23 8 TSC1_TSC2_pS1387_dephos #R_dephos_TSC_S1387
+   32 24 8 TSC1_TSC2_pT1462_dephos #R_dephos_TSC_T1462
+   33 25 9 f_mTORC1_dephos #R_dephos_mTORC1_TSC
+   34 27 32 f_S6K_T389_second #R_phos_S6K_T389_2
+   35 26 32 f_S6K_T229_second #R_phos_S6K_T229_2
+   36 26 10 p70_S6K_pT389_dephos_first #R_dephos_S6K_T389_1
+   37 27 10 p70_S6K_pT229_dephos_first #R_dephos_S6K_T229_1
+   38 29 33 f_PRAS40_S183_second #R_phos_PRAS40_S183_2
+   39 28 33 f_PRAS40_T246_second #R_phos_PRAS40_T246_2
+   40 28 11 PRAS40_pS183_dephos_first #R_dephos_PRAS40_S183_1
+   41 29 11 PRAS40_pT246_dephos_first #R_dephos_PRAS40_T246_1
+   42 30 1 IR_beta_ready #R_recycle_IR
+   43 31 20 Akt_pT308_dephos_second #R_dephos_Akt_T308_2
+   44 31 19 Akt_pS473_dephos_second #R_dephos_Akt_S473_2
+   45 32 27 p70_S6K_pT389_dephos_second #R_dephos_S6K_T389_2
+   46 32 26 p70_S6K_pT229_dephos_second #R_dephos_S6K_T229_2
+   47 33 29 PRAS40_pS183_dephos_second #R_dephos_PRAS40_S183_2
+   48 33 28 PRAS40_pT246_dephos_second #R_dephos_PRAS40_T246_2
+end reactions
+begin groups
+    1 Obs_Insulin          12
+    2 Obs_AminoAcids       13
+    3 Obs_IR_pY1146        14
+    4 Obs_IRS_pS636        16
+    5 Obs_AMPK_pT172       22
+    6 Obs_Akt_pT308        19,31
+    7 Obs_Akt_pS473        20,31
+    8 Obs_TSC_pS1387       23
+    9 Obs_mTOR_pS2448      25
+   10 Obs_mTOR_pS2481      21
+   11 Obs_S6K_pT229        27,32
+   12 Obs_S6K_pT389        26,32
+   13 Obs_PRAS40_pT246     29,33
+   14 Obs_PRAS40_pS183     28,33
+   15 Obs_IRS_p            15
+   16 Obs_PI3K_var_p       17
+   17 Obs_PI3K_PDK1_p      18
+   18 Obs_S6K_pT229_pT389  32
+   19 Obs_TSC_u            8
+end groups
