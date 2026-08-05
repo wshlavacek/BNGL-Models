@@ -99,9 +99,28 @@ Record that you did it.
 
 ## 4. Statistics and tolerances
 
-Compare *statistics of the distribution*, never trajectories. Pick metrics the figure type
-supports, and justify each threshold from a named source of error — sampling, digitization,
-figure resolution, or the precision of the printed number.
+Compare *statistics of the distribution*, never trajectories.
+
+**The procedure is required; the numbers are not.** For every comparison a stochastic curation
+makes, three things MUST appear in the verification artifact and on the figure:
+
+1. **a metric the figure type supports** — a distribution comparison is not a trajectory
+   comparison, and neither is a spectrum;
+2. **a stated threshold**; and
+3. **the source of error that threshold comes from** — sampling, digitization, figure
+   resolution, or the precision of the printed number — named, not implied.
+
+Item 3 is the one that does the work. A threshold with no named error source is a number
+someone liked, and it will be wrong in both directions on the next model: `max|z| < 3` looked
+principled until `network-free-verification.md` worked out that the expected maximum over N
+comparisons is Φ⁻¹(1−1/2N) ≈ 3.4 at N = 1488, so three correct models sat just above it; and
+where the s.e.m. is small, z is so sensitive that `tlbr_steric_monine2010` reads max|z| = 19 at
+a maximum absolute difference of 0.011 against its own RMS of 0.02.
+
+The table below is therefore **calibration, not a specification**. Reading a threshold off it
+without checking that your line thickness, run length, or printed precision resemble the row's
+is the same mistake in a friendlier font. Where they do resemble it, adopt the number and say
+so — that is a named source of error, and matching the collection is worth something.
 
 Thresholds in current use, as calibration:
 
@@ -122,6 +141,11 @@ Two habits worth copying:
 - **When both sides are sampled, use standard errors, not a fixed percentage.** "every stationary
   mean within 3 combined standard errors" (samoilov2005) scales correctly with run length; a flat
   5% does not.
+
+A threshold that is *looser* than the table needs the same treatment as one that is tighter: say
+which error source widened it. "RMSE/height ≤ 0.15 because the published curve is 3 pt wide on a
+panel 40 pt tall" is a justification; "≤ 0.15" alone is a model that has not been verified to any
+stated standard.
 
 Normalize a distribution comparison by something physical (the panel height, the mean), so the
 number means the same thing across models.

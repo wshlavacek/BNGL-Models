@@ -94,33 +94,33 @@ files:
     description: Digitized dashed 1PS curve from Fig. 3b.
 
   # Literal four-site BioNetGen reference outputs
-  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010/ste5_fus3_ptc1_switch_malleshaiah2010.net
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010.net
     role: reference
-  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010/ste5_fus3_ptc1_switch_malleshaiah2010_scan.scan
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_scan.scan
     role: reference
-  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010/ste5_fus3_ptc1_switch_malleshaiah2010_scan/
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_scan/
     role: reference
 
   # Literal one-site BioNetGen reference outputs
-  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_1ps/ste5_fus3_ptc1_switch_malleshaiah2010_1ps.net
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_1ps.net
     role: reference
-  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_1ps/ste5_fus3_ptc1_switch_malleshaiah2010_1ps_scan.scan
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_1ps_scan.scan
     role: reference
-  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_1ps/ste5_fus3_ptc1_switch_malleshaiah2010_1ps_scan/
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_1ps_scan/
     role: reference
 
   # Molar-association-units four-site BioNetGen reference outputs
-  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units.net
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units.net
     role: reference
-  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_scan.scan
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_scan.scan
     role: reference
-  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_scan/
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_scan/
     role: reference
 
   # Molar-association-units one-site BioNetGen reference outputs
-  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps.net
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps.net
     role: reference
-  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps_scan.scan
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps_scan.scan
     role: reference
-  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps_scan/
+  - name: reference/ste5_fus3_ptc1_switch_malleshaiah2010_molar_association_units_1ps_scan/
     role: reference

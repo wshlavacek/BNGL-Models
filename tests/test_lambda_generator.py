@@ -1,6 +1,7 @@
 """The generator in models/lambda_switch_arkin1998/generator/ must regenerate the two
 committed network-free lambda full-circuit models byte-for-byte. This guards against
 drift between the generator and the committed .bngl files."""
+
 import sys
 from pathlib import Path
 

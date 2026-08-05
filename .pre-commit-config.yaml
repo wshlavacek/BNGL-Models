@@ -24,6 +24,15 @@ repos:
 
   - repo: local
     hooks:
+      # Structural conformance of models/ (skills/bngl/skill.md §9). ~0.4 s over all 54 folders,
+      # so it runs at commit time rather than being held back to pre-push with pytest.
+      - id: conformance
+        name: models/ conformance
+        entry: uv run python tools/conformance.py
+        language: system
+        pass_filenames: false
+        files: ^(models/|README\.md|tools/conformance)
+
       - id: pytest
         name: pytest
         entry: uv run pytest -q

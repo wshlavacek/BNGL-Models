@@ -2,6 +2,7 @@
 must regenerate all six committed BNGL files byte-for-byte. The six files are near-identical
 transcriptions of one 80-reaction network under six protocols, so they are written by a
 generator rather than by hand; this guards against drift between the two."""
+
 import sys
 from pathlib import Path
 

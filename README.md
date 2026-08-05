@@ -85,3 +85,22 @@ Requires Python 3.12+.
 ```sh
 uv sync
 ```
+
+## Conformance
+
+`tools/conformance.py` is a regression guard over `models/`. It checks the structural half of
+the house style — `metadata.yaml` against the schema and controlled vocabularies of
+`skills/bngl/skill.md` §5, the required `#@` header keys and the simulation-intent declaration
+in every `.bngl`, a flat `reference/`, the `verify_*.png`, and each folder's row and Scale cell
+in the Models table above. Every finding names the section it came from.
+
+```sh
+uv run python tools/conformance.py -w
+```
+
+It runs in pre-commit and in CI, takes under a second, and never invokes BioNetGen: it says
+nothing about whether a model is *correct*, which is what each folder's `verify_<author><year>`
+artifact is for. Errors fail the build; warnings do not. Pre-existing findings are listed file
+by file in `tools/conformance_baseline.yaml` — 52 today, in two classes named in
+`skills/bngl/skill.md` §11.5. That file is meant to shrink, and an entry that stops firing
+fails the build, so fixing a file includes deleting its line.

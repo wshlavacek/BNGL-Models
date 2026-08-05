@@ -1,0 +1,59 @@
+name: CI
+
+# The gate on curation drift. `conformance` is the one that matters for `models/`: it runs the
+# structural rules in tools/conformance.py over all 54 folders and fails on any ERROR that is not
+# grandfathered in tools/conformance_baseline.yaml. Nothing here runs BioNetGen — the checks are
+# structural by design, and each folder's own verify_<author><year> artifact carries the science.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  conformance:
+    name: models/ conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      # Warnings are printed but do not fail the build (skills/bngl/skill.md §9 severity levels).
+      - name: Validate models/
+        run: uv run python tools/conformance.py --warnings
+
+  lint:
+    name: ruff (tools, tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      # Scoped to tools/ and tests/ on purpose. .pre-commit-config.yaml runs ruff over *staged*
+      # files only, so the repository has never been lint-clean as a whole: `ruff check .` reports
+      # 762 findings today, almost all in curation scripts under models/ and skills/. Widening
+      # this job means a reformat pass over 116 files, which is its own commit, not this one.
+      - run: uv run ruff check tools tests
+      - run: uv run ruff format --check tools tests
+
+  tests:
+    name: pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      # test_digitize.py replays the two committed digitizers; those skip here, because the
+      # source PDFs they read are deliberately not committed (references/digitization.md).
+      - run: uv run pytest -q

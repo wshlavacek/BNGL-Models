@@ -129,6 +129,24 @@ Before creating or editing model artifacts:
     exists. Use the corpus's single canonical `<firstauthor><year>` key for the
     paper across `models/`, `pybnf-jobs/`, and `dev/papers/`; check for an existing
     spelling before coining one.
+11. **Run the conformance validator and leave it green.**
+
+    ```bash
+    uv run python tools/conformance.py -w
+    ```
+
+    It checks the structural half of the contract over every folder — `metadata.yaml`
+    against the §5.1 schema and the §5.2/§5.3/§5.6 vocabularies, the four required
+    header keys and the simulation-intent declaration in every `.bngl`, a flat
+    `reference/`, the `verify_*.png`, and the README row with its Scale cell. Each
+    finding names the house-style section it came from. Fix what it reports; do
+    **not** add the new folder to `tools/conformance_baseline.yaml`, which holds
+    pre-existing debt only and is meant to shrink. Warnings do not fail CI but are
+    worth reading before you call the curation done.
+
+    A green run means no structural drift. It is not a substitute for the
+    verification the rest of this skill describes — the validator never runs
+    BioNetGen and has no opinion about whether the model is right.
 
 ## Reported Simulation Data Verification
 
@@ -412,7 +430,9 @@ The task is not complete until:
   classed `hours` or `cluster` carries a `#@runtime_expectation:` stating the
   measured cost, the machine, and what dominates it;
 - `README.md` includes the completed model collection in the Models table, with
-  its Scale column filled in.
+  its Scale column filled in;
+- `uv run python tools/conformance.py` reports no ERROR for the new folder, and
+  the folder appears nowhere in `tools/conformance_baseline.yaml`.
 
 If a required artifact cannot be produced, state exactly which artifact is
 missing and why.

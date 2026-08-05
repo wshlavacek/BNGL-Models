@@ -75,8 +75,10 @@ def test_mu2010_digitizer_reproduces_committed_csv():
 
 
 @pytest.mark.skipif(shutil.which("pdftoppm") is None, reason="poppler pdftoppm not on PATH")
-@pytest.mark.skipif(importlib.util.find_spec("PIL") is None,
-                    reason="pillow not installed (uv sync --group digitize)")
+@pytest.mark.skipif(
+    importlib.util.find_spec("PIL") is None,
+    reason="pillow not installed (uv sync --group digitize)",
+)
 def test_malleshaiah2010_digitizer_reproduces_committed_csvs():
     if not MALLESHAIAH_PDF.exists():
         pytest.skip("Malleshaiah2010 source PDF is not committed and is not present in dev/papers/")

@@ -684,8 +684,12 @@ Tags describe provenance — where the model came from and how it was produced. 
 | `adapted_from_python` | Translated from Python/SciPy code |
 | `biomodels_database` | Source model obtained from the BioModels database |
 | `benchmark_collection` | Part of a curated benchmark or test suite |
+| `network_free` | Curated to run network-free (NFsim/RuleMonkey) rather than from a generated network |
 
-New tags MAY be added as needed; existing tags MUST NOT be removed or redefined.
+New tags MAY be added as needed; existing tags MUST NOT be removed or redefined. The vocabulary
+is enforced (§9.4a), so a genuinely new tag is added to this table **and** to `SOURCE_TAGS` in
+`tools/conformance.py` in the same commit; that pairing is what keeps "open vocabulary" from
+meaning "unchecked".
 
 ### 5.3 File role vocabulary
 
@@ -698,15 +702,20 @@ New tags MAY be added as needed; existing tags MUST NOT be removed or redefined.
 | `reference` | `.net`, `.gdat`, `.cdat`, `.scan`, `.xml`, etc. | Committed reference simulation data in `reference/` subdirectory |
 | `output` | `.net`, `.gdat`, `.cdat`, `.scan`, etc. | Transient generated output files (not committed) |
 | `figure` | `.png`, `.pdf`, `.svg` | Plots or figures |
+| `tooling` | a directory, or a script that is neither verification nor output | Machinery that produces the folder's artifacts — most often a `generator/` that emits the `.bngl` (`lambda_switch_arkin1998`) |
 
 Every folder MUST have exactly one file with `role: primary`. The primary `.bngl` file MUST have the same stem name as the folder (per §4.8).
+
+A `tooling` entry MAY name a directory rather than a file (`generator/`), in which case it covers everything inside it — the same allowance §5.4 rule 4 makes for a scan output directory.
 
 ### 5.4 Metadata rules
 
 1. **One `metadata.yaml` per folder.** The `id` field is the folder name — it identifies the collection, not individual files. Individual files are distinguished by the `files` manifest.
 2. **Point of contact is singular and MUST include an email.** List the person most knowledgeable about this folder. Email is required for contact verification. An `alternate_point_of_contact` MAY be listed as a backup. Additional contributors go in the optional `contributors` list. Per-file `point_of_contact` overrides in the `files` manifest are allowed when different people contribute different files.
 3. **Documentation level.** The `documentation_target` field on each file entry declares the intended annotation/formatting depth (`none`, `minimal`, `standard`, `extra`, `comprehensive`). The folder-level `status` field is deprecated; do not use it. (A per-file numeric `rating` was specified in an earlier `rating.md` and removed 2026-08-04 — it was never computed, because the grader it depended on was never implemented, and all 107 instances in the collection were blank. `documentation_target` is the field that carries intent.)
-4. **Reference simulation data** lives in a `reference/` subdirectory within each model folder. This directory contains committed output files (`.net`, `.gdat`, `.cdat`, `.scan`, `.xml`, `.species`, and scan subdirectories) that serve as regression baselines. Files are organized flat — filenames encode the parent `.bngl` file via the naming convention. Reference files SHOULD be listed in the `files` manifest with `role: reference` and paths relative to the model folder (e.g., `reference/model_ode.gdat`).
+4. **Reference simulation data** lives in a `reference/` subdirectory within each model folder. This directory contains committed output files (`.net`, `.gdat`, `.cdat`, `.scan`, `.xml`, `.species`, and scan subdirectories) that serve as regression baselines. Reference files SHOULD be listed in the `files` manifest with `role: reference` and paths relative to the model folder (e.g., `reference/model_ode.gdat`).
+
+   **`reference/` is flat (REQUIRED).** The only directories permitted directly inside it are BioNetGen `parameter_scan()` output directories — the `<prefix>_scan/` that BNG writes itself, holding one file per scan point and no directories of its own. Everything else is a file at the top level, because the *filename* already encodes the parent `.bngl` via the §4.8 naming convention; a per-model subdirectory only repeats the stem the filename carries. This was open until 2026-08-06: `ste5_fus3_ptc1_switch_malleshaiah2010`, with four variants each producing a `.net`, a `.scan` and a scan directory, had grouped them one directory per variant, giving paths of the shape `reference/<stem>/<stem>.net`. It was flattened rather than generalized, on the ground that the nesting carried no information the filenames did not — and twelve flat entries is unremarkable next to `car_cd3zeta_phosphorylation_rohrs2018`, which ships 44. The rule is enforced (§9.4a).
 5. **Generated output files** outside `reference/` are transient and SHOULD NOT be committed. Use `.gitignore` or clean up after runs.
 6. **Git tracks version history.** Do not duplicate commit history or changelogs in `metadata.yaml`. Use `git log -- models/<folder>/` for history.
 
@@ -1071,6 +1080,22 @@ Severity levels:
 - **WARN**: should fix; model is compliant but has issues
 - **INFO**: optional suggestions
 
+**What is automated.** `tools/conformance.py` enforces the structural subset of these rules over
+every folder in `models/` — §9.4a in full, the §9.4 header keys, the §1.3 item 4 simulation-intent
+declaration, the §5.4 rule 4 `reference/` layout, and the README Models table row and Scale cell
+that `curate-model` step 9 asks for. It runs in pre-commit, in CI, and from `tests/test_conformance.py`:
+
+```bash
+uv run python tools/conformance.py -w
+```
+
+The rest of §9 — block order, indentation, units comments, reserved identifiers, single-site
+semantics — is **not** automated and is still read by a person. Passing the validator therefore
+means "no structural drift", not "compliant"; do not treat a green run as a curation review.
+Pre-existing ERROR findings are grandfathered in `tools/conformance_baseline.yaml`, which lists
+them file by file. Two classes are in there today (see §11.5), and an entry that stops firing
+fails the build, so fixing a file includes deleting its line.
+
 ### 9.1 Structure and blocks
 - **ERROR**: Block order matches §2.
 - **ERROR**: Required blocks present: parameters, molecule types, seed species, observables, reaction rules.
@@ -1087,6 +1112,7 @@ Severity levels:
 
 ### 9.4 Header metadata
 - **ERROR**: required minimal header keys exist (§6.1.1): `#@title:`, `#@description:`, `#@keyword:`, `#@reference:`.
+- **ERROR**: the header declares the simulation intent (§1.3 item 4) — population-based (molecule counts) or concentration-based with conversion through `NA` and a volume. There is no dedicated key for this; it is prose inside `#@description:` or `#@note:`, and the validator looks for it in the header comment block only, so a `# dimensionless` units comment further down the file does not satisfy it.
 - **WARN**: `#@modified:` not updated on substantive edits.
 
 ### 9.4a Folder metadata
@@ -1102,6 +1128,10 @@ Severity levels:
 - **WARN**: `scale: hours` or `scale: cluster` declared with no `#@runtime_expectation:` anywhere in the corresponding `.bngl` file (§7.1).
 - **WARN**: `scale:` disagrees with the file's committed evidence — `trivial` on a file whose `.net` has ≥ 10³ reactions, or on a network-free file (§5.6.1 floors those at `minutes`).
 - **ERROR**: `rating:` present. The field was removed 2026-08-04; use `documentation_target:`.
+- **ERROR**: every entry in the `files` manifest resolves to a file or directory that exists.
+- **ERROR**: `reference/` contains no directories other than BioNetGen `parameter_scan()` output directories, and those contain no directories of their own (§5.4 rule 4).
+- **ERROR**: the folder has a `verify_*.png`. `curate-model` requires the verification figure in both artifact shapes, notebook and driver script.
+- **ERROR**: the folder has a row in the `README.md` Models table, and that row's Scale cell equals the **maximum** `scale:` over the manifest — over *every* scaled entry, not only the `.bngl` ones, since §5.6 allows `scale:` on a driver script or notebook and four folders are `hours` because of the verification campaign rather than the model.
 
 ### 9.5 Naming and reserved identifiers
 - **ERROR**: identifiers satisfy §4.1.
@@ -1194,3 +1224,4 @@ A model is compliant if it satisfies the minimal header requirements (§6.1.1) a
 | Version | Date | Change | Migration |
 |---|---|---|---|
 | 1.0 | 2026-08-05 | **Runnable scale.** New REQUIRED per-file `scale:` key on `.bngl` entries in `metadata.yaml` (§5.6), with the static assignment procedure (§5.6.1) and lint rules (§9.4a). §7.1 rewritten: the ~1-minute runtime target is withdrawn, and `#@runtime_expectation:` is explicitly permitted at header or protocol level under §6.3, resolving its collision with the deferred §6.1.2. | All 54 model folders annotated in the same change; new curations set `scale:` per `curate-model` step 4. |
+| 1.1 | 2026-08-06 | **§9 partially automated.** `tools/conformance.py` enforces the structural subset over all 54 folders, in pre-commit and CI. Three vocabulary/wording gaps it exposed are fixed here rather than in the corpus, because the corpus was right and the tables were short: `network_free` added to §5.2 (5 folders used it), `tooling` added to §5.3 (`lambda_switch_arkin1998` lists its `generator/` that way), and §5.4 rule 4 now states the flat-`reference/` rule precisely enough to check. New §9.4/§9.4a rules: simulation intent declared in the header, manifest entries resolve, `reference/` layout, `verify_*.png` present, README row and Scale cell. | `ste5_fus3_ptc1_switch_malleshaiah2010` flattened from per-variant `reference/` subdirectories. Two classes of pre-existing debt grandfathered in `tools/conformance_baseline.yaml` rather than fixed: **47** `.bngl` files that never declare simulation intent (§1.3 item 4), and **5** with no structured `#@` header at all (§6.1.1) — `blbr_rings_posner1995_alt_formulation`, `size2_ring_posner_validation`, `cell_cycle_oscillator_lang2024_fused`, and the two generator-emitted `lambda_switch_arkin1998_fullcircuit*`. Deleting a baseline line is part of fixing the file it names. |
