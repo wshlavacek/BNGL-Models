@@ -1,0 +1,342 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 NA           6.02214076e23  # Constant
+    2 A_ref        1  # Constant
+    3 f            1  # Constant
+    4 A_sim        A_ref*f  # ConstantExpression
+    5 h_mem        1e-8  # Constant
+    6 V_ref        (A_sim*h_mem)*1e-9  # ConstantExpression
+    7 tS           1  # Constant
+    8 s_bind       0.0056  # Constant
+    9 A_enc        1e-4  # Constant
+   10 k_plus       0.1  # Constant
+   11 k_on         10.0  # Constant
+   12 k_minus      k_plus/A_enc  # ConstantExpression
+   13 k_on_star    k_on/A_enc  # ConstantExpression
+   14 koff         1  # Constant
+   15 kr           0.1  # Constant
+   16 EF_tot       1000  # Constant
+   17 r            0.398107170553498  # Constant
+   18 ET           (EF_tot*r)/(1+r)  # ConstantExpression
+   19 FT           EF_tot/(1+r)  # ConstantExpression
+   20 kp_E         ET*k_plus  # ConstantExpression
+   21 kp_F         FT*k_plus  # ConstantExpression
+end parameters
+begin species
+    1 S(a~0,e~0,f~0,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) tS
+    2 S(a~0,e~1,f~0,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+    3 S(a~0,e~0,f~1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+    4 S(a~0,e~1!1,f~0,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+    5 S(a~0,e~1,f~0,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+    6 S(a~0,e~0,f~0,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+    7 S(a~0,e~1!1,f~0,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+    8 S(a~0,e~0,f~1,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+    9 S(a~0,e~1,f~0,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   10 S(a~0,e~0,f~0,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   11 S(a~0,e~1!1,f~0,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   12 S(a~0,e~0,f~1!1,y~P!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   13 S(a~0,e~0,f~1,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   14 S(a~0,e~1,f~0,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   15 S(a~0,e~0,f~0,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   16 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   17 S(a~0,e~0,f~1!1,y~P!1,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   18 S(a~0,e~0,f~1,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   19 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   20 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   21 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   22 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   23 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   24 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   25 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   26 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   27 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   28 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   29 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   30 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   31 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   32 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   33 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   34 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   35 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   36 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   37 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   38 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   39 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   40 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   41 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   42 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   43 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   44 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   45 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   46 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   47 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   48 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   49 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   50 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   51 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   52 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   53 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   54 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   55 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   56 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   57 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   58 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   59 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   60 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   61 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   62 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   63 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   64 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   65 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   66 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   67 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   68 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   69 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   70 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   71 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U,y~U) 0
+   72 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   73 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   74 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U) 0
+   75 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U) 0
+   76 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U,y~U) 0
+   77 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U,y~U) 0
+   78 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U) 0
+   79 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U) 0
+   80 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U) 0
+   81 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U,y~U) 0
+   82 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U,y~U) 0
+   83 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U) 0
+   84 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U) 0
+   85 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U) 0
+   86 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U,y~U) 0
+   87 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U,y~U) 0
+   88 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U) 0
+   89 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U) 0
+   90 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U) 0
+   91 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1,y~U) 0
+   92 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U,y~U) 0
+   93 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U) 0
+   94 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U) 0
+   95 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U) 0
+   96 S(a~0,e~1!1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U!1) 0
+   97 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U,y~U) 0
+   98 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U) 0
+   99 S(a~0,e~1,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P) 0
+  100 S(a~0,e~0,f~0,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P) 0
+  101 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~U) 0
+  102 S(a~0,e~0,f~1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P) 0
+  103 S(a~0,e~0,f~1!1,y~P!1,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P,y~P) 0
+end species
+begin reactions
+    1 1 2 kp_E #R_enc_E
+    2 1 3 kp_F #R_enc_F
+    3 2 1 k_minus #_reverse_R_enc_E
+    4 3 1 k_minus #_reverse_R_enc_F
+    5 2 4 20*k_on_star #R_bind_E
+    6 4 2 koff #_reverse_R_bind_E
+    7 4 5 kr #R_cat_E
+    8 5 6 k_minus #_reverse_R_enc_E
+    9 5 7 19*k_on_star #R_bind_E
+   10 6 5 kp_E #R_enc_E
+   11 6 8 kp_F #R_enc_F
+   12 7 5 koff #_reverse_R_bind_E
+   13 7 9 kr #R_cat_E
+   14 9 10 k_minus #_reverse_R_enc_E
+   15 8 6 k_minus #_reverse_R_enc_F
+   16 9 11 18*k_on_star #R_bind_E
+   17 8 12 k_on_star #R_bind_F
+   18 10 9 kp_E #R_enc_E
+   19 10 13 kp_F #R_enc_F
+   20 11 9 koff #_reverse_R_bind_E
+   21 12 8 koff #_reverse_R_bind_F
+   22 11 14 kr #R_cat_E
+   23 12 3 kr #R_cat_F
+   24 14 15 k_minus #_reverse_R_enc_E
+   25 13 10 k_minus #_reverse_R_enc_F
+   26 14 16 17*k_on_star #R_bind_E
+   27 13 17 2*k_on_star #R_bind_F
+   28 15 14 kp_E #R_enc_E
+   29 15 18 kp_F #R_enc_F
+   30 16 14 koff #_reverse_R_bind_E
+   31 17 13 koff #_reverse_R_bind_F
+   32 16 19 kr #R_cat_E
+   33 17 8 kr #R_cat_F
+   34 19 20 k_minus #_reverse_R_enc_E
+   35 18 15 k_minus #_reverse_R_enc_F
+   36 19 21 16*k_on_star #R_bind_E
+   37 18 22 3*k_on_star #R_bind_F
+   38 20 19 kp_E #R_enc_E
+   39 20 23 kp_F #R_enc_F
+   40 21 19 koff #_reverse_R_bind_E
+   41 22 18 koff #_reverse_R_bind_F
+   42 21 24 kr #R_cat_E
+   43 22 13 kr #R_cat_F
+   44 24 25 k_minus #_reverse_R_enc_E
+   45 23 20 k_minus #_reverse_R_enc_F
+   46 24 26 15*k_on_star #R_bind_E
+   47 23 27 4*k_on_star #R_bind_F
+   48 25 24 kp_E #R_enc_E
+   49 25 28 kp_F #R_enc_F
+   50 26 24 koff #_reverse_R_bind_E
+   51 27 23 koff #_reverse_R_bind_F
+   52 26 29 kr #R_cat_E
+   53 27 18 kr #R_cat_F
+   54 29 30 k_minus #_reverse_R_enc_E
+   55 28 25 k_minus #_reverse_R_enc_F
+   56 29 31 14*k_on_star #R_bind_E
+   57 28 32 5*k_on_star #R_bind_F
+   58 30 29 kp_E #R_enc_E
+   59 30 33 kp_F #R_enc_F
+   60 31 29 koff #_reverse_R_bind_E
+   61 32 28 koff #_reverse_R_bind_F
+   62 31 34 kr #R_cat_E
+   63 32 23 kr #R_cat_F
+   64 34 35 k_minus #_reverse_R_enc_E
+   65 33 30 k_minus #_reverse_R_enc_F
+   66 34 36 13*k_on_star #R_bind_E
+   67 33 37 6*k_on_star #R_bind_F
+   68 35 34 kp_E #R_enc_E
+   69 35 38 kp_F #R_enc_F
+   70 36 34 koff #_reverse_R_bind_E
+   71 37 33 koff #_reverse_R_bind_F
+   72 36 39 kr #R_cat_E
+   73 37 28 kr #R_cat_F
+   74 39 40 k_minus #_reverse_R_enc_E
+   75 38 35 k_minus #_reverse_R_enc_F
+   76 39 41 12*k_on_star #R_bind_E
+   77 38 42 7*k_on_star #R_bind_F
+   78 40 39 kp_E #R_enc_E
+   79 40 43 kp_F #R_enc_F
+   80 41 39 koff #_reverse_R_bind_E
+   81 42 38 koff #_reverse_R_bind_F
+   82 41 44 kr #R_cat_E
+   83 42 33 kr #R_cat_F
+   84 44 45 k_minus #_reverse_R_enc_E
+   85 43 40 k_minus #_reverse_R_enc_F
+   86 44 46 11*k_on_star #R_bind_E
+   87 43 47 8*k_on_star #R_bind_F
+   88 45 44 kp_E #R_enc_E
+   89 45 48 kp_F #R_enc_F
+   90 46 44 koff #_reverse_R_bind_E
+   91 47 43 koff #_reverse_R_bind_F
+   92 46 49 kr #R_cat_E
+   93 47 38 kr #R_cat_F
+   94 49 50 k_minus #_reverse_R_enc_E
+   95 48 45 k_minus #_reverse_R_enc_F
+   96 49 51 10*k_on_star #R_bind_E
+   97 48 52 9*k_on_star #R_bind_F
+   98 50 49 kp_E #R_enc_E
+   99 50 53 kp_F #R_enc_F
+  100 51 49 koff #_reverse_R_bind_E
+  101 52 48 koff #_reverse_R_bind_F
+  102 51 54 kr #R_cat_E
+  103 52 43 kr #R_cat_F
+  104 54 55 k_minus #_reverse_R_enc_E
+  105 53 50 k_minus #_reverse_R_enc_F
+  106 54 56 9*k_on_star #R_bind_E
+  107 53 57 10*k_on_star #R_bind_F
+  108 55 54 kp_E #R_enc_E
+  109 55 58 kp_F #R_enc_F
+  110 56 54 koff #_reverse_R_bind_E
+  111 57 53 koff #_reverse_R_bind_F
+  112 56 59 kr #R_cat_E
+  113 57 48 kr #R_cat_F
+  114 59 60 k_minus #_reverse_R_enc_E
+  115 58 55 k_minus #_reverse_R_enc_F
+  116 59 61 8*k_on_star #R_bind_E
+  117 58 62 11*k_on_star #R_bind_F
+  118 60 59 kp_E #R_enc_E
+  119 60 63 kp_F #R_enc_F
+  120 61 59 koff #_reverse_R_bind_E
+  121 62 58 koff #_reverse_R_bind_F
+  122 61 64 kr #R_cat_E
+  123 62 53 kr #R_cat_F
+  124 64 65 k_minus #_reverse_R_enc_E
+  125 63 60 k_minus #_reverse_R_enc_F
+  126 64 66 7*k_on_star #R_bind_E
+  127 63 67 12*k_on_star #R_bind_F
+  128 65 64 kp_E #R_enc_E
+  129 65 68 kp_F #R_enc_F
+  130 66 64 koff #_reverse_R_bind_E
+  131 67 63 koff #_reverse_R_bind_F
+  132 66 69 kr #R_cat_E
+  133 67 58 kr #R_cat_F
+  134 69 70 k_minus #_reverse_R_enc_E
+  135 68 65 k_minus #_reverse_R_enc_F
+  136 69 71 6*k_on_star #R_bind_E
+  137 68 72 13*k_on_star #R_bind_F
+  138 70 69 kp_E #R_enc_E
+  139 70 73 kp_F #R_enc_F
+  140 71 69 koff #_reverse_R_bind_E
+  141 72 68 koff #_reverse_R_bind_F
+  142 71 74 kr #R_cat_E
+  143 72 63 kr #R_cat_F
+  144 74 75 k_minus #_reverse_R_enc_E
+  145 73 70 k_minus #_reverse_R_enc_F
+  146 74 76 5*k_on_star #R_bind_E
+  147 73 77 14*k_on_star #R_bind_F
+  148 75 74 kp_E #R_enc_E
+  149 75 78 kp_F #R_enc_F
+  150 76 74 koff #_reverse_R_bind_E
+  151 77 73 koff #_reverse_R_bind_F
+  152 76 79 kr #R_cat_E
+  153 77 68 kr #R_cat_F
+  154 79 80 k_minus #_reverse_R_enc_E
+  155 78 75 k_minus #_reverse_R_enc_F
+  156 79 81 4*k_on_star #R_bind_E
+  157 78 82 15*k_on_star #R_bind_F
+  158 80 79 kp_E #R_enc_E
+  159 80 83 kp_F #R_enc_F
+  160 81 79 koff #_reverse_R_bind_E
+  161 82 78 koff #_reverse_R_bind_F
+  162 81 84 kr #R_cat_E
+  163 82 73 kr #R_cat_F
+  164 84 85 k_minus #_reverse_R_enc_E
+  165 83 80 k_minus #_reverse_R_enc_F
+  166 84 86 3*k_on_star #R_bind_E
+  167 83 87 16*k_on_star #R_bind_F
+  168 85 84 kp_E #R_enc_E
+  169 85 88 kp_F #R_enc_F
+  170 86 84 koff #_reverse_R_bind_E
+  171 87 83 koff #_reverse_R_bind_F
+  172 86 89 kr #R_cat_E
+  173 87 78 kr #R_cat_F
+  174 89 90 k_minus #_reverse_R_enc_E
+  175 88 85 k_minus #_reverse_R_enc_F
+  176 89 91 2*k_on_star #R_bind_E
+  177 88 92 17*k_on_star #R_bind_F
+  178 90 89 kp_E #R_enc_E
+  179 90 93 kp_F #R_enc_F
+  180 91 89 koff #_reverse_R_bind_E
+  181 92 88 koff #_reverse_R_bind_F
+  182 91 94 kr #R_cat_E
+  183 92 83 kr #R_cat_F
+  184 94 95 k_minus #_reverse_R_enc_E
+  185 93 90 k_minus #_reverse_R_enc_F
+  186 94 96 k_on_star #R_bind_E
+  187 93 97 18*k_on_star #R_bind_F
+  188 95 94 kp_E #R_enc_E
+  189 95 98 kp_F #R_enc_F
+  190 96 94 koff #_reverse_R_bind_E
+  191 97 93 koff #_reverse_R_bind_F
+  192 96 99 kr #R_cat_E
+  193 97 88 kr #R_cat_F
+  194 99 100 k_minus #_reverse_R_enc_E
+  195 98 95 k_minus #_reverse_R_enc_F
+  196 98 101 19*k_on_star #R_bind_F
+  197 100 99 kp_E #R_enc_E
+  198 100 102 kp_F #R_enc_F
+  199 101 98 koff #_reverse_R_bind_F
+  200 101 93 kr #R_cat_F
+  201 102 100 k_minus #_reverse_R_enc_F
+  202 102 103 20*k_on_star #R_bind_F
+  203 103 102 koff #_reverse_R_bind_F
+  204 103 98 kr #R_cat_F
+end reactions
+begin groups
+    1 Obs_pY               5,6,7,8,2*9,2*10,2*11,12,2*13,3*14,3*15,3*16,2*17,3*18,4*19,4*20,4*21,3*22,4*23,5*24,5*25,5*26,4*27,5*28,6*29,6*30,6*31,5*32,6*33,7*34,7*35,7*36,6*37,7*38,8*39,8*40,8*41,7*42,8*43,9*44,9*45,9*46,8*47,9*48,10*49,10*50,10*51,9*52,10*53,11*54,11*55,11*56,10*57,11*58,12*59,12*60,12*61,11*62,12*63,13*64,13*65,13*66,12*67,13*68,14*69,14*70,14*71,13*72,14*73,15*74,15*75,15*76,14*77,15*78,16*79,16*80,16*81,15*82,16*83,17*84,17*85,17*86,16*87,17*88,18*89,18*90,18*91,17*92,18*93,19*94,19*95,19*96,18*97,19*98,20*99,20*100,19*101,20*102,20*103
+    2 Obs_enc_E            2,5,9,14,19,24,29,34,39,44,49,54,59,64,69,74,79,84,89,94,99
+    3 Obs_enc_F            3,8,13,18,23,28,33,38,43,48,53,58,63,68,73,78,83,88,93,98,102
+    4 Obs_bound_E          4,7,11,16,21,26,31,36,41,46,51,56,61,66,71,76,81,86,91,96
+    5 Obs_bound_F          12,17,22,27,32,37,42,47,52,57,62,67,72,77,82,87,92,97,101,103
+end groups

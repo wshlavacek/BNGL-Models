@@ -1,0 +1,190 @@
+begin model
+
+#@title: Multisite phosphorylation without enzyme inactivation (Dushek et al., 2011)
+
+#@description: |
+#  A membrane-anchored substrate carrying 20 phosphorylation
+#  sites, 
+#  modified by a kinase and dephosphorylated by a phosphatase that are both confined to the
+#  same membrane and both in excess of the substrate. The paper's two-step scheme: enzyme and
+#  substrate first diffuse into an ENCOUNTER COMPLEX at the diffusion-limited rate X*k_plus,
+#  and only inside it can they bind (at the local on-rate, lambda*k_on_star) or move apart
+#  again (k_minus). 
+#  This file has NO refractory state: after catalysis the enzyme is immediately
+#  able to act again. It is the paper's own control on the mechanism, not a limit of the
+#  primary file -- the a~1 state and its two reactivation rules simply do not exist,
+#  so the network is smaller.
+#
+#  How it works: every reaction is a first-order transition of one substrate molecule, so with
+#  the enzymes held in excess the whole model is a linear continuous-time Markov chain on
+#  143 states (284 reactions at N = 20). The site multiplicity lambda is not
+#  written into any rate constant -- the 20 sites are 20 identical components
+#  and BioNetGen supplies the
+#  factors 1..20 itself.
+#
+#  What it does: Local saturation makes the encounter effectively processive, so a single
+#  encounter drives many modifications and the dose-response collapses onto the
+#  single-site curve -- nearly flat at 0.5 across four decades of [E]/[F].
+
+#@keyword: |
+#  signalling, multisite phosphorylation, ultrasensitivity, membrane diffusion,
+#  encounter complex, kinetic proofreading, mass action, T-cell receptor,
+#  noncatalytic tyrosine-phosphorylated receptor, Homo sapiens
+
+#@reference: |
+#  Dushek O, van der Merwe PA, Shahrezaei V (2011). Ultrasensitivity in multisite
+#  phosphorylation of membrane-anchored proteins. Biophysical Journal 100:1189-1197.
+#  doi:10.1016/j.bpj.2011.01.060
+
+#@note: |
+#  SIMULATION INTENT. Population-based: every amount is a molecule count on a membrane patch
+#  of area A_sim = A_ref*f, and at the default A_ref = 1 um^2, f = 1 the counts are
+#  numerically equal to the surface densities (um^-2) the paper quotes. The enzymes are NOT
+#  molecules -- the paper works in the enzyme-excess limit, so [E] and [F] enter only through
+#  the pseudo-first-order encounter rates ET*k_plus and FT*k_plus, exactly as in the authors'
+#  own BioNetGen file (Supporting Material pp. 10-12).
+
+#@note: |
+#  SITE MULTIPLICITY IS STRUCTURAL, NOT A CONSTANT. The authors' SI file uses one counter site
+#  with 20+1 states and hard-codes the multiplicity into 40 constants (Ekf1 = 20*10/A,
+#  Ekf2 = 19*10/A, ...). This file uses 20 identical y components instead. BioNetGen
+#  canonicalises species up to permutation of identical components, so the two give the SAME
+#  network -- 143 species and 284 reactions, the "143 coupled ODEs" the paper reports at
+#  N = 20 -- but here the generated rate laws read k_on_star, 2*k_on_star, ... 20*k_on_star,
+#  supplied by BioNetGen rather than by hand, so k_on_star stays a single-site constant
+#  (skills/bngl/skill.md §1.3.1).
+
+#@note: |
+#  REACTION-LIMITED k_on IS k_plus/10, NOT THE PUBLISHED k_plus/100. The main text defines the
+#  reaction-limited regime as "k_on = k+/100", which at k_plus = 10 um^2/s gives k_on = 0.1.
+#  That value does not reproduce the published panel: it puts the N = 1 curve of Fig. 2 A at
+#  0.313 -> 0.687 across the plotted range, whereas the panel itself measures 0.476 at
+#  log10([E]/[F]) = -2. k_on = 1 um^2/s gives 0.471, agreeing to 0.005 of full scale. The
+#  Hill-number insets do not discriminate (both give ~1), so the curve shape is the evidence.
+#  The digitized measurement is in verify_dushek2011.ipynb. The diffusion-limited regime is
+#  unaffected: "k_on = 100*k+" at k_plus = 0.1 gives k_on = 10, which is also the value in the
+#  authors' SI file, and it reproduces the Fig. 2 D Hill numbers (5.387 against a published
+#  fit of 5.38 at N = 20).
+
+#@figure: Fig. 2 B in Dushek et al. (2011)
+
+begin parameters
+  # --- Conversion readiness (skills/bngl/skill.md §1.3). No volumetric species exist; the
+  # model lives on a membrane, so the reference quantity is an AREA.
+  NA         6.02214076e23   # molecules/mol
+  A_ref      1               # um^2/patch
+  f          1               # dimensionless
+  A_sim      A_ref*f         # um^2/patch
+  h_mem      1e-8            # m
+  V_ref      A_sim*h_mem*1e-9  # L/patch
+
+  # --- Substrate
+  # Total substrate density; SI file `tS 1`, SI Fig. S1 caption S_T = 1 um^-2
+  tS         1            # molecules/um^2
+
+  # --- Encounter geometry
+  # Binding radius s and encounter area A = pi*s^2; main text p. 1191 and Table 1.
+  # The Fig. 2 caption prints A = 0.01^2 um^2; `pdftotext` renders that as "0.012".
+  s_bind     0.0056       # um
+  A_enc      1e-4         # um^2
+
+  # --- Two-step kinetics (diffusion-limited regime; Fig. 2 caption and Table 1)
+  # Diffusion-limited on-rate k+ (macroscopic)
+  k_plus     0.1          # um^2/s
+  # Bimolecular on-rate k_on (macroscopic), SINGLE SITE
+  k_on       10.0          # um^2/s
+  # Local rates: k- = k+/A and k*on = k_on/A (Table 1)
+  k_minus    k_plus/A_enc  # /s
+  k_on_star  k_on/A_enc    # /s
+  # Unbinding and modification rates; Fig. 2 caption
+  koff       1            # /s
+  kr         0.1          # /s
+
+  # --- Enzyme densities. The scanned quantity is the ratio r = [E]/[F] at fixed total.
+  # EF_tot is stated only in the SI Fig. S1 caption (E_T + F_T = 1000 um^-2).
+  EF_tot     1000         # molecules/um^2
+  r          1            # dimensionless
+  ET         EF_tot*r/(1+r)  # molecules/um^2
+  FT         EF_tot/(1+r)    # molecules/um^2
+  # Pseudo-first-order encounter rates X*k+ (main text, Eq. 1)
+  kp_E       ET*k_plus    # /s
+  kp_F       FT*k_plus    # /s
+end parameters
+
+begin molecule types
+  # The membrane-anchored substrate. `e`/`f` record whether a kinase / phosphatase is inside
+  # the encounter complex, `a` whether that enzyme is active or refractory, and the 20
+  # identical `y` components are the phosphorylation sites. A bond between `e` (or `f`) and a
+  # `y` is the bound enzyme-substrate complex, which is why no separate "bound" site is needed.
+  S(a~0,e~0~1,f~0~1,y~U~P,y~U~P,y~U~P,y~U~P,y~U~P,y~U~P,y~U~P,y~U~P,y~U~P,y~U~P,y~U~P,y~U~P,\
+y~U~P,y~U~P,y~U~P,y~U~P,y~U~P,y~U~P,y~U~P,y~U~P)
+end molecule types
+
+begin seed species
+  # All substrate starts unphosphorylated with no enzyme in the encounter complex.
+  S(a~0,e~0,f~0,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,y~U,\
+y~U)  tS   # molecules
+end seed species
+
+begin observables
+  # Numerator of the paper's Eq. 2: the number of phosphorylated sites, counted over every
+  # substrate state, bound or not. `!?` matches a site whether or not an enzyme is on it.
+  Molecules Obs_pY        S(y~P!?)
+  # Substrate with a kinase / phosphatase inside the encounter complex, active or refractory
+  Molecules Obs_enc_E     S(e~1)
+  Molecules Obs_enc_F     S(f~1)
+  # Substrate actually bound to an enzyme
+  Molecules Obs_bound_E   S(e~1!1,y~U!1)
+  Molecules Obs_bound_F   S(f~1!1,y~P!1)
+end observables
+
+begin reaction rules
+  # --- Encounter complex (Eq. 1, left half). X*k+ in, k- out.
+  R_enc_E:   S(e~0,f~0,a~0) <-> S(e~1,f~0,a~0)                     kp_E, k_minus
+  R_enc_F:   S(e~0,f~0,a~0) <-> S(e~0,f~1,a~0)                     kp_F, k_minus
+
+  # --- Binding inside the encounter complex (Eq. 1, right half). The rate constant is the
+  # SINGLE-SITE local on-rate; BioNetGen multiplies by the number of matching sites, which is
+  # the paper's lambda = N - j for the kinase and lambda = j for the phosphatase.
+  R_bind_E:  S(e~1,a~0,y~U) <-> S(e~1!1,a~0,y~U!1)                 k_on_star, koff
+  R_bind_F:  S(f~1,a~0,y~P) <-> S(f~1!1,a~0,y~P!1)                 k_on_star, koff
+
+  # --- Catalysis. Distributive: the enzyme releases the site and stays in the encounter
+  # complex, so it may rebind locally rather than diffusing away.
+  R_cat_E:   S(e~1!1,a~0,y~U!1) -> S(e~1,a~0,y~P)   kr
+  R_cat_F:   S(f~1!1,a~0,y~P!1) -> S(f~1,a~0,y~U)   kr
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 143 species, 284 reactions
+
+  # Dose-response against the kinase/phosphatase balance
+
+  #@protocol: |
+  #  Steady-state total phosphorylation as [E]/[F] is scanned over four decades at fixed
+  #  [E]+[F]. Each scan point is integrated to steady state, which is what the paper plots;
+  #  the system is a linear Markov chain so the steady state is unique and independent of the
+  #  initial condition.
+
+  #@figure: Fig. 2 B in Dushek et al. (2011)
+
+  parameter_scan({method=>"ode",parameter=>"r",par_min=>0.01,par_max=>100,n_scan_pts=>41,\
+    log_scale=>1,t_start=>0,t_end=>1e5,n_steps=>10,steady_state=>1,\
+    atol=>1e-12,rtol=>1e-10,suffix=>"scan"})
+
+  # The other kinetic regime of the same figure row
+
+  #@protocol: |
+  #  The reaction-limited regime is the same network with k_plus = 10.0 um^2/s and
+  #  k_on = 1.0 um^2/s. Switching both reproduces Fig. 2 A.
+
+  #@figure: Fig. 2 A in Dushek et al. (2011)
+
+  setParameter("k_plus",10.0)
+  setParameter("k_on",1.0)
+  parameter_scan({method=>"ode",parameter=>"r",par_min=>0.01,par_max=>100,n_scan_pts=>41,\
+    log_scale=>1,t_start=>0,t_end=>1e5,n_steps=>10,steady_state=>1,\
+    atol=>1e-12,rtol=>1e-10,suffix=>"scan_reaction"})
+end actions

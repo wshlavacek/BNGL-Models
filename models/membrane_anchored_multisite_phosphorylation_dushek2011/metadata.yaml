@@ -1,0 +1,134 @@
+# metadata.yaml — membrane_anchored_multisite_phosphorylation_dushek2011
+id: membrane_anchored_multisite_phosphorylation_dushek2011
+created: 2026-08-05
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_bngl, reformulation, ai_assisted]
+  description: >
+    Dushek O, van der Merwe PA, Shahrezaei V (2011), Biophysical Journal
+    100:1189-1197, doi:10.1016/j.bpj.2011.01.060. The paper ships its own
+    BioNetGen input file in the Supporting Material (pp. 10-12), so this is a
+    reformulation of a published BNGL model rather than a translation from
+    equations. Two substantive things changed and both are recorded in the file
+    headers. (1) REPRESENTATION. The authors write the N sites as one counter
+    component with N+1 states and hard-code the site multiplicity into 40 rate
+    constants (Ekf1 = 20*10/A, Ekf2 = 19*10/A, ...). This curation writes N
+    identical `y~U~P` components instead. BioNetGen canonicalises species up to
+    permutation of identical components, so the two produce the SAME network --
+    143 species and 284 reactions at N = 20, the "143 coupled ODEs" the paper
+    reports -- but here the generated rate laws read k_on_star, 2*k_on_star, ...
+    20*k_on_star, supplied by BioNetGen, which keeps k_on_star a single-site
+    constant as skills/bngl/skill.md §1.3.1 requires. The equivalence is checked,
+    not asserted. (2) A PUBLISHED VALUE THAT DOES NOT HOLD. The main text defines
+    the reaction-limited regime as k_on = k+/100; that misses the N = 1 curve of
+    its own Fig. 2A by 0.159 of full scale, where k_on = k+/10 misses it by
+    0.001. The Hill-number insets do not discriminate between the two, which is
+    presumably how it went unnoticed. The curated files use k+/10.
+    Not curated, and documented rather than dropped: Fig. 4 (Smoldyn
+    particle simulation with volume exclusion, outside BNGL's semantics),
+    SI Fig. S3 for M >= 2 enzymes per encounter complex (the authors abandoned
+    network generation for it themselves), and SI Fig. S4's one-step model,
+    whose rate constants are lambda-dependent effective constants that §1.3.1
+    forbids baking into parameters.
+
+files:
+  - name: membrane_anchored_multisite_phosphorylation_dushek2011.bngl
+    role: primary
+    description: >
+      N = 20 sites with the enzyme refractory state. Its two scans are Fig. 2 D
+      (diffusion-limited) and Fig. 2 C (reaction-limited).
+    documentation_target: comprehensive
+    min_bionetgen_version: "2.9.3"
+    scale: trivial          # 284 reactions, linear chain; two 41-point steady-state scans
+  - name: membrane_anchored_multisite_phosphorylation_dushek2011_nonrefractory.bngl
+    role: variant
+    description: >
+      The same model without the enzyme refractory state — the paper's own
+      control on the mechanism, and a structurally different network (103
+      species, 204 reactions) rather than a parameter change. Its two scans are
+      Fig. 2 B and Fig. 2 A.
+    documentation_target: comprehensive
+    min_bionetgen_version: "2.9.3"
+    scale: trivial
+
+  - name: generator/build_dushek2011.py
+    role: tooling
+    description: >
+      Emits the model for any (N, regime, refractory). N is structural — it is N
+      components on the substrate — so a family over N cannot be a
+      parameter_scan, and twenty near-identical files would be worse than one
+      generator. `--check` regenerates the committed files in place and exits
+      non-zero on drift.
+  - name: verify_dushek2011.ipynb
+    role: verification
+    description: >
+      Both verification levels, the network structural checks, and the
+      measurement that settles the reaction-limited k_on. Committed with outputs.
+    scale: trivial
+  - name: verify_dushek2011.png
+    role: figure
+  - name: independent_dushek2011.py
+    role: verification
+    description: >
+      The level-1 implementation. Every reaction is first order in one substrate
+      molecule — the generated network has zero bimolecular reactions — so the
+      model is a linear continuous-time Markov chain and its steady state is the
+      null space of the generator, exact with no solver tolerance at all. The
+      chain is assembled from Eq. 1 and Table 1 state by state and never reads
+      the generated .net.
+  - name: digitize_dushek2011.py
+    role: verification
+    description: >
+      Recovers all 80 dose-response curves of Fig. 2 from the page's vector
+      paths. Series identity is drawing order, cross-checked against the MATLAB
+      colour cycle (which repeats every seven curves, so N = 1, 8 and 15 share a
+      colour and no raster route could separate them) and against curve nesting.
+      The axes calibration is validated on a landmark known exactly: kinase and
+      phosphatase carry identical constants, so every curve passes through
+      (0, 0.5).
+
+  # Reference simulation output
+  - name: reference/membrane_anchored_multisite_phosphorylation_dushek2011.net
+    role: reference
+  - name: reference/membrane_anchored_multisite_phosphorylation_dushek2011_scan.scan
+    role: reference
+  - name: reference/membrane_anchored_multisite_phosphorylation_dushek2011_scan/
+    role: reference
+    description: Per-point output of the Fig. 2 D scan, 41 points.
+  - name: reference/membrane_anchored_multisite_phosphorylation_dushek2011_scan_reaction.scan
+    role: reference
+  - name: reference/membrane_anchored_multisite_phosphorylation_dushek2011_scan_reaction/
+    role: reference
+    description: Per-point output of the Fig. 2 C scan, 41 points.
+  - name: reference/membrane_anchored_multisite_phosphorylation_dushek2011_nonrefractory.net
+    role: reference
+  - name: reference/membrane_anchored_multisite_phosphorylation_dushek2011_nonrefractory_scan.scan
+    role: reference
+  - name: reference/membrane_anchored_multisite_phosphorylation_dushek2011_nonrefractory_scan/
+    role: reference
+    description: Per-point output of the Fig. 2 B scan, 41 points.
+  - name: reference/membrane_anchored_multisite_phosphorylation_dushek2011_nonrefractory_scan_reaction.scan
+    role: reference
+  - name: reference/membrane_anchored_multisite_phosphorylation_dushek2011_nonrefractory_scan_reaction/
+    role: reference
+    description: Per-point output of the Fig. 2 A scan, 41 points.
+
+  # Digitized reported data
+  - name: reference/dushek2011_figa_digitized.csv
+    role: reference
+    description: The 20 curves of Fig. 2 A, from digitize_dushek2011.py.
+  - name: reference/dushek2011_figb_digitized.csv
+    role: reference
+    description: The 20 curves of Fig. 2 B.
+  - name: reference/dushek2011_figc_digitized.csv
+    role: reference
+    description: The 20 curves of Fig. 2 C.
+  - name: reference/dushek2011_figd_digitized.csv
+    role: reference
+    description: The 20 curves of Fig. 2 D.
