@@ -1,0 +1,664 @@
+begin model
+
+#@title: Host-pathogen iron homeostasis in tuberculosis (Ghosh et al., 2011) -- non-infected control
+
+#@description: |
+#  A rule-based, network-free stochastic model of the contest for iron between a human host
+#  and Mycobacterium tuberculosis, translated from the Kappa model of Ghosh et al. (2011).
+#  The host module carries transferrin uptake through the Tf-TfR endocytic cycle, ferritin
+#  storage, ferroportin export, the Fe-S cluster and heme biosynthesis pathways, iron
+#  regulatory protein control, and red cell turnover. The pathogen module carries siderophore
+#  synthesis on the mbt assembly line, iron import through irtAB and esx3, bacterioferritin
+#  storage, its own Fe-S cluster pathway, and ideR- and SufR-dependent transcriptional
+#  regulation. Four rules connect the two: the siderophores carboxymycobactin and mycobactin
+#  strip iron from host transferrin and host ferritin respectively.
+#
+#  How it works: 194 published rules over 90 molecule types. The species space does not close
+#  -- iron and the siderophore precursors are made without bound -- so the model is run
+#  network-free, as the authors ran it in Kappa, rather than through generate_network.
+#
+#  What it does: from one copy of each gene, 5000 extracellular and 50 pathogen iron atoms
+#  and 20000 red cells, the system is incubated for 30000 time units, the protocol the
+#  Methods use to reach a steady state.
+#
+#  This is the paper's non-infected control: the same 194 rules with the four
+#  host-pathogen interaction rates set to zero, so the siderophores cannot reach host
+#  iron. The Methods build it exactly this way.
+
+#@keyword: |
+#  host-pathogen interaction, iron homeostasis, tuberculosis, Mycobacterium tuberculosis,
+#  siderophore, mycobactin, transferrin, ferritin, bacterioferritin, ideR, network-free,
+#  stochastic, rule-based, translated from Kappa, Homo sapiens
+
+#@reference: |
+#  Ghosh S, Prasad KVSK, Vishveshwara S, Chandra N (2011). Rule-based modelling of iron
+#  homeostasis in tuberculosis. Molecular BioSystems 7:2750-2768. doi:10.1039/c1mb05093a
+
+#@note: |
+#  SIMULATION INTENT. Network-free and stochastic: every amount is a molecule count, and the
+#  rate constants are the per-molecule constants of the published Kappa file. The network is
+#  not generable -- rule 100 makes five siderophore precursors from nothing at a constant rate
+#  and no rule degrades any of them -- so `generate_network` cannot terminate and the model is
+#  run with NFsim. Use bngsim's NFsim core rather than the NFsim binary BNG2.pl ships: seven
+#  rules here move a bond from one partner to another, and NFsim v1.14.3 aborts partway
+#  through such a run with "sites that are already occupied", at a different time on each
+#  seed. bngsim runs all of them. Nothing in this file is shaped around that defect.
+
+#@note: |
+#  TRANSLATED FROM KAPPA BY TRuML, NOT BY HAND. The paper publishes no .ka file; the rules
+#  exist only as the Kappa text printed in Table S2 of the ESI, recovered into
+#  generator/tableS2.json. generator/emit_kappa.py rewrites that Kappa 3 text as the Kappa 4
+#  TRuML parses, and TRuML (github.com/lanl/TRuML) performs the translation. This matters
+#  quantitatively: Kappa and BNGL count the automorphisms of a reactant pattern differently,
+#  and TRuML applies a symmetry factor to 31 of the 194 rules, ranging from 2 to 2592. A hand
+#  translation of the same rules applied none of them, i.e. it had those rates wrong by up to
+#  three orders of magnitude. generator/truml_py3.patch ports TRuML to Python 3 and replaces
+#  its automorphism counter, which enumerates permutations of identically-named molecules and
+#  therefore cannot finish on a rule containing twelve identical Fe; the replacement counts
+#  the same group with VF2 and reproduces TRuML's own test assertions.
+
+#@note: |
+#  RULE 163 IS SPLIT IN TWO, AND IT IS THE ONLY RULE THAT IS. As published it releases four
+#  iron-loaded ideR from the bfr operator and frees twelve identical Fe in a single step.
+#  Sizing that rule means enumerating 12! permutations, which neither BioNetGen nor TRuML
+#  finishes -- BioNetGen never gets past reading the rule. 163a performs the published step
+#  with the iron still bound and flags the released ideR; 163b frees three irons at a time at
+#  kfast, far above the fastest published rate of 30 /s. The flag is invisible to every other
+#  rule, iron is conserved throughout, and the error is first order in 1/kfast.
+
+#@note: |
+#  FOUR REPAIRS TO THE PRINTED TABLE. Extracting Table S2 from the PDF displaced some arrow
+#  glyphs onto the preceding row, so rules 5, 7 and 16 carry a spurious trailing arrow and
+#  rules 6, 9 and 17 have none; the strays sit past the end of the products and the three
+#  gaps are filled from the printed text, which is unambiguous. Rule 31's text stops
+#  mid-agent at `fp(site!1` with no closing bracket, and its completion is forced because a
+#  bond needs two ends. Auditing all 194 rules, rule 31 is the only truncation and every bond
+#  has an even number of ends, so the extraction is otherwise sound. emit_kappa.py now fails
+#  loudly rather than silently dropping an agent it cannot parse, which is how the rule 31
+#  damage went unnoticed at first.
+
+#@note: |
+#  WHAT THIS MODEL DOES NOT REPRODUCE, AND WHY THAT IS A PROPERTY OF THE PUBLISHED RULES. The
+#  paper reports a steady state with bacterioferritin at 82 molecules, irtAB at 22 and stored
+#  Fe-bfr at 41. This model produces none of them: bfr, mycobactin, carboxymycobactin and the
+#  assembled siderophore are identically zero for the whole run. The cause is arithmetic, not
+#  simulation. Rule 100 synthesises lysine, salicylate, serine and two acyl precursors at
+#  k105 = 1.0 per time unit, zeroth order, and no rule degrades any of them, so each grows as
+#  exactly k105*t -- 30000 molecules by the end of the incubation. Their only consumers, mbtE
+#  and mbtF, come from single-copy genes with steady states of about 10 and 12 molecules, so
+#  the assembly line is oversubscribed roughly a thousandfold. Loaded mbtE cannot degrade
+#  either, because its decay rule requires every site free, so partially-loaded mbtE
+#  accumulates and the assembly never completes. With no siderophore, no iron reaches the
+#  pathogen, ideR is never activated, the bfr operator is never switched on. Separately, red
+#  cells are seeded at 20000 against an implied steady state of k97/k98 = 4.08 over an
+#  incubation lasting 39 decay time constants, so that pool can only collapse. All of this is
+#  readable from the rate constants; verify_ghosh2011.ipynb checks each claim in closed form.
+
+#@figure: Fig. 5 and Fig. 6 in Ghosh et al. (2011)
+
+
+begin parameters
+
+	k1 0.0071
+	k2 1.0E-6
+	k3 0.062
+	k4 2.8
+	k5 0.062
+	k6 0.00033
+	k7 0.0032
+	k8 2.7E-5
+	k9 3.8E-3
+	k10 0.0015
+	k11 0.0033
+	k12 0.091
+	k13 0.023
+	k14 0.0023
+	k15 0.043
+	k16 0.0038
+	k17 0.00026
+	k18 0.023
+	k19 0.023
+	k20 0.0038
+	k21 7.0E-5
+	k22 6.6E-4
+	k23 6.6E-4
+	k24 1.1E-3
+	k25 2.7E-5
+	k26 0.011
+	k27 4.9E-3
+	k28 4.8E-5
+	k29 1.3E-6
+	k30 0.08
+	k31 0.08
+	k32 3.5E-3
+	k33 1.6E-6
+	k34 0.2
+	k35 0.2
+	k36 8.9E-3
+	k37 2.1E-5
+	k38 10
+	k39 10
+	k40 7.3E-3
+	k41 3.8E-6
+	k42 0.0011
+	k43 0.0011
+	k44 0.0011
+	k45 0.0011
+	k46 0.0011
+	k47 0.0011
+	k48 6.05E-8
+	k49 1.5E-2
+	k50 1.6E-6
+	k51 0.0016
+	k52 7.68E-10
+	k53 0.0012
+	k54 0.0046
+	k55 1.2E-5
+	k56 1.0
+	k57 8.1E-3
+	k58 6.4E-5
+	k59 0.074
+	k60 10
+	k61 5.1E-3
+	k62 2.6E-4
+	k63 0.421
+	k64 1.08E-2
+	k65 8.02E-6
+	k66 2.4E-6
+	k67 1.4E-4
+	k68 0.25
+	k69 1.2E-2
+	k70 3.8E-4
+	k71 30
+	k72 0.16
+	k73 0.06
+	k74 5.95
+	k75 1.2E-2
+	k76 6.1E-3
+	k77 9.3E-3
+	k78 9.6E-5
+	k79 2.2E-3
+	k80 1.9E-5
+	k81 0.1
+	k82 1.6E-9
+	k83 0.96
+	k84 0.96
+	k85 0.96
+	k86 1.07E-2
+	k87 1.2E-4
+	k88 0.1
+	k89 2.0
+	k90 0.05
+	k91 2.0
+	k92 2.7E-4
+	k93 6.9E-5
+	k94 6.9E-5
+	k95 6.9E-5
+	k96 6.9E-5
+	k97 5.31E-3
+	k98 1.3E-3
+	k99 0.10
+	k100 3.8E-2
+	k101 3.6E-5
+	k102 1.1E-3
+	k103 0.07
+	k104 0.1
+	k105 1.0
+	k106 8.5E-3
+	k107 5.7E-3
+	k108 3.5E-3
+	k109 1.1E-4
+	k110 0.711
+	k111 0.711
+	k112 1.4E-3
+	k113 1.1E-4
+	k114 1.566
+	k115 0.0166
+	k116 1.1E-3
+	k117 1.1E-4
+	k118 0.0166
+	k119 1.3E-3
+	k120 1.1E-4
+	k121 0.0166
+	k122 4.4E-3
+	k123 1.1E-4
+	k124 0.0166
+	k125 0.0166
+	k126 0.0166
+	k127 0.0166
+	k128 6.9E-6
+	k129 6.9E-6
+	k130 4.7E-3
+	k131 1.1E-4
+	k132 1.3E-2
+	k133 1.1E-4
+	k134 0.16
+	k135 5.57E-8
+	k136 2.3E-3
+	k137 1.1E-4
+	k138 7.4E-3
+	k139 1.1E-4
+	k140 4.9E-3
+	k141 1.1E-4
+	k142 0.0
+	k143 0.0
+	k144 2.3E-3
+	k145 1.1E-4
+	k146 5.5E-4
+	k147 5.5E-4
+	k148 0.0
+	k149 0.0
+	k150 4.2E-3
+	k151 1.1E-4
+	k152 2.66E-4
+	k153 2.66E-4
+	k154 2.3E-3
+	k155 0.33E-9
+	k156 0.00083
+	k157 0.00083
+	k158 1.1E-4
+	k159 8.5E-3
+	k160 1.52E-8
+	k161 0.0085
+	k162 4.16E-11
+	k163 1.1E-2
+	k164 1.0E-4
+	k165 0.011
+	k166 1.0E-4
+	k167 2.0
+	k168 0.05
+	kfast 1.0e4  # /time unit, completes split rule 163
+	k169 2.0
+	k170 0.05
+	k171 2.0
+	k172 0.05
+	k173 2.0
+	k174 0.05
+	k175 2.0
+	k176 0.05
+	k177 8.3E-3
+	k178 1.1E-4
+	k179 8.3E-3
+	k180 1.1E-4
+	k181 2.0
+	k182 0.05
+	k183 2.0
+	k184 0.05
+	k185 2.0
+	k186 0.05
+	k187 2.0
+	k188 0.05
+	k189 2.0
+	k190 0.05
+	k191 2.0
+	k192 0.05
+	k193 5.7E-6
+	k194 1.3E-5
+
+end parameters
+
+begin molecule types
+
+	ALA(site~mt~cy)
+	ALAS()
+	Aca(site,site2)
+	CP3()
+	CPO()
+	Cp(site)
+	DMT(site)
+	Dcytb(site)
+	Fe(site~3ex~3ed~2ed~2cy~fer~fp~2ex~2mt~heme~cm~mtb~esx,site1)
+	Fer(Fe)
+	HO()
+	IRP(site~m~i~a)
+	IScU(fra)
+	Mca(site,site2)
+	P9(site)
+	PBG()
+	PBGD()
+	PBS()
+	PP9()
+	PPO()
+	PUP()
+	RBC(site~a~d)
+	SA(site~i~a,site2)
+	ScoA()
+	Ser(site,site2)
+	SufB(site,site1)
+	SufC(site1,site2)
+	SufD(site)
+	SufE(site)
+	SufR(site,site1,site2)
+	SufS(site)
+	Tf(Fe1,Fe2~n~a,tfR~u~a~inside~out)
+	TfR(Tf)
+	UP3()
+	UPD()
+	UPS()
+	bfr(site)
+	cmex(site1,site2)
+	esx3(site)
+	fc(Fe,P9,site)
+	fp(site)
+	fra(isu,site1,site2,site3,site4,site5,site6)
+	g_IRP()
+	g_alas()
+	g_bfr(site1~a~inc,site2)
+	g_cp()
+	g_cpo()
+	g_dcytb()
+	g_dmt()
+	g_esx3(site~a~inc)
+	g_fc()
+	g_fer()
+	g_fp()
+	g_fra()
+	g_hep()
+	g_ho()
+	g_ider()
+	g_irtAB(site~a~inc)
+	g_isu()
+	g_mbtA(site~a~inc)
+	g_mbtB(site~a~inc)
+	g_mbtCD()
+	g_mbtE()
+	g_mbtF()
+	g_mf()
+	g_pbgd()
+	g_pbs()
+	g_ppo()
+	g_sufB(site~a~inc)
+	g_sufC(site~a~inc)
+	g_sufD(site~a~inc)
+	g_sufE(site~a)
+	g_sufR(site~a~inc)
+	g_sufS(site~a~inc)
+	g_tf()
+	g_tfR()
+	g_upd()
+	g_ups()
+	glycine()
+	hep()
+	ideR(Fe1,Fe2,Fe3,ideR,site,rel~0~1)
+	irtAB(site)
+	lys(site)
+	m(site1,site2)
+	mbtA(site~a)
+	mbtB(site1,site2)
+	mbtCD(site1,site2)
+	mbtE(site1,site2,site3,site4,site5,site6)
+	mbtF(site1,site2)
+	mf(site)
+
+end molecule types
+
+begin seed species
+
+	g_tf() 1
+	g_tfR() 1
+	g_dcytb() 1
+	g_dmt() 1
+	g_fer() 1
+	g_fp() 1
+	g_cp() 1
+	g_mf() 1
+	g_fra() 1
+	g_isu() 1
+	g_IRP() 1
+	g_alas() 1
+	g_pbs() 1
+	g_pbgd() 1
+	g_ups() 1
+	g_upd() 1
+	g_cpo() 1
+	g_ppo() 1
+	g_fc() 1
+	g_ho() 1
+	g_hep() 1
+	g_sufR(site~a) 1
+	g_esx3(site~a) 1
+	g_irtAB(site~a) 1
+	g_sufS(site~a) 1
+	g_sufE(site~a) 1
+	g_bfr(site1~inc,site2) 1
+	g_sufB(site~a) 1
+	g_sufC(site~a) 1
+	g_sufD(site~a) 1
+	g_ider() 1
+	g_mbtCD() 1
+	g_mbtA(site~a) 1
+	g_mbtB(site~a) 1
+	g_mbtE() 1
+	g_mbtF() 1
+	Fe(site~3ex,site1) 5000
+	Fe(site~mtb,site1) 50
+	RBC(site~a) 20000
+
+end seed species
+
+begin observables
+
+	Molecules Obs_Fe_mtb Fe(site~mtb)
+	Molecules Obs_Fe_3ex Fe(site~3ex)
+	Molecules Obs_Fer_Fe Fe(site~fer!+)
+	Molecules Obs_Fe_myB m(site1!+)
+	Molecules Obs_Fe_cmB cmex(site1!+)
+	Molecules Obs_act_ideR ideR(Fe1!+,Fe2!+,Fe3!+,ideR!+)
+	Molecules Obs_Tf_TfR Tf(tfR~a!+)
+	Molecules Obs_RBC RBC(site~a)
+
+end observables
+
+begin functions
+
+
+end functions
+
+begin reaction rules
+
+	g_tf() -> g_tf()+Tf(Fe1,Fe2~n,tfR~u) k1
+	Tf(Fe1,Fe2~n,tfR~u) -> 0 k2 DeleteMolecules
+	Fe(site~3ex)+Tf(Fe1,Fe2~n,tfR~u) -> Fe(site~3ex!1).Tf(Fe1!1,Fe2~n,tfR~u) k3
+	Tf(Fe1!+,Fe2~n,tfR~u) -> Tf(Fe1!+,Fe2~n,tfR~a) k4
+	Tf(Fe2~n,tfR~a) -> Tf(Fe2~a,tfR~a) k5
+	Fe(site~3ex)+Tf(Fe2~a) -> Fe(site~3ex!1).Tf(Fe2~a!1) k6
+	g_tfR() -> g_tfR()+TfR(Tf) k7
+	TfR(Tf) -> 0 k8 DeleteMolecules
+	Tf(Fe1!+,Fe2~a!?,tfR~a)+TfR(Tf) -> Tf(Fe1!+,Fe2~a!?,tfR~a!1).TfR(Tf!1) k9
+	Tf(Fe1!+,tfR~a!1).TfR(Tf!1) -> Tf(Fe1!+,tfR~a)+TfR(Tf) k10
+	Tf(Fe1!+,tfR~a!+) -> Tf(Fe1!+,tfR~inside!+) k11
+	Fe(site~3ex!2).Tf(Fe1!+,Fe2~a!2,tfR~inside!+) -> Fe(site~3ed)+Tf(Fe1!+,Fe2~a,tfR~inside!+) k12
+	Fe(site~3ex!2).Tf(Fe1!2,Fe2~a,tfR~inside!+) -> Fe(site~3ed)+Tf(Fe1,Fe2~a,tfR~inside!+) k13
+	Tf(Fe2~a,tfR~inside!+) -> Tf(Fe2~a,tfR~out!+) k14
+	Tf(Fe2~a,tfR~out!1).TfR(Tf!1) -> Tf(Fe2~n,tfR~u)+TfR(Tf) k15
+	g_dcytb() -> g_dcytb()+Dcytb(site) k16
+	Dcytb(site) -> 0 k17 DeleteMolecules
+	Dcytb(site)+Fe(site~3ed) -> Dcytb(site!1).Fe(site~3ed!1) k18
+	Dcytb(site!1).Fe(site~3ed!1) -> Dcytb(site)+Fe(site~2ed) k19
+	g_dmt() -> g_dmt()+DMT(site) k20
+	DMT(site) -> 0 k21 DeleteMolecules
+	DMT(site)+Fe(site~2ed) -> DMT(site!1).Fe(site~2ed!1) k22
+	DMT(site!1).Fe(site~2ed!1) -> DMT(site)+Fe(site~2cy) k23
+	g_fer() -> g_fer()+Fer(Fe) k24
+	Fer(Fe) -> 0 k25 DeleteMolecules
+	Fe(site~2cy)+Fer(Fe) -> Fe(site~fer!1).Fer(Fe!1) k26
+	g_fp() -> g_fp()+fp(site) k27
+	fp(site) -> 0 k28 DeleteMolecules
+	Fe(site~fer!1).Fer(Fe!1)+fp(site) -> Fe(site~fp!1).fp(site!1) k29 DeleteMolecules
+	Fe(site~fp!1).fp(site!1) -> Fe(site~2ex)+fp(site) k30
+	Fe(site~2cy)+fp(site) -> Fe(site~fp!1).fp(site!1) k31
+	g_cp() -> g_cp()+Cp(site) k32
+	Cp(site) -> 0 k33 DeleteMolecules
+	Cp(site)+Fe(site~2ex) -> Cp(site!1).Fe(site~2ex!1) k34
+	Cp(site!1).Fe(site~2ex!1) -> Cp(site)+Fe(site~3ex) k35
+	g_mf() -> g_mf()+mf(site) k36
+	mf(site) -> 0 k37 DeleteMolecules
+	mf(site)+Fe(site~2cy) -> mf(site!1).Fe(site~2cy!1) k38
+	mf(site!1).Fe(site~2cy!1) -> mf(site)+Fe(site~2mt) k39
+	g_fra() -> g_fra()+fra(isu,site1,site2,site3,site4,site5,site6) k40
+	fra(isu,site1,site2,site3,site4,site5,site6) -> 0 k41 DeleteMolecules
+	Fe(site~2mt)+fra(site1) -> Fe(site~2mt!1).fra(site1!1) k42
+	Fe(site~2mt)+fra(site2) -> Fe(site~2mt!1).fra(site2!1) k43
+	Fe(site~2mt)+fra(site3) -> Fe(site~2mt!1).fra(site3!1) k44
+	Fe(site~2mt)+fra(site4) -> Fe(site~2mt!1).fra(site4!1) k45
+	Fe(site~2mt)+fra(site5) -> Fe(site~2mt!1).fra(site5!1) k46
+	Fe(site~2mt)+fra(site6) -> Fe(site~2mt!1).fra(site6!1) k47
+	Fe(site~2mt!1).Fe(site~2mt!2).Fe(site~2mt!3).Fe(site~2mt!4).Fe(site~2mt!5).Fe(site~2mt!6).fra(site1!1,site2!2,site3!3,site4!4,site5!5,site6!6) -> Fe(site~2mt)+Fe(site~2mt)+Fe(site~2mt)+Fe(site~2mt)+Fe(site~2mt)+Fe(site~2mt)+fra(site1,site2,site3,site4,site5,site6) k48 * 720.0
+	g_isu() -> g_isu()+IScU(fra) k49
+	IScU(fra) -> 0 k50 DeleteMolecules
+	IScU(fra)+fra(isu,site1!+,site2!+,site3!+,site4!+,site5!+,site6!+) -> IScU(fra!1).fra(isu!1,site1!+,site2!+,site3!+,site4!+,site5!+,site6!+) k51
+	fra(isu!1).IScU(fra!1) -> fra(isu)+IScU(fra) k52
+	Fe(site~2mt!1,site1).Fe(site~2mt!2,site1).Fe(site~2mt!3,site1).Fe(site~2mt!4,site1).Fe(site~2mt!5,site1).Fe(site~2mt!6,site1).fra(isu!+,site1!1,site2!2,site3!3,site4!4,site5!5,site6!6) -> Fe(site~2mt,site1)+Fe(site~2mt,site1)+Fe(site~2mt!1,site1).Fe(site~2mt!1,site1!2).Fe(site~2mt!2,site1!3).Fe(site~2mt!3,site1)+fra(isu!+,site1,site2,site3,site4,site5,site6) k53 * 720.0
+	g_IRP() -> g_IRP()+IRP(site~m) k54
+	IRP(site~m) -> 0 k55 DeleteMolecules
+	0 -> ScoA()+glycine() k56
+	g_alas() -> g_alas()+ALAS() k57
+	ALAS() -> 0 k58 DeleteMolecules
+	ALAS()+ScoA()+glycine() -> ALAS()+ALA(site~mt) k59
+	ALA(site~mt) -> ALA(site~cy) k60
+	g_pbs() -> g_pbs()+PBS() k61
+	PBS() -> 0 k62 DeleteMolecules
+	PBS()+ALA(site~cy)+ALA(site~cy) -> PBS()+PBG() k63 * 2.0
+	g_pbgd() -> g_pbgd()+PBGD() k64
+	PBGD() -> 0 k65 DeleteMolecules
+	UPD() -> 0 k66 DeleteMolecules
+	CPO() -> 0 k67 DeleteMolecules
+	PBGD()+PBG()+PBG()+PBG()+PBG() -> PBGD()+PUP() k68 * 24.0
+	g_ups() -> g_ups()+UPS() k69
+	UPS() -> 0 k70 DeleteMolecules
+	UPS()+PUP() -> UPS()+UP3() k71
+	UPD()+UP3() -> UPD()+CP3() k72
+	CPO()+CP3() -> CPO()+PP9() k73
+	PPO()+PP9() -> PPO()+P9(site) k74
+	g_upd() -> g_upd()+UPD() k75
+	g_cpo() -> g_cpo()+CPO() k76
+	g_ppo() -> g_ppo()+PPO() k77
+	PPO() -> 0 k78 DeleteMolecules
+	g_fc() -> g_fc()+fc(Fe,P9,site) k79
+	fc(Fe,P9,site) -> 0 k80 DeleteMolecules
+	fc(Fe,P9,site)+fc(Fe,P9,site) -> fc(Fe,P9,site!1).fc(Fe,P9,site!1) k81 * 2.0
+	fc(Fe,P9,site!1).fc(Fe,P9,site!1) -> fc(Fe,P9,site)+fc(Fe,P9,site) k82 * 2.0
+	Fe(site~2mt!2).Fe(site~2mt!3).Fe(site~2mt!4).Fe(site~2mt!5).Fe(site~2mt!6).Fe(site~2mt!7).fra(site1!2,site2!3,site3!4,site4!5,site5!6,site6!7)+fc(Fe,P9,site!1).fc(Fe,P9,site!1) -> Fe(site~2mt!2).fc(Fe!2,P9,site!1).fc(Fe,P9,site!1)+Fe(site~2mt)+Fe(site~2mt)+Fe(site~2mt)+Fe(site~2mt)+Fe(site~2mt)+fra(site1,site2,site3,site4,site5,site6) k83 * 1440.0
+	P9(site)+fc(Fe!+,P9,site!1).fc(Fe,P9,site!1) -> P9(site!2).fc(Fe!+,P9!2,site!1).fc(Fe,P9,site!1) k84
+	fc(Fe!3,P9!2,site!1).fc(Fe,P9,site!1).P9(site!2).Fe(site~2mt!3) -> fc(Fe,P9,site!1).fc(Fe,P9,site!1)+P9(site)+Fe(site~heme) k85
+	g_ho() -> g_ho()+HO() k86
+	HO() -> 0 k87 DeleteMolecules
+	HO()+Fe(site~heme) -> HO()+Fe(site~2cy) k88
+	IRP(site~m)+Fe(site~2mt!1,site1).Fe(site~2mt!1,site1!2).Fe(site~2mt!2,site1!3).Fe(site~2mt!3,site1) -> IRP(site~i!4).Fe(site~2mt!1,site1).Fe(site~2mt!1,site1!2).Fe(site~2mt!2,site1!3).Fe(site~2mt!3,site1!4) k89 * 2.0
+	IRP(site~i!4).Fe(site~2mt!1,site1).Fe(site~2mt!1,site1!2).Fe(site~2mt!2,site1!3).Fe(site~2mt!3,site1!4) -> IRP(site~a)+Fe(site~2mt!1,site1).Fe(site~2mt!1,site1!2).Fe(site~2mt!2,site1)+Fe(site~2mt,site1) k90
+	IRP(site~a)+Fe(site~2mt!1,site1).Fe(site~2mt!1,site1!2).Fe(site~2mt!2,site1)+Fe(site~2mt,site1) -> IRP(site~i!4).Fe(site~2mt!1,site1).Fe(site~2mt!1,site1!2).Fe(site~2mt!2,site1!3).Fe(site~2mt!3,site1!4) k91 * 2.0
+	Fe(site~2mt!1,site1).Fe(site~2mt!1,site1!2).Fe(site~2mt!2,site1!3).Fe(site~2mt!3,site1) -> Fe(site~2mt,site1)+Fe(site~2mt,site1)+Fe(site~2mt,site1)+Fe(site~2mt,site1) k92 * 2.0
+	IRP(site~a)+Fer(Fe) -> IRP(site~a) k93
+	IRP(site~a)+fp(site) -> IRP(site~a) k94
+	IRP(site~a)+IRP(site~a)+IRP(site~a)+TfR(Tf) -> IRP(site~a)+IRP(site~a)+IRP(site~a)+TfR(Tf)+TfR(Tf) k95 * 6.0
+	IRP(site~a)+ALAS() -> IRP(site~a) k96
+	0 -> RBC(site~a) k97
+	RBC(site~a) -> RBC(site~d) k98
+	HO()+RBC(site~d) -> HO()+Fe(site~2cy,site1)+Fe(site~2cy,site1)+Fe(site~2cy,site1)+Fe(site~2cy,site1) k99
+	g_hep() -> g_hep()+hep() k100
+	hep() -> 0 k101 DeleteMolecules
+	hep()+fp(site) -> hep() k102
+	0 -> Fe(site~3ex,site1) k103
+	Fe(site~3ex,site1) -> 0 k104 DeleteMolecules
+	0 -> SA(site~i,site2)+Ser(site,site2)+lys(site)+Aca(site,site2)+Mca(site,site2) k105
+	g_ider() -> g_ider()+ideR(Fe1,Fe2,Fe3,ideR,site,rel~0) k106
+	ideR(Fe1,Fe2,Fe3,ideR,site) -> 0 k107 DeleteMolecules
+	g_mbtA(site~a) -> g_mbtA(site~a)+mbtA(site~a) k108
+	mbtA(site~a) -> 0 k109 DeleteMolecules
+	mbtA(site~a)+SA(site~i) -> mbtA(site~a!1).SA(site~i!1) k110
+	mbtA(site~a!1).SA(site~i!1) -> mbtA(site~a)+SA(site~a) k111
+	g_mbtB(site~a) -> g_mbtB(site~a)+mbtB(site1,site2) k112
+	mbtB(site1,site2) -> 0 k113 DeleteMolecules
+	SA(site~a)+mbtB(site1) -> SA(site~a!1).mbtB(site1!1) k114
+	Ser(site)+mbtB(site1!+,site2) -> Ser(site!1).mbtB(site1!+,site2!1) k115
+	g_mbtE() -> g_mbtE()+mbtE(site1,site2,site3,site4,site5,site6) k116
+	mbtE(site1,site2,site3,site4,site5,site6) -> 0 k117 DeleteMolecules
+	lys(site)+mbtE(site1) -> lys(site!1).mbtE(site1!1) k118
+	g_mbtF() -> g_mbtF()+mbtF(site1,site2) k119
+	mbtF(site1,site2) -> 0 k120 DeleteMolecules
+	lys(site)+mbtF(site1) -> lys(site!1).mbtF(site1!1) k121
+	g_mbtCD() -> g_mbtCD()+mbtCD(site1,site2) k122
+	mbtCD(site1,site2) -> 0 k123 DeleteMolecules
+	mbtCD(site1,site2)+Aca(site)+Mca(site) -> mbtCD(site1!1,site2!2).Aca(site!1).Mca(site!2) k124
+	Aca(site!5).Mca(site!4).mbtCD(site1!5,site2!4)+SA(site~a!3).Ser(site!2).mbtB(site1!3,site2!2)+mbtE(site1!1,site2,site3,site4,site5).lys(site!1) -> Aca(site!5).Mca(site!4).SA(site~a!3).Ser(site!2).mbtE(site1!1,site2!3,site3!2,site4!5,site5!4).lys(site!1)+mbtB(site1,site2)+mbtCD(site1,site2) k125
+	mbtE(site1!+,site2!+,site3!+,site4!+,site5!+,site6)+mbtF(site1!1).lys(site!1) -> mbtE(site1!+,site2!+,site3!+,site4!+,site5!+,site6!1).lys(site!1)+mbtF(site1) k126
+	mbtE(site1!1,site2!2,site3!3,site4!4,site5!5,site6!6).lys(site!1).SA(site~a!2,site2).Ser(site!3,site2).Aca(site!4,site2).Mca(site!5,site2).lys(site!6) -> mbtE(site1,site2,site3,site4,site5,site6)+lys(site!1).SA(site~a!1,site2!2).Ser(site!2,site2!3).Aca(site!3,site2!4).Mca(site!4,site2!5).lys(site!5) k127 * 2.0
+	lys(site!1).SA(site~a!1,site2!2).Ser(site!2,site2!3).Aca(site!3,site2!4).Mca(site!4,site2!5).lys(site!5) -> cmex(site1,site2) k128
+	lys(site!1).SA(site~a!1,site2!2).Ser(site!2,site2!3).Aca(site!3,site2!4).Mca(site!4,site2!5).lys(site!5) -> m(site1,site2) k129
+	g_sufS(site~a) -> g_sufS(site~a)+SufS(site) k130
+	SufS(site) -> 0 k131 DeleteMolecules
+	g_sufE(site~a) -> g_sufE(site~a)+SufE(site) k132
+	SufE(site) -> 0 k133 DeleteMolecules
+	SufS(site)+SufE(site) -> SufS(site!1).SufE(site!1) k134
+	SufS(site!1).SufE(site!1) -> SufS(site)+SufE(site) k135
+	g_sufB(site~a) -> g_sufB(site~a)+SufB(site,site1) k136
+	SufB(site,site1) -> 0 k137 DeleteMolecules
+	g_sufC(site~a) -> g_sufC(site~a)+SufC(site1,site2) k138
+	SufC(site1,site2) -> 0 k139 DeleteMolecules
+	g_sufD(site~a) -> g_sufD(site~a)+SufD(site) k140
+	SufD(site) -> 0 k141 DeleteMolecules
+	cmex(site1,site2)+Tf(Fe1!1,Fe2~a!2).Fe(site~3ex!1).Fe(site~3ex!2) -> cmex(site1!1,site2!2).Fe(site~3ex!1).Fe(site~3ex!2)+Tf(Fe1,Fe2~n) k142 * 2.0
+	cmex(site1!1,site2!2).Fe(site~3ex!1).Fe(site~3ex!2) -> cmex(site1,site2)+Fe(site~cm)+Fe(site~cm) k143 * 2.0
+	g_irtAB(site~a) -> g_irtAB(site~a)+irtAB(site) k144
+	irtAB(site) -> 0 k145 DeleteMolecules
+	irtAB(site)+Fe(site~cm) -> irtAB(site!1).Fe(site~cm!1) k146
+	irtAB(site!1).Fe(site~cm!1) -> irtAB(site)+Fe(site~mtb) k147
+	m(site1)+Fe(site~fer!1).Fer(Fe!1) -> m(site1!1).Fe(site~esx!1)+Fer(Fe) k148
+	m(site1!1).Fe(site~esx!1) -> m(site1)+Fe(site~esx) k149
+	g_esx3(site~a) -> g_esx3(site~a)+esx3(site) k150
+	esx3(site) -> 0 k151 DeleteMolecules
+	esx3(site)+Fe(site~esx) -> esx3(site!1).Fe(site~esx!1) k152
+	esx3(site!1).Fe(site~esx!1) -> esx3(site)+Fe(site~mtb) k153
+	SufB(site)+SufC(site1,site2)+SufC(site1,site2)+SufD(site) -> SufB(site!1).SufC(site1!1,site2!2).SufC(site1!2,site2!3).SufD(site!3) k154 * 2.0
+	SufB(site!1).SufC(site1!1,site2!2).SufC(site1!2,site2!3).SufD(site!3) -> SufB(site)+SufC(site1,site2)+SufC(site1,site2)+SufD(site) k155
+	SufB(site!1,site1).SufC(site1!1,site2!2).SufC(site1!2,site2!3).SufD(site!3)+SufS(site!4).SufE(site!4)+Fe(site~mtb,site1)+Fe(site~mtb,site1)+Fe(site~mtb,site1)+Fe(site~mtb,site1) -> SufB(site!1,site1!9).SufC(site1!1,site2!2).SufC(site1!2,site2!3).SufD(site!3).Fe(site~mtb!6,site1!9).Fe(site~mtb!6,site1!7).Fe(site~mtb!7,site1!8).Fe(site~mtb!8,site1)+SufS(site!4).SufE(site!4) k156 * 24.0
+	SufB(site!1,site1!9).SufC(site1!1,site2!2).SufC(site1!2,site2!3).SufD(site!3).Fe(site~mtb!6,site1!9).Fe(site~mtb!6,site1!7).Fe(site~mtb!7,site1!8).Fe(site~mtb!8,site1) -> SufB(site!1,site1).SufC(site1!1,site2!2).SufC(site1!2,site2!3).SufD(site!3)+Fe(site~mtb!6,site1).Fe(site~mtb!6,site1!7).Fe(site~mtb!7,site1!8).Fe(site~mtb!8,site1) k157
+	Fe(site~mtb!1,site1).Fe(site~mtb!1,site1!2).Fe(site~mtb!2,site1!3).Fe(site~mtb!3,site1) -> Fe(site~mtb,site1)+Fe(site~mtb,site1)+Fe(site~mtb,site1)+Fe(site~mtb,site1) k158 * 2.0
+	ideR(Fe1,Fe2,Fe3,ideR)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb) -> ideR(Fe1!1,Fe2!2,Fe3!3,ideR).Fe(site~mtb!1).Fe(site~mtb!2).Fe(site~mtb!3) k159 * 6.0
+	ideR(Fe1!1,Fe2!2,Fe3!3,ideR).Fe(site~mtb!1).Fe(site~mtb!2).Fe(site~mtb!3) -> ideR(Fe1,Fe2,Fe3,ideR)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb) k160 * 6.0
+	ideR(Fe1!+,ideR)+ideR(Fe1!+,ideR) -> ideR(Fe1!+,ideR!1).ideR(Fe1!+,ideR!1) k161 * 2.0
+	ideR(Fe1!1,Fe2!2,Fe3!3,ideR!4).ideR(Fe1!5,Fe2!6,Fe3!7,ideR!4).Fe(site~mtb!1).Fe(site~mtb!2).Fe(site~mtb!3).Fe(site~mtb!5).Fe(site~mtb!6).Fe(site~mtb!7) -> ideR(Fe1,Fe2,Fe3,ideR)+ideR(Fe1,Fe2,Fe3,ideR)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb) k162 * 72.0
+	g_bfr(site1~a!+,site2!+) -> g_bfr(site1~a!+,site2!+)+bfr(site) k163
+	bfr(site) -> 0 k164 DeleteMolecules
+	Fe(site~mtb)+bfr(site) -> Fe(site~mtb!1).bfr(site!1) k165
+	Fe(site~mtb!1).bfr(site!1) -> Fe(site~mtb)+bfr(site) k166
+	g_bfr(site1~inc,site2)+ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1,site).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1,site)+ideR(Fe1!+,Fe2!+,Fe3!+,ideR!2,site).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!2,site) -> g_bfr(site1~a!3,site2!4).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1,site).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1,site!3).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!2,site).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!2,site!4) k167 * 8.0
+	g_bfr(site1~a!3,site2!4).ideR(Fe1!16,Fe2!5,Fe3!6,ideR!1,site,rel~0).ideR(Fe1!7,Fe2!8,Fe3!9,ideR!1,site!3,rel~0).ideR(Fe1!10,Fe2!11,Fe3!12,ideR!2,site,rel~0).ideR(Fe1!13,Fe2!14,Fe3!15,ideR!2,site!4,rel~0).Fe(site~mtb!16).Fe(site~mtb!5).Fe(site~mtb!6).Fe(site~mtb!7).Fe(site~mtb!8).Fe(site~mtb!9).Fe(site~mtb!10).Fe(site~mtb!11).Fe(site~mtb!12).Fe(site~mtb!13).Fe(site~mtb!14).Fe(site~mtb!15) -> g_bfr(site1~inc,site2) + ideR(Fe1!16,Fe2!5,Fe3!6,ideR,site,rel~1).Fe(site~mtb!16).Fe(site~mtb!5).Fe(site~mtb!6) + ideR(Fe1!7,Fe2!8,Fe3!9,ideR,site,rel~1).Fe(site~mtb!7).Fe(site~mtb!8).Fe(site~mtb!9) + ideR(Fe1!10,Fe2!11,Fe3!12,ideR,site,rel~1).Fe(site~mtb!10).Fe(site~mtb!11).Fe(site~mtb!12) + ideR(Fe1!13,Fe2!14,Fe3!15,ideR,site,rel~1).Fe(site~mtb!13).Fe(site~mtb!14).Fe(site~mtb!15)  k168 * 2592.0
+	ideR(Fe1!1,Fe2!2,Fe3!3,ideR,site,rel~1).Fe(site~mtb!1).Fe(site~mtb!2).Fe(site~mtb!3) -> ideR(Fe1,Fe2,Fe3,ideR,site,rel~0) + Fe(site~mtb) + Fe(site~mtb) + Fe(site~mtb)  kfast
+	g_mbtA(site~a)+ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1,site) -> g_mbtA(site~inc!2).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1,site!2) k169
+	g_mbtA(site~inc!2).ideR(Fe1!3,Fe2!4,Fe3!5,ideR!1).ideR(Fe1!6,Fe2!7,Fe3!8,ideR!1,site!2).Fe(site~mtb!3).Fe(site~mtb!4).Fe(site~mtb!5).Fe(site~mtb!6).Fe(site~mtb!7).Fe(site~mtb!8) -> g_mbtA(site~a)+ideR(Fe1,Fe2,Fe3,ideR)+ideR(Fe1,Fe2,Fe3,ideR,site)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb) k170 * 36.0
+	g_mbtB(site~a)+ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1,site) -> g_mbtB(site~inc!2).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1,site!2) k171
+	g_mbtB(site~inc!2).ideR(Fe1!3,Fe2!4,Fe3!5,ideR!1).ideR(Fe1!6,Fe2!7,Fe3!8,ideR!1,site!2).Fe(site~mtb!3).Fe(site~mtb!4).Fe(site~mtb!5).Fe(site~mtb!6).Fe(site~mtb!7).Fe(site~mtb!8) -> g_mbtB(site~a)+ideR(Fe1,Fe2,Fe3,ideR)+ideR(Fe1,Fe2,Fe3,ideR,site)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb) k172 * 36.0
+	g_irtAB(site~a)+ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1,site) -> g_irtAB(site~inc!2).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1,site!2) k173
+	g_irtAB(site~inc!2).ideR(Fe1!3,Fe2!4,Fe3!5,ideR!1).ideR(Fe1!6,Fe2!7,Fe3!8,ideR!1,site!2).Fe(site~mtb!3).Fe(site~mtb!4).Fe(site~mtb!5).Fe(site~mtb!6).Fe(site~mtb!7).Fe(site~mtb!8) -> g_irtAB(site~a)+ideR(Fe1,Fe2,Fe3,ideR)+ideR(Fe1,Fe2,Fe3,ideR,site)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb) k174 * 36.0
+	g_esx3(site~a)+ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1,site) -> g_esx3(site~inc!2).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1).ideR(Fe1!+,Fe2!+,Fe3!+,ideR!1,site!2) k175
+	g_esx3(site~inc!2).ideR(Fe1!3,Fe2!4,Fe3!5,ideR!1).ideR(Fe1!6,Fe2!7,Fe3!8,ideR!1,site!2).Fe(site~mtb!3).Fe(site~mtb!4).Fe(site~mtb!5).Fe(site~mtb!6).Fe(site~mtb!7).Fe(site~mtb!8) -> g_esx3(site~a)+ideR(Fe1,Fe2,Fe3,ideR)+ideR(Fe1,Fe2,Fe3,ideR,site)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb)+Fe(site~mtb) k176 * 36.0
+	g_sufR(site~a) -> g_sufR(site~a)+SufR(site,site1,site2) k177
+	SufR(site,site1,site2) -> 0 k178 DeleteMolecules
+	SufR(site)+SufR(site) -> SufR(site!1).SufR(site!1) k179 * 2.0
+	SufR(site!1).SufR(site!1) -> SufR(site)+SufR(site) k180 * 2.0
+	SufR(site!1,site1).SufR(site!1,site1)+Fe(site~mtb!2,site1).Fe(site~mtb!2,site1!3).Fe(site~mtb!3,site1!4).Fe(site~mtb!4,site1)+Fe(site~mtb!5,site1).Fe(site~mtb!5,site1!6).Fe(site~mtb!6,site1!7).Fe(site~mtb!7,site1) -> SufR(site!1,site1!8).SufR(site!1,site1!9).Fe(site~mtb!2,site1).Fe(site~mtb!2,site1!3).Fe(site~mtb!3,site1!4).Fe(site~mtb!4,site1!9).Fe(site~mtb!5,site1).Fe(site~mtb!5,site1!6).Fe(site~mtb!6,site1!7).Fe(site~mtb!7,site1!8) k181 * 16.0
+	SufR(site!1,site1!8).SufR(site!1,site1!9).Fe(site~mtb!2,site1).Fe(site~mtb!2,site1!3).Fe(site~mtb!3,site1!4).Fe(site~mtb!4,site1!9).Fe(site~mtb!5,site1).Fe(site~mtb!5,site1!6).Fe(site~mtb!6,site1!7).Fe(site~mtb!7,site1!8) -> SufR(site!1,site1).SufR(site!1,site1)+Fe(site~mtb,site1)+Fe(site~mtb,site1)+Fe(site~mtb,site1)+Fe(site~mtb,site1)+Fe(site~mtb,site1)+Fe(site~mtb,site1)+Fe(site~mtb,site1)+Fe(site~mtb,site1) k182 * 2.0
+	g_sufB(site~a)+SufR(site!1,site1!+,site2).SufR(site!1,site1!+) -> g_sufB(site~inc!2).SufR(site!1,site1!+,site2!2).SufR(site!1,site1!+) k183
+	g_sufB(site~inc!2).SufR(site!1,site1!+,site2!2).SufR(site!1,site1!+) -> g_sufB(site~a)+SufR(site!1,site1!+,site2).SufR(site!1,site1!+) k184
+	g_sufC(site~a)+SufR(site!1,site1!+,site2).SufR(site!1,site1!+) -> g_sufC(site~inc!2).SufR(site!1,site1!+,site2!2).SufR(site!1,site1!+) k185
+	g_sufC(site~inc!2).SufR(site!1,site1!+,site2!2).SufR(site!1,site1!+) -> g_sufC(site~a)+SufR(site!1,site1!+,site2).SufR(site!1,site1!+) k186
+	g_sufD(site~a)+SufR(site!1,site1!+,site2).SufR(site!1,site1!+) -> g_sufD(site~inc!2).SufR(site!1,site1!+,site2!2).SufR(site!1,site1!+) k187
+	g_sufD(site~inc!2).SufR(site!1,site1!+,site2!2).SufR(site!1,site1!+) -> g_sufD(site~a)+SufR(site!1,site1!+,site2).SufR(site!1,site1!+) k188
+	g_sufR(site~a)+SufR(site!1,site1!+,site2).SufR(site!1,site1!+) -> g_sufR(site~inc!2).SufR(site!1,site1!+,site2!2).SufR(site!1,site1!+) k189
+	g_sufR(site~inc!2).SufR(site!1,site1!+,site2!2).SufR(site!1,site1!+) -> g_sufR(site~a)+SufR(site!1,site1!+,site2).SufR(site!1,site1!+) k190
+	g_sufS(site~a)+SufR(site!1,site1!+,site2).SufR(site!1,site1!+) -> g_sufS(site~inc!2).SufR(site!1,site1!+,site2!2).SufR(site!1,site1!+) k191
+	g_sufS(site~inc!2).SufR(site!1,site1!+,site2!2).SufR(site!1,site1!+) -> g_sufS(site~a)+SufR(site!1,site1!+,site2).SufR(site!1,site1!+) k192
+	g_sufR(site~a)+g_esx3(site~a)+g_irtAB(site~a)+g_sufS(site~a)+g_sufE(site~a)+g_bfr(site1~inc,site2)+g_sufB(site~a)+g_sufC(site~a)+g_sufD(site~a)+g_ider()+g_mbtCD()+g_mbtA(site~a)+g_mbtB(site~a)+g_mbtE()+g_mbtF() -> 0 k193 DeleteMolecules
+	g_sufR(site)+g_esx3(site)+g_irtAB(site)+g_sufS(site)+g_sufE(site)+g_bfr(site1)+g_sufB(site)+g_sufC(site)+g_sufD(site)+g_ider()+g_mbtCD()+g_mbtA(site)+g_mbtB(site)+g_mbtE()+g_mbtF() -> g_sufR(site~a)+g_esx3(site~a)+g_irtAB(site~a)+g_sufS(site~a)+g_sufE(site~a)+g_sufB(site~a)+g_sufC(site~a)+g_sufD(site~a)+g_ider()+g_mbtCD()+g_mbtA(site~a)+g_mbtB(site~a)+g_mbtE()+g_mbtF()+g_bfr(site1~inc,site2)+g_sufR(site~a)+g_esx3(site~a)+g_irtAB(site~a)+g_sufS(site~a)+g_sufE(site~a)+g_bfr(site1~inc,site2)+g_sufB(site~a)+g_sufC(site~a)+g_sufD(site~a)+g_ider()+g_mbtCD()+g_mbtA(site~a)+g_mbtB(site~a)+g_mbtE()+g_mbtF() k194
+
+end reaction rules
+
+end model
+
+begin actions
+
+# The Methods incubate for 30000 time units to reach a steady state.
+simulate({method=>"nf",t_end=>30000,n_steps=>300,complex_bookkeeping=>1,utl=>1000})
+
+end actions

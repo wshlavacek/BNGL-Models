@@ -1,0 +1,134 @@
+# metadata.yaml — iron_homeostasis_host_pathogen_ghosh2011
+id: iron_homeostasis_host_pathogen_ghosh2011
+created: 2026-08-05
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, translation, network_free, ai_assisted]
+  description: >
+    Ghosh S, Prasad KVSK, Vishveshwara S, Chandra N (2011), Molecular BioSystems
+    7:2750-2768, doi:10.1039/c1mb05093a. A Kappa model of the contest for iron
+    between a human host and Mycobacterium tuberculosis, simulated by the authors
+    with Kappa's simplx. The paper ships no .ka file: the 194 rules exist only as
+    the Kappa text printed in Table S2 of the ESI, and the initial counts only in
+    the Methods. The translation is performed by TRuML (github.com/lanl/TRuML),
+    not by hand, which matters quantitatively -- Kappa and BNGL count the
+    automorphisms of a reactant pattern differently, and TRuML applies a symmetry
+    factor to 31 of the 194 rules, from 2 up to 2592. An earlier hand translation
+    of the same rules applied none of them.
+    Three things about the published model are worth knowing before using it, and
+    all three are arithmetic consequences of the rate constants rather than
+    artifacts of this curation. (1) Rule 100 synthesises five siderophore
+    precursors at k105 = 1.0 per time unit, zeroth order, and no rule degrades any
+    of them, so each grows as exactly k105*t without bound. (2) Their only
+    consumers, mbtE and mbtF, have steady states near 10 and 12 molecules, so the
+    mbt assembly line is oversubscribed about a thousandfold and never completes;
+    consequently mycobactin, carboxymycobactin and bacterioferritin are
+    identically zero, against the 82 molecules of bfr the paper reports at steady
+    state. (3) Red cells are seeded at 20000 against an implied steady state of
+    k97/k98 = 4.08, over an incubation lasting 39 decay time constants.
+    Not curated: the paper's hub-rule perturbation and knock-out scans (Figs 7-9),
+    which are parameter edits over this same rule set rather than distinct models.
+
+files:
+  - name: iron_homeostasis_host_pathogen_ghosh2011.bngl
+    role: primary
+    description: >
+      The 194 published rules, with rule 163 split in two because BioNetGen cannot
+      read a rule that frees twelve identical molecules at once. Runs the Methods'
+      30000-time-unit incubation.
+    documentation_target: comprehensive
+    min_bionetgen_version: "2.9.3"
+    scale: minutes          # network-free; ~95 s for 30000 time units on one core
+  - name: iron_homeostasis_host_pathogen_ghosh2011_noninfected.bngl
+    role: variant
+    description: >
+      The paper's non-infected control, built the way the Methods build it: the
+      same rule set with the four host-pathogen interaction rates (k142, k143,
+      k148, k149) set to zero, so neither siderophore can reach host iron.
+    documentation_target: comprehensive
+    min_bionetgen_version: "2.9.3"
+    scale: minutes
+
+  - name: ghosh2011.ka
+    role: reference
+    description: >
+      The model as Kappa, emitted by generator/emit_kappa.py and consumed by
+      TRuML. Committed because it is the closest thing to the source the paper
+      does not distribute, and because every later file derives from it.
+
+  - name: generator/build_ghosh2011.py
+    role: tooling
+    description: >
+      Runs the whole chain and writes both .bngl files. Everything it does after
+      TRuML is forced by a BioNetGen or BNGL language limit and is commented where
+      it happens. `--check` rebuilds in place and exits non-zero on drift.
+  - name: generator/emit_kappa.py
+    role: tooling
+    description: >
+      Rewrites the Kappa 3 text of Table S2 as the Kappa 4 TRuML parses, derives
+      the agent signatures from the rules themselves rather than from any prior
+      BNGL, and repairs the four places where PDF extraction damaged the table.
+      Raises rather than silently dropping an agent it cannot parse.
+  - name: generator/truml_py3.patch
+    role: tooling
+    description: >
+      Applies to a checkout of TRuML at upstream head. Ports it to Python 3 and
+      replaces its automorphism counter, which enumerates permutations of
+      identically-named molecules and so cannot finish on a rule containing twelve
+      identical Fe; the replacement counts the same group with VF2 and reproduces
+      TRuML's own test assertions.
+  - name: generator/tableS2.json
+    role: tooling
+    description: The 194 rules recovered from Table S2 of the ESI, with rates and descriptions.
+  - name: generator/initial_counts.json
+    role: tooling
+    description: >
+      The initial molecule counts of the Methods -- one copy of each gene, 5000
+      extracellular and 50 pathogen iron atoms, 20000 red cells. The rate
+      constants are not duplicated here; they are the rate column of
+      tableS2.json, so there is no second copy to drift out of step.
+  - name: generator/state_mangling.json
+    role: tooling
+    description: >
+      The internal-state names renamed for the TRuML round trip, because its
+      grammar requires a state name to begin with a letter and this model names
+      iron pools 3ex, 2cy and so on.
+
+  - name: independent_ghosh2011.py
+    role: verification
+    description: >
+      The level-1 implementation. The collection's usual witness for a
+      network-free model, agreement between bngsim's two engines, is unavailable
+      here: RuleMonkey silently never fires a rule with three or more identical
+      reactant patterns (richardposner/RuleMonkey#24, lanl/bngsim#185) and every
+      rule consuming pathogen iron in this model has three or four identical Fe.
+      The witness is arithmetic instead. This file reads only the published rate
+      constants and solves the parts of the model that are exactly solvable: the
+      twenty species that are made from a single-copy gene, decay first order and
+      are left unconsumed by their own catalytic rule are each an immigration
+      -death process decoupled from everything else, and red cells and the
+      siderophore precursors have closed forms of their own. A hand-written
+      Gillespie simulator in the same file checks those closed forms without
+      sharing code with any of BioNetGen, NFsim or bngsim.
+    scale: minutes
+  - name: verify_ghosh2011.ipynb
+    role: verification
+    description: >
+      Both verification levels and the three arithmetic claims about the published
+      model. Committed with outputs.
+    scale: minutes
+  - name: verify_ghosh2011.png
+    role: figure
+
+  - name: reference/iron_homeostasis_host_pathogen_ghosh2011.gdat
+    role: reference
+    description: The Methods' 30000-time-unit incubation, seed 1.
+  - name: reference/iron_homeostasis_host_pathogen_ghosh2011_noninfected.gdat
+    role: reference
+    description: The same protocol for the non-infected control, seed 1.

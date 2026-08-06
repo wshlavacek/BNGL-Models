@@ -1,0 +1,532 @@
+# Ghosh et al. 2011, Mol. BioSyst. 7:2750, Table S2 (ESI).
+# Kappa 4 transcription of the printed Kappa 3 rules; see emit_kappa.py.
+
+%agent: ALA(site{mt cy})
+%agent: ALAS()
+%agent: Aca(site site2)
+%agent: CP3()
+%agent: CPO()
+%agent: Cp(site)
+%agent: DMT(site)
+%agent: Dcytb(site)
+%agent: Fe(site{st_3ex st_3ed st_2ed st_2cy fer fp st_2ex st_2mt heme cm mtb esx} site1)
+%agent: Fer(Fe)
+%agent: HO()
+%agent: IRP(site{m i a})
+%agent: IScU(fra)
+%agent: Mca(site site2)
+%agent: P9(site)
+%agent: PBG()
+%agent: PBGD()
+%agent: PBS()
+%agent: PP9()
+%agent: PPO()
+%agent: PUP()
+%agent: RBC(site{a d})
+%agent: SA(site{i a} site2)
+%agent: ScoA()
+%agent: Ser(site site2)
+%agent: SufB(site site1)
+%agent: SufC(site1 site2)
+%agent: SufD(site)
+%agent: SufE(site)
+%agent: SufR(site site1 site2)
+%agent: SufS(site)
+%agent: Tf(Fe1 Fe2{n a} tfR{u a inside out})
+%agent: TfR(Tf)
+%agent: UP3()
+%agent: UPD()
+%agent: UPS()
+%agent: bfr(site)
+%agent: cmex(site1 site2)
+%agent: esx3(site)
+%agent: fc(Fe P9 site)
+%agent: fp(site)
+%agent: fra(isu site1 site2 site3 site4 site5 site6)
+%agent: g_IRP()
+%agent: g_alas()
+%agent: g_bfr(site1{a inc} site2)
+%agent: g_cp()
+%agent: g_cpo()
+%agent: g_dcytb()
+%agent: g_dmt()
+%agent: g_esx3(site{a inc})
+%agent: g_fc()
+%agent: g_fer()
+%agent: g_fp()
+%agent: g_fra()
+%agent: g_hep()
+%agent: g_ho()
+%agent: g_ider()
+%agent: g_irtAB(site{a inc})
+%agent: g_isu()
+%agent: g_mbtA(site{a inc})
+%agent: g_mbtB(site{a inc})
+%agent: g_mbtCD()
+%agent: g_mbtE()
+%agent: g_mbtF()
+%agent: g_mf()
+%agent: g_pbgd()
+%agent: g_pbs()
+%agent: g_ppo()
+%agent: g_sufB(site{a inc})
+%agent: g_sufC(site{a inc})
+%agent: g_sufD(site{a inc})
+%agent: g_sufE(site{a})
+%agent: g_sufR(site{a inc})
+%agent: g_sufS(site{a inc})
+%agent: g_tf()
+%agent: g_tfR()
+%agent: g_upd()
+%agent: g_ups()
+%agent: glycine()
+%agent: hep()
+%agent: ideR(Fe1 Fe2 Fe3 ideR site)
+%agent: irtAB(site)
+%agent: lys(site)
+%agent: m(site1 site2)
+%agent: mbtA(site{a})
+%agent: mbtB(site1 site2)
+%agent: mbtCD(site1 site2)
+%agent: mbtE(site1 site2 site3 site4 site5 site6)
+%agent: mbtF(site1 site2)
+%agent: mf(site)
+
+%var: 'k1' 0.0071
+%var: 'k2' 1.0e-6
+%var: 'k3' 0.062
+%var: 'k4' 2.8
+%var: 'k5' 0.062
+%var: 'k6' 0.00033
+%var: 'k7' 0.0032
+%var: 'k8' 2.7e-5
+%var: 'k9' 3.8e-3
+%var: 'k10' 0.0015
+%var: 'k11' 0.0033
+%var: 'k12' 0.091
+%var: 'k13' 0.023
+%var: 'k14' 0.0023
+%var: 'k15' 0.043
+%var: 'k16' 0.0038
+%var: 'k17' 0.00026
+%var: 'k18' 0.023
+%var: 'k19' 0.023
+%var: 'k20' 0.0038
+%var: 'k21' 7.0e-5
+%var: 'k22' 6.6e-4
+%var: 'k23' 6.6e-4
+%var: 'k24' 1.1e-3
+%var: 'k25' 2.7e-5
+%var: 'k26' 0.011
+%var: 'k27' 4.9e-3
+%var: 'k28' 4.8e-5
+%var: 'k29' 1.3e-6
+%var: 'k30' 0.08
+%var: 'k31' 0.08
+%var: 'k32' 3.5e-3
+%var: 'k33' 1.6e-6
+%var: 'k34' 0.2
+%var: 'k35' 0.2
+%var: 'k36' 8.9e-3
+%var: 'k37' 2.1e-5
+%var: 'k38' 10
+%var: 'k39' 10
+%var: 'k40' 7.3e-3
+%var: 'k41' 3.8e-6
+%var: 'k42' 0.0011
+%var: 'k43' 0.0011
+%var: 'k44' 0.0011
+%var: 'k45' 0.0011
+%var: 'k46' 0.0011
+%var: 'k47' 0.0011
+%var: 'k48' 6.05e-8
+%var: 'k49' 1.5e-2
+%var: 'k50' 1.6e-6
+%var: 'k51' 0.0016
+%var: 'k52' 7.68e-10
+%var: 'k53' 0.0012
+%var: 'k54' 0.0046
+%var: 'k55' 1.2e-5
+%var: 'k56' 1.0
+%var: 'k57' 8.1e-3
+%var: 'k58' 6.4e-5
+%var: 'k59' 0.074
+%var: 'k60' 10
+%var: 'k61' 5.1e-3
+%var: 'k62' 2.6e-4
+%var: 'k63' 0.421
+%var: 'k64' 1.08e-2
+%var: 'k65' 8.02e-6
+%var: 'k66' 2.4e-6
+%var: 'k67' 1.4e-4
+%var: 'k68' 0.25
+%var: 'k69' 1.2e-2
+%var: 'k70' 3.8e-4
+%var: 'k71' 30
+%var: 'k72' 0.16
+%var: 'k73' 0.06
+%var: 'k74' 5.95
+%var: 'k75' 1.2e-2
+%var: 'k76' 6.1e-3
+%var: 'k77' 9.3e-3
+%var: 'k78' 9.6e-5
+%var: 'k79' 2.2e-3
+%var: 'k80' 1.9e-5
+%var: 'k81' 0.1
+%var: 'k82' 1.6e-9
+%var: 'k83' 0.96
+%var: 'k84' 0.96
+%var: 'k85' 0.96
+%var: 'k86' 1.07e-2
+%var: 'k87' 1.2e-4
+%var: 'k88' 0.1
+%var: 'k89' 2.0
+%var: 'k90' 0.05
+%var: 'k91' 2.0
+%var: 'k92' 2.7e-4
+%var: 'k93' 6.9e-5
+%var: 'k94' 6.9e-5
+%var: 'k95' 6.9e-5
+%var: 'k96' 6.9e-5
+%var: 'k97' 5.31e-3
+%var: 'k98' 1.3e-3
+%var: 'k99' 0.10
+%var: 'k100' 3.8e-2
+%var: 'k101' 3.6e-5
+%var: 'k102' 1.1e-3
+%var: 'k103' 0.07
+%var: 'k104' 0.1
+%var: 'k105' 1.0
+%var: 'k106' 8.5e-3
+%var: 'k107' 5.7e-3
+%var: 'k108' 3.5e-3
+%var: 'k109' 1.1e-4
+%var: 'k110' 0.711
+%var: 'k111' 0.711
+%var: 'k112' 1.4e-3
+%var: 'k113' 1.1e-4
+%var: 'k114' 1.566
+%var: 'k115' 0.0166
+%var: 'k116' 1.1e-3
+%var: 'k117' 1.1e-4
+%var: 'k118' 0.0166
+%var: 'k119' 1.3e-3
+%var: 'k120' 1.1e-4
+%var: 'k121' 0.0166
+%var: 'k122' 4.4e-3
+%var: 'k123' 1.1e-4
+%var: 'k124' 0.0166
+%var: 'k125' 0.0166
+%var: 'k126' 0.0166
+%var: 'k127' 0.0166
+%var: 'k128' 6.9e-6
+%var: 'k129' 6.9e-6
+%var: 'k130' 4.7e-3
+%var: 'k131' 1.1e-4
+%var: 'k132' 1.3e-2
+%var: 'k133' 1.1e-4
+%var: 'k134' 0.16
+%var: 'k135' 5.57e-8
+%var: 'k136' 2.3e-3
+%var: 'k137' 1.1e-4
+%var: 'k138' 7.4e-3
+%var: 'k139' 1.1e-4
+%var: 'k140' 4.9e-3
+%var: 'k141' 1.1e-4
+%var: 'k142' 2.66e-4
+%var: 'k143' 2.66e-4
+%var: 'k144' 2.3e-3
+%var: 'k145' 1.1e-4
+%var: 'k146' 5.5e-4
+%var: 'k147' 5.5e-4
+%var: 'k148' 2.66e-4
+%var: 'k149' 2.66e-4
+%var: 'k150' 4.2e-3
+%var: 'k151' 1.1e-4
+%var: 'k152' 2.66e-4
+%var: 'k153' 2.66e-4
+%var: 'k154' 2.3e-3
+%var: 'k155' 0.33e-9
+%var: 'k156' 0.00083
+%var: 'k157' 0.00083
+%var: 'k158' 1.1e-4
+%var: 'k159' 8.5e-3
+%var: 'k160' 1.52e-8
+%var: 'k161' 0.0085
+%var: 'k162' 4.16e-11
+%var: 'k163' 1.1e-2
+%var: 'k164' 1.0e-4
+%var: 'k165' 0.011
+%var: 'k166' 1.0e-4
+%var: 'k167' 2.0
+%var: 'k168' 0.05
+%var: 'k169' 2.0
+%var: 'k170' 0.05
+%var: 'k171' 2.0
+%var: 'k172' 0.05
+%var: 'k173' 2.0
+%var: 'k174' 0.05
+%var: 'k175' 2.0
+%var: 'k176' 0.05
+%var: 'k177' 8.3e-3
+%var: 'k178' 1.1e-4
+%var: 'k179' 8.3e-3
+%var: 'k180' 1.1e-4
+%var: 'k181' 2.0
+%var: 'k182' 0.05
+%var: 'k183' 2.0
+%var: 'k184' 0.05
+%var: 'k185' 2.0
+%var: 'k186' 0.05
+%var: 'k187' 2.0
+%var: 'k188' 0.05
+%var: 'k189' 2.0
+%var: 'k190' 0.05
+%var: 'k191' 2.0
+%var: 'k192' 0.05
+%var: 'k193' 5.7e-6
+%var: 'k194' 1.3e-5
+
+%init: 1 g_tf()
+%init: 1 g_tfR()
+%init: 1 g_dcytb()
+%init: 1 g_dmt()
+%init: 1 g_fer()
+%init: 1 g_fp()
+%init: 1 g_cp()
+%init: 1 g_mf()
+%init: 1 g_fra()
+%init: 1 g_isu()
+%init: 1 g_IRP()
+%init: 1 g_alas()
+%init: 1 g_pbs()
+%init: 1 g_pbgd()
+%init: 1 g_ups()
+%init: 1 g_upd()
+%init: 1 g_cpo()
+%init: 1 g_ppo()
+%init: 1 g_fc()
+%init: 1 g_ho()
+%init: 1 g_hep()
+%init: 1 g_sufR(site{a}[.])
+%init: 1 g_esx3(site{a}[.])
+%init: 1 g_irtAB(site{a}[.])
+%init: 1 g_sufS(site{a}[.])
+%init: 1 g_sufE(site{a}[.])
+%init: 1 g_bfr(site1{inc}[.] site2[.])
+%init: 1 g_sufB(site{a}[.])
+%init: 1 g_sufC(site{a}[.])
+%init: 1 g_sufD(site{a}[.])
+%init: 1 g_ider()
+%init: 1 g_mbtCD()
+%init: 1 g_mbtA(site{a}[.])
+%init: 1 g_mbtB(site{a}[.])
+%init: 1 g_mbtE()
+%init: 1 g_mbtF()
+%init: 5000 Fe(site{st_3ex}[.] site1[.])
+%init: 50 Fe(site{mtb}[.] site1[.])
+%init: 20000 RBC(site{a}[.])
+
+%obs: 'Obs_Fe_mtb' |Fe(site{mtb}[.])|
+%obs: 'Obs_Fe_3ex' |Fe(site{st_3ex}[.])|
+%obs: 'Obs_Fer_Fe' |Fe(site{fer}[_])|
+%obs: 'Obs_Fe_myB' |m(site1[_])|
+%obs: 'Obs_Fe_cmB' |cmex(site1[_])|
+%obs: 'Obs_act_ideR' |ideR(Fe1[_] Fe2[_] Fe3[_] ideR[_])|
+%obs: 'Obs_Tf_TfR' |Tf(tfR{a}[_])|
+%obs: 'Obs_RBC' |RBC(site{a}[.])|
+
+'R1' g_tf() -> g_tf(), Tf(Fe1[.] Fe2{n}[.] tfR{u}[.]) @ 'k1'  // Tf synthesis
+'R2' Tf(Fe1[.] Fe2{n}[.] tfR{u}[.]) -> . @ 'k2'  // Tf decay st
+'R3' Fe(site{st_3ex}[.]), Tf(Fe1[.] Fe2{n}[.] tfR{u}[.]) -> Fe(site{st_3ex}[1]), Tf(Fe1[1] Fe2{n}[.] tfR{u}[.]) @ 'k3'  // 1 Fe binds to Tf
+'R4' Tf(Fe1[_] Fe2{n}[.] tfR{u}[.]) -> Tf(Fe1[_] Fe2{n}[.] tfR{a}[.]) @ 'k4'  // Modification in TfR binding site on iron binding
+'R5' Tf(Fe2{n}[.] tfR{a}[.]) -> Tf(Fe2{a}[.] tfR{a}[.]) @ 'k5'  // Modification in nd 2 Fe binding site on iron binding nd
+'R6' Fe(site{st_3ex}[.]), Tf(Fe2{a}[.]) -> Fe(site{st_3ex}[1]), Tf(Fe2{a}[1]) @ 'k6'  // 2 Fe binding
+'R7' g_tfR() -> g_tfR(), TfR(Tf[.]) @ 'k7'  // TfR synthesis
+'R8' TfR(Tf[.]) -> . @ 'k8'  // TfR decay
+'R9' Tf(Fe1[_] Fe2{a}[#] tfR{a}[.]), TfR(Tf[.]) -> Tf(Fe1[_] Fe2{a}[#] tfR{a}[1]), TfR(Tf[1]) @ 'k9'  // Holo Tf binds to TfR
+'R10' Tf(Fe1[_] tfR{a}[_]) -> Tf(Fe1[_] tfR{a}[.]) @ 'k10'  // Dissociation of Tf-Fe-TfR complex
+'R11' Tf(Fe1[_] tfR{a}[_]) -> Tf(Fe1[_] tfR{inside}[_]) @ 'k11'  // Transport of the Tf-Fe-TfR complex to the endosome (Tf- TfR endocytic cycle) st
+'R12' Fe(site{st_3ex}[2]), Tf(Fe1[_] Fe2{a}[2] tfR{inside}[_]) -> Fe(site{st_3ed}[.]), Tf(Fe1[_] Fe2{a}[.] tfR{inside}[_]) @ 'k12'  // Release of 1 Fe nd
+'R13' Fe(site{st_3ex}[2]), Tf(Fe1[2] Fe2{a}[.] tfR{inside}[_]) -> Fe(site{st_3ed}[.]), Tf(Fe1[.] Fe2{a}[.] tfR{inside}[_]) @ 'k13'  // Release of 2 Fe
+'R14' Tf(Fe2{a}[.] tfR{inside}[_]) -> Tf(Fe2{a}[.] tfR{out}[_]) @ 'k14'  // Transport of Fe less Tf-TfR outside
+'R15' Tf(Fe2{a}[.] tfR{out}[1]), TfR(Tf[1]) -> Tf(Fe2{n}[.] tfR{u}[.]), TfR(Tf[.]) @ 'k15'  // Dissociation of Tf-TfR
+'R16' g_dcytb() -> g_dcytb(), Dcytb(site[.]) @ 'k16'  // Dcytb synthesis
+'R17' Dcytb(site[.]) -> . @ 'k17'  // Dcytb decay +3
+'R18' Dcytb(site[.]), Fe(site{st_3ed}[.]) -> Dcytb(site[1]), Fe(site{st_3ed}[1]) @ 'k18'  // Fe reduction by Dcytb (I) +3
+'R19' Dcytb(site[1]), Fe(site{st_3ed}[1]) -> Dcytb(site[.]), Fe(site{st_2ed}[.]) @ 'k19'  // Fe reduction by Dcytb (II)
+'R20' g_dmt() -> g_dmt(), DMT(site[.]) @ 'k20'  // DMT synthesis
+'R21' DMT(site[.]) -> . @ 'k21'  // DMT decay
+'R22' DMT(site[.]), Fe(site{st_2ed}[.]) -> DMT(site[1]), Fe(site{st_2ed}[1]) @ 'k22'  // DMT-Fe complex (I)
+'R23' DMT(site[1]), Fe(site{st_2ed}[1]) -> DMT(site[.]), Fe(site{st_2cy}[.]) @ 'k23'  // DMT-Fe complex (II)
+'R24' g_fer() -> g_fer(), Fer(Fe[.]) @ 'k24'  // Ferritin synthesis
+'R25' Fer(Fe[.]) -> . @ 'k25'  // Ferritin decay
+'R26' Fe(site{st_2cy}[.]), Fer(Fe[.]) -> Fe(site{fer}[1]), Fer(Fe[1]) @ 'k26'  // Iron storage in ferritin
+'R27' g_fp() -> g_fp(), fp(site[.]) @ 'k27'  // Fp synthesis
+'R28' fp(site[.]) -> . @ 'k28'  // Fp decay
+'R29' Fe(site{fer}[1]), fp(site[.]), Fer(Fe[1]) -> Fe(site{fp}[1]), fp(site[1]) @ 'k29'  // Fp extracts iron stored in ferritin and degrades ferritin in the process (I)
+'R30' Fe(site{fp}[1]), fp(site[1]) -> Fe(site{st_2ex}[.]), fp(site[.]) @ 'k30'  // Fp extracts iron stored in ferritin and degrades ferritin in the process (II)
+'R31' Fe(site{st_2cy}[.]), fp(site[.]) -> Fe(site{fp}[1]), fp(site[1]) @ 'k31'  // Fp exports cytoplasmic iron outside
+'R32' g_cp() -> g_cp(), Cp(site[.]) @ 'k32'  // Cp synthesis
+'R33' Cp(site[.]) -> . @ 'k33'  // Cp decay
+'R34' Cp(site[.]), Fe(site{st_2ex}[.]) -> Cp(site[1]), Fe(site{st_2ex}[1]) @ 'k34'  // Cp dependent +2 oxidation of Fe (I)
+'R35' Cp(site[1]), Fe(site{st_2ex}[1]) -> Cp(site[.]), Fe(site{st_3ex}[.]) @ 'k35'  // Cp dependent +2 oxidation of Fe (II)
+'R36' g_mf() -> g_mf(), mf(site[.]) @ 'k36'  // mf synthesis
+'R37' mf(site[.]) -> . @ 'k37'  // mf decay
+'R38' mf(site[.]), Fe(site{st_2cy}[.]) -> mf(site[1]), Fe(site{st_2cy}[1]) @ 'k38'  // Iron transport to mitochondria via mf (I)
+'R39' mf(site[1]), Fe(site{st_2cy}[1]) -> mf(site[.]), Fe(site{st_2mt}[.]) @ 'k39'  // Iron transport to mitochondria via mf (II)
+'R40' g_fra() -> g_fra(), fra(isu[.] site1[.] site2[.] site3[.] site4[.] site5[.] site6[.]) @ 'k40'  // frataxin synthesis
+'R41' fra(isu[.] site1[.] site2[.] site3[.] site4[.] site5[.] site6[.]) -> . @ 'k41'  // frataxin decay
+'R42' Fe(site{st_2mt}[.]), fra(site1[.]) -> Fe(site{st_2mt}[1]), fra(site1[1]) @ 'k42'  // fra binds to iron in the mitochondria (I)
+'R43' Fe(site{st_2mt}[.]), fra(site2[.]) -> Fe(site{st_2mt}[1]), fra(site2[1]) @ 'k43'  // fra binds to iron in the mitochondria (II)
+'R44' Fe(site{st_2mt}[.]), fra(site3[.]) -> Fe(site{st_2mt}[1]), fra(site3[1]) @ 'k44'  // fra binds to iron in the mitochondria (III)
+'R45' Fe(site{st_2mt}[.]), fra(site4[.]) -> Fe(site{st_2mt}[1]), fra(site4[1]) @ 'k45'  // fra binds to iron in the mitochondria (IV)
+'R46' Fe(site{st_2mt}[.]), fra(site5[.]) -> Fe(site{st_2mt}[1]), fra(site5[1]) @ 'k46'  // fra binds to iron in the mitochondria (V)
+'R47' Fe(site{st_2mt}[.]), fra(site6[.]) -> Fe(site{st_2mt}[1]), fra(site6[1]) @ 'k47'  // fra binds to iron in the mitochondria (VI)
+'R48' Fe(site{st_2mt}[1]), Fe(site{st_2mt}[2]), Fe(site{st_2mt}[3]), Fe(site{st_2mt}[4]), Fe(site{st_2mt}[5]), Fe(site{st_2mt}[6]), fra(site1[1] site2[2] site3[3] site4[4] site5[5] site6[6]) -> Fe(site{st_2mt}[.]), Fe(site{st_2mt}[.]), Fe(site{st_2mt}[.]), Fe(site{st_2mt}[.]), Fe(site{st_2mt}[.]), Fe(site{st_2mt}[.]), fra(site1[.] site2[.] site3[.] site4[.] site5[.] site6[.]) @ 'k48'  // Dissociation of holo-frataxin
+'R49' g_isu() -> g_isu(), IScU(fra[.]) @ 'k49'  // IScU synthesis
+'R50' IScU(fra[.]) -> . @ 'k50'  // ISU decay
+'R51' IScU(fra[.]), fra(isu[.] site1[_] site2[_] site3[_] site4[_] site5[_] site6[_]) -> IScU(fra[1]), fra(isu[1] site1[_] site2[_] site3[_] site4[_] site5[_] site6[_]) @ 'k51'  // Holo-fra interacts with ISU
+'R52' fra(isu[1]), IScU(fra[1]) -> fra(isu[.]), IScU(fra[.]) @ 'k52'  // Holo-fra-ISU dissociation
+'R53' Fe(site{st_2mt}[1] site1[.]), Fe(site{st_2mt}[2] site1[.]), Fe(site{st_2mt}[3] site1[.]), Fe(site{st_2mt}[4] site1[.]), Fe(site{st_2mt}[5] site1[.]), Fe(site{st_2mt}[6] site1[.]), fra(isu[_] site1[1] site2[2] site3[3] site4[4] site5[5] site6[6]) -> Fe(site{st_2mt}[.] site1[.]), Fe(site{st_2mt}[.] site1[.]), Fe(site{st_2mt}[1] site1[.]), Fe(site{st_2mt}[1] site1[2]), Fe(site{st_2mt}[2] site1[3]), Fe(site{st_2mt}[3] site1[.]), fra(isu[_] site1[.] site2[.] site3[.] site4[.] site5[.] site6[.]) @ 'k53'  // Formation of Fe- S cluster
+'R54' g_IRP() -> g_IRP(), IRP(site{m}[.]) @ 'k54'  // IRP synthesis
+'R55' IRP(site{m}[.]) -> . @ 'k55'  // IRP decay
+'R56' . -> ScoA(), glycine() @ 'k56'  // Random production of starting metabolites for heme synthesis
+'R57' g_alas() -> g_alas(), ALAS() @ 'k57'  // ALAS synthesis
+'R58' ALAS() -> . @ 'k58'  // ALAS decay
+'R59' ALAS(), ScoA(), glycine() -> ALAS(), ALA(site{mt}[.]) @ 'k59'  // Heme synthesis (I)
+'R60' ALA(site{mt}[.]) -> ALA(site{cy}[.]) @ 'k60'  // Heme synthesis (II)
+'R61' g_pbs() -> g_pbs(), PBS() @ 'k61'  // PBS synthesis
+'R62' PBS() -> . @ 'k62'  // PBS decay
+'R63' PBS(), ALA(site{cy}[.]), ALA(site{cy}[.]) -> PBS(), PBG() @ 'k63'  // Heme synthesis (III)
+'R64' g_pbgd() -> g_pbgd(), PBGD() @ 'k64'  // PBGD synthesis
+'R65' PBGD() -> . @ 'k65'  // PBGD decay
+'R66' UPD() -> . @ 'k66'  // UPD decay
+'R67' CPO() -> . @ 'k67'  // CPO decay
+'R68' PBGD(), PBG(), PBG(), PBG(), PBG() -> PBGD(), PUP() @ 'k68'  // Heme synthesis (IV)
+'R69' g_ups() -> g_ups(), UPS() @ 'k69'  // UPS synthesis
+'R70' UPS() -> . @ 'k70'  // UPS decay
+'R71' UPS(), PUP() -> UPS(), UP3() @ 'k71'  // Heme synthesis (V)
+'R72' UPD(), UP3() -> UPD(), CP3() @ 'k72'  // Heme synthesis (VI)
+'R73' CPO(), CP3() -> CPO(), PP9() @ 'k73'  // Heme synthesis (VII)
+'R74' PPO(), PP9() -> PPO(), P9(site[.]) @ 'k74'  // Heme synthesis (VIII)
+'R75' g_upd() -> g_upd(), UPD() @ 'k75'  // UPD synthesis
+'R76' g_cpo() -> g_cpo(), CPO() @ 'k76'  // CPO synthesis
+'R77' g_ppo() -> g_ppo(), PPO() @ 'k77'  // PPO synthesis
+'R78' PPO() -> . @ 'k78'  // PPO decay
+'R79' g_fc() -> g_fc(), fc(Fe[.] P9[.] site[.]) @ 'k79'  // fc synthesis
+'R80' fc(Fe[.] P9[.] site[.]) -> . @ 'k80'  // fc decay
+'R81' fc(Fe[.] P9[.] site[.]), fc(Fe[.] P9[.] site[.]) -> fc(Fe[.] P9[.] site[1]), fc(Fe[.] P9[.] site[1]) @ 'k81'  // fc dimerization
+'R82' fc(Fe[.] P9[.] site[1]), fc(Fe[.] P9[.] site[1]) -> fc(Fe[.] P9[.] site[.]), fc(Fe[.] P9[.] site[.]) @ 'k82'  // fc dissociation
+'R83' Fe(site{st_2mt}[2]), Fe(site{st_2mt}[3]), Fe(site{st_2mt}[4]), Fe(site{st_2mt}[5]), Fe(site{st_2mt}[6]), Fe(site{st_2mt}[7]), fra(site1[2] site2[3] site3[4] site4[5] site5[6] site6[7]), fc(Fe[.] P9[.] site[1]), fc(Fe[.] P9[.] site[1]) -> Fe(site{st_2mt}[2]), Fe(site{st_2mt}[.]), Fe(site{st_2mt}[.]), Fe(site{st_2mt}[.]), Fe(site{st_2mt}[.]), Fe(site{st_2mt}[.]), fra(site1[.] site2[.] site3[.] site4[.] site5[.] site6[.]), fc(Fe[2] P9[.] site[1]), fc(Fe[.] P9[.] site[1]) @ 'k83'  // Iron transfer from holo frataxin to fc
+'R84' P9(site[.]), fc(Fe[_] P9[.] site[1]), fc(Fe[.] P9[.] site[1]) -> P9(site[2]), fc(Fe[_] P9[2] site[1]), fc(Fe[.] P9[.] site[1]) @ 'k84'  // P9 forms a complex with iron bound fc
+'R85' fc(Fe[3] P9[2] site[1]), fc(Fe[.] P9[.] site[1]), P9(site[2]), Fe(site{st_2mt}[3]) -> fc(Fe[.] P9[.] site[1]), fc(Fe[.] P9[.] site[1]), P9(site[.]), Fe(site{heme}[.]) @ 'k85'  // Release of P9 and heme
+'R86' g_ho() -> g_ho(), HO() @ 'k86'  // HO synthesis
+'R87' HO() -> . @ 'k87'  // HO decay
+'R88' HO(), Fe(site{heme}[.]) -> HO(), Fe(site{st_2cy}[.]) @ 'k88'  // Degradation of heme
+'R89' IRP(site{m}[.]), Fe(site{st_2mt}[1] site1[.]), Fe(site{st_2mt}[1] site1[2]), Fe(site{st_2mt}[2] site1[3]), Fe(site{st_2mt}[3] site1[.]) -> IRP(site{i}[4]), Fe(site{st_2mt}[1] site1[.]), Fe(site{st_2mt}[1] site1[2]), Fe(site{st_2mt}[2] site1[3]), Fe(site{st_2mt}[3] site1[4]) @ 'k89'  // Fe-S dependent inactivation of IRP (I)
+'R90' IRP(site{i}[4]), Fe(site{st_2mt}[1] site1[.]), Fe(site{st_2mt}[1] site1[2]), Fe(site{st_2mt}[2] site1[3]), Fe(site{st_2mt}[3] site1[4]) -> IRP(site{a}[.]), Fe(site{st_2mt}[1] site1[.]), Fe(site{st_2mt}[1] site1[2]), Fe(site{st_2mt}[2] site1[.]), Fe(site{st_2mt}[.] site1[.]) @ 'k90'  // Activation of IRP
+'R91' IRP(site{a}[.]), Fe(site{st_2mt}[1] site1[.]), Fe(site{st_2mt}[1] site1[2]), Fe(site{st_2mt}[2] site1[.]), Fe(site{st_2mt}[.] site1[.]) -> IRP(site{i}[4]), Fe(site{st_2mt}[1] site1[.]), Fe(site{st_2mt}[1] site1[2]), Fe(site{st_2mt}[2] site1[3]), Fe(site{st_2mt}[3] site1[4]) @ 'k91'  // Inactivation of IRP (II)
+'R92' Fe(site{st_2mt}[1] site1[.]), Fe(site{st_2mt}[1] site1[2]), Fe(site{st_2mt}[2] site1[3]), Fe(site{st_2mt}[3] site1[.]) -> Fe(site{st_2mt}[.] site1[.]), Fe(site{st_2mt}[.] site1[.]), Fe(site{st_2mt}[.] site1[.]), Fe(site{st_2mt}[.] site1[.]) @ 'k92'  // Dissociation of Fe-S into Fe and S
+'R93' IRP(site{a}[.]), Fer(Fe[.]) -> IRP(site{a}[.]) @ 'k93'  // IRP dependent degradation of Ferritin
+'R94' IRP(site{a}[.]), fp(site[.]) -> IRP(site{a}[.]) @ 'k94'  // IRP dependent degradation of fp
+'R95' IRP(site{a}[.]), IRP(site{a}[.]), IRP(site{a}[.]), TfR(Tf[.]) -> IRP(site{a}[.]), IRP(site{a}[.]), IRP(site{a}[.]), TfR(Tf[.]), TfR(Tf[.]) @ 'k95'  // IRP dependent activation of TfR
+'R96' IRP(site{a}[.]), ALAS() -> IRP(site{a}[.]) @ 'k96'  // IRP dependent degradation of ALAS
+'R97' . -> RBC(site{a}[.]) @ 'k97'  // Addition of RBC to the circulation
+'R98' RBC(site{a}[.]) -> RBC(site{d}[.]) @ 'k98'  // Natural Degradation of RBC (I)
+'R99' HO(), RBC(site{d}[.]) -> HO(), Fe(site{st_2cy}[.] site1[.]), Fe(site{st_2cy}[.] site1[.]), Fe(site{st_2cy}[.] site1[.]), Fe(site{st_2cy}[.] site1[.]) @ 'k99'  // Natural Degradation of RBC (II)
+'R100' g_hep() -> g_hep(), hep() @ 'k100'  // Hep synthesis
+'R101' hep() -> . @ 'k101'  // Hep decay
+'R102' hep(), fp(site[.]) -> hep() @ 'k102'  // Hepcidin dependent degradation of fp
+'R103' . -> Fe(site{st_3ex}[.] site1[.]) @ 'k103'  // Iron influx
+'R104' Fe(site{st_3ex}[.] site1[.]) -> . @ 'k104'  // Iron outflux
+'R105' . -> SA(site{i}[.] site2[.]), Ser(site[.] site2[.]), lys(site[.]), Aca(site[.] site2[.]), Mca(site[.] site2[.]) @ 'k105'  // Addition of starting metabolites
+'R106' g_ider() -> g_ider(), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.] site[.]) @ 'k106'  // ideR synthesis
+'R107' ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.] site[.]) -> . @ 'k107'  // ideR decay
+'R108' g_mbtA(site{a}[.]) -> g_mbtA(site{a}[.]), mbtA(site{a}[.]) @ 'k108'  // mbtA synthesis
+'R109' mbtA(site{a}[.]) -> . @ 'k109'  // mbtA decay
+'R110' mbtA(site{a}[.]), SA(site{i}[.]) -> mbtA(site{a}[1]), SA(site{i}[1]) @ 'k110'  // Siderophore synthesis (I)
+'R111' mbtA(site{a}[1]), SA(site{i}[1]) -> mbtA(site{a}[.]), SA(site{a}[.]) @ 'k111'  // Siderophore synthesis (II)
+'R112' g_mbtB(site{a}[.]) -> g_mbtB(site{a}[.]), mbtB(site1[.] site2[.]) @ 'k112'  // mbtB synthesis
+'R113' mbtB(site1[.] site2[.]) -> . @ 'k113'  // mbtB decay
+'R114' SA(site{a}[.]), mbtB(site1[.]) -> SA(site{a}[1]), mbtB(site1[1]) @ 'k114'  // Siderophore synthesis (III)
+'R115' Ser(site[.]), mbtB(site1[_] site2[.]) -> Ser(site[1]), mbtB(site1[_] site2[1]) @ 'k115'  // Siderophore synthesis (IV)
+'R116' g_mbtE() -> g_mbtE(), mbtE(site1[.] site2[.] site3[.] site4[.] site5[.] site6[.]) @ 'k116'  // mbtE synthesis
+'R117' mbtE(site1[.] site2[.] site3[.] site4[.] site5[.] site6[.]) -> . @ 'k117'  // mbtE decay
+'R118' lys(site[.]), mbtE(site1[.]) -> lys(site[1]), mbtE(site1[1]) @ 'k118'  // Siderophore synthesis (V)
+'R119' g_mbtF() -> g_mbtF(), mbtF(site1[.] site2[.]) @ 'k119'  // mbtF synthesis
+'R120' mbtF(site1[.] site2[.]) -> . @ 'k120'  // mbtF decay
+'R121' lys(site[.]), mbtF(site1[.]) -> lys(site[1]), mbtF(site1[1]) @ 'k121'  // Siderophore synthesis (VI)
+'R122' g_mbtCD() -> g_mbtCD(), mbtCD(site1[.] site2[.]) @ 'k122'  // mbtC/D synthesis
+'R123' mbtCD(site1[.] site2[.]) -> . @ 'k123'  // mbtC/D decay
+'R124' mbtCD(site1[.] site2[.]), Aca(site[.]), Mca(site[.]) -> mbtCD(site1[1] site2[2]), Aca(site[1]), Mca(site[2]) @ 'k124'  // Siderophore synthesis (VII)
+'R125' Aca(site[5]), Mca(site[4]), SA(site{a}[3]), Ser(site[2]), mbtB(site1[3] site2[2]), mbtCD(site1[5] site2[4]), mbtE(site1[1] site2[.] site3[.] site4[.] site5[.]), lys(site[1]) -> Aca(site[5]), Mca(site[4]), SA(site{a}[3]), Ser(site[2]), mbtB(site1[.] site2[.]), mbtCD(site1[.] site2[.]), mbtE(site1[1] site2[3] site3[2] site4[5] site5[4]), lys(site[1]) @ 'k125'  // Siderophore synthesis (VIII)
+'R126' mbtE(site1[_] site2[_] site3[_] site4[_] site5[_] site6[.]), mbtF(site1[1]), lys(site[1]) -> mbtE(site1[_] site2[_] site3[_] site4[_] site5[_] site6[1]), mbtF(site1[.]), lys(site[1]) @ 'k126'  // Siderophore synthesis (IX)
+'R127' mbtE(site1[1] site2[2] site3[3] site4[4] site5[5] site6[6]), lys(site[1]), SA(site{a}[2] site2[.]), Ser(site[3] site2[.]), Aca(site[4] site2[.]), Mca(site[5] site2[.]), lys(site[6]) -> mbtE(site1[.] site2[.] site3[.] site4[.] site5[.] site6[.]), lys(site[1]), SA(site{a}[1] site2[2]), Ser(site[2] site2[3]), Aca(site[3] site2[4]), Mca(site[4] site2[5]), lys(site[5]) @ 'k127'  // Siderophore synthesis (X)
+'R128' lys(site[1]), SA(site{a}[1] site2[2]), Ser(site[2] site2[3]), Aca(site[3] site2[4]), Mca(site[4] site2[5]), lys(site[5]) -> cmex(site1[.] site2[.]) @ 'k128'  // Siderophore synthesis (XI)
+'R129' lys(site[1]), SA(site{a}[1] site2[2]), Ser(site[2] site2[3]), Aca(site[3] site2[4]), Mca(site[4] site2[5]), lys(site[5]) -> m(site1[.] site2[.]) @ 'k129'  // Siderophore synthesis (XII)
+'R130' g_sufS(site{a}[.]) -> g_sufS(site{a}[.]), SufS(site[.]) @ 'k130'  // SufS synthesis
+'R131' SufS(site[.]) -> . @ 'k131'  // SufS decay
+'R132' g_sufE(site{a}[.]) -> g_sufE(site{a}[.]), SufE(site[.]) @ 'k132'  // SufE synthesis
+'R133' SufE(site[.]) -> . @ 'k133'  // SufE decay
+'R134' SufS(site[.]), SufE(site[.]) -> SufS(site[1]), SufE(site[1]) @ 'k134'  // SufS-SufE complex formation
+'R135' SufS(site[1]), SufE(site[1]) -> SufS(site[.]), SufE(site[.]) @ 'k135'  // Dissociation of SufSE complex
+'R136' g_sufB(site{a}[.]) -> g_sufB(site{a}[.]), SufB(site[.] site1[.]) @ 'k136'  // SufB synthesis
+'R137' SufB(site[.] site1[.]) -> . @ 'k137'  // SufB decay
+'R138' g_sufC(site{a}[.]) -> g_sufC(site{a}[.]), SufC(site1[.] site2[.]) @ 'k138'  // SufC synthesis
+'R139' SufC(site1[.] site2[.]) -> . @ 'k139'  // SufC decay
+'R140' g_sufD(site{a}[.]) -> g_sufD(site{a}[.]), SufD(site[.]) @ 'k140'  // SufD synthesis
+'R141' SufD(site[.]) -> . @ 'k141'  // SufD decay
+'R142' cmex(site1[.] site2[.]), Tf(Fe1[1] Fe2{a}[2]), Fe(site{st_3ex}[1]), Fe(site{st_3ex}[2]) -> cmex(site1[1] site2[2]), Tf(Fe1[.] Fe2{n}[.]), Fe(site{st_3ex}[1]), Fe(site{st_3ex}[2]) @ 'k142'  // Iron uptake by cmB (I)
+'R143' cmex(site1[1] site2[2]), Fe(site{st_3ex}[1]), Fe(site{st_3ex}[2]) -> cmex(site1[.] site2[.]), Fe(site{cm}[.]), Fe(site{cm}[.]) @ 'k143'  // Iron uptake by cmB (II)
+'R144' g_irtAB(site{a}[.]) -> g_irtAB(site{a}[.]), irtAB(site[.]) @ 'k144'  // irtAB synthesis
+'R145' irtAB(site[.]) -> . @ 'k145'  // irtAB decay
+'R146' irtAB(site[.]), Fe(site{cm}[.]) -> irtAB(site[1]), Fe(site{cm}[1]) @ 'k146'  // Iron transport via irtAB (I)
+'R147' irtAB(site[1]), Fe(site{cm}[1]) -> irtAB(site[.]), Fe(site{mtb}[.]) @ 'k147'  // Iron transport via irtAB (II)
+'R148' m(site1[.]), Fe(site{fer}[1]), Fer(Fe[1]) -> m(site1[1]), Fe(site{esx}[1]), Fer(Fe[.]) @ 'k148'  // Iron uptake by myB (I)
+'R149' m(site1[1]), Fe(site{esx}[1]) -> m(site1[.]), Fe(site{esx}[.]) @ 'k149'  // Iron uptake by myB (II)
+'R150' g_esx3(site{a}[.]) -> g_esx3(site{a}[.]), esx3(site[.]) @ 'k150'  // Esx3 synthesis
+'R151' esx3(site[.]) -> . @ 'k151'  // Esx3 decay
+'R152' esx3(site[.]), Fe(site{esx}[.]) -> esx3(site[1]), Fe(site{esx}[1]) @ 'k152'  // Esx3 dependent iron transport (I)
+'R153' esx3(site[1]), Fe(site{esx}[1]) -> esx3(site[.]), Fe(site{mtb}[.]) @ 'k153'  // Esx3 dependent iron transport (II)
+'R154' SufB(site[.]), SufC(site1[.] site2[.]), SufC(site1[.] site2[.]), SufD(site[.]) -> SufB(site[1]), SufC(site1[1] site2[2]), SufC(site1[2] site2[3]), SufD(site[3]) @ 'k154'  // SufBCD complex formation
+'R155' SufB(site[1]), SufC(site1[1] site2[2]), SufC(site1[2] site2[3]), SufD(site[3]) -> SufB(site[.]), SufC(site1[.] site2[.]), SufC(site1[.] site2[.]), SufD(site[.]) @ 'k155'  // SufBCD dissociation
+'R156' SufB(site[1] site1[.]), SufC(site1[1] site2[2]), SufC(site1[2] site2[3]), SufD(site[3]), SufS(site[4]), SufE(site[4]), Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]) -> SufB(site[1] site1[9]), SufC(site1[1] site2[2]), SufC(site1[2] site2[3]), SufD(site[3]), SufS(site[4]), SufE(site[4]), Fe(site{mtb}[6] site1[9]), Fe(site{mtb}[6] site1[7]), Fe(site{mtb}[7] site1[8]), Fe(site{mtb}[8] site1[.]) @ 'k156'  // Fe-S formation (I)
+'R157' SufB(site[1] site1[9]), SufC(site1[1] site2[2]), SufC(site1[2] site2[3]), SufD(site[3]), Fe(site{mtb}[6] site1[9]), Fe(site{mtb}[6] site1[7]), Fe(site{mtb}[7] site1[8]), Fe(site{mtb}[8] site1[.]) -> SufB(site[1] site1[.]), SufC(site1[1] site2[2]), SufC(site1[2] site2[3]), SufD(site[3]), Fe(site{mtb}[6] site1[.]), Fe(site{mtb}[6] site1[7]), Fe(site{mtb}[7] site1[8]), Fe(site{mtb}[8] site1[.]) @ 'k157'  // Fe-S formation (II)
+'R158' Fe(site{mtb}[1] site1[.]), Fe(site{mtb}[1] site1[2]), Fe(site{mtb}[2] site1[3]), Fe(site{mtb}[3] site1[.]) -> Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]) @ 'k158'  // Dissociation of Fe-S cluster
+'R159' ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]) -> ideR(Fe1[1] Fe2[2] Fe3[3] ideR[.]), Fe(site{mtb}[1]), Fe(site{mtb}[2]), Fe(site{mtb}[3]) @ 'k159'  // Association of Fe with ideR
+'R160' ideR(Fe1[1] Fe2[2] Fe3[3] ideR[.]), Fe(site{mtb}[1]), Fe(site{mtb}[2]), Fe(site{mtb}[3]) -> ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]) @ 'k160'  // Dissociation of Fe with ideR
+'R161' ideR(Fe1[_] ideR[.]), ideR(Fe1[_] ideR[.]) -> ideR(Fe1[_] ideR[1]), ideR(Fe1[_] ideR[1]) @ 'k161'  // Iron bound ideR dimerizes
+'R162' ideR(Fe1[1] Fe2[2] Fe3[3] ideR[4]), ideR(Fe1[5] Fe2[6] Fe3[7] ideR[4]), Fe(site{mtb}[1]), Fe(site{mtb}[2]), Fe(site{mtb}[3]), Fe(site{mtb}[5]), Fe(site{mtb}[6]), Fe(site{mtb}[7]) -> ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]) @ 'k162'  // Dissociation of ideR dimers
+'R163' g_bfr(site1{a}[_] site2[_]) -> g_bfr(site1{a}[_] site2[_]), bfr(site[.]) @ 'k163'  // bfr synthesis
+'R164' bfr(site[.]) -> . @ 'k164'  // bfr decay
+'R165' Fe(site{mtb}[.]), bfr(site[.]) -> Fe(site{mtb}[1]), bfr(site[1]) @ 'k165'  // Iron stored in bfr
+'R166' Fe(site{mtb}[1]), bfr(site[1]) -> Fe(site{mtb}[.]), bfr(site[.]) @ 'k166'  // Iron release from bfr
+'R167' g_bfr(site1{inc}[.] site2[.]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1] site[.]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1] site[.]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[2] site[.]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[2] site[.]) -> g_bfr(site1{a}[3] site2[4]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1] site[.]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1] site[3]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[2] site[.]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[2] site[4]) @ 'k167'  // ideR dependent activation of bfr
+'R168' g_bfr(site1{a}[3] site2[4]), ideR(Fe1[16] Fe2[5] Fe3[6] ideR[1] site[.]), ideR(Fe1[7] Fe2[8] Fe3[9] ideR[1] site[3]), ideR(Fe1[10] Fe2[11] Fe3[12] ideR[2] site[.]), ideR(Fe1[13] Fe2[14] Fe3[15] ideR[2] site[4]), Fe(site{mtb}[16]), Fe(site{mtb}[5]), Fe(site{mtb}[6]), Fe(site{mtb}[7]), Fe(site{mtb}[8]), Fe(site{mtb}[9]), Fe(site{mtb}[10]), Fe(site{mtb}[11]), Fe(site{mtb}[12]), Fe(site{mtb}[13]), Fe(site{mtb}[14]), Fe(site{mtb}[15]) -> g_bfr(site1{inc}[.] site2[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.] site[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.] site[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.] site[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.] site[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]) @ 'k168'  // Release of ideR and inactivation of bfr
+'R169' g_mbtA(site{a}[.]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1] site[.]) -> g_mbtA(site{inc}[2]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1] site[2]) @ 'k169'  // ideR dependent inactivation of mbtA
+'R170' g_mbtA(site{inc}[2]), ideR(Fe1[3] Fe2[4] Fe3[5] ideR[1]), ideR(Fe1[6] Fe2[7] Fe3[8] ideR[1] site[2]), Fe(site{mtb}[3]), Fe(site{mtb}[4]), Fe(site{mtb}[5]), Fe(site{mtb}[6]), Fe(site{mtb}[7]), Fe(site{mtb}[8]) -> g_mbtA(site{a}[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.] site[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]) @ 'k170'  // ideR release and activation of mbtA
+'R171' g_mbtB(site{a}[.]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1] site[.]) -> g_mbtB(site{inc}[2]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1] site[2]) @ 'k171'  // ideR dependent inactivation of mbtB
+'R172' g_mbtB(site{inc}[2]), ideR(Fe1[3] Fe2[4] Fe3[5] ideR[1]), ideR(Fe1[6] Fe2[7] Fe3[8] ideR[1] site[2]), Fe(site{mtb}[3]), Fe(site{mtb}[4]), Fe(site{mtb}[5]), Fe(site{mtb}[6]), Fe(site{mtb}[7]), Fe(site{mtb}[8]) -> g_mbtB(site{a}[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.] site[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]) @ 'k172'  // ideR release and reactivation of mbtB
+'R173' g_irtAB(site{a}[.]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1] site[.]) -> g_irtAB(site{inc}[2]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1] site[2]) @ 'k173'  // ideR dependent inactivation of irtAB
+'R174' g_irtAB(site{inc}[2]), ideR(Fe1[3] Fe2[4] Fe3[5] ideR[1]), ideR(Fe1[6] Fe2[7] Fe3[8] ideR[1] site[2]), Fe(site{mtb}[3]), Fe(site{mtb}[4]), Fe(site{mtb}[5]), Fe(site{mtb}[6]), Fe(site{mtb}[7]), Fe(site{mtb}[8]) -> g_irtAB(site{a}[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.] site[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]) @ 'k174'  // ideR release and reactivation of irtAB
+'R175' g_esx3(site{a}[.]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1] site[.]) -> g_esx3(site{inc}[2]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1]), ideR(Fe1[_] Fe2[_] Fe3[_] ideR[1] site[2]) @ 'k175'  // ideR dependent inactivation of esx3
+'R176' g_esx3(site{inc}[2]), ideR(Fe1[3] Fe2[4] Fe3[5] ideR[1]), ideR(Fe1[6] Fe2[7] Fe3[8] ideR[1] site[2]), Fe(site{mtb}[3]), Fe(site{mtb}[4]), Fe(site{mtb}[5]), Fe(site{mtb}[6]), Fe(site{mtb}[7]), Fe(site{mtb}[8]) -> g_esx3(site{a}[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.]), ideR(Fe1[.] Fe2[.] Fe3[.] ideR[.] site[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]), Fe(site{mtb}[.]) @ 'k176'  // ideR release and reactivation of esx3
+'R177' g_sufR(site{a}[.]) -> g_sufR(site{a}[.]), SufR(site[.] site1[.] site2[.]) @ 'k177'  // sufR synthesis
+'R178' SufR(site[.] site1[.] site2[.]) -> . @ 'k178'  // sufR decay
+'R179' SufR(site[.]), SufR(site[.]) -> SufR(site[1]), SufR(site[1]) @ 'k179'  // sufR dimerizes
+'R180' SufR(site[1]), SufR(site[1]) -> SufR(site[.]), SufR(site[.]) @ 'k180'  // Dissociation of SufR dimer
+'R181' SufR(site[1] site1[.]), SufR(site[1] site1[.]), Fe(site{mtb}[2] site1[.]), Fe(site{mtb}[2] site1[3]), Fe(site{mtb}[3] site1[4]), Fe(site{mtb}[4] site1[.]), Fe(site{mtb}[5] site1[.]), Fe(site{mtb}[5] site1[6]), Fe(site{mtb}[6] site1[7]), Fe(site{mtb}[7] site1[.]) -> SufR(site[1] site1[8]), SufR(site[1] site1[9]), Fe(site{mtb}[2] site1[.]), Fe(site{mtb}[2] site1[3]), Fe(site{mtb}[3] site1[4]), Fe(site{mtb}[4] site1[9]), Fe(site{mtb}[5] site1[.]), Fe(site{mtb}[5] site1[6]), Fe(site{mtb}[6] site1[7]), Fe(site{mtb}[7] site1[8]) @ 'k181'  // Fe-S activates SufR dimer
+'R182' SufR(site[1] site1[8]), SufR(site[1] site1[9]), Fe(site{mtb}[2] site1[.]), Fe(site{mtb}[2] site1[3]), Fe(site{mtb}[3] site1[4]), Fe(site{mtb}[4] site1[9]), Fe(site{mtb}[5] site1[.]), Fe(site{mtb}[5] site1[6]), Fe(site{mtb}[6] site1[7]), Fe(site{mtb}[7] site1[8]) -> SufR(site[1] site1[.]), SufR(site[1] site1[.]), Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]), Fe(site{mtb}[.] site1[.]) @ 'k182'  // Dissociation of Fe-S from SufR dimer
+'R183' g_sufB(site{a}[.]), SufR(site[1] site1[_] site2[.]), SufR(site[1] site1[_]) -> g_sufB(site{inc}[2]), SufR(site[1] site1[_] site2[2]), SufR(site[1] site1[_]) @ 'k183'  // SufR dependent inactivation of sufB
+'R184' g_sufB(site{inc}[2]), SufR(site[1] site1[_] site2[2]), SufR(site[1] site1[_]) -> g_sufB(site{a}[.]), SufR(site[1] site1[_] site2[.]), SufR(site[1] site1[_]) @ 'k184'  // Release of sufR and reactivation of sufB
+'R185' g_sufC(site{a}[.]), SufR(site[1] site1[_] site2[.]), SufR(site[1] site1[_]) -> g_sufC(site{inc}[2]), SufR(site[1] site1[_] site2[2]), SufR(site[1] site1[_]) @ 'k185'  // SufR dependent inactivation of sufC
+'R186' g_sufC(site{inc}[2]), SufR(site[1] site1[_] site2[2]), SufR(site[1] site1[_]) -> g_sufC(site{a}[.]), SufR(site[1] site1[_] site2[.]), SufR(site[1] site1[_]) @ 'k186'  // Release of sufR and reactivation of sufC
+'R187' g_sufD(site{a}[.]), SufR(site[1] site1[_] site2[.]), SufR(site[1] site1[_]) -> g_sufD(site{inc}[2]), SufR(site[1] site1[_] site2[2]), SufR(site[1] site1[_]) @ 'k187'  // SufR dependent inactivation of sufD
+'R188' g_sufD(site{inc}[2]), SufR(site[1] site1[_] site2[2]), SufR(site[1] site1[_]) -> g_sufD(site{a}[.]), SufR(site[1] site1[_] site2[.]), SufR(site[1] site1[_]) @ 'k188'  // Release of sufR and reactivation of sufD
+'R189' g_sufR(site{a}[.]), SufR(site[1] site1[_] site2[.]), SufR(site[1] site1[_]) -> g_sufR(site{inc}[2]), SufR(site[1] site1[_] site2[2]), SufR(site[1] site1[_]) @ 'k189'  // SufR dependent inactivation of sufR
+'R190' g_sufR(site{inc}[2]), SufR(site[1] site1[_] site2[2]), SufR(site[1] site1[_]) -> g_sufR(site{a}[.]), SufR(site[1] site1[_] site2[.]), SufR(site[1] site1[_]) @ 'k190'  // Release of sufR and reactivation of sufR
+'R191' g_sufS(site{a}[.]), SufR(site[1] site1[_] site2[.]), SufR(site[1] site1[_]) -> g_sufS(site{inc}[2]), SufR(site[1] site1[_] site2[2]), SufR(site[1] site1[_]) @ 'k191'  // SufR dependent inactivation of sufS
+'R192' g_sufS(site{inc}[2]), SufR(site[1] site1[_] site2[2]), SufR(site[1] site1[_]) -> g_sufS(site{a}[.]), SufR(site[1] site1[_] site2[.]), SufR(site[1] site1[_]) @ 'k192'  // Release of sufR and reactivation of sufS
+'R193' g_sufR(site{a}[.]), g_esx3(site{a}[.]), g_irtAB(site{a}[.]), g_sufS(site{a}[.]), g_sufE(site{a}[.]), g_bfr(site1{inc}[.] site2[.]), g_sufB(site{a}[.]), g_sufC(site{a}[.]), g_sufD(site{a}[.]), g_ider(), g_mbtCD(), g_mbtA(site{a}[.]), g_mbtB(site{a}[.]), g_mbtE(), g_mbtF() -> . @ 'k193'  // Mtb death
+'R194' g_sufR(site[.]), g_esx3(site[.]), g_irtAB(site[.]), g_sufS(site[.]), g_sufE(site[.]), g_bfr(site1[.]), g_sufB(site[.]), g_sufC(site[.]), g_sufD(site[.]), g_ider(), g_mbtCD(), g_mbtA(site[.]), g_mbtB(site[.]), g_mbtE(), g_mbtF() -> g_sufR(site{a}[.]), g_esx3(site{a}[.]), g_irtAB(site{a}[.]), g_sufS(site{a}[.]), g_sufE(site{a}[.]), g_bfr(site1{inc}[.] site2[.]), g_sufB(site{a}[.]), g_sufC(site{a}[.]), g_sufD(site{a}[.]), g_ider(), g_mbtCD(), g_mbtA(site{a}[.]), g_mbtB(site{a}[.]), g_mbtE(), g_mbtF(), g_sufR(site{a}[.]), g_esx3(site{a}[.]), g_irtAB(site{a}[.]), g_sufS(site{a}[.]), g_sufE(site{a}[.]), g_bfr(site1{inc}[.] site2[.]), g_sufB(site{a}[.]), g_sufC(site{a}[.]), g_sufD(site{a}[.]), g_ider(), g_mbtCD(), g_mbtA(site{a}[.]), g_mbtB(site{a}[.]), g_mbtE(), g_mbtF() @ 'k194'  // Mtb replication
