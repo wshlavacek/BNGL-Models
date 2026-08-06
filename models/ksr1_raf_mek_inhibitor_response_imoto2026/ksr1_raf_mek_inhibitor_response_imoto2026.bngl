@@ -1,0 +1,865 @@
+begin model
+
+#@title: KSR1-RAF-MEK inhibitor response (Imoto et al., 2026)
+
+#@description: |
+#  Energy-based rule model of the RAS/RAF/KSR1/MEK/ERK cascade and its response
+#  to conformation-selective RAF inhibitors (RAFi) and an allosteric MEK
+#  inhibitor (MEKi). BRAF and RAF1 each carry a RAS-binding domain, a
+#  side-to-side dimerization domain, and an ATP-site inhibitor pocket; KSR1
+#  dimerizes through the same interface and additionally binds MEK. Every
+#  binding equilibrium is written as a BioNetGen energy rule, so allosteric
+#  couplings enter as free energies of formation attached to structural motifs
+#  (Gf_* below) and detailed balance holds by construction. MEK phosphorylation
+#  by the aggregate RAF kinase activity uses competitive Michaelis-Menten
+#  kinetics over the KSR1-free ("substrate") MEK pool; MEK-ERK and the two
+#  phosphatases (Ph1, MKP3) are mass action. ppERK docks on the dimerization
+#  domain of BRAF, RAF1 and KSR1 and phosphorylates the inhibitory sites T753,
+#  S642 and S443, closing three negative-feedback loops.
+#
+#  The model is concentration-based: all species are in nM and all rate
+#  constants are per nM per s, so the `cell` compartment volume is 1 by
+#  construction and is not a physical volume (NA and V_phys below convert to
+#  molecule counts). Simulated from the seed state, ppERK overshoots within ten
+#  minutes and is then pulled back by the feedback loops to a stable ERK-active
+#  steady state by about 1.4 h; there are no oscillations. RAF and KSR1
+#  abundances raise steady-state ppERK synergistically, and RAF inhibitors
+#  produce the paradoxical activation characteristic of RAF dimers -- ppERK
+#  more than doubles near one Kd of a Type II inhibitor -- before suppressing
+#  it at higher doses.
+
+#@keyword: |
+#  signaling, energy patterns, allostery, RAF dimerization, scaffold protein,
+#  drug response, negative feedback, Michaelis-Menten, mass action, monostable,
+#  cancer, Homo sapiens
+
+#@reference: |
+#  Imoto H, Rauch N, Nagasato AI, Okada M, Kolch W, Rukhlenko OS,
+#  Kholodenko BN (2026). Dual RAF inhibition outperforms RAF-MEK combinations
+#  for suppressing ERK signaling in KRAS mutant cells. npj Systems Biology and
+#  Applications. doi:10.1038/s41540-026-00710-6
+#  Source model (PySB; SBML export): https://github.com/himoto/ksrmodel
+
+#@note: |
+#  Curated from the authors' deposited SBML export (ksrmodel_PSN1.sbml,
+#  ksrmodel_MCF7.sbml), which is a flattened network rather than a rule set;
+#  the rules and energy patterns here were reconstructed from it together with
+#  Tables S1-S5 of Imoto et al. (2026), and every generated reaction and rate
+#  constant is checked against the deposited network in verify_imoto2026.ipynb.
+#
+#  Three features of the deposited export are inert at the published
+#  parameterization and are omitted here: the BRAF V600E allele (abundance 0 in
+#  both cell lines, and given no dimerization rules by the export), the
+#  Trametinib and KSR1-inhibitor binding sites on MEK (no rules generated), and
+#  a time-dependent RAS-GTP input (its amplitude RAS_Rm is 0, so RAS-GTP is
+#  constant). Free drug concentrations are clamped, as in the source model.
+#
+#  One published discrepancy is recorded rather than repaired. Table S3 gives the
+#  MEK inhibitor an allosteric factor fM = 0.1 on the KSR1-MEK bond, but the
+#  deposited SBML stores fM = 1, and both MEK-inhibitor panels of Fig. 3
+#  reproduce at 1 and not at 0.1 (median |delta| 0.003 and 0.007 in normalized
+#  ppERK, against 0.114 and 0.010 with maxima of 0.185 and 0.119). Two published
+#  artifacts therefore outvote the table, and fM is 1 below; the notebook shows
+#  both and run_imoto2026.py --fm 0.1 regenerates the Table S3 counterfactual.
+
+begin parameters
+
+  # --- Unit-system constants ---
+
+  # BioNetGen divides bimolecular rate constants by the compartment volume.
+  # This model's rate constants are already per nM, so the reaction volume of
+  # the `cell` compartment MUST be 1; it is a unit-system scale factor on the nM
+  # concentration basis, not a physical volume, and so carries no unit.
+  V_cell  1.0  # dimensionless
+
+  # Physical cell volume and Avogadro constant, used only by the commented
+  # concentration-to-population conversions at the end of the functions block.
+  V_phys  1.0e-12      # L/cell
+  NA      6.02214076e23  # molecules/mol
+
+  # Rate-distribution parameter of the Arrhenius energy rules (Ollivier-Danos
+  # convention); phi = 1/2 splits every free-energy change evenly between the
+  # forward and reverse activation energies.
+  phi     0.5  # dimensionless
+
+  # Diffusion-limited association rate constant shared by all protein-protein
+  # binding steps; see Methods in Imoto et al. (2026).
+  kon_typ 0.001  # /nM/s
+
+  # --- Protein abundances (Table S2 in Imoto et al., 2026) ---
+
+  # Active RAS. 300 nM is the KRAS-G12R/WT mutant (PSN1) level; the wild-type
+  # RAS (MCF7) counterpart is the _wtras variant of this file.
+  RAS_0    300.0  # nM
+
+  BRAFWT_0  50.0    # nM
+  RAF1_0    50.0    # nM
+
+  # KSR1 abundance refined from 50 nM to 15 nM against OpenCell, PaxDb and the
+  # Human Protein Atlas; see Discussion in Imoto et al. (2026). The deposited
+  # SBML still carries the pre-refinement value of 50 nM.
+  KSR_0     15.0    # nM
+
+  MEK_0   1600.0  # nM
+  Ph1_0    100.0  # nM
+  ERK_0   3000.0  # nM
+  MKP3_0   100.0  # nM
+
+  # --- Inhibitor concentrations (clamped; see seed species) ---
+
+  # RAFi1 and RAFi2 are two conformation-selective RAF inhibitors; their
+  # thermodynamic factors below select the inhibitor type.
+  RAFi1_0        0.0  # nM
+  RAFi2_0        0.0  # nM
+  Cobimetinib_0  0.0  # nM
+
+  # --- Equilibrium dissociation constants (Table S2) ---
+
+  Kd_RASgtp_BRAF     80.0        # nM
+  Kd_RASgtp_RAF1    400.0        # nM
+  Kd_BRAF_BRAF     2000.0        # nM
+  Kd_BRAF_RAF1     4000.0        # nM
+  Kd_RAF1_RAF1     4000.0        # nM
+  Kd_BRAF_KSR         2.0e6      # nM
+  Kd_RAF1_KSR         6.0e7      # nM
+  Kd_MEK_KSR       1600.0        # nM
+  Kd_BRAF_ppERK      50.0        # nM
+  Kd_RAF1_ppERK      50.0        # nM
+  Kd_KSR_ppERK       50.0        # nM
+
+  # --- Inhibitor binding ---
+
+  Kd_BRAF_RAFi1  1.0  # nM
+  Kd_RAF1_RAFi1  1.0  # nM
+  Kd_BRAF_RAFi2  1.0  # nM
+  Kd_RAF1_RAFi2  1.0  # nM
+
+  kon_RAF_RAFi1  0.1  # /nM/s
+  kon_RAF_RAFi2  0.1  # /nM/s
+
+  Kd_MEK_Cobimetinib   10.0  # nM
+  kon_MEK_Cobimetinib   0.1  # /nM/s
+
+  # --- Thermodynamic factors for RAF inhibitors (Table S3) ---
+
+  # f: Kd of inhibitor binding to a protomer inside a RAF dimer, over the Kd
+  # for a free RAF monomer. Suffix a = RAFi1, b = RAFi2.
+  fa   1.0  # dimensionless
+  fb   1.0  # dimensionless
+
+  # g1: further change in Kd when the inhibitor binds the RAF1 protomer of a
+  # BRAF-RAF1 heterodimer rather than the BRAF protomer.
+  g1a  1.0  # dimensionless
+  g1b  1.0  # dimensionless
+
+  # g2: Kd of the second inhibitor molecule binding a dimer that already
+  # carries an inhibitor of the same type, over the free-monomer Kd.
+  g2a  1.0  # dimensionless
+  g2b  1.0  # dimensionless
+
+  # g3: same, for a dimer already carrying an inhibitor of the other type.
+  g3a  1.0  # dimensionless
+  g3b  1.0  # dimensionless
+
+  # fK: Kd of inhibitor binding to the RAF protomer of a RAF-KSR1 dimer, over
+  # the free-monomer Kd.
+  fKa  1.0  # dimensionless
+  fKb  1.0  # dimensionless
+
+  # --- Thermodynamic factors for the KSR1 module (Table S3) ---
+
+  # fKR: Kd of RAF binding to the KSR1-MEK complex, over the Kd of RAF binding
+  # to free KSR1. MEK is the obligatory activator of the RAF-KSR1 interface.
+  fKR  1.0e-4  # dimensionless
+
+  # fM: Kd of MEKi binding to KSR1-MEK, over its Kd for free MEK. By detailed
+  # balance the same factor stabilizes the KSR1-MEK complex. Table S3 in Imoto
+  # et al. (2026) gives 0.1 for Cobimetinib; the deposited SBML and Fig. 3 both
+  # say 1, which is what is used here. See the #@note: above.
+  fM   1.0  # dimensionless
+
+  # dKMP: change in the KSR1-MEK Kd when MEK is doubly phosphorylated.
+  dKMP 1.0  # dimensionless
+
+  # --- Spatial localization and feedback factors (Methods) ---
+
+  # p2 (<1): volume ratio of the plasma-membrane layer to the cytoplasm. A
+  # RAS-bound RAF inside a dimer is membrane-localized, which lowers both the
+  # RAS-RAF and the dimerization Kd.
+  p2    0.004  # dimensionless
+
+  # p1: increase of the RAS-RAF Kd when RAF carries the ERK-phosphorylated
+  # inhibitory site (BRAF T753, RAF1 S642).
+  p1   49.0  # dimensionless
+
+  # p3, p3KSR: increase of the dimerization Kd per ERK-phosphorylated protomer,
+  # for RAF and for KSR1 respectively.
+  p3     9.0  # dimensionless
+  p3KSR  9.0  # dimensionless
+
+  # pEB, pEC, pEK: increase of the ppERK docking Kd once the target is already
+  # phosphorylated on its inhibitory site (BRAF, RAF1, KSR1).
+  pEB  25.0  # dimensionless
+  pEC  25.0  # dimensionless
+  pEK  25.0  # dimensionless
+
+  # --- Catalytic constants (Methods) ---
+
+  # 14-3-3 site turnover: BRAF S365 and RAF1 S259.
+  kcat_S365_u  0.0003  # /s
+  kcat_S365_p  0.015   # /s
+  kcat_S259_u  0.0003  # /s
+  kcat_S259_p  0.015   # /s
+
+  # RAF1 activation-loop site S338.
+  kcat_S338_u  0.03  # /s
+  kcat_S338_p  0.03  # /s
+
+  # Membrane recruitment speeds up 14-3-3 site dephosphorylation and slows its
+  # phosphorylation.
+  PM_recruited_u_faster  100.0  # dimensionless
+  PM_recruited_p_slower   25.0  # dimensionless
+
+  # MEK phosphorylation by total RAF activity (competitive Michaelis-Menten).
+  Kd_RAF_MEK_1   2000.0  # nM
+  Kd_RAF_MEK_2   1500.0  # nM
+  kcat_RAF_MEK_1    0.5  # /s
+  kcat_RAF_MEK_2    0.5  # /s
+
+  # MEK phosphatase Ph1.
+  kon_pMEK_Ph1          0.001  # /nM/s
+  kon_ppMEK_Ph1         0.001  # /nM/s
+  koff_MEK_Ph1          2.0    # /s
+  kcat_pMEK_dephospho   0.5    # /s
+  kcat_ppMEK_dephospho  0.1    # /s
+
+  # ERK phosphorylation by ppMEK.
+  kon_ppMEK_uERK     0.0025  # /nM/s
+  kon_ppMEK_pERK     0.005   # /nM/s
+  koff_ppMEK_ERK     5.0     # /s
+  kcat_uERK_phospho  0.1     # /s
+  kcat_pERK_phospho  0.2     # /s
+
+  # ERK phosphatase MKP3.
+  kon_pERK_MKP3         0.005  # /nM/s
+  kon_ppERK_MKP3        0.001  # /nM/s
+  koff_ERK_MKP3        10.0    # /s
+  kcat_pERK_dephospho   1.0    # /s
+  kcat_ppERK_dephospho  0.5    # /s
+
+  # ERK-mediated feedback phosphorylation and its reversal.
+  kcat_ER       0.5  # /s
+  VmaxERKT753   0.1  # /s
+  VmaxERKS642   0.1  # /s
+  VmaxERKS443   0.1  # /s
+
+  # --- Derived: dissociation rate constants ---
+
+  koff_RASgtp_BRAF     Kd_RASgtp_BRAF*kon_typ      # /s
+  koff_RASgtp_RAF1     Kd_RASgtp_RAF1*kon_typ      # /s
+  koff_BRAF_BRAF       Kd_BRAF_BRAF*kon_typ        # /s
+  koff_BRAF_RAF1       Kd_BRAF_RAF1*kon_typ        # /s
+  koff_RAF1_RAF1       Kd_RAF1_RAF1*kon_typ        # /s
+  koff_BRAF_KSR        Kd_BRAF_KSR*kon_typ         # /s
+  koff_RAF1_KSR        Kd_RAF1_KSR*kon_typ         # /s
+  koff_MEK_KSR         Kd_MEK_KSR*kon_typ          # /s
+  koff_BRAF_ppERK      Kd_BRAF_ppERK*kon_typ       # /s
+  koff_RAF1_ppERK      Kd_RAF1_ppERK*kon_typ       # /s
+  koff_KSR_ppERK       Kd_KSR_ppERK*kon_typ        # /s
+  koff_BRAF_RAFi1      Kd_BRAF_RAFi1*kon_RAF_RAFi1 # /s
+  koff_RAF1_RAFi1      Kd_RAF1_RAFi1*kon_RAF_RAFi1 # /s
+  koff_BRAF_RAFi2      Kd_BRAF_RAFi2*kon_RAF_RAFi2 # /s
+  koff_RAF1_RAFi2      Kd_RAF1_RAFi2*kon_RAF_RAFi2 # /s
+  koff_MEK_Cobimetinib Kd_MEK_Cobimetinib*kon_MEK_Cobimetinib  # /s
+
+  # --- Derived: membrane-adjusted catalytic constants ---
+
+  kcat_S365_u_PM  PM_recruited_u_faster*kcat_S365_u  # /s
+  kcat_S365_p_PM  kcat_S365_p/PM_recruited_p_slower  # /s
+  kcat_S259_u_PM  PM_recruited_u_faster*kcat_S259_u  # /s
+  kcat_S259_p_PM  kcat_S259_p/PM_recruited_p_slower  # /s
+
+  # --- Derived: Michaelis constants of MEK phosphorylation ---
+
+  Km_RAF_MEK_1  (Kd_RAF_MEK_1*kon_typ+kcat_RAF_MEK_1)/kon_typ  # nM
+  Km_RAF_MEK_2  (Kd_RAF_MEK_2*kon_typ+kcat_RAF_MEK_2)/kon_typ  # nM
+
+  # --- Derived: baseline activation energies of the energy rules ---
+
+  #@note: |
+  #  Energy-rule kinetics follow Ea = Ea0 + phi*dG, so that
+  #  k_forward = exp(-Ea0 - phi*dG) and k_reverse = exp(-Ea0 + (1-phi)*dG),
+  #  with dG the total free-energy change over the energy patterns below. Each
+  #  Ea0 is fixed by requiring that a reaction creating exactly one bond of its
+  #  own type run at kon and relax at koff. Energies are in RT units with a
+  #  1 nM standard state, as in the source model.
+
+  Ea0_RASgtp_BRAF  -phi*ln(koff_RASgtp_BRAF)-(1-phi)*ln(kon_typ)  # dimensionless
+  Ea0_RASgtp_RAF1  -phi*ln(koff_RASgtp_RAF1)-(1-phi)*ln(kon_typ)  # dimensionless
+  Ea0_BRAF_BRAF    -phi*ln(koff_BRAF_BRAF)-(1-phi)*ln(kon_typ)    # dimensionless
+  Ea0_BRAF_RAF1    -phi*ln(koff_BRAF_RAF1)-(1-phi)*ln(kon_typ)    # dimensionless
+  Ea0_RAF1_RAF1    -phi*ln(koff_RAF1_RAF1)-(1-phi)*ln(kon_typ)    # dimensionless
+  Ea0_BRAF_KSR     -phi*ln(koff_BRAF_KSR)-(1-phi)*ln(kon_typ)     # dimensionless
+  Ea0_RAF1_KSR     -phi*ln(koff_RAF1_KSR)-(1-phi)*ln(kon_typ)     # dimensionless
+  Ea0_MEK_KSR      -phi*ln(koff_MEK_KSR)-(1-phi)*ln(kon_typ)      # dimensionless
+  Ea0_BRAF_ppERK   -phi*ln(koff_BRAF_ppERK)-(1-phi)*ln(kon_typ)   # dimensionless
+  Ea0_RAF1_ppERK   -phi*ln(koff_RAF1_ppERK)-(1-phi)*ln(kon_typ)   # dimensionless
+  Ea0_KSR_ppERK    -phi*ln(koff_KSR_ppERK)-(1-phi)*ln(kon_typ)    # dimensionless
+
+  Ea0_BRAF_RAFi1  -phi*ln(koff_BRAF_RAFi1)-(1-phi)*ln(kon_RAF_RAFi1)  # dimensionless
+  Ea0_RAF1_RAFi1  -phi*ln(koff_RAF1_RAFi1)-(1-phi)*ln(kon_RAF_RAFi1)  # dimensionless
+  Ea0_BRAF_RAFi2  -phi*ln(koff_BRAF_RAFi2)-(1-phi)*ln(kon_RAF_RAFi2)  # dimensionless
+  Ea0_RAF1_RAFi2  -phi*ln(koff_RAF1_RAFi2)-(1-phi)*ln(kon_RAF_RAFi2)  # dimensionless
+
+  Ea0_MEK_Cobimetinib \
+    -phi*ln(koff_MEK_Cobimetinib)-(1-phi)*ln(kon_MEK_Cobimetinib)  # dimensionless
+
+  # --- Derived: free energies of formation (RT units) ---
+
+  # Bond energies. Gf = ln(Kd) reproduces the intended equilibrium constant.
+  Gf_RASgtp_BRAF  ln(Kd_RASgtp_BRAF)      # dimensionless
+  Gf_RASgtp_RAF1  ln(Kd_RASgtp_RAF1)      # dimensionless
+  Gf_BRAF_BRAF    ln(Kd_BRAF_BRAF)        # dimensionless
+  Gf_BRAF_RAF1    ln(Kd_BRAF_RAF1)        # dimensionless
+  Gf_RAF1_RAF1    ln(Kd_RAF1_RAF1)        # dimensionless
+  Gf_BRAF_KSR     ln(Kd_BRAF_KSR)         # dimensionless
+  Gf_RAF1_KSR     ln(Kd_RAF1_KSR)         # dimensionless
+  Gf_MEK_KSR      ln(Kd_MEK_KSR)          # dimensionless
+  Gf_BRAF_ppERK   ln(Kd_BRAF_ppERK)       # dimensionless
+  Gf_RAF1_ppERK   ln(Kd_RAF1_ppERK)       # dimensionless
+  Gf_KSR_ppERK    ln(Kd_KSR_ppERK)        # dimensionless
+  Gf_BRAF_RAFi1   ln(Kd_BRAF_RAFi1)       # dimensionless
+  Gf_RAF1_RAFi1   ln(Kd_RAF1_RAFi1)       # dimensionless
+  Gf_BRAF_RAFi2   ln(Kd_BRAF_RAFi2)       # dimensionless
+  Gf_RAF1_RAFi2   ln(Kd_RAF1_RAFi2)       # dimensionless
+  Gf_MEK_Cobimetinib  ln(Kd_MEK_Cobimetinib)  # dimensionless
+
+  # Motif energies. Each is the logarithm of the Kd-modifying factor it carries.
+  Gf_p1     ln(p1)     # dimensionless
+  Gf_p2     ln(p2)     # dimensionless
+  Gf_p3     ln(p3)     # dimensionless
+  Gf_p3KSR  ln(p3KSR)  # dimensionless
+  Gf_pEB    ln(pEB)    # dimensionless
+  Gf_pEC    ln(pEC)    # dimensionless
+  Gf_pEK    ln(pEK)    # dimensionless
+  Gf_fKR    ln(fKR)    # dimensionless
+  Gf_fM     ln(fM)     # dimensionless
+  Gf_dKMP   ln(dKMP)   # dimensionless
+  Gf_fKa    ln(fKa)    # dimensionless
+  Gf_fKb    ln(fKb)    # dimensionless
+
+  # Inhibited-dimer energies. These are whole-configuration energies, so the
+  # doubly-inhibited motifs carry the product of the factors rather than an
+  # increment; the mixed-inhibitor motifs use the geometric mean of fa and fb.
+  Gf_fa                 ln(fa)                          # dimensionless
+  Gf_fb                 ln(fb)                          # dimensionless
+  Gf_fa_g1a             ln(fa*g1a)                      # dimensionless
+  Gf_fb_g1b             ln(fb*g1b)                      # dimensionless
+  Gf_fa_g2a             ln(fa*g2a)                      # dimensionless
+  Gf_fb_g2b             ln(fb*g2b)                      # dimensionless
+  Gf_fa_g1a_g2a         ln(fa*g1a*g2a)                  # dimensionless
+  Gf_fb_g1b_g2b         ln(fb*g1b*g2b)                  # dimensionless
+  Gf_sqrt_fafb_g3a      ln(sqrt(fa)*sqrt(fb)*g3a)       # dimensionless
+  Gf_sqrt_fafb_g1b_g3a  ln(sqrt(fa)*sqrt(fb)*g1b*g3a)   # dimensionless
+  Gf_sqrt_fafb_g1a_g3b  ln(sqrt(fa)*sqrt(fb)*g1a*g3b)   # dimensionless
+
+end parameters
+
+begin compartments
+  # Single well-mixed cellular compartment. Its "volume" is the unit-system
+  # scale factor V_cell = 1 (see the parameters block), which makes BioNetGen's
+  # bimolecular unit conversion the identity; it is not a physical volume, and
+  # the physical one (V_phys, L/cell) is used only for population conversion.
+  cell  3  V_cell  # dimensionless
+end compartments
+
+begin molecule types
+
+  # Active RAS. Only the GTP-bound form is seeded and no rule switches the
+  # nucleotide, so G is constant in this parameterization.
+  RAS(raf,G~D~T)
+
+  # BRAF: RAS-binding domain, side-to-side dimerization domain, RAFi pocket,
+  # the 14-3-3 site S365, and the ERK-phosphorylated inhibitory site T753.
+  BRAF(RBD,Dm,rafi,S365~u~p,ERKT753~u~p)
+
+  # RAF1 (CRAF): as BRAF, with the 14-3-3 site S259, the activation-loop site
+  # S338, and the ERK-phosphorylated inhibitory site S642.
+  RAF1(RBD,Dm,rafi,S259~u~p,S338~u~p,ERKS642~u~p)
+
+  # KSR1 pseudokinase: dimerizes with RAF through the kinase-domain interface
+  # and binds MEK; S443 is the ERK-phosphorylated inhibitory site.
+  KSR(Dm,mek,ERKS443~u~p)
+
+  # MEK1/2. Sites S218/S222 are lumped into one three-state phosphosite.
+  MEK(ksr,ph1,erk,cobimetinib,phospho~u~p~pp)
+
+  # MEK phosphatase.
+  Ph1(mek)
+
+  # ERK1/2. T202/Y204 are lumped into one three-state phosphosite; `raf` is the
+  # feedback docking site on BRAF, RAF1 and KSR1.
+  ERK(raf,mek,mkp3,phospho~u~p~pp)
+
+  # ERK phosphatase (DUSP6).
+  MKP3(erk)
+
+  # Two conformation-selective RAF inhibitors and the allosteric MEK inhibitor.
+  RAFi1(raf)
+  RAFi2(raf)
+  Cobimetinib(mek)
+
+end molecule types
+
+begin seed species
+
+  RAS(raf,G~T)@cell                              RAS_0     # nM
+  BRAF(RBD,Dm,rafi,S365~p,ERKT753~u)@cell        BRAFWT_0  # nM
+  RAF1(RBD,Dm,rafi,S259~p,S338~u,ERKS642~u)@cell RAF1_0    # nM
+  KSR(Dm,mek,ERKS443~u)@cell                     KSR_0     # nM
+  MEK(ksr,ph1,erk,cobimetinib,phospho~u)@cell    MEK_0     # nM
+  Ph1(mek)@cell                                  Ph1_0     # nM
+  ERK(raf,mek,mkp3,phospho~u)@cell               ERK_0     # nM
+  MKP3(erk)@cell                                 MKP3_0    # nM
+
+  # Free drug is clamped: dosing is an externally imposed concentration.
+  $RAFi1(raf)@cell                               RAFi1_0        # nM
+  $RAFi2(raf)@cell                               RAFi2_0        # nM
+  $Cobimetinib(mek)@cell                         Cobimetinib_0  # nM
+
+end seed species
+
+begin observables
+
+  # --- Pathway readouts ---
+
+  # Doubly phosphorylated ERK, the model output compared with western blots.
+  Molecules Obs_Tot_ppERK  ERK(phospho~pp)
+  Molecules Obs_Tot_pERK   ERK(phospho~p)
+  Molecules Obs_Tot_ppMEK  MEK(phospho~pp)
+  Molecules Obs_Tot_pMEK   MEK(phospho~p)
+
+  # --- Complexes of interest ---
+
+  Molecules Obs_Cplx_KSR_MEK  KSR(mek!1).MEK(ksr!1)
+  Molecules Obs_Cplx_RAF_KSR  KSR(Dm!1).BRAF(Dm!1)  KSR(Dm!1).RAF1(Dm!1)
+  Molecules Obs_Cplx_RAF_dimers \
+    BRAF(Dm!1).BRAF(Dm!1)  BRAF(Dm!1).RAF1(Dm!1) \
+    RAF1(Dm!1).RAF1(Dm!1)
+  Molecules Obs_Cplx_RAS_RAF  RAS(raf!1).BRAF(RBD!1)  RAS(raf!1).RAF1(RBD!1)
+
+  # --- Substrate pools for MEK phosphorylation ---
+
+  # KSR1-bound MEK is excluded from the substrate pool: the KSR1-MEK interface
+  # masks the phospho-acceptor residues (Methods in Imoto et al., 2026).
+  Molecules Obs_Sub_uMEK  MEK(ksr,phospho~u)
+  Molecules Obs_Sub_pMEK  MEK(ksr,phospho~p)
+
+  # --- RAF kinase-activity classes (Table S4 in Imoto et al., 2026) ---
+
+  # Each observable is one row of Table S4; the weights that combine them into
+  # a total activity are in RAF_activity() below.
+  Molecules Obs_Act_BRAF_mono        BRAF(Dm,S365~u,rafi)
+  Molecules Obs_Act_BRAF_act_nonact  BRAF(Dm!1,S365~u,rafi).BRAF(Dm!1,S365~p,rafi)
+  Molecules Obs_Act_BRAF_homodimer   BRAF(Dm!1,S365~u,rafi).BRAF(Dm!1,S365~u,rafi)
+  Molecules Obs_Act_RAF1_mono_off \
+    RAF1(Dm,S338~u,rafi) \
+    RAF1(Dm,S338~p,ERKS642~p,rafi)
+  Molecules Obs_Act_RAF1_mono_on  RAF1(Dm,S338~p,ERKS642~u,rafi)
+  Molecules Obs_Act_RAF1_homodimer_off \
+    RAF1(Dm!1,S338~u,rafi).RAF1(Dm!1,S338~u,rafi) \
+    RAF1(Dm!1,S338~u,rafi).RAF1(Dm!1,S338~p,ERKS642~p,rafi) \
+    RAF1(Dm!1,S338~p,ERKS642~p,rafi).RAF1(Dm!1,S338~p,ERKS642~p,rafi)
+  Molecules Obs_Act_RAF1_homodimer_half \
+    RAF1(Dm!1,S338~u,rafi).RAF1(Dm!1,S338~p,ERKS642~u,rafi) \
+    RAF1(Dm!1,S338~p,ERKS642~p,rafi).RAF1(Dm!1,S338~p,ERKS642~u,rafi)
+  Molecules Obs_Act_RAF1_homodimer_on \
+    RAF1(Dm!1,S338~p,ERKS642~u,rafi).RAF1(Dm!1,S338~p,ERKS642~u,rafi)
+  Molecules Obs_Act_heterodimer_partial \
+    RAF1(Dm!1,S338~u,rafi).BRAF(Dm!1,S365~u,rafi) \
+    RAF1(Dm!1,S338~p,ERKS642~u,rafi).BRAF(Dm!1,S365~p,rafi) \
+    RAF1(Dm!1,S338~p,ERKS642~p,rafi).BRAF(Dm!1,S365~u,rafi)
+  Molecules Obs_Act_heterodimer_full  RAF1(Dm!1,S338~p,ERKS642~u,rafi).BRAF(Dm!1,S365~u,rafi)
+  Molecules Obs_Act_BRAF_BRAF_inh     BRAF(Dm!1,S365~u,rafi).BRAF(Dm!1,rafi!+)
+  Molecules Obs_Act_RAF1_RAF1_inh_off \
+    RAF1(Dm!1,S259~u,S338~u,rafi).RAF1(Dm!1,rafi!+) \
+    RAF1(Dm!1,S259~u,S338~p,ERKS642~p,rafi).RAF1(Dm!1,rafi!+)
+  Molecules Obs_Act_RAF1_RAF1_inh_on  RAF1(Dm!1,S338~p,ERKS642~u,rafi).RAF1(Dm!1,rafi!+)
+  Molecules Obs_Act_RAF1_off_BRAF_inh \
+    RAF1(Dm!1,S338~u,rafi).BRAF(Dm!1,rafi!+) \
+    RAF1(Dm!1,S338~p,ERKS642~p,rafi).BRAF(Dm!1,rafi!+)
+  Molecules Obs_Act_RAF1_off_inh_BRAF \
+    RAF1(Dm!1,S338~u,rafi!+).BRAF(Dm!1,S365~u,rafi) \
+    RAF1(Dm!1,S338~p,ERKS642~p,rafi!+).BRAF(Dm!1,S365~u,rafi)
+  Molecules Obs_Act_RAF1_on_BRAF_inh  RAF1(Dm!1,S338~p,ERKS642~u,rafi).BRAF(Dm!1,rafi!+)
+  Molecules Obs_Act_RAF1_on_inh_BRAF  RAF1(Dm!1,S338~p,ERKS642~u,rafi!+).BRAF(Dm!1,S365~u,rafi)
+  Molecules Obs_Act_BRAF_KSR          BRAF(Dm!1,S365~u,rafi).KSR(Dm!1)
+  Molecules Obs_Act_RAF1_KSR_off \
+    RAF1(Dm!1,S338~u,rafi).KSR(Dm!1) \
+    RAF1(Dm!1,S338~p,ERKS642~p,rafi).KSR(Dm!1)
+  Molecules Obs_Act_RAF1_KSR_on  RAF1(Dm!1,S338~p,ERKS642~u,rafi).KSR(Dm!1)
+
+end observables
+
+begin functions
+
+  # Total RAF kinase activity toward MEK, in units of the activity of one
+  # active BRAF monomer. Weights are Table S4 of Imoto et al. (2026).
+  RAF_activity() = Obs_Act_BRAF_mono \
+    + 5*Obs_Act_BRAF_act_nonact + 10*Obs_Act_BRAF_homodimer \
+    + 0.05*Obs_Act_RAF1_mono_off + 0.2*Obs_Act_RAF1_mono_on \
+    + 0.5*Obs_Act_RAF1_homodimer_off + 1.25*Obs_Act_RAF1_homodimer_half \
+    + 2*Obs_Act_RAF1_homodimer_on \
+    + 15*Obs_Act_heterodimer_partial + 30*Obs_Act_heterodimer_full \
+    + 5*Obs_Act_BRAF_BRAF_inh \
+    + 0.25*Obs_Act_RAF1_RAF1_inh_off + Obs_Act_RAF1_RAF1_inh_on \
+    + 8*Obs_Act_RAF1_off_BRAF_inh + 8*Obs_Act_RAF1_off_inh_BRAF \
+    + 15*Obs_Act_RAF1_on_BRAF_inh + 15*Obs_Act_RAF1_on_inh_BRAF \
+    + 10*Obs_Act_BRAF_KSR \
+    + 0.5*Obs_Act_RAF1_KSR_off + 2*Obs_Act_RAF1_KSR_on
+
+  # Shared competitive denominator: unphosphorylated and monophosphorylated
+  # substrate MEK compete for the same RAF active sites.
+  MEK_competition() = 1 + Obs_Sub_uMEK/Km_RAF_MEK_1 + Obs_Sub_pMEK/Km_RAF_MEK_2
+
+  # Pseudo-first-order rate constants for the two MEK phosphorylation steps.
+  # BioNetGen supplies the substrate concentration, so these must not contain it.
+  MM_uMEK() = kcat_RAF_MEK_1*RAF_activity()/(Km_RAF_MEK_1*MEK_competition())
+  MM_pMEK() = kcat_RAF_MEK_2*RAF_activity()/(Km_RAF_MEK_2*MEK_competition())
+
+  # Concentration-to-population conversions (uncomment for molecule counts)
+# ppERK_count() = Obs_Tot_ppERK*1e-9*NA*V_phys  # molecules/cell
+# ppMEK_count() = Obs_Tot_ppMEK*1e-9*NA*V_phys  # molecules/cell
+
+end functions
+
+begin energy patterns
+
+  # --- Bond energies ---
+
+  RAS(raf!1,G~T).BRAF(RBD!1)      Gf_RASgtp_BRAF
+  RAS(raf!1,G~T).RAF1(RBD!1)      Gf_RASgtp_RAF1
+  BRAF(Dm!1).BRAF(Dm!1)           Gf_BRAF_BRAF
+  BRAF(Dm!1).RAF1(Dm!1)           Gf_BRAF_RAF1
+  RAF1(Dm!1).RAF1(Dm!1)           Gf_RAF1_RAF1
+  BRAF(Dm!1).KSR(Dm!1)            Gf_BRAF_KSR
+  RAF1(Dm!1).KSR(Dm!1)            Gf_RAF1_KSR
+  KSR(mek!1).MEK(ksr!1)           Gf_MEK_KSR
+  BRAF(rafi!1).RAFi1(raf!1)       Gf_BRAF_RAFi1
+  RAF1(rafi!1).RAFi1(raf!1)       Gf_RAF1_RAFi1
+  BRAF(rafi!1).RAFi2(raf!1)       Gf_BRAF_RAFi2
+  RAF1(rafi!1).RAFi2(raf!1)       Gf_RAF1_RAFi2
+  MEK(cobimetinib!1).Cobimetinib(mek!1)      Gf_MEK_Cobimetinib
+  BRAF(Dm!1).ERK(raf!1,phospho~pp)           Gf_BRAF_ppERK
+  RAF1(Dm!1).ERK(raf!1,phospho~pp)           Gf_RAF1_ppERK
+  KSR(Dm!1).ERK(raf!1,phospho~pp)            Gf_KSR_ppERK
+
+  # --- Feedback phosphorylation weakens RAS binding (p1) ---
+
+  RAS(raf!1,G~T).BRAF(RBD!1,ERKT753~p)  Gf_p1
+  RAS(raf!1,G~T).RAF1(RBD!1,ERKS642~p)  Gf_p1
+
+  # --- Membrane localization of a RAS-engaged dimer (p2) ---
+
+  # The energy is stored once per membrane-localized dimer, which requires every
+  # RAS-competent protomer to carry RAS: both protomers of a RAF-RAF dimer, and
+  # the RAF protomer of a RAF-KSR1 dimer. Naming the partner explicitly also
+  # keeps ppERK docked on the dimerization domain from counting as a dimer.
+  RAS(raf!1,G~T).BRAF(RBD!1,Dm!2).BRAF(Dm!2,RBD!3).RAS(raf!3,G~T)  Gf_p2
+  RAS(raf!1,G~T).BRAF(RBD!1,Dm!2).RAF1(Dm!2,RBD!3).RAS(raf!3,G~T)  Gf_p2
+  RAS(raf!1,G~T).RAF1(RBD!1,Dm!2).RAF1(Dm!2,RBD!3).RAS(raf!3,G~T)  Gf_p2
+  RAS(raf!1,G~T).BRAF(RBD!1,Dm!2).KSR(Dm!2)                        Gf_p2
+  RAS(raf!1,G~T).RAF1(RBD!1,Dm!2).KSR(Dm!2)                        Gf_p2
+
+  # --- Feedback phosphorylation weakens dimerization (p3, p3KSR) ---
+
+  BRAF(Dm!1,ERKT753~p).BRAF(Dm!1)  Gf_p3
+  BRAF(Dm!1,ERKT753~p).RAF1(Dm!1)  Gf_p3
+  BRAF(Dm!1,ERKT753~p).KSR(Dm!1)   Gf_p3
+  RAF1(Dm!1,ERKS642~p).BRAF(Dm!1)  Gf_p3
+  RAF1(Dm!1,ERKS642~p).RAF1(Dm!1)  Gf_p3
+  RAF1(Dm!1,ERKS642~p).KSR(Dm!1)   Gf_p3
+  KSR(Dm!1,ERKS443~p).BRAF(Dm!1)   Gf_p3KSR
+  KSR(Dm!1,ERKS443~p).RAF1(Dm!1)   Gf_p3KSR
+
+  # --- ppERK docks less well on an already-phosphorylated target ---
+
+  BRAF(Dm!1,ERKT753~p).ERK(raf!1,phospho~pp)  Gf_pEB
+  RAF1(Dm!1,ERKS642~p).ERK(raf!1,phospho~pp)  Gf_pEC
+  KSR(Dm!1,ERKS443~p).ERK(raf!1,phospho~pp)   Gf_pEK
+
+  # --- MEK is the activator of the RAF-KSR1 interface (fKR) ---
+
+  BRAF(Dm!1).KSR(Dm!1,mek!2).MEK(ksr!2)  Gf_fKR
+  RAF1(Dm!1).KSR(Dm!1,mek!2).MEK(ksr!2)  Gf_fKR
+
+  # --- MEKi and MEK phosphorylation modulate the KSR1-MEK bond ---
+
+  KSR(mek!1).MEK(ksr!1,cobimetinib!2).Cobimetinib(mek!2)  Gf_fM
+  KSR(mek!1).MEK(ksr!1,phospho~pp)                        Gf_dKMP
+
+  # --- RAFi bound to the RAF protomer of a RAF-KSR1 dimer (fK) ---
+
+  BRAF(Dm!1,rafi!2).KSR(Dm!1).RAFi1(raf!2)  Gf_fKa
+  RAF1(Dm!1,rafi!2).KSR(Dm!1).RAFi1(raf!2)  Gf_fKa
+  BRAF(Dm!1,rafi!2).KSR(Dm!1).RAFi2(raf!2)  Gf_fKb
+  RAF1(Dm!1,rafi!2).KSR(Dm!1).RAFi2(raf!2)  Gf_fKb
+
+  # --- RAFi bound inside a RAF dimer (f, g1, g2, g3) ---
+
+  # BRAF homodimer.
+  BRAF(Dm!1,rafi!2).BRAF(Dm!1,rafi).RAFi1(raf!2)                   Gf_fa
+  BRAF(Dm!1,rafi!2).BRAF(Dm!1,rafi).RAFi2(raf!2)                   Gf_fb
+  BRAF(Dm!1,rafi!2).BRAF(Dm!1,rafi!3).RAFi1(raf!2).RAFi1(raf!3)    Gf_fa_g2a
+  BRAF(Dm!1,rafi!2).BRAF(Dm!1,rafi!3).RAFi2(raf!2).RAFi2(raf!3)    Gf_fb_g2b
+  BRAF(Dm!1,rafi!2).BRAF(Dm!1,rafi!3).RAFi1(raf!2).RAFi2(raf!3)    Gf_sqrt_fafb_g3a
+
+  # RAF1 homodimer.
+  RAF1(Dm!1,rafi!2).RAF1(Dm!1,rafi).RAFi1(raf!2)                   Gf_fa
+  RAF1(Dm!1,rafi!2).RAF1(Dm!1,rafi).RAFi2(raf!2)                   Gf_fb
+  RAF1(Dm!1,rafi!2).RAF1(Dm!1,rafi!3).RAFi1(raf!2).RAFi1(raf!3)    Gf_fa_g2a
+  RAF1(Dm!1,rafi!2).RAF1(Dm!1,rafi!3).RAFi2(raf!2).RAFi2(raf!3)    Gf_fb_g2b
+  RAF1(Dm!1,rafi!2).RAF1(Dm!1,rafi!3).RAFi1(raf!2).RAFi2(raf!3)    Gf_sqrt_fafb_g3a
+
+  # BRAF-RAF1 heterodimer. g1 distinguishes the RAF1 protomer from the BRAF one.
+  BRAF(Dm!1,rafi!2).RAF1(Dm!1,rafi).RAFi1(raf!2)                   Gf_fa
+  BRAF(Dm!1,rafi).RAF1(Dm!1,rafi!2).RAFi1(raf!2)                   Gf_fa_g1a
+  BRAF(Dm!1,rafi!2).RAF1(Dm!1,rafi).RAFi2(raf!2)                   Gf_fb
+  BRAF(Dm!1,rafi).RAF1(Dm!1,rafi!2).RAFi2(raf!2)                   Gf_fb_g1b
+  BRAF(Dm!1,rafi!2).RAF1(Dm!1,rafi!3).RAFi1(raf!2).RAFi1(raf!3)    Gf_fa_g1a_g2a
+  BRAF(Dm!1,rafi!2).RAF1(Dm!1,rafi!3).RAFi2(raf!2).RAFi2(raf!3)    Gf_fb_g1b_g2b
+  BRAF(Dm!1,rafi!2).RAF1(Dm!1,rafi!3).RAFi1(raf!2).RAFi2(raf!3)    Gf_sqrt_fafb_g1b_g3a
+  BRAF(Dm!1,rafi!2).RAF1(Dm!1,rafi!3).RAFi2(raf!2).RAFi1(raf!3)    Gf_sqrt_fafb_g1a_g3b
+
+end energy patterns
+
+begin reaction rules
+
+  # --- RAS-GTP binding to RAF ---
+
+  R_bind_RAS_BRAF: RAS(raf,G~T) + BRAF(RBD) <-> RAS(raf!1,G~T).BRAF(RBD!1) \
+    Arrhenius(phi,Ea0_RASgtp_BRAF)
+  R_bind_RAS_RAF1: RAS(raf,G~T) + RAF1(RBD) <-> RAS(raf!1,G~T).RAF1(RBD!1) \
+    Arrhenius(phi,Ea0_RASgtp_RAF1)
+
+  # --- RAF and KSR1 dimerization ---
+
+  # A phosphorylated 14-3-3 site (BRAF S365, RAF1 S259) blocks dimerization.
+  R_dim_BRAF_BRAF: BRAF(Dm,S365~u) + BRAF(Dm,S365~u) <-> \
+    BRAF(Dm!1,S365~u).BRAF(Dm!1,S365~u)  Arrhenius(phi,Ea0_BRAF_BRAF)
+  R_dim_BRAF_RAF1: BRAF(Dm,S365~u) + RAF1(Dm,S259~u) <-> \
+    BRAF(Dm!1,S365~u).RAF1(Dm!1,S259~u)  Arrhenius(phi,Ea0_BRAF_RAF1)
+  R_dim_RAF1_RAF1: RAF1(Dm,S259~u) + RAF1(Dm,S259~u) <-> \
+    RAF1(Dm!1,S259~u).RAF1(Dm!1,S259~u)  Arrhenius(phi,Ea0_RAF1_RAF1)
+  R_dim_BRAF_KSR:  BRAF(Dm,S365~u) + KSR(Dm) <-> \
+    BRAF(Dm!1,S365~u).KSR(Dm!1)  Arrhenius(phi,Ea0_BRAF_KSR)
+  R_dim_RAF1_KSR:  RAF1(Dm,S259~u) + KSR(Dm) <-> \
+    RAF1(Dm!1,S259~u).KSR(Dm!1)  Arrhenius(phi,Ea0_RAF1_KSR)
+
+  # --- MEK binding to the KSR1 scaffold ---
+
+  R_bind_MEK_KSR: KSR(mek) + MEK(ksr) <-> KSR(mek!1).MEK(ksr!1) \
+    Arrhenius(phi,Ea0_MEK_KSR)
+
+  # --- RAF inhibitor binding ---
+
+  R_bind_BRAF_RAFi1: BRAF(rafi) + RAFi1(raf) <-> BRAF(rafi!1).RAFi1(raf!1) \
+    Arrhenius(phi,Ea0_BRAF_RAFi1)
+  R_bind_RAF1_RAFi1: RAF1(rafi) + RAFi1(raf) <-> RAF1(rafi!1).RAFi1(raf!1) \
+    Arrhenius(phi,Ea0_RAF1_RAFi1)
+  R_bind_BRAF_RAFi2: BRAF(rafi) + RAFi2(raf) <-> BRAF(rafi!1).RAFi2(raf!1) \
+    Arrhenius(phi,Ea0_BRAF_RAFi2)
+  R_bind_RAF1_RAFi2: RAF1(rafi) + RAFi2(raf) <-> RAF1(rafi!1).RAFi2(raf!1) \
+    Arrhenius(phi,Ea0_RAF1_RAFi2)
+
+  # --- MEK inhibitor binding ---
+
+  R_bind_MEK_Cobi: MEK(cobimetinib) + Cobimetinib(mek) <-> \
+    MEK(cobimetinib!1).Cobimetinib(mek!1)  Arrhenius(phi,Ea0_MEK_Cobimetinib)
+
+  # --- ppERK docking on the dimerization domain (feedback) ---
+
+  R_dock_ppERK_BRAF: BRAF(Dm) + ERK(raf,phospho~pp) <-> \
+    BRAF(Dm!1).ERK(raf!1,phospho~pp)  Arrhenius(phi,Ea0_BRAF_ppERK)
+  R_dock_ppERK_RAF1: RAF1(Dm) + ERK(raf,phospho~pp) <-> \
+    RAF1(Dm!1).ERK(raf!1,phospho~pp)  Arrhenius(phi,Ea0_RAF1_ppERK)
+  R_dock_ppERK_KSR:  KSR(Dm) + ERK(raf,phospho~pp) <-> \
+    KSR(Dm!1).ERK(raf!1,phospho~pp)   Arrhenius(phi,Ea0_KSR_ppERK)
+
+  # --- BRAF S365: monomer turnover ---
+
+  # Rules suffixed _PM act on a RAS-bound (membrane-recruited) RAF; the _CP
+  # counterparts act on the cytoplasmic form.
+  R_phos_BRAF_S365_mono_CP: BRAF(RBD,Dm,S365~u) -> BRAF(RBD,Dm,S365~p) \
+    kcat_S365_p
+  R_phos_BRAF_S365_mono_PM: RAS(raf!1,G~T).BRAF(RBD!1,Dm,S365~u) -> \
+    RAS(raf!1,G~T).BRAF(RBD!1,Dm,S365~p)  kcat_S365_p_PM
+  R_dephos_BRAF_S365_CP: BRAF(RBD,S365~p) -> BRAF(RBD,S365~u)  kcat_S365_u
+  R_dephos_BRAF_S365_PM: RAS(raf!1,G~T).BRAF(RBD!1,S365~p) -> \
+    RAS(raf!1,G~T).BRAF(RBD!1,S365~u)  kcat_S365_u_PM
+
+  # --- BRAF S365: trans-phosphorylation inside a dimer, with dissociation ---
+
+  R_phos_BRAF_S365_by_BRAF_CP: BRAF(RBD,Dm!1,S365~u).BRAF(RBD,Dm!1,S365~u) -> \
+    BRAF(RBD,Dm,S365~p) + BRAF(RBD,Dm,S365~u)  kcat_S365_p
+  R_phos_BRAF_S365_by_BRAF_PM: \
+    RAS(raf!2,G~T).BRAF(RBD!2,Dm!1,S365~u).BRAF(Dm!1,S365~u) -> \
+    RAS(raf!2,G~T).BRAF(RBD!2,Dm,S365~p) + BRAF(Dm,S365~u)  kcat_S365_p_PM
+  R_phos_BRAF_S365_by_RAF1_CP: BRAF(RBD,Dm!1,S365~u).RAF1(RBD,Dm!1) -> \
+    BRAF(RBD,Dm,S365~p) + RAF1(RBD,Dm)  kcat_S365_p
+  R_phos_BRAF_S365_by_RAF1_PM: \
+    RAS(raf!2,G~T).BRAF(RBD!2,Dm!1,S365~u).RAF1(Dm!1) -> \
+    RAS(raf!2,G~T).BRAF(RBD!2,Dm,S365~p) + RAF1(Dm)  kcat_S365_p_PM
+  R_phos_BRAF_S365_by_KSR_CP: BRAF(RBD,Dm!1,S365~u).KSR(Dm!1) -> \
+    BRAF(RBD,Dm,S365~p) + KSR(Dm)  kcat_S365_p
+  R_phos_BRAF_S365_by_KSR_PM: \
+    RAS(raf!2,G~T).BRAF(RBD!2,Dm!1,S365~u).KSR(Dm!1) -> \
+    RAS(raf!2,G~T).BRAF(RBD!2,Dm,S365~p) + KSR(Dm)  kcat_S365_p_PM
+
+  # --- RAF1 S259: monomer turnover ---
+
+  R_phos_RAF1_S259_mono_CP: RAF1(RBD,Dm,S259~u) -> RAF1(RBD,Dm,S259~p) \
+    kcat_S259_p
+  R_phos_RAF1_S259_mono_PM: RAS(raf!1,G~T).RAF1(RBD!1,Dm,S259~u) -> \
+    RAS(raf!1,G~T).RAF1(RBD!1,Dm,S259~p)  kcat_S259_p_PM
+  R_dephos_RAF1_S259_CP: RAF1(RBD,S259~p) -> RAF1(RBD,S259~u)  kcat_S259_u
+  R_dephos_RAF1_S259_PM: RAS(raf!1,G~T).RAF1(RBD!1,S259~p) -> \
+    RAS(raf!1,G~T).RAF1(RBD!1,S259~u)  kcat_S259_u_PM
+
+  # --- RAF1 S259: trans-phosphorylation inside a dimer, with dissociation ---
+
+  R_phos_RAF1_S259_by_RAF1_CP: RAF1(RBD,Dm!1,S259~u).RAF1(RBD,Dm!1) -> \
+    RAF1(RBD,Dm,S259~p) + RAF1(RBD,Dm)  kcat_S259_p
+  R_phos_RAF1_S259_by_RAF1_PM: \
+    RAS(raf!2,G~T).RAF1(RBD!2,Dm!1,S259~u).RAF1(Dm!1) -> \
+    RAS(raf!2,G~T).RAF1(RBD!2,Dm,S259~p) + RAF1(Dm)  kcat_S259_p_PM
+  R_phos_RAF1_S259_by_BRAF_CP: RAF1(RBD,Dm!1,S259~u).BRAF(RBD,Dm!1) -> \
+    RAF1(RBD,Dm,S259~p) + BRAF(RBD,Dm)  kcat_S259_p
+  R_phos_RAF1_S259_by_BRAF_PM: \
+    RAS(raf!2,G~T).RAF1(RBD!2,Dm!1,S259~u).BRAF(Dm!1) -> \
+    RAS(raf!2,G~T).RAF1(RBD!2,Dm,S259~p) + BRAF(Dm)  kcat_S259_p_PM
+  R_phos_RAF1_S259_by_KSR_CP: RAF1(RBD,Dm!1,S259~u).KSR(Dm!1) -> \
+    RAF1(RBD,Dm,S259~p) + KSR(Dm)  kcat_S259_p
+  R_phos_RAF1_S259_by_KSR_PM: \
+    RAS(raf!2,G~T).RAF1(RBD!2,Dm!1,S259~u).KSR(Dm!1) -> \
+    RAS(raf!2,G~T).RAF1(RBD!2,Dm,S259~p) + KSR(Dm)  kcat_S259_p_PM
+
+  # --- RAF1 activation loop S338 (membrane only) ---
+
+  R_phos_RAF1_S338: RAS(raf!1,G~T).RAF1(RBD!1,S259~u,S338~u) -> \
+    RAS(raf!1,G~T).RAF1(RBD!1,S259~u,S338~p)  kcat_S338_p
+  R_dephos_RAF1_S338: RAF1(S338~p) -> RAF1(S338~u)  kcat_S338_u
+
+  # --- ERK negative feedback: phosphorylation of inhibitory sites ---
+
+  R_ppERK_phos_BRAF_T753: BRAF(Dm!1,ERKT753~u).ERK(raf!1,phospho~pp) -> \
+    BRAF(Dm,ERKT753~p) + ERK(raf,phospho~pp)  kcat_ER
+  R_ppERK_phos_RAF1_S642: RAF1(Dm!1,ERKS642~u).ERK(raf!1,phospho~pp) -> \
+    RAF1(Dm,ERKS642~p) + ERK(raf,phospho~pp)  kcat_ER
+  R_ppERK_phos_KSR_S443: KSR(Dm!1,ERKS443~u).ERK(raf!1,phospho~pp) -> \
+    KSR(Dm,ERKS443~p) + ERK(raf,phospho~pp)  kcat_ER
+
+  R_dephos_BRAF_T753: BRAF(ERKT753~p) -> BRAF(ERKT753~u)  VmaxERKT753
+  R_dephos_RAF1_S642: RAF1(ERKS642~p) -> RAF1(ERKS642~u)  VmaxERKS642
+  R_dephos_KSR_S443:  KSR(ERKS443~p)  -> KSR(ERKS443~u)   VmaxERKS443
+
+  # --- MEK phosphorylation by total RAF activity ---
+
+  R_phos_uMEK: MEK(ksr,phospho~u) -> MEK(ksr,phospho~p)   MM_uMEK()
+  R_phos_pMEK: MEK(ksr,phospho~p) -> MEK(ksr,phospho~pp)  MM_pMEK()
+
+  # --- MEK dephosphorylation by Ph1 ---
+
+  R_bind_pMEK_Ph1: MEK(ksr,ph1,erk,phospho~p) + Ph1(mek) -> \
+    MEK(ksr,ph1!1,erk,phospho~p).Ph1(mek!1)  kon_pMEK_Ph1
+  R_bind_ppMEK_Ph1: MEK(ksr,ph1,erk,phospho~pp) + Ph1(mek) -> \
+    MEK(ksr,ph1!1,erk,phospho~pp).Ph1(mek!1)  kon_ppMEK_Ph1
+  R_unbind_MEK_Ph1: MEK(ph1!1).Ph1(mek!1) -> MEK(ph1) + Ph1(mek) \
+    koff_MEK_Ph1
+  R_dephos_pMEK: MEK(ksr,ph1!1,erk,phospho~p).Ph1(mek!1) -> \
+    MEK(ksr,ph1,erk,phospho~u) + Ph1(mek)  kcat_pMEK_dephospho
+  R_dephos_ppMEK: MEK(ksr,ph1!1,erk,phospho~pp).Ph1(mek!1) -> \
+    MEK(ksr,ph1,erk,phospho~p) + Ph1(mek)  kcat_ppMEK_dephospho
+
+  # --- ERK phosphorylation by ppMEK ---
+
+  R_bind_ppMEK_uERK: MEK(ksr,erk,phospho~pp) + ERK(mek,phospho~u) -> \
+    MEK(ksr,erk!1,phospho~pp).ERK(mek!1,phospho~u)  kon_ppMEK_uERK
+  R_bind_ppMEK_pERK: MEK(ksr,erk,phospho~pp) + ERK(mek,phospho~p) -> \
+    MEK(ksr,erk!1,phospho~pp).ERK(mek!1,phospho~p)  kon_ppMEK_pERK
+  R_unbind_ppMEK_ERK: MEK(erk!1).ERK(mek!1) -> MEK(erk) + ERK(mek) \
+    koff_ppMEK_ERK
+  R_phos_uERK: MEK(ksr,cobimetinib,erk!1,phospho~pp).ERK(mek!1,phospho~u) -> \
+    MEK(ksr,cobimetinib,erk,phospho~pp) + ERK(mek,phospho~p)  kcat_uERK_phospho
+  R_phos_pERK: MEK(ksr,cobimetinib,erk!1,phospho~pp).ERK(mek!1,phospho~p) -> \
+    MEK(ksr,cobimetinib,erk,phospho~pp) + ERK(mek,phospho~pp)  kcat_pERK_phospho
+
+  # --- ERK dephosphorylation by MKP3 ---
+
+  R_bind_pERK_MKP3: ERK(mkp3,phospho~p) + MKP3(erk) -> \
+    ERK(mkp3!1,phospho~p).MKP3(erk!1)  kon_pERK_MKP3
+  R_bind_ppERK_MKP3: ERK(raf,mek,mkp3,phospho~pp) + MKP3(erk) -> \
+    ERK(raf,mek,mkp3!1,phospho~pp).MKP3(erk!1)  kon_ppERK_MKP3
+  R_unbind_ERK_MKP3: ERK(mkp3!1).MKP3(erk!1) -> ERK(mkp3) + MKP3(erk) \
+    koff_ERK_MKP3
+  R_dephos_pERK: ERK(mkp3!1,phospho~p).MKP3(erk!1) -> \
+    ERK(mkp3,phospho~u) + MKP3(erk)  kcat_pERK_dephospho
+  R_dephos_ppERK: ERK(raf,mek,mkp3!1,phospho~pp).MKP3(erk!1) -> \
+    ERK(raf,mek,mkp3,phospho~p) + MKP3(erk)  kcat_ppERK_dephospho
+
+end reaction rules
+
+end model
+
+begin actions
+
+  generate_network({overwrite=>1})  # 2709 species, 27457 reactions
+
+  #@note: |
+  #  ODE only. NFsim does not support energy patterns (or compartments), so no
+  #  network-free protocol is feasible. SSA and PSA are omitted for a different
+  #  reason: the state variables are nM concentrations, not molecule counts, so
+  #  a stochastic run would read 1600 nM of MEK as 1600 molecules and simulate a
+  #  system a billion times smaller than the one intended.
+
+  # Relaxation to the pre-treatment steady state
+
+  #@protocol: |
+  #  Integrate the drug-free network from the seed state to steady state, which
+  #  is the state the authors equilibrate to before adding inhibitors (Methods
+  #  in Imoto et al., 2026). ppERK overshoots to about 2580 nM near t = 500 s,
+  #  is pulled back by the three ERK feedback loops, and settles at 1527.7 nM by
+  #  t ~ 5000 s; the run continues to 20000 s so that the approach to the steady
+  #  state is visible in the committed output.
+
+  #@runtime_expectation: |
+  #  Measured on an Apple M-series laptop with BioNetGen 2.9.3: 55 s of CPU time
+  #  to generate the network and 1305 s (22 min) for the ODE solve below, 23 min
+  #  in all on one core. The cost is set by stiffness rather than by size — rate
+  #  constants span eight decades, so CVODE re-forms its 2709 x 2709 Jacobian
+  #  often. Loosening atol/rtol to 1e-6 roughly halves it and moves steady-state
+  #  ppERK by under 1e-5 relative.
+
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>20000,n_steps=>200,\
+    atol=>1e-8,rtol=>1e-8,print_functions=>1})
+
+  # Type II RAF inhibitor dose response
+
+  #@note: |
+  #  The BioNetGen-native route to the model panel of Fig. 3B: scan the clamped
+  #  Type II RAFi concentration, with the thermodynamic factors of Table S3 in
+  #  Imoto et al. (2026) set first (fa 0.005, g1a 0.044, g2a 4.346, fKa 0.025).
+  #  It is left inactive because one steady state costs ~23 min here, so the
+  #  27-point scan is a ten-hour run; run_imoto2026.py computes the same curves,
+  #  and all five KSR1 levels of all six panels, from this model's generated
+  #  network in well under an hour.
+
+#  setParameter("fa",0.005)
+#  setParameter("g1a",0.044)
+#  setParameter("g2a",4.346)
+#  setParameter("fKa",0.025)
+#  parameter_scan({method=>"ode",parameter=>"RAFi1_0",par_min=>0,par_max=>50,\
+#    n_scan_pts=>27,t_start=>0,t_end=>20000,n_steps=>1,reset_conc=>1,\
+#    atol=>1e-8,rtol=>1e-8,suffix=>"scan"})
+
+end actions

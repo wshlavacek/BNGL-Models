@@ -1,0 +1,155 @@
+# metadata.yaml — ksr1_raf_mek_inhibitor_response_imoto2026
+id: ksr1_raf_mek_inhibitor_response_imoto2026
+created: 2026-08-06
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, originally_rule_based, adapted_from_sbml, ai_assisted]
+  description: >
+    Reconstruction of the PySB energy-pattern model of Imoto et al. (2026), npj
+    Systems Biology and Applications, doi:10.1038/s41540-026-00710-6. The
+    authors publish the model only as flattened SBML exports of its reaction
+    network (github.com/himoto/ksrmodel, mirrored in dev/papers/Imoto2026/), so
+    the rules, energy patterns and observables here were derived from those
+    exports together with Tables S1-S5 and re-expressed in BioNetGen's own
+    energy formalism. The reconstruction is exact: the generated network matches
+    the deposited one species for species, reaction for reaction and rate
+    constant for rate constant. One published discrepancy is recorded rather
+    than repaired: Table S3 gives the MEK inhibitor an allosteric factor
+    fM = 0.1 on the KSR1-MEK bond, while the deposited SBML stores fM = 1 and
+    both MEK-inhibitor panels of Fig. 3 reproduce at 1 and not at 0.1.
+
+files:
+  - name: ksr1_raf_mek_inhibitor_response_imoto2026.bngl
+    role: primary
+    description: >
+      RAS/RAF/KSR1/MEK/ERK energy-pattern model at the KRAS-G12R/WT (PSN1
+      pancreatic cancer) RAS-GTP level of 300 nM. Sixty-one rules and
+      sixty energy patterns expand to 2,709 species and 27,457 reactions,
+      resolving RAF hetero- and homodimerization, the KSR1-MEK-RAF complex,
+      conformation-selective RAF and MEK inhibitor binding, membrane
+      localization, and three ERK negative-feedback loops. The active protocol
+      relaxes the drug-free network to its ERK-active steady state.
+    documentation_target: comprehensive
+    scale: minutes
+    min_bionetgen_version: "2.9.3"
+  - name: ksr1_raf_mek_inhibitor_response_imoto2026_wtras.bngl
+    role: variant
+    description: >
+      The wild-type KRAS (MCF7 breast cancer) counterpart, differing only in the
+      active RAS abundance (35 nM rather than 300 nM), which is the single
+      parameter the authors vary between their two cell-line models.
+    documentation_target: comprehensive
+    scale: minutes
+    min_bionetgen_version: "2.9.3"
+  - name: verify_imoto2026.ipynb
+    role: verification
+    description: >
+      Verifies the reconstruction at both levels: the generated network against
+      the deposited SBML export (species, reactions, all 27,457 rate constants
+      with every thermodynamic factor set to a distinct non-unit value, the RAF
+      kinase-activity weights and the Michaelis-Menten substrate pools), the
+      BioNetGen ODE solution against an independent SciPy integration of the
+      same network, and the model's steady-state dose responses against the six
+      digitized model panels of Fig. 3.
+  - name: verify_imoto2026.png
+    role: figure
+    description: >
+      Both verification levels: BioNetGen against the independent SciPy solution
+      with residuals, all 27,457 rate constants against the deposited network on
+      the identity line, the six Fig. 3 model panels overlaid on the digitized
+      published curves, and the pooled parity and residual panels.
+  - name: compare_network_imoto2026.py
+    role: verification
+    description: >
+      Canonicalizes the BioNetGen-generated network and the deposited SBML
+      export into a common form and compares them exhaustively. This is the test
+      that the reconstruction is faithful, and it is what licenses reading the
+      `.bngl` as the authors' model rather than as an approximation of it.
+  - name: independent_imoto2026.py
+    role: verification
+    description: >
+      Rebuilds the ODE system from a generated `.net` — stoichiometry,
+      mass-action fluxes, observables and functional rate laws — and integrates
+      it with SciPy's implicit BDF method on a sparse Jacobian pattern, sharing
+      no solver code with BioNetGen's run_network.
+  - name: digitize_imoto2026.py
+    role: verification
+    description: >
+      Recovers the six model-prediction panels of Fig. 3 from the embedded
+      bitmap of page 9, calibrating on the tick marks and separating the five
+      KSR1 series by ink direction against the legend key colours.
+  - name: run_imoto2026.py
+    role: verification
+    scale: hours
+    description: >
+      Dose-response campaign behind the level-2 comparison: 725 steady states of
+      the 2,709-species network across three inhibitors, two cell lines and five
+      KSR1 abundances, run through the independent integrator with continuation
+      along each dose ladder. About 35 minutes on 14 cores, five hours
+      serial-equivalent, which is why it is a driver script and not a notebook
+      cell; the notebook reads the CSV it writes. `--fm 0.1` regenerates the two
+      MEK-inhibitor panels at the Table S3 value of fM, the counterfactual the
+      notebook reports beside the deposited value.
+
+  # Reference simulation data
+  # BioNetGen also writes a `<prefix>_ode.net` and a `.cdat` per run. Neither is
+  # committed: the `_ode.net` is byte-identical to the `.net` beside it, and the
+  # `.cdat` is a 10.7 MB per-species dump whose every observable and function is
+  # already in the `.gdat`. The reproducibility contract asks for the `.net` and
+  # the `.gdat`, and both are here.
+  - name: reference/ksr1_raf_mek_inhibitor_response_imoto2026.net
+    role: reference
+    description: Generated network, 2,709 species and 27,457 reactions.
+  - name: reference/ksr1_raf_mek_inhibitor_response_imoto2026_ode.gdat
+    role: reference
+    description: >
+      Observables and functions along the drug-free relaxation to steady state,
+      0 to 20000 s in 200 steps.
+  - name: reference/ksr1_raf_mek_inhibitor_response_imoto2026_wtras.net
+    role: reference
+    description: The same network generated from the wild-type RAS variant.
+  - name: reference/ksr1_raf_mek_inhibitor_response_imoto2026_wtras_ode.gdat
+    role: reference
+    description: The same relaxation at the wild-type RAS level.
+
+  # Reported simulation data, digitized from Fig. 3
+  - name: reference/imoto2026_fig3A_MCF7_type_II_RAFi_digitized.csv
+    role: reference
+    description: >
+      Model-predicted ppERK dose response to a Type II RAF inhibitor in
+      wild-type RAS cells at five KSR1 abundances, normalized to the no-drug
+      steady state; from the Fig. 3A model panel.
+  - name: reference/imoto2026_fig3B_PSN1_type_II_RAFi_digitized.csv
+    role: reference
+    description: The same for KRAS-mutant cells; Fig. 3B model panel.
+  - name: reference/imoto2026_fig3C_MCF7_type_I_half_RAFi_digitized.csv
+    role: reference
+    description: Type I-1/2 RAF inhibitor, wild-type RAS; Fig. 3C model panel.
+  - name: reference/imoto2026_fig3D_PSN1_type_I_half_RAFi_digitized.csv
+    role: reference
+    description: Type I-1/2 RAF inhibitor, KRAS-mutant; Fig. 3D model panel.
+  - name: reference/imoto2026_fig3E_MCF7_cobimetinib_digitized.csv
+    role: reference
+    description: Cobimetinib, wild-type RAS; Fig. 3E model panel.
+  - name: reference/imoto2026_fig3F_PSN1_cobimetinib_digitized.csv
+    role: reference
+    description: Cobimetinib, KRAS-mutant; Fig. 3F model panel.
+  - name: reference/imoto2026_fig3_model_doseresponse.csv
+    role: reference
+    description: >
+      The curated model's own steady-state dose responses for the same six
+      panels, written by run_imoto2026.py and compared against the digitized
+      curves in the verification notebook.
+  - name: reference/imoto2026_fig3_model_doseresponse_fM0.1.csv
+    role: reference
+    description: >
+      The two MEK-inhibitor panels recomputed with Table S3's fM = 0.1 instead
+      of the deposited fM = 1. This is the evidence for the fM discrepancy
+      recorded in the `.bngl` header: at 0.1 the model misses Fig. 3E by a
+      median of 0.114 in normalized ppERK, at 1 by 0.003.
