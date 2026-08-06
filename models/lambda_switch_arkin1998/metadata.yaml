@@ -68,7 +68,14 @@ files:
       Promoter rates are driven by Molecules-type dimer observables with
       dimer_scale=0.5 (NFsim freezes functional rates that read
       Species-type observables; RuleWorld/nfsim#86). writeXML only;
-      simulate the XML with run_fullcircuit.py.
+      simulate the XML with run_fullcircuit.py. ENGINE AGREEMENT (issue
+      #39): NFsim and RuleMonkey agree on this file -- 100 seeds per
+      engine on one XML with shared seeds at MOI 4 and 6 give max|z| =
+      2.81 over 558 comparisons of ensemble means against an expected
+      maximum of 3.12, 100% below 3, largest combined endpoint |z| =
+      1.5, and lysogeny fractions differing by at most 0.07 against a
+      0.05 binomial noise scale (reference/fullcircuit_agreement.npz,
+      bngsim 0.12.2+dee86da42547).
     documentation_target: standard
     scale: minutes
     min_bionetgen_version: "2.9.3"
@@ -87,10 +94,29 @@ files:
       (Table 2): nut sites become a slow step (k23=5 nt/s) with reversible N
       loading (k24=0.145, k25=0.1) and antiterminated escape (k26=30), via paused
       RNAP states at~n/at~m -- restores the Fig-6a 'Full' onset to MOI>3
-      (f_lyso = 0.29/0.54/0.71 at MOI 4/5/6, matching the paper's 0.30/0.55/0.70;
-      the base model sits at 0.10/0.36/0.48). NFsim/RuleMonkey parity retained.
-      Translation stays geometric-burst (deprioritized). Drive with
-      run_fullcircuit.py under FULLCIRCUIT_MODEL=exact.
+      (f_lyso = 0.29/0.60/0.58 at MOI 4/5/6 in the committed 48-seed
+      reference/fullcircuit_exact_fig6.npz, against the paper's 0.30/0.55/0.70 --
+      each within the +/-0.07 binomial s.e. of 48 seeds; the base model sits at
+      0.10/0.32/0.48). Translation stays geometric-burst (deprioritized). Drive
+      with run_fullcircuit.py under FULLCIRCUIT_MODEL=exact.
+      RUN THIS FILE WITH RULEMONKEY, NOT NFsim (issue #39). The two engines do
+      NOT agree on this variant, and the cause is an NFsim defect rather than the
+      model (lanl/bngsim#195): for a rule whose reactant pattern is SYMMETRIC and whose rate is a
+      FUNCTION, NFsim does not divide out the pattern's automorphism and fires at
+      twice the intended rate. That is exactly Rdil_CI2 / Rdil_Cro2, the
+      growth-dilution rules this variant adds (CI(d!1).CI(d!1) -> 0 mu_dil()), so
+      under NFsim the CI2/Cro2 dimers are diluted at 2x, Shea-Ackers repression at
+      P_R/P_L weakens, and transcription rises: 100 seeds per engine at MOI 4 and 6
+      put NFsim's free N ~30% high (combined endpoint z = +3.4) and the dimers ~15%
+      low (z = -2.9), the same direction at both MOIs, while a same-engine null
+      (RuleMonkey against itself on a disjoint seed block) gives |z| <= 1.9 with no
+      sign structure. A minimal reproducer decays a symmetric dimer to 497.5 under
+      NFsim where the analytic answer and RuleMonkey both give ~1000; the same rule
+      with a CONSTANT rate, and an asymmetric dimer at the same functional rate, are
+      correct in both engines. RuleMonkey reproduces the analytic dilution solution
+      to 0.5%, and every committed artifact here is RuleMonkey, so the reported
+      numbers are unaffected. Measured in reference/fullcircuit_exact_agreement.npz
+      (bngsim 0.12.2+dee86da42547); re-run `agreement` after a bngsim upgrade.
     documentation_target: standard
     scale: minutes
     min_bionetgen_version: "2.9.3"
@@ -106,7 +132,17 @@ files:
       12: (i) P_RE activation (total open-complex rate A_PRE*MOI >= 1/2min over a
       contiguous 4-min window) AND (ii) [CI2]>[Cro2] at the end of the 35-min
       cell cycle. Drives either full circuit: set FULLCIRCUIT_MODEL=exact to run
-      the paper-exact companion.
+      the paper-exact companion. Modes: fig3 | fig6 | agreement | rescore |
+      symcheck | traj. `agreement` is verification level 1 for a model with no
+      network to integrate -- it runs rejection-based NFsim against exact
+      RuleMonkey on one XML with shared seeds and caches every per-seed trajectory
+      (issue #39). `rescore` recomputes every agreement statistic from that cache
+      without re-simulating; `symcheck` reproduces, in about a minute on a
+      three-species model, the NFsim defect that makes the exact variant's check
+      fail, and is the re-check to run after a bngsim upgrade. Each mode writes
+      reference/<prefix>_*.npz recording the engine and the bngsim build that
+      produced it, and defaults to the seed count of the committed cache, so a bare
+      mode regenerates it.
   - name: generator/
     role: tooling
     description: >
@@ -142,16 +178,40 @@ files:
       digitized Arkin Fig 6a points); Fig 6b Poisson-weighted lysogens vs API.
   - name: reference/fullcircuit_fig3.npz
     role: reference
-    description: Cached MOI-6 network-free ensemble (Cro2/CI2 mean + 16/84 pctile).
+    description: >
+      Cached MOI-6 network-free ensemble (Cro2/CI2 mean + 16/84 pctile), RuleMonkey,
+      60 seeds from seed0=30000. Regenerate with `run_fullcircuit.py fig3`; every
+      cache records `engine`, `seed0` and `model`.
   - name: reference/fullcircuit_fig6.npz
     role: reference
-    description: Cached f_lysogeny(MOI) sweep + Poisson-weighted F(API).
+    description: >
+      Cached f_lysogeny(MOI) sweep + Poisson-weighted F(API), RuleMonkey, 50 seeds
+      from seed0=20000. Regenerate with `run_fullcircuit.py fig6`.
   - name: reference/fullcircuit_exact_fig3.npz
     role: reference
-    description: Exact-variant MOI-6 ensemble (Cro2/CI2 mean + 16/84 pctile, 60 seeds).
+    description: >
+      Exact-variant MOI-6 ensemble (Cro2/CI2 mean + 16/84 pctile), RuleMonkey, 60 seeds.
   - name: reference/fullcircuit_exact_fig6.npz
     role: reference
-    description: Exact-variant f_lysogeny(MOI) sweep + Poisson-weighted F(API).
+    description: >
+      Exact-variant f_lysogeny(MOI) sweep + Poisson-weighted F(API), RuleMonkey, 48 seeds.
+  - name: reference/fullcircuit_agreement.npz
+    role: reference
+    description: >
+      NFsim-vs-RuleMonkey agreement ensemble for the base full circuit (issue #39):
+      every per-seed trajectory of all eight observables, both engines, 100 seeds per
+      engine on the SAME XML with the SAME seeds, at MOI 4 and 6, plus the per-seed
+      footnote-12 lysogeny calls and the z-statistics. Per-seed rather than summary,
+      so the metric can be recomputed without re-running the campaign.
+  - name: reference/fullcircuit_exact_agreement.npz
+    role: reference
+    description: >
+      The same NFsim-vs-RuleMonkey agreement ensemble for the paper-exact variant.
+      This one records a DISAGREEMENT (verdict field), and is the evidence for the
+      "run this variant with RuleMonkey" note on the .bngl above: combined endpoint
+      z = +3.4 on free N and -2.9 on the Cro2 dimer. Both agreement caches record
+      the bngsim build that produced them; `run_fullcircuit.py rescore` recomputes
+      every statistic from the per-seed arrays without re-simulating.
   # Reference simulation data
   - name: reference/lambda_switch_arkin1998.net
     role: reference

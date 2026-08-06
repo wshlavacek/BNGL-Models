@@ -203,6 +203,31 @@ Report **both** numbers and judge on the pair: the fraction below 3 should sit a
 like this — it puts a whole observable systematically off, which collapses the fraction, not just
 the maximum.
 
+**`max|z|` plus the fraction below 3 is necessary but NOT sufficient — add a per-observable
+endpoint test.** Both statistics pool every observable and every time point, and both are
+therefore blind to the failure mode they most need to catch: a *systematic* offset in one
+direction. `lambda_switch_arkin1998`'s exact variant is the demonstration. Its trajectory
+summary reads `max|z| = 3.69` against an expected maximum of 3.12 with 99.1% below 3 — a
+borderline pass, and the shape §5 tells you not to worry about. It is nonetheless a real
+engine defect (§8). Two things hid it:
+
+- **Early-time comparisons dilute the pool.** Most of the 558 comparisons sit where both
+  engines are near zero and agree trivially. A late-time offset is a small minority of the
+  pool, so the fraction below 3 barely moves.
+- **A consistent sign never trips a maximum.** The free-N pool differed by `z = +2.65` at
+  MOI 4 and `z = +2.12` at MOI 6 — *neither* exceeds 3, so `max|z|` never sees it, but the
+  two MOIs are independent runs and combining them as `Σz/√k` gives **+3.4**.
+
+So compute, in addition, the z of the **endpoint** ensemble mean per observable, and combine
+it across independent conditions. Then read the *sign pattern*: engines that sample the same
+process scatter signs at random, and this model's did not — every P_L/P_R output pool high,
+every dimer low, at both MOIs. Confirm with a **same-engine null**: rerun the exact arm
+against itself on a disjoint seed block and score it identically. Here that null gave
+`|z| ≤ 1.9` with no sign structure, which rules out heavy tails, bimodality and
+under-sized error bars in one measurement, and is cheap because the exact arm is usually the
+fast one. A null control is what converts "these z's look biggish" into a defect you can act
+on.
+
 **Restrict to active observables.** `creamer2012` filters the 55 tracked sites down to the 31
 whose ensemble mean ever exceeds one molecule. A z-score between two engines that both report
 zero is `0/0`, and carrying those comparisons inflates the fraction-below-3 into meaninglessness.
@@ -300,13 +325,33 @@ seven run ODE or SSA on a finite network and only offer a commented-out `simulat
 `erbb_receptor_signaling_creamer2012`, `egfr_oligomerization_mitra2019`, `tcr_signaling_chylek2014`,
 `p53_nhej_dolan2015`, `lambda_switch_cortes2017`, `lambda_switch_arkin1998`.
 
-One of those seven is a claim without an artifact. `lambda_switch_arkin1998`'s `metadata.yaml`
-says "NFsim/RuleMonkey parity retained" of the exact full-circuit variant;
-`run_fullcircuit.py` takes `method` as an argument so either engine can be driven, but no
-comparison is cached, and neither `fullcircuit_fig3.npz` nor `fullcircuit_fig6.npz` records which
-engine produced it. **A parity claim with no number is the thing this document exists to
-prevent.** When that folder is next touched it needs an `agreement` mode, or the sentence needs to
-come out.
+All seven now commit a cached comparison with a metric. `lambda_switch_arkin1998` was the
+holdout — its `metadata.yaml` asserted "NFsim/RuleMonkey parity retained" of the exact
+full-circuit variant with nothing in the folder behind it — and closing it (issue #39) is the
+best argument this document has for why the artifact is not a formality. **The claim was
+false.** Running it found a live NFsim defect (lanl/bngsim#195): for a rule whose reactant pattern is
+*symmetric* and whose rate is a *function*, NFsim does not divide out the pattern's
+automorphism and fires at twice the intended rate. That is exactly the exact variant's
+growth-dilution rules (`CI(d!1).CI(d!1) -> 0 mu_dil()`), so under NFsim the CI2/Cro2 dimers
+are diluted at 2×, Shea-Ackers repression at P_R/P_L weakens, and transcription rises — free
+N ~30% high, dimers ~15% low, the same direction at both cross-checked MOIs. The base
+full-circuit file, which has no functional-rate dilution rules, agrees cleanly. Three lessons,
+all of which generalize:
+
+- **The engine behind an undocumented cache is usually recoverable — replay it.** Nobody had
+  recorded which sampler produced the four `fullcircuit_*.npz`. Re-running each at its own
+  recorded seeds under RuleMonkey reproduced three of them *to the last bit*, which proves the
+  engine instead of inferring it from a default argument. Do this before you write a
+  provenance field; a guess in a metadata file is what created the issue in the first place.
+- **The replay that FAILS is the valuable one.** `fullcircuit_fig6.npz` did not reproduce, and
+  the reason was not the engine: it predated a fix to the lysogeny classifier and was still
+  carrying the superseded end-state-only numbers, which the old classifier reproduced exactly.
+  A cache the committed driver cannot regenerate is a second unbacked claim wearing a data
+  file's clothes. Make every mode write its own cache, put the engine and seed range in it,
+  and default a bare mode to the committed seed count so the replay is one command.
+- **Record the build, not just the engine.** An agreement number is a statement about one
+  compiled core. Both `*_agreement.npz` carry `bngsim 0.12.2+dee86da42547`; without it, "the
+  engines agree" silently becomes a claim about whatever is installed today.
 
 Of the seven actively network-free folders with no cross-engine arm, six are the blbr/tlbr theory
 family and need none — they are checked against closed-form equilibrium or kinetic theory, which
@@ -341,3 +386,18 @@ It is not a flags problem — see below — it is simply a check that has never 
   expected to sit *above* the mean-field value and that offset explained rather than tolerated.
 - **`lambda_switch_cortes2017`** — parity on a **binary** statistic (lysogeny fraction), where the
   right ensemble size is set by `√(p(1−p)/n)` and the answer is 100 seeds per engine, not 24.
+- **`lambda_switch_arkin1998`** — the case where the check **failed**, and the template for what
+  to do then. Two arms rather than three, with the missing arm justified rather than skipped:
+  the legacy binary cannot run the model at all (it aborts on the `~PLUS` integer states), and
+  `-bscb` is inert because every bond-forming rule joins two free monomers and the largest
+  species is a dimer — argued from the rules per §6 and then *measured*, on/off giving
+  bit-identical ensembles. Ruling the flag out mattered: it was the leading suspect, since the
+  offset's sign pattern (dimers low, protease substrates high) pointed straight at the
+  bimolecular rules, and it was wrong. The defect was found by the endpoint test of §5, confirmed against a
+  same-engine null, and then **localized to a minimal model** — a symmetric dimer decaying at a
+  functional rate, where RuleMonkey and the analytic solution give ~1000 and NFsim gives 497.5,
+  while the same rule at a *constant* rate and an *asymmetric* dimer at the same functional rate
+  are correct in both. That reproducer is what makes the finding actionable upstream instead of
+  a note that "the engines disagree." Also the folder that shows the payoff of caching per seed:
+  the endpoint test was written *after* the campaign, and `run_fullcircuit.py rescore` applied it
+  to the stored per-seed ensembles without re-running a single simulation.
