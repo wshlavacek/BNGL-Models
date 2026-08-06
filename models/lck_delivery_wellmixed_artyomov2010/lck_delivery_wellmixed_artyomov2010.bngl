@@ -1,0 +1,156 @@
+begin model
+
+#@title: Lck delivery by CD4/CD8, well-mixed counterpart (Artyomov et al., 2010)
+
+#@description: |
+#  A WELL-MIXED counterpart of the reaction-diffusion lattice model of Artyomov et al.
+#  (2010). Agonist and endogenous pMHC on an APC engage TCR on a T cell; the coreceptor
+#  CD4 (standing for a constitutively associated CD4-Lck complex) binds MHC and, through
+#  the TCR's intracellular domain, delivers Lck. Because MHC, TCR and coreceptor can each
+#  bind the other two, the three of them close a ring, and it is that ring that keeps MHC
+#  on the T-cell surface after the TCR-pMHC bond breaks.
+#
+#  How it works: the rules are transcribed from the first SSC listing in the paper's
+#  supporting file, the one headed "irreversible dissociation of MHC off the T-cell
+#  surface", which is what Fig. 2A reports. An MHC left bound to nothing is destroyed at
+#  an enormous rate, so leaving the surface is irreversible and the recorded observable
+#  is a survival curve. Its half-time is the paper's "effective half-life".
+#
+#  What it does: it is NOT expected to reproduce Fig. 2A, and the gap is the point.
+#  See the note below.
+
+#@keyword: |
+#  T-cell receptor, coreceptor, CD4, CD8, Lck, pMHC, kinetic proofreading, avidity,
+#  ring closure, trimolecular complex, well-mixed limit, mean-field, spatial model,
+#  reaction-diffusion, stochastic, Mus musculus, Homo sapiens
+
+#@reference: |
+#  Artyomov MN, Lis M, Devadas S, Davis MM, Chakraborty AK (2010). CD4 and CD8 binding to
+#  MHC molecules primarily acts to enhance Lck delivery. Proceedings of the National
+#  Academy of Sciences 107:16916-16921. doi:10.1073/pnas.1010568107
+
+#@note: |
+#  SIMULATION INTENT. Population-based and stochastic: every amount is a molecule count on
+#  the 1 um^2 T-cell/APC contact the paper simulates. Stochastic rather than ODE on
+#  purpose -- the published model is stochastic too, so running this one stochastically
+#  leaves spatial structure as the only difference between them, which is what the folder
+#  sets out to measure.
+
+#@note: |
+#  THIS IS A COUNTERPART, NOT A REPRODUCTION. The published model is a 100x100 lattice of
+#  chambers over the contact area, with per-molecule hopping and bound complexes given
+#  diffusion 0. There is no non-spatial variant anywhere in the paper. This file is the
+#  well-mixed limit of the same rules, built so that the difference between the two can be
+#  measured; it is not an attempt to reproduce Fig. 2A, and it does not.
+#
+#  The conversion is the paper's own, SI Methods Eq. S1b: a lattice propensity is
+#  k * n_A * n_B in PER-CHAMBER counts, so averaged over the 10^4 chambers a bimolecular
+#  propensity in total counts is (k/10^4) * N_A * N_B, while a unimolecular one is
+#  unchanged. Every rule whose reactants are two separate complexes is therefore divided
+#  by n_chambers, and every ring closure keeps the published constant. That is the only
+#  change to the rules.
+
+#@note: |
+#  WHAT THE COMPARISON ISOLATES. Not "spatial heterogeneity" loosely: this model differs
+#  from the published one by finite diffusion and the local depletion and rebinding that
+#  come with it. The lattice is diffusion-limited by construction -- kon per chamber is
+#  150 and konCD is 1000 against a hop rate of 50 -- and bound complexes do not move at
+#  all, so a partner that has just let go is still next door. The well-mixed limit throws
+#  all of that away and lets any two molecules meet at the average rate.
+#
+#  The model carries its own control. With no coreceptor the ring cannot form, the
+#  agonist MHC simply falls off at koffAg and is lost, and the survival curve is exactly
+#  exp(-koffAg t) whatever the geometry: a half-time of ln2/0.02 = 34.66 s, against the
+#  ~35 s the paper reads off Fig. 2A. That arm must agree and does, which is what makes
+#  the disagreement in the coreceptor arm attributable to geometry rather than to the
+#  translation.
+
+#@note: |
+#  TWO COUNTS ARE NOT IN THE PAPER. The SSC listing seeds `count_ag` agonist pMHC
+#  pre-bound to TCR and `count_en` endogenous pMHC, and neither number appears in the
+#  paper, the SI or the listing. They are parameters here, defaulting to 10 agonist as a
+#  tracer against 200 TCR and 100 coreceptors, and no endogenous pMHC, which leaves the
+#  coreceptor pool uncontested and the measurement unconfounded. verify_artyomov2010.ipynb
+#  scans both and reports how much the half-time moves.
+
+#@figure: Fig. 2 A in Artyomov et al. (2010)
+
+
+begin parameters
+  n_chambers  1e4  # chambers in the 1 um^2 contact, SI Methods Eq. S3
+  kon_local  150  # TCR-MHC on rate, per chamber  [Table 1]
+  koffAg  0.02  # TCR-MHC off, agonist peptide  [Table 1]
+  koffEn  20  # TCR-MHC off, endogenous peptide  [Table 1]
+  konCD_local  1000  # MHC-coreceptor on rate, per chamber  [Table 1]
+  koffCD  20  # MHC-coreceptor off rate; the x axis of Fig. 2A  [Table 1]
+  konLck_local  1  # Lck(coreceptor)-TCR on rate, per chamber  [Table 1]
+  konLck1_local  1  # the same, for the case with no MHC involved
+  koffLck  1  # Lck(coreceptor)-TCR off rate  [Table 1]
+  kdiff  50  # hop rate of a surface protein  [Table 1]
+  kdestroy  1e8  # loss of an MHC with both sites free, from the SSC listing
+  count_ag  10  # agonist pMHC, pre-bound to TCR; not stated in the paper
+  count_en  0  # endogenous pMHC; not stated in the paper
+  count_tcr  200  # TCRs, from the SSC listing
+  count_cd4  100  # coreceptors, from the SSC listing
+
+  # Mean-field limit of a per-chamber bimolecular constant (SI Methods Eq. S1b).
+  kon  kon_local/n_chambers
+  konCD  konCD_local/n_chambers
+  konLck  konLck_local/n_chambers
+  konLck1  konLck1_local/n_chambers
+end parameters
+
+begin molecule types
+  MHC(t,c,p~ag~en)
+  TCR(m,c,p~p0)
+  CD4(m,t,lck~basal)
+end molecule types
+
+begin seed species
+  MHC(t!1,c,p~ag).TCR(m!1,c,p~p0)  count_ag  # agonist, seeded already engaged
+  MHC(t,c,p~en)                    count_en
+  TCR(m,c,p~p0)                    count_tcr
+  CD4(m,t,lck~basal)               count_cd4
+end seed species
+
+begin observables
+  Molecules AgMHC_on_TCR  MHC(t!1,p~ag).TCR(m!1)  # the SSC listing's `record`
+  Molecules AgMHC_total   MHC(p~ag)
+  Molecules Ring          MHC(t!1,c!2).TCR(m!1,c!3).CD4(t!3,m!2)
+  Molecules CD4_free      CD4(m,t)
+end observables
+
+begin reaction rules
+  mhc_lost: MHC(t,c) -> 0  kdestroy
+  tcr_mhc_on: MHC(t,c) + TCR(m,c) -> MHC(t!1,c).TCR(m!1,c)  kon
+  tcr_mhc_on_mhc_cd: MHC(t,c!1).CD4(m!1,t) + TCR(m,c) -> MHC(t!2,c!1).CD4(m!1,t).TCR(m!2,c)  kon
+  tcr_mhc_on_tcr_cd: MHC(t,c) + TCR(m,c!1).CD4(t!1,m) -> MHC(t!2,c).TCR(m!2,c!1).CD4(t!1,m)  kon
+  tcr_mhc_close: MHC(t,c!2).TCR(m,c!1).CD4(t!1,m!2) -> MHC(t!3,c!2).TCR(m!3,c!1).CD4(t!1,m!2)  kon_local
+  tcr_mhc_off_ag: TCR(m!1).MHC(t!1,p~ag) -> TCR(m) + MHC(t,p~ag)  koffAg
+  tcr_mhc_off_en: TCR(m!1).MHC(t!1,p~en) -> TCR(m) + MHC(t,p~en)  koffEn
+  tcr_cd_on: TCR(c,m) + CD4(t,m) -> TCR(c!1,m).CD4(t!1,m)  konLck1
+  tcr_cd_on_via_mhc: TCR(c,m!1).MHC(t!1,c) + CD4(t,m) -> TCR(c!2,m!1).MHC(t!1,c).CD4(t!2,m)  konLck
+  tcr_cd_on_cd_mhc: TCR(c,m) + CD4(t,m!1).MHC(c!1,t) -> TCR(c!2,m).CD4(t!2,m!1).MHC(c!1,t)  konLck
+  tcr_cd_close: TCR(m!2,c).CD4(t,m!1).MHC(c!1,t!2) -> TCR(m!2,c!3).CD4(t!3,m!1).MHC(c!1,t!2)  konLck_local
+  tcr_cd_off_ring: TCR(c!1,m!2).MHC(t!2).CD4(t!1) -> TCR(c,m!2).MHC(t!2) + CD4(t)  koffLck
+  tcr_cd_off: TCR(c!1,m).CD4(t!1) -> TCR(c,m) + CD4(t)  koffLck
+  mhc_cd_on: MHC(c,t) + CD4(m,t) -> MHC(c!1,t).CD4(m!1,t)  konCD
+  mhc_cd_on_mhc_tcr: MHC(c,t!1).TCR(m!1,c) + CD4(m,t) -> MHC(c!2,t!1).TCR(m!1,c).CD4(m!2,t)  konCD
+  mhc_cd_on_cd_tcr: MHC(c,t) + CD4(m,t!1).TCR(c!1,m) -> MHC(c!2,t).CD4(m!2,t!1).TCR(c!1,m)  konCD
+  mhc_cd_close: MHC(t!2,c).CD4(m,t!1).TCR(c!1,m!2) -> MHC(t!2,c!3).CD4(m!3,t!1).TCR(c!1,m!2)  konCD_local
+  mhc_cd_off: MHC(c!1).CD4(m!1) -> MHC(c) + CD4(m)  koffCD
+  ring_open_tcr_mhc_ag: MHC(t!1,c!3,p~ag).TCR(m!1,c!2).CD4(t!2,m!3) -> MHC(t,c!3,p~ag).TCR(m,c!2).CD4(t!2,m!3)  koffAg
+  ring_open_tcr_mhc_en: MHC(t!1,c!3,p~en).TCR(m!1,c!2).CD4(t!2,m!3) -> MHC(t,c!3,p~en).TCR(m,c!2).CD4(t!2,m!3)  koffEn
+  ring_open_tcr_cd: MHC(t!1,c!3).TCR(m!1,c!2).CD4(t!2,m!3) -> MHC(t!1,c!3).TCR(m!1,c).CD4(t,m!3)  koffLck
+  ring_open_mhc_cd: MHC(t!1,c!3).TCR(m!1,c!2).CD4(t!2,m!3) -> MHC(t!1,c).TCR(m!1,c!2).CD4(t!2,m)  koffCD
+end reaction rules
+
+end model
+
+begin actions
+
+# The network is small and closes, so it is generated rather than run network-free.
+generate_network({overwrite=>1})
+simulate({method=>"ssa",t_end=>250,n_steps=>250})
+
+end actions

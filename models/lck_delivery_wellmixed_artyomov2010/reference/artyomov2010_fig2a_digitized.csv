@@ -1,0 +1,15 @@
+# Fig. 2A of Artyomov et al. (2010), read off a 600 dpi rendering of the published
+# page. The panel is a small set of plotted markers on a linear grid, so the values
+# are read directly rather than traced; the published error bars are +/- 4-5 s, an
+# order of magnitude larger than the reading uncertainty.
+# koffCD is koff(coreceptor-MHC) in /s; half_life_s is the MHC-TCR complex lifetime.
+series,koffCD,half_life_s
+coreceptor,20,45.0
+coreceptor,40,43.0
+coreceptor,60,40.5
+coreceptor,80,38.5
+coreceptor,100,37.0
+coreceptor,110,36.2
+coreceptor,150,35.0
+no_coreceptor,20,35.0
+no_coreceptor,150,35.0

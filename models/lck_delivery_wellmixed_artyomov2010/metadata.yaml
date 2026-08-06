@@ -1,0 +1,95 @@
+# metadata.yaml — lck_delivery_wellmixed_artyomov2010
+id: lck_delivery_wellmixed_artyomov2010
+created: 2026-08-05
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: bill.hlavacek@gmail.com
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, reformulation, ai_assisted]
+  description: >
+    Artyomov MN, Lis M, Devadas S, Davis MM, Chakraborty AK (2010), PNAS
+    107:16916-16921, doi:10.1073/pnas.1010568107. The published model is a
+    reaction-diffusion lattice -- 100x100 chambers over a 1 um^2 T-cell/APC
+    contact, per-molecule hopping, bound complexes immobile -- and the paper
+    contains no non-spatial variant. This folder is therefore a COUNTERPART, not a
+    reproduction: the same rules, transcribed from the first SSC listing in the
+    paper's supporting file, in a single well-mixed compartment.
+    The conversion is the paper's own, SI Methods Eq. S1b. A lattice propensity is
+    k*n_A*n_B in per-chamber counts, so averaged over the 10^4 chambers a
+    bimolecular propensity in total counts is (k/10^4)*N_A*N_B while a unimolecular
+    one is unchanged. Every rule whose reactants are two separate complexes is
+    divided by the chamber count; every ring closure keeps the published constant.
+    Nothing else about the rules changes.
+    The result is that the well-mixed limit REPRODUCES Fig. 2A. Across the paper's
+    whole koff(coreceptor-MHC) range the largest disagreement is 4.8 s against
+    published error bars of +/- 4-5 s, and the coreceptor enhancement falls from
+    ~1.4x at koff = 20 to ~1.0x by koff = 150 exactly as the paper reports. For
+    this observable the lattice's diffusion limitation does not change the answer,
+    which is worth knowing because the paper's Methods justifies the spatial
+    treatment as avoiding the extra avidity parameters a well-mixed rule-based
+    model would need, citing Faeder, Blinov & Hlavacek (2009).
+    Not curated: the paper's second SSC listing (TCR phosphorylation, Figs 2B and
+    2C), which is a separate model over the same molecules.
+
+files:
+  - name: lck_delivery_wellmixed_artyomov2010.bngl
+    role: primary
+    description: >
+      The exact mean-field limit of the published rules. Generates 17 species and
+      42 reactions and runs a stochastic simulation, matching the published model's
+      own stochastic treatment so that geometry is the only difference between them.
+    documentation_target: comprehensive
+    min_bionetgen_version: "2.9.3"
+    scale: trivial
+  - name: lck_delivery_wellmixed_artyomov2010_encounter.bngl
+    role: variant
+    description: >
+      The same rules with every intermolecular constant multiplied by the paper's
+      own encounter probability k/(k + m_A + m_B), which restores part of the
+      diffusion limitation the mean-field limit discards. A hybrid rather than a
+      well-mixed model, since the effective rate carries spatial information; it is
+      here to show how much of the (small) residual gap that correction accounts
+      for, and it moves the answer by about a second.
+    documentation_target: comprehensive
+    min_bionetgen_version: "2.9.3"
+    scale: trivial
+
+  - name: generator/build_artyomov2010.py
+    role: tooling
+    description: >
+      Transcribes the SSC listing and emits both files. Each rule's arity decides
+      whether its constant is divided by the chamber count, so the mean-field
+      conversion is applied by construction rather than by hand.
+
+  - name: independent_artyomov2010.py
+    role: verification
+    description: >
+      The level-1 implementation, and exact rather than simulated. While the
+      agonist pMHC are a tracer against the TCR and coreceptor pools each one is
+      independent, so its fate is a seven-state Markov chain over the bond pattern
+      of the complex around it, solved by matrix exponential. It reads only Table 1
+      of the paper -- never the .bngl, the .net or any simulator output. The
+      TCR-coreceptor bond has to be in the chain even though it touches neither of
+      the MHC's own sites, because ring closure is intramolecular and so happens at
+      the full local rate rather than the mean-field one; an earlier four-state
+      version that omitted it reported almost no coreceptor enhancement, which is
+      how the omission was caught.
+    scale: trivial
+  - name: verify_artyomov2010.png
+    role: figure
+
+  - name: reference/artyomov2010_fig2a_digitized.csv
+    role: reference
+    description: >
+      Fig. 2A read off a 600 dpi rendering. The panel plots a handful of markers on
+      a linear grid, so the values are read directly rather than traced; the
+      published error bars are +/- 4-5 s, far larger than the reading uncertainty.
+  - name: reference/halflife_vs_koffCD.json
+    role: reference
+    description: >
+      Half-lives from a 400-run stochastic ensemble at each of the paper's
+      koff(coreceptor-MHC) values, for both files, with the no-coreceptor control.
