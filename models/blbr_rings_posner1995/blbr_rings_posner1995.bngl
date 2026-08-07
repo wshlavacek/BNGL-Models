@@ -171,8 +171,15 @@ begin actions
   #@protocol: |
   #  Simulate to equilibrium (3000 s). The verification notebook
   #  runs three doses by modifying LT_per_cell separately.
+  #
+  #  One stochastic replicate; seed=>42 matches the sibling files
+  #  _no_rings and _alt_formulation and makes the committed
+  #  reference/ output an exact regression baseline. The
+  #  verification notebooks run their own doses and do not read
+  #  reference/.
 
   simulate({method=>"nf",suffix=>"nfr",t_start=>0,\
-    t_end=>3000,n_steps=>300,gml=>2147483647,param=>"-bscb -utl 5"})
+    t_end=>3000,n_steps=>300,gml=>2147483647,seed=>42,\
+    param=>"-bscb -utl 5"})
 
 end actions

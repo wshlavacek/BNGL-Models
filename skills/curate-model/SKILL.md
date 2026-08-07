@@ -197,6 +197,39 @@ Commit reference output for every uncommented simulation protocol — `.gdat`/`.
 network-free one, and the per-point files in scan subdirectories. Reference data for
 commented-out protocols is welcome but not required.
 
+### The network-free `.xml` is committed at the shipped nominals
+
+For a network-free model the XML is not an incidental byproduct: it is the artifact every
+engine consumes. BNG2.pl's NFsim, bngsim's `NfsimSession` and bngsim's `RuleMonkeySession`
+each read the XML, and the three-arm cross-check of
+`references/network-free-verification.md` §3 is only meaningful if they were handed
+byte-identical initial conditions — which is why those drivers bake parameters into the XML
+instead of calling `set_param` after `initialize()` (lanl/bngsim#44). Without a committed XML
+there is no record of what the engines were given. It is also the network-free counterpart of
+the `.net`: the structural baseline a diff can catch a change in.
+
+**One committed XML per network-free `.bngl`, written at that file's shipped nominals**
+(rule enforced as ERROR, `skills/bngl/skill.md` §9.4a):
+
+- **Parameterization — shipped nominals, not the cross-check dose.** Write it from the
+  committed file with its actions block replaced by a bare `writeXML({overwrite=>1})`, so no
+  `setParameter` inside the protocol reaches the export. `erbb_receptor_signaling_creamer2012`
+  is the case that settles it: it ships at subvolume `f=0.02` and runs the three-engine
+  cross-check at a reduced `f=0.002`, and the committed XML is the `f=0.02` one, because that
+  is the model the `.bngl` describes. Cross-check and per-dose XMLs stay temp-dir artifacts of
+  the driver. Where the protocol turns something on partway through — `creamer2012`'s `lig=1`,
+  `tcr_signaling_chylek2014`'s `kfl` — the committed XML is the ligand-off state the protocol
+  starts from.
+- **Per file, not per folder.** `blbr_rings_posner1995` commits five and
+  `lambda_switch_arkin1998` two, one for each network-free `.bngl`.
+- **Name it `reference/<stem>.xml`** — what a bare `writeXML()` writes, so the file that
+  regenerates it is unambiguous. `reference/<stem>_<suffix>.xml` carrying the protocol's own
+  suffix is also accepted (`blbr_dembo1978_nfr.xml`, `blbr_cooperativity_posner2004_scan.xml`),
+  which is what the folders predating this rule use.
+- **Say the parameterization in `metadata.yaml`**, in the `role: reference` entry's
+  `description`, naming the values that fix it. `tlbr_steric_monine2010`'s is the model:
+  "default `LT_conc=7 nM`, the input consumed by the bngsim NFsim / RuleMonkey engines."
+
 ## The Verification Figure
 
 `verify_<author><year>.png` exists to answer exactly one question: **is the BioNetGen

@@ -222,6 +222,61 @@ def test_allows_bng_scan_directories(drifted) -> None:
     assert "reference-layout" not in rules(root)
 
 
+NF_PROTOCOL = 'simulate({method=>"nf",suffix=>"nfr"})'
+
+
+def _make_network_free(bngl: Path, protocol: str = NF_PROTOCOL) -> None:
+    """Rewrite a `.bngl`'s actions block so its committed protocol is network-free."""
+    text = bngl.read_text()
+    head = text[: text.index("begin actions")]
+    bngl.write_text(f"{head}begin actions\n  {protocol}\nend actions\n")
+
+
+def test_catches_network_free_bngl_without_xml(drifted) -> None:
+    """The defect behind issue #41: for a network-free model the XML is what NFsim and
+    RuleMonkey actually read, so it is committed the way a generate-first model commits its
+    `.net`. Six folders had shipped without one."""
+    root, folder, _edit = drifted
+    _make_network_free(folder / f"{EXEMPLAR}.bngl")
+    assert "network-free-xml" in rules(root)
+
+
+def test_catches_writexml_only_protocol_without_xml(drifted) -> None:
+    """`lambda_switch_arkin1998_fullcircuit`'s shape: the whole actions block is `writeXML()`,
+    so the XML is the only output the protocol produces — and was the one thing not committed."""
+    root, folder, _edit = drifted
+    _make_network_free(folder / f"{EXEMPLAR}.bngl", "writeXML()")
+    assert "network-free-xml" in rules(root)
+
+
+def test_allows_the_protocol_suffixed_xml_name(drifted) -> None:
+    """`reference/<stem>.xml` is the default, but eight folders predate it and carry the
+    protocol's own suffix (`blbr_dembo1978_nfr.xml`). Both satisfy the rule."""
+    root, folder, _edit = drifted
+    _make_network_free(folder / f"{EXEMPLAR}.bngl")
+    (folder / "reference" / f"{EXEMPLAR}_nfr.xml").write_text("<sbml/>\n")
+    assert "network-free-xml" not in rules(root)
+
+
+def test_network_free_xml_is_not_satisfied_by_a_sibling(drifted) -> None:
+    """The trap the suffix allowance opens, live in `blbr_rings_posner1995`: a variant's
+    `<stem>_no_rings_nfr.xml` starts with the primary's stem, and must not count for it."""
+    root, folder, _edit = drifted
+    _make_network_free(folder / f"{EXEMPLAR}.bngl")
+    variant = folder / f"{EXEMPLAR}_variant.bngl"
+    shutil.copy(folder / f"{EXEMPLAR}.bngl", variant)
+    (folder / "reference" / f"{EXEMPLAR}_variant_nfr.xml").write_text("<sbml/>\n")
+    findings = [f for f in conformance.run(root) if f.rule == "network-free-xml"]
+    assert [f.where for f in findings] == [f"models/{EXEMPLAR}/{EXEMPLAR}.bngl"]
+
+
+def test_generate_first_bngl_needs_no_xml(drifted) -> None:
+    """The rule keys on the protocol, not on the folder: the exemplar generates its network and
+    commits `.net`/`.gdat`, and must not be asked for an XML."""
+    root, _folder, _edit = drifted
+    assert "network-free-xml" not in rules(root)
+
+
 def test_catches_folder_missing_from_readme(drifted) -> None:
     root, _folder, _edit = drifted
     (root / "README.md").write_text("| File(s) | Scale | Description | Reference(s) |\n")

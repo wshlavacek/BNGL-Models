@@ -68,6 +68,15 @@ files:
       (BNG NFsim, bngsim NFsim, bngsim RuleMonkey) overlaid as ensemble
       mean +/- s.e.m. phosphosite trajectories, showing they agree within
       Monte-Carlo error on the reduced-subvolume cross-check.
+  - name: reference/tcr_signaling_chylek2014.xml
+    role: reference
+    description: >
+      BioNetGen writeXML() export of the network-free model at the shipped
+      nominals (subvolume Fx=0.02, ligand binding off at kfl=kfl_m=0 — the state
+      the actions block equilibrates before turning them on per File B), the
+      input consumed by the bngsim NFsim / RuleMonkey engines. The reduced
+      Fx=0.005 ligand-on XMLs the three-engine cross-check runs on are baked per
+      run in a temp dir by run_tcr_chylek2014.py and are not committed.
   - name: reference/tcr_signaling_chylek2014_equil.gdat
     role: reference
     description: Equilibration observables (ligand off; flat basal state), BNG NFsim.

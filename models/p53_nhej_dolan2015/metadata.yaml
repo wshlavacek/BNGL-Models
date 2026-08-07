@@ -81,6 +81,14 @@ files:
       ensemble for the damage-off signaling core (bar + identity-line panels),
       and the three network-free engines (BNG NFsim, bngsim NFsim, bngsim
       RuleMonkey) overlaid as ensemble mean +/- s.e.m.
+  - name: reference/p53_nhej_dolan2015.xml
+    role: reference
+    description: >
+      BioNetGen writeXML() export of the network-free model at the shipped
+      nominals (irradiation off, IR()=0, so damage is driven only by chronic
+      background ROS — the Fig. 4 non-irradiated baseline), the input consumed
+      by the bngsim NFsim / RuleMonkey engines. Includes the re-encoded 10-level
+      Sen counter that replaces the published PLUS/MINUS operators.
   - name: reference/p53_nhej_dolan2015_nfr.gdat
     role: reference
     description: >

@@ -185,12 +185,18 @@ begin actions
   #  t = 10 s to reach binding equilibrium (characteristic time
   #  ~0.1 s at kr = 10/s). The observable frac_bound gives the
   #  fraction of 23G3 epitopes occupied.
+  #
+  #  One stochastic replicate per dose; seed=>42 (the seed the
+  #  other BLBR models pin) makes the committed reference/ .scan
+  #  an exact regression baseline rather than one arbitrary
+  #  sample. The Fig. 3a check is done in verify_posner2004.ipynb,
+  #  which runs its own scan and does not read reference/.
 
   #@figure: Fig. 3a in Posner et al. (2004)
 
   parameter_scan({method=>"nf",parameter=>"AT_nM",\
     par_min=>0.03,par_max=>100,n_scan_pts=>20,log_scale=>1,\
     t_start=>0,t_end=>10,n_steps=>1,\
-    suffix=>"scan",complex=>1,gml=>1000000})
+    suffix=>"scan",complex=>1,gml=>1000000,seed=>42})
 
 end actions

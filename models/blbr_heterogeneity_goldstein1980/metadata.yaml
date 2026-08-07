@@ -35,12 +35,27 @@ files:
       (1980) Eqs. 13-14 for X_T = 500 (Fig. 5, bottom curve).
   - name: verify_goldstein1980.png
     role: figure
+  - name: reference/blbr_heterogeneity_goldstein1980.xml
+    role: reference
+    description: >
+      BioNetGen writeXML() export of the network-free model at the shipped
+      nominals (X_T_per_cell=500, subvolume f=0.1, LT_conc_M=1e-8 M, equal
+      halves r1=r2=0.5 at Ka_1=5e6 /M and Ka_2=5e8 /M), the input consumed by
+      NFsim. The scan directory below holds the per-dose XMLs BioNetGen writes
+      as it steps LT_conc_M; this one is the single-point baseline the .bngl
+      itself describes.
   - name: reference/blbr_heterogeneity_goldstein1980_scan.scan
     role: reference
     description: >
-      Single-rep equilibrium dose-response scan (18 points,
-      1e-12 to 1e-4 M).
+      Single-replicate equilibrium dose-response scan (18 points, 1e-12 to
+      1e-4 M) at the pinned seed 42, so a fresh run reproduces it exactly.
+      One replicate at 25 + 25 antibody molecules carries a few molecules of
+      Monte-Carlo noise per point; the Fig. 5 check averages 10 replicates and
+      lives in verify_goldstein1980.ipynb, which runs its own scan.
   - name: reference/blbr_heterogeneity_goldstein1980_scan/
     role: reference
     description: >
-      Individual gdat and xml files for each scan point.
+      Individual gdat and xml files for each scan point. Each per-point XML is
+      the top-level export above with LT_conc_M stepped to that dose, plus the
+      values that derive from it (LT, the pseudo-first-order kf1/kf2 and the
+      rate-law constants built on them).

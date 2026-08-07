@@ -29,5 +29,14 @@ files:
   # Reference simulation data (reference/ subdirectory)
   - name: reference/tlbr_yang2008_nfr.xml
     role: reference
+    description: >
+      BioNetGen writeXML() export of the network-free model at the shipped
+      nominals, the input NFsim consumes.
   - name: reference/tlbr_yang2008_nfr.gdat
     role: reference
+    description: >
+      NFsim equilibration time course to 3000 s from all-free initial
+      conditions, one replicate at the pinned seed 42.
+  - name: reference/tlbr_yang2008_nfr.species
+    role: reference
+    description: NFsim final species list for the same run.

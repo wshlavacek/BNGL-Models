@@ -38,11 +38,26 @@ files:
   - name: verify_posner2004.png
     role: figure
   # Reference simulation data (reference/ subdirectory)
-  - name: reference/blbr_cooperativity_posner2004_scan.xml
+  - name: reference/blbr_cooperativity_posner2004.xml
     role: reference
+    description: >
+      BioNetGen writeXML() export of the network-free model at the shipped
+      nominals (AT_nM=1), the input NFsim consumes. It replaces an earlier file
+      that was the scan's first point (AT_nM=0.03) lifted out of the scan
+      directory, which is the dose-specific artifact the house convention keeps
+      out of reference/.
   - name: reference/blbr_cooperativity_posner2004_scan.scan
     role: reference
-  - name: reference/blbr_cooperativity_posner2004_rings_scan.xml
+    description: >
+      NFsim equilibrium binding curve from the actions block: 20 doses of AT_nM
+      from 0.03 to 100 nM, one replicate each at the pinned seed 42.
+  - name: reference/blbr_cooperativity_posner2004_rings.xml
     role: reference
+    description: >
+      The same writeXML() export at the shipped nominals (AT_nM=1) for the
+      ring-forming variant.
   - name: reference/blbr_cooperativity_posner2004_rings_scan.scan
     role: reference
+    description: >
+      The same 20-dose binding curve for the ring-forming variant, one replicate
+      per dose at the pinned seed 42.

@@ -41,6 +41,12 @@ files:
   - name: verify_macken1982_aggregates.png
     role: figure
     description: Aggregate distribution kinetics comparison
+  - name: reference/tlbr_solution_macken1982.xml
+    role: reference
+    description: >
+      BioNetGen writeXML() export of the network-free model at the shipped
+      nominals (NL=4200, NR=300, kappa_ST=0.5, f=1), the input consumed by
+      NFsim and by any RuleMonkey cross-check.
   - name: reference/tlbr_solution_macken1982_nfr.gdat
     role: reference
     description: >

@@ -126,6 +126,19 @@ files:
   - name: verify_ghosh2011.png
     role: figure
 
+  - name: reference/iron_homeostasis_host_pathogen_ghosh2011.xml
+    role: reference
+    description: >
+      BioNetGen writeXML() export of the network-free model at the shipped
+      nominals (the Methods' initial counts -- one copy of each gene, 5000
+      extracellular and 50 pathogen iron atoms, 20000 red cells), the input
+      NFsim consumes. It is also the only committed record of TRuML's symmetry
+      factors as BioNetGen finally reads them.
+  - name: reference/iron_homeostasis_host_pathogen_ghosh2011_noninfected.xml
+    role: reference
+    description: >
+      The same export for the non-infected control, which differs from the file
+      above only in k142, k143, k148 and k149 being zero.
   - name: reference/iron_homeostasis_host_pathogen_ghosh2011.gdat
     role: reference
     description: The Methods' 30000-time-unit incubation, seed 1.

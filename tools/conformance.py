@@ -15,7 +15,8 @@ Rules are transcribed from the house style, and each finding names its section:
                           §4.8         primary `.bngl` stem matches the folder name
                           §5.2         source-tag vocabulary
                           §5.3         file-role vocabulary
-                          §5.4         one `metadata.yaml` per folder; `reference/` is flat
+                          §5.4         one `metadata.yaml` per folder; `reference/` is flat, and
+                                       a network-free `.bngl` commits its `.xml`
                           §5.6         `scale:` vocabulary, required on every `.bngl` entry
                           §6.1.1       the four required header keys
                           §7.1         `#@runtime_expectation:` when `scale:` is heavy
@@ -184,16 +185,73 @@ def reaction_count(net_path: Path) -> int | None:
 def is_network_free(text: str) -> bool:
     """True when the file has an *active* network-free protocol.
 
-    §5.6.1 step 3 floors those at `minutes`, never `trivial`."""
+    Two shapes qualify. The common one is a `simulate()`/`parameter_scan()` at `method=>"nf"`.
+    The other is a `writeXML()`-only protocol, where the XML *is* the whole committed output
+    and something else (a driver, bngsim) simulates it — three files do this, all of them
+    network-free (`lambda_switch_arkin1998_fullcircuit*`, `lambda_switch_cortes2017_pergenome`).
+    A `writeXML()` alongside `generate_network()` or a `simulate()` would not be network-free,
+    hence the exclusion rather than a bare `writeXML` match.
+
+    §5.6.1 step 3 floors these at `minutes`, never `trivial`; §5.4 rule 4 requires each to
+    commit its `.xml`."""
+    write_xml = False
+    generates = False
     for line in text.splitlines():
         stripped = line.strip()
         if stripped.startswith("#"):
             continue
-        if 'method=>"nf"' in stripped.replace(" ", "") or "method=>'nf'" in stripped.replace(
-            " ", ""
-        ):
+        squashed = stripped.replace(" ", "")
+        if 'method=>"nf"' in squashed or "method=>'nf'" in squashed:
             return True
-    return False
+        if "writeXML(" in squashed:
+            write_xml = True
+        if "generate_network(" in squashed or "simulate(" in squashed:
+            generates = True
+    return write_xml and not generates
+
+
+def check_network_free_xml(folder: Path, repo_root: Path) -> list[Finding]:
+    """§5.4 rule 4: every actively network-free `.bngl` commits a `reference/*.xml`.
+
+    The default name is `reference/<stem>.xml`, what a bare `writeXML()` writes. Eight folders
+    predate that default and carry the protocol's own suffix instead (`blbr_dembo1978_nfr.xml`,
+    `blbr_cooperativity_posner2004_scan.xml`), so `<stem>_<suffix>.xml` counts too.
+
+    The suffix allowance is what makes this delicate: `blbr_rings_posner1995.bngl` would
+    otherwise be satisfied by its sibling's `blbr_rings_posner1995_no_rings_nfr.xml`. A
+    candidate is therefore discarded when a *longer* sibling `.bngl` stem in the same folder
+    also prefixes it — that XML belongs to the sibling, not to this file.
+    """
+    findings: list[Finding] = []
+    reference = folder / "reference"
+    bngls = model_bngl_files(folder)
+    stems = {p.stem for p in bngls}
+    for bngl in bngls:
+        text = bngl.read_text(encoding="utf-8", errors="replace")
+        if not is_network_free(text):
+            continue
+        stem = bngl.stem
+        longer_siblings = [s for s in stems if s != stem and s.startswith(f"{stem}_")]
+        owned = [
+            xml
+            for xml in (sorted(reference.glob(f"{stem}*.xml")) if reference.is_dir() else [])
+            if xml.stem == stem
+            or (
+                xml.stem.startswith(f"{stem}_")
+                and not any(xml.stem.startswith(f"{s}_") or xml.stem == s for s in longer_siblings)
+            )
+        ]
+        if not owned:
+            findings.append(
+                Finding(
+                    "network-free-xml",
+                    ERROR,
+                    bngl.relative_to(repo_root).as_posix(),
+                    "network-free protocol with no committed `reference/` XML; write it at the "
+                    f"file's shipped nominals as `reference/{stem}.xml` (§5.4 rule 4)",
+                )
+            )
+    return findings
 
 
 def parse_readme(readme: str) -> dict[str, str]:
@@ -464,6 +522,13 @@ def check_folder(
                     "a scan output directory holds per-point files, not further "
                     "directories (§5.4 rule 4)",
                 )
+
+    # --- a network-free .bngl commits its .xml (§5.4 rule 4) --------------------------------
+    # The network-free counterpart of the `.net` a generate-first model commits: the XML is what
+    # NFsim and RuleMonkey actually read, so without it there is no record of what the engines
+    # were handed. Structural only — this cannot tell whether a committed XML is *current*, and
+    # deliberately does not run BioNetGen to find out.
+    findings.extend(check_network_free_xml(folder, repo_root))
 
     # --- the README Models table (curate-model workflow step 9) -----------------------------
     # The README row is the maximum over *every* scaled entry, not only the `.bngl` ones: §5.6

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created by BioNetGen 2.9.3  -->
 <sbml xmlns="http://www.sbml.org/sbml/level3" level="3" version="1">
-  <model id="bivalent_ligand_receptor_cyclic_dimers_posner1995">
+  <model id="blbr_rings_posner1995">
     <ListOfParameters>
       <Parameter id="NA" type="Constant" value="6.0221408e+23" expr="6.02214076e23"/>
       <Parameter id="V_cell" type="Constant" value="1e-9" expr="1e-9"/>

@@ -136,9 +136,16 @@ begin actions
   #  (3000 s, well beyond the ~100 s equilibration timescale
   #  at these parameters). NFsim tracks individual molecules
   #  and applies rules stochastically.
+  #
+  #  One stochastic replicate; seed=>42 (the seed the other
+  #  multivalent-binding models pin) makes the committed
+  #  reference/ output an exact regression baseline rather than
+  #  one arbitrary sample. The Fig. 3(a) check is done in
+  #  verify_yang2008.ipynb, which runs its own simulations and
+  #  does not read reference/.
 
   #@figure: Fig. 3(a) in Yang et al. (2008)
 
   simulate({method=>"nf",suffix=>"nfr",t_start=>0,\
-    t_end=>3000,n_steps=>300})
+    t_end=>3000,n_steps=>300,seed=>42})
 end actions

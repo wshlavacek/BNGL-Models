@@ -82,6 +82,15 @@ files:
       Monte-Carlo error); -bscb/-utl shown to be no-ops vs the exact method; and the
       digitized vs simulated Fig. 4 heat maps with the per-site sustainment
       comparison.
+  - name: reference/erbb_receptor_signaling_creamer2012.xml
+    role: reference
+    description: >
+      BioNetGen writeXML() export of the network-free model at the shipped
+      nominals (subvolume f=0.02, ligand binding off at lig=0 — the state the
+      actions block equilibrates before setting lig=1), the input consumed by
+      the bngsim NFsim / RuleMonkey engines. The reduced f=0.002 XMLs the
+      three-engine cross-check runs on are baked per run in a temp dir by
+      run_creamer2012.py and are not committed.
   - name: reference/erbb_receptor_signaling_creamer2012_equil.gdat
     role: reference
     description: Equilibration observables (ligand off; flat basal state), BNG NFsim, f=0.02.

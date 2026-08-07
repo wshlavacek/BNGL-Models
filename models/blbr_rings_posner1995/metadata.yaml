@@ -85,10 +85,17 @@ files:
       BNGL file used by the size2-ring-posner-validation suite.
   - name: reference/blbr_rings_posner1995_nfr.gdat
     role: reference
+    description: >
+      NFsim time course (seed=42, -bscb -utl 5) for the ring-forming primary
+      model at the shipped nominals.
   - name: reference/blbr_rings_posner1995_nfr.species
     role: reference
+    description: NFsim final species list for the same run.
   - name: reference/blbr_rings_posner1995_nfr.xml
     role: reference
+    description: >
+      BioNetGen writeXML() export of the primary model at the shipped nominals,
+      the input NFsim consumes.
   - name: reference/blbr_rings_posner1995_no_rings_nfr.gdat
     role: reference
     description: NFsim time course (seed=42) for the no-rings variant.

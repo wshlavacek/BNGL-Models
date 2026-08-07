@@ -176,6 +176,21 @@ files:
       Paper-exact variant verification: Fig 3a Cro2 plateau restored to ~55-60 nM
       by growth dilution; Fig 6a 'Full' onset restored to MOI>3 (overlaid on the
       digitized Arkin Fig 6a points); Fig 6b Poisson-weighted lysogens vs API.
+  - name: reference/lambda_switch_arkin1998_fullcircuit.xml
+    role: reference
+    description: >
+      BioNetGen writeXML() export of the base full circuit at the shipped
+      nominals (MOI=6, dimer_scale=0.5). This is the model's ENTIRE committed
+      protocol -- the actions block is writeXML() only -- and the artifact both
+      network-free engines consume; run_fullcircuit.py bakes any other MOI into
+      its own temp-dir copy rather than editing this one.
+  - name: reference/lambda_switch_arkin1998_fullcircuit_exact.xml
+    role: reference
+    description: >
+      The same writeXML() export for the paper-exact variant at the shipped
+      nominals (MOI=6), including the growth-dilution rules and the
+      antitermination-saturation states that distinguish it from the base file.
+      Simulate it with RuleMonkey, not NFsim (see the .bngl entry above).
   - name: reference/fullcircuit_fig3.npz
     role: reference
     description: >
