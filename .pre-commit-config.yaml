@@ -7,10 +7,24 @@ repos:
     rev: v5.0.0
     hooks:
       - id: check-yaml
+      # `reference/` holds verbatim BioNetGen and NFsim output, and the house rule is that a
+      # fresh run reproduces it byte for byte (`curate-model` "Reproducibility Of Committed
+      # Reference Output"). Tidying it is exactly what makes it stop being a faithful record:
+      # NFsim's `.species` banner ends in a space, and 1224 committed `.net`/`.species` files
+      # carry trailing whitespace that these hooks would silently rewrite the next time the
+      # file is staged. `.gitattributes` already treats the same paths as byte-sensitive.
       - id: end-of-file-fixer
+        exclude: (^|/)reference/
       - id: trailing-whitespace
+        exclude: (^|/)reference/
       - id: check-merge-conflict
+      # Committed reference output is large by design — 72 tracked files already exceed the
+      # hook's 500 KB default, topping out at the 26 MB Kocieniewski 2026 `.cdat`, and the
+      # default has been bypassed rather than respected each time. The ceiling is set above
+      # the largest thing the collection legitimately holds, so the hook goes back to doing
+      # its actual job: catching a binary nobody meant to commit.
       - id: check-added-large-files
+        args: [--maxkb=30000]
       - id: mixed-line-ending
       - id: debug-statements
       - id: detect-private-key
