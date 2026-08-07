@@ -61,6 +61,18 @@ begin model
 #  SSA both depend on it. The verification notebook varies N_sub to reproduce
 #  the holoenzyme-size sweep of Fig. 6a and checks the N = 6 result against the
 #  exact ODE network of the primary file.
+#
+#  Above the hexamer no exact network exists, so the witness there is a second
+#  network-free ALGORITHM rather than a second build of this one: bngsim's
+#  RuleMonkey, which computes exact event times over every particle and rejects
+#  nothing, against rejection-based NFsim. Sec. 6 of the verification notebook
+#  runs both, plus BNG2.pl's bundled legacy NFsim, on one writeXML() input at
+#  N_sub = 6, 12 and 100 with 48 seeds per arm, and they agree: max|z| = 2.53
+#  over 216 comparisons of ensemble means against an expected maximum of 2.83,
+#  100% below 3. -bscb is inert for this file because no rule creates a bond -
+#  both autophosphorylation rules are single connected two-molecule patterns
+#  joined by an explicit bond, hence unimolecular - and the auto-computed UTL
+#  of 2 already covers the largest pattern; both are measured, not assumed.
 
 begin parameters
   # Avogadro constant.

@@ -7,7 +7,7 @@ the independent implementation, and how tightly it must agree, is what this docu
 
 The replacement is **RuleMonkey used as the correctness check on NFsim**: an exact network-free
 method standing witness for a rejection-based one. Fourteen of the collection's fifty-four model
-folders are actively network-free; seven of those document a cross-engine check. The protocol
+folders are actively network-free; eight of those document a cross-engine check. The protocol
 below is generalized from `tlbr_steric_monine2010` and `erbb_receptor_signaling_creamer2012`,
 which run it most completely, together with `egfr_oligomerization_mitra2019`,
 `tcr_signaling_chylek2014`, `p53_nhej_dolan2015` and `lambda_switch_cortes2017`.
@@ -69,8 +69,8 @@ error just as NFsim does, so a closed form beats it. Use the strongest witness t
 | **a RuleMonkey ensemble** | no closed form, and no size at which the network can be generated | everything peculiar to the sampler: rejection bookkeeping, molecularity, traversal |
 | **a second NFsim build** | never sufficient alone | that the build reproduces |
 
-This ordering is why six of the seven actively network-free folders with no RuleMonkey arm are
-nonetheless verified. The blbr/tlbr family is *built* from theory and checked against it —
+This ordering is why the six actively network-free folders with no RuleMonkey arm are nonetheless
+verified. The blbr/tlbr family is *built* from theory and checked against it —
 `tlbr_solution_macken1982` against the paper's ODE kinetics (Eq. 11), its closed-form equilibrium
 (Eqs. 13, 17) and its branching-process aggregate-size distribution (Theorem 1, Eq. 21);
 `blbr_heterogeneity_goldstein1980` against the Goldstein–Wofsy equilibrium Eqs. 13–14;
@@ -255,7 +255,11 @@ never create a bond gives it nothing to act on.
 `camkii_holoenzyme_activation_michalski2012_nfsim.bngl` seeds a pre-formed twelve-subunit ring and
 thereafter only changes subunit states: both autophosphorylation rules are single connected
 two-molecule patterns joined by an explicit bond — unimolecular — so `-bscb` is inert, and the
-auto-computed UTL of 2 already covers the largest pattern in the file.
+auto-computed UTL of 2 already covers the largest pattern in the file. Both predictions are now
+measured (issue #40): forcing `-bscb` on or off leaves the per-seed ensembles **bit-identical** in
+both stacks, and raising the UTL above the auto value changes nothing but the legacy binary's
+random stream. Argue it from the rules, then measure it anyway — `lambda_switch_arkin1998` is the
+case where the argument was right and the flag was still the leading suspect for a real defect.
 `blbr_rings_posner1995` looks structurally similar and is the opposite case: its rules *build* the
 rings, through bimolecular crosslinking and an explicit closure rule, and it requires
 `-bscb -utl 5`. Read the rules, not the topology of the seeded species.
@@ -289,6 +293,14 @@ Network-free verification is the canonical driver-script case in `curate-model` 
 Artifact Shape": hours of ensemble runs across three engines will not fit in a notebook. Five
 folders have converged on one shape — use it.
 
+**Check the runtime before you reach for it.** The shape below exists to survive an expensive
+campaign, and it costs a file, a mode dispatcher and a second place for the reasoning to live.
+`camkii_holoenzyme_activation_michalski2012` runs the full three-engine check, at three
+holoenzyme sizes with 48 seeds each plus a null and the flag determination, in under three
+minutes, and it stays in `verify_michalski2012.ipynb` §6 — still caching per seed to
+`reference/agreement.npz`, still printing the metric and the verdict on the PNG. Minutes belong
+in the notebook; hours get a driver.
+
 ```
 python run_<author><year>.py reference [N]   # faithful published protocol vs committed reference/
 python run_<author><year>.py agreement [N]   # the three-engine cross-check, N seeds/engine
@@ -321,11 +333,14 @@ implementation for a model that has no network to integrate — not a bonus pane
 
 Twenty-one folders reference `method=>"nf"`. Fourteen are **actively** network-free; the other
 seven run ODE or SSA on a finite network and only offer a commented-out `simulate_nf` alternative
-(§2). Of the fourteen, seven document a cross-engine check: `tlbr_steric_monine2010`,
+(§2). Of the fourteen, eight document a cross-engine check: `tlbr_steric_monine2010`,
 `erbb_receptor_signaling_creamer2012`, `egfr_oligomerization_mitra2019`, `tcr_signaling_chylek2014`,
-`p53_nhej_dolan2015`, `lambda_switch_cortes2017`, `lambda_switch_arkin1998`.
+`p53_nhej_dolan2015`, `lambda_switch_cortes2017`, `lambda_switch_arkin1998`,
+`camkii_holoenzyme_activation_michalski2012`. The remaining six are the blbr/tlbr theory family
+and need none — they are checked against closed-form equilibrium or kinetic theory, which is the
+stronger witness (§2).
 
-All seven now commit a cached comparison with a metric. `lambda_switch_arkin1998` was the
+All eight now commit a cached comparison with a metric. `lambda_switch_arkin1998` was the
 holdout — its `metadata.yaml` asserted "NFsim/RuleMonkey parity retained" of the exact
 full-circuit variant with nothing in the folder behind it — and closing it (issue #39) is the
 best argument this document has for why the artifact is not a formality. **The claim was
@@ -353,17 +368,40 @@ all of which generalize:
   compiled core. Both `*_agreement.npz` carry `bngsim 0.12.2+dee86da42547`; without it, "the
   engines agree" silently becomes a claim about whatever is installed today.
 
-Of the seven actively network-free folders with no cross-engine arm, six are the blbr/tlbr theory
-family and need none — they are checked against closed-form equilibrium or kinetic theory, which
-is the stronger witness (§2). The seventh is the open case:
+`camkii_holoenzyme_activation_michalski2012` was the last of the eight to be closed (issue #40),
+and it is the one case where the check lives in a **notebook** rather than a driver script,
+because the whole campaign — three engines × three holoenzyme sizes × 48 seeds, plus a null
+control and the flag determination — runs in under three minutes. §7's shape is for hours of
+ensemble runs; do not pay its cost when the campaign is minutes. Three things it adds:
 
-**`camkii_holoenzyme_activation_michalski2012_nfsim.bngl`.** The file is anchored where an exact
-witness exists — its reformulation reproduces the primary file's exact hexamer ODE — but its
-reason for existing is the dodecamer-to-100-mer range that `generate_network` cannot reach
-(44,368 dodecamer configurations), and there it has no exact witness. It is the cheapest
-outstanding cross-check in the collection: the model carries ~2,500 dodecamers over six seconds
-of simulated time, so a five-configuration, eight-seed campaign runs in about nine seconds.
-It is not a flags problem — see below — it is simply a check that has never been committed.
+- **A first-order rule set makes the deterministic ODE an exact witness, not a mean-field one.**
+  Every rule in the file is first order in the holoenzyme species — CaM4 binding is
+  pseudo-first-order in a buffered pool, and both autophosphorylation rules act inside one ring —
+  so the enumerated hexamer network is linear and its ODE solution *is* the mean of the CTMC. A
+  z-score against it therefore carries no model error in the denominator, which is a stronger
+  version of §2's "generated network at reduced size" row: check whether the rules are linear
+  before you settle for calling the ODE a mean-field approximation.
+- **Assert that the XML the arms consume is the committed one.** `writeXML()` at the committed
+  `N_sub` comes out byte-identical to `reference/..._nfsim_nfr.xml`, and the notebook asserts
+  that before running any arm. Note that BioNetGen writes the file stem into the XML as the model
+  id, so a size sweep has to vary the *directory*, not the stem, or the assertion fails for a
+  reason that has nothing to do with the model.
+- **Shared seeds correlate the two NFsim cores, and that is measurable.** At matched seeds the
+  legacy binary and bngsim's NFsim core reach a per-seed endpoint correlation of r = 0.41 on
+  F_P, while RuleMonkey against either stays at r ≤ 0.15 and a disjoint-seed null at r ≈ 0.
+  This is §1's independence rule made empirical: the two rejection cores share the algorithm
+  and much of its random-number consumption, so they are not two independent samples of the
+  process, and the exact arm is the one that is. It also means the unpaired denominator
+  `sqrt(se_a² + se_b²)` is *conservative* for the NFsim–NFsim pair — it cannot manufacture a
+  pass, but it does explain a cross-engine z pool that sits slightly under-dispersed against a
+  null that does not.
+
+Result: `max|z| = 2.53` over 216 comparisons against an expected 2.83, 100% below 3, largest
+combined endpoint `|z| = 2.03`, same-engine null 2.56; at the hexamer all three arms reproduce the
+exact ODE to 0.2% of *F*, and no arm at any size departs from that value by more than 0.51%
+— mostly the legacy binary's own offset — against the 1–2% size independence the paper
+reports for Fig. 6a. `-bscb` and `-utl` are inert, measured as per-seed bit-identical
+ensembles, and predicted from the rules because no rule in the file creates a bond (§6).
 
 ## 9. Worked examples
 
@@ -401,3 +439,10 @@ It is not a flags problem — see below — it is simply a check that has never 
   a note that "the engines disagree." Also the folder that shows the payoff of caching per seed:
   the endpoint test was written *after* the campaign, and `run_fullcircuit.py rescore` applied it
   to the stored per-seed ensembles without re-running a single simulation.
+- **`camkii_holoenzyme_activation_michalski2012`** — the cheap case, and the one that stays in the
+  notebook (§7). Its reduced-size arm is an *exact* witness rather than a mean-field one, because
+  the rules are first order in the holoenzyme species, so the enumerated hexamer ODE is the mean
+  of the chain; the reduction axis is the axis under test (holoenzyme size), so the check runs at
+  three sizes rather than one. Also the folder where the shared seed block was measured instead of
+  assumed away: the two NFsim cores correlate at r ≈ 0.4 at matched seeds while the exact arm does
+  not (r = 0.41 against r ≤ 0.15), which is §1's independence rule as a number.

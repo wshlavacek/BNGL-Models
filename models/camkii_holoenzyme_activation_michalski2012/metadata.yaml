@@ -64,6 +64,24 @@ files:
       NFsim from instantiating hundreds of thousands of CaM particles.
       Reaches the holoenzyme sizes of Fig. 6a, which generate_network
       cannot (44368 dodecamer configurations).
+
+      WITNESSES. Below and at the hexamer the file is pinned exactly: its
+      reformulation reproduces the primary file's generated hexamer network,
+      whose deterministic solution is not a mean-field approximation but the
+      exact mean of the stochastic process, because every rule is first order
+      in the holoenzyme species. Above the hexamer no exact network exists,
+      and the witness is a second network-free ALGORITHM: bngsim's
+      RuleMonkey, which computes exact event times over every particle and
+      rejects nothing, standing witness for rejection-based NFsim. Section 6
+      of verify_michalski2012.ipynb runs both against BNG2.pl's bundled
+      legacy NFsim on one writeXML() input at N_sub = 6, 12 and 100 --
+      48 seeds per arm, endpoint and trajectory FP()/FC() -- and they agree:
+      max|z| = 2.53 over 216 comparisons against an expected maximum of
+      2.83, 100% below 3, largest combined endpoint |z| = 2.03, against a
+      same-engine null of 2.56. -bscb is inert here because no rule creates
+      a bond, measured as per-seed bit-identical ensembles, and NFsim's
+      auto-computed UTL of 2 already covers the largest pattern. Cached in
+      reference/agreement.npz and reference/flags.npz.
     documentation_target: standard
     scale: minutes
     min_bionetgen_version: ">=2.9.3"
@@ -93,6 +111,14 @@ files:
       compares BioNetGen against those independent solutions, sweeps the
       holoenzyme size from 2 to 100 subunits with NFsim for Fig. 6a, and
       compares every curve with the digitized Figs. 2, 4, 5a and 7.
+      Section 6 is the level-1 check for _nfsim.bngl above the hexamer,
+      where there is no network to integrate: three network-free engines
+      (BNG2.pl's legacy NFsim, bngsim NfsimSession, exact bngsim
+      RuleMonkeySession) on one writeXML() input at three holoenzyme sizes,
+      scored as the pairwise z of ensemble means against the expected
+      maximum of that many standard normals, with a same-engine null
+      control and the -bscb / -utl determination. That campaign takes under
+      three minutes, so no driver script is needed.
   - name: verify_michalski2012.png
     role: figure
   - name: verify_michalski2012_six_state.ipynb
@@ -166,7 +192,29 @@ files:
   - name: reference/camkii_holoenzyme_activation_michalski2012_nfsim_nfr.xml
     role: reference
     description: >
-      NFsim input XML for the dodecamer model.
+      NFsim input XML for the dodecamer model. This is the single input all
+      three network-free engines consume in verify_michalski2012.ipynb
+      Sec. 6, which asserts that a fresh writeXML() reproduces it byte for
+      byte before running any arm.
+  # Cross-engine cross-check caches, written by verify_michalski2012.ipynb Sec. 6.
+  - name: reference/agreement.npz
+    role: reference
+    description: >
+      Cached per-seed FP()/FC() trajectory ensembles, 48 seeds per arm, for
+      BNG2.pl's legacy NFsim, bngsim NfsimSession and exact bngsim
+      RuleMonkeySession at N_sub = 6, 12 and 100, plus a same-engine null
+      block of RuleMonkey on disjoint seeds and the exact hexamer ODE
+      trajectory. Per-seed rather than summarized, so the metric can be
+      recomputed or a new statistic added without re-running the campaign.
+      Carries the metrics, the verdict, and the bngsim build and BioNetGen
+      version that produced them.
+  - name: reference/flags.npz
+    role: reference
+    description: >
+      Cached dodecamer ensembles for the -bscb / -utl determination in both
+      stacks against the same exact RuleMonkey ensemble, with NFsim's
+      auto-computed UTL and the per-seed bit-identity verdict that shows
+      both flags are inert for this file.
   - name: reference/camkii_holoenzyme_activation_michalski2012_six_state_isha.net
     role: reference
     description: >
