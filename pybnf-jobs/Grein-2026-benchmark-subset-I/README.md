@@ -205,12 +205,12 @@ linear one.
 | `Brannmark_JBC2010` | `minutes` | 141.8248543 | lin | 22 | 43 | gntr | 0.064 † | ✓ | 🟢 objective validated ‡ |
 | `Giordano_Nature2020` | `minutes` | −3488.3414981 | lin | 50 | 313 | gntr | 3.8e+03 † | ✓ | ⚪ setup only |
 | `Weber_BMC2015` | `minutes` | 296.2020025 | lin | 36 | 135 | gntr | −0.0002 † | ✓ | 🟢 objective validated ‡ |
-| `Okuonghae_ChaosSolitonsFractals2020` | `hours` | 373.5476580 | lin | 16 | 92 | cmaes | 4.7e+05 † |   | ⚪ setup only |
+| `Okuonghae_ChaosSolitonsFractals2020` | `minutes` | 373.5476580 | lin | 16 | 92 | gntr | 0.0012 |   | ✅ **solved** |
 | `Oliveira_NatCommun2021` | `minutes` | 7904.9343174 | lin | 12 | 120 | gntr | 0.011 |   | ✅ **solved** |
 | `Smith_BMCSystBiol2013` | `hours` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † |   | ⚪ setup only |
 
 `k` = free parameters, `n` = scored data points.
-**† = optimality gap at the PEtab nominal point, not from a fit.** Only the thirteen ✅ rows report an
+**† = optimality gap at the PEtab nominal point, not from a fit.** Only the fourteen ✅ rows report an
 OG from an actual optimization run.
 
 **obj ✓ = the objective has been checked against an independent oracle.** The Eq. 6 NLL is
@@ -319,7 +319,7 @@ enough to find the reference basin. `Laske_PLOSComputBiol2019` is the worked exa
 direction, and it is now **solved**: the collection-default 20 × 500 reaches only `OG = 6.76` on it,
 while 100 × 1000 — the budget its conf now carries — reaches the reference optimum itself. Expect to tune
 `population_size` / `max_iterations`, or to switch to `cmaes` with IPOP restarts, before treating any
-⚪ or 🟢 row as a statement about PyBNF's optimizers. The thirteen ✅ rows are the only ones where a fit
+⚪ or 🟢 row as a statement about PyBNF's optimizers. The fourteen ✅ rows are the only ones where a fit
 was actually driven to `OG < 1.92`.
 
 `SalazarCavazos_MBoC2020` is the second worked example, and the sharper one: at 20 × 500 it reaches
