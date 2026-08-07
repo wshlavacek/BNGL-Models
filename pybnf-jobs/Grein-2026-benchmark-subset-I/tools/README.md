@@ -108,3 +108,43 @@ rows = csv.DictReader(open('<upstream>/parameters_<slug>.tsv'), delimiter='\t')
 json.dump({r['parameterId']: float(r['nominalValue']) for r in rows
            if str(r.get('estimate', '1')).strip() == '1'}, open('nominal.json', 'w'))
 ```
+
+## `sigma_profile.py` — how far is the nominal point once its estimated σ are free?
+
+```bash
+python tools/sigma_profile.py <upstream-root> <slug-dir>...
+```
+
+`nominal_check.json`'s `OG_nominal` evaluates the objective at the PEtab `nominalValue` vector —
+**every** parameter, the estimated noise parameters included. Many slugs here ship placeholder σ
+nominals (`Giordano` 1, `Zhao` 1000), and for those the number is dominated by `Σ nⱼ log σⱼ` sitting
+far from its MLE. It is then not a statement about the dynamics, which is how it gets read: issue #38
+orders the remaining ⚪ candidates "roughly by nominal-point distance, i.e. plausibly by difficulty".
+
+This holds every non-noise parameter at nominal, sets each estimated σ to `√(Σⱼ r²/nⱼ)`, and
+re-scores. No PyBNF and no simulation — the trajectory is upstream's own `simulatedData`, the same
+oracle §2c uses, so this inherits exactly that coverage. Measured on the corpus: `Giordano` 3776 →
+**743.72**, `Zhao` 276.12 → **135.75**, `Brannmark` unchanged.
+
+> **The self-check is the load-bearing part, so it is printed rather than thresholded.** Substituting
+> the nominal σ back in must reproduce `nominal_check.json`'s `J_paper`. That residual is reported in
+> the last column, and a profiled number means something only when it is orders below the inflation
+> it claims. `Giordano` reads `5.7e-14` against 3032. `Brannmark` reads `2.9e-04` against an inflation
+> of `2.9e-04` — the same order, i.e. the tool saying it cannot resolve an effect that small, and the
+> right conclusion is that Brannmark has no inflation rather than that it has one of `2.9e-04`.
+> `Laske` reads `4.9e+02` against `5.5e+02`: its `simulatedData` is not the nominal-point trajectory
+> at all, so every residual is against the wrong point. A threshold would have turned all three into
+> the same uninformative red.
+
+> **Gotcha: check against `J_paper`, never against `reduced_objective`.** PyBNF's reduced objective
+> drops only the *parameter-independent* per-point constants; `Σ nⱼ log σⱼ` depends on a fitted σ and
+> therefore stays inside it. The first version of this script compared to `reduced_objective` and
+> reported a confident failure on `Brannmark`, `Laske` **and** `Zhao` — three slugs, one wrong
+> baseline. `J_paper == -log_likelihood` is the unambiguous scale and the one `score.py` uses.
+
+> **Gotcha: a one-to-one join is not optional.** `measurementData` and `simulatedData` must join on
+> the full key (observable, condition, pre-equilibration condition, time, observable/noise
+> parameters, dataset). Where they do not, the script refuses rather than guessing — a duplicated
+> join silently multiplies the residual sum, which would read as a real distance. Normalizing the key
+> columns matters too: the two tables disagree on dtype wherever a cell is sometimes blank, and on
+> formatting between `1` and `1.0`.
