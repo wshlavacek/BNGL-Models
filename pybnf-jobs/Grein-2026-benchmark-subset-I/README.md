@@ -105,7 +105,7 @@ will mislead. Measured at each nominal point (`J_paper − reduced` against `(N/
 | `Elowitz_Nature2000` | log10 | 60.5282 | 53.2984 | 7.2298 |
 | `Laske_PLOSComputBiol2019` | lin/ln | 299.6851 | 38.5954 | 261.0897 |
 | `Perelson_Science1996` | log10 | 247.8317 | 14.7030 | 233.1287 |
-| `Schwen_PONE2014` | log10 | 1255.8661 | 262.8164 | 993.0497 |
+| `Schwen_PONE2015` | log10 | 1255.8661 | 262.8164 | 993.0497 |
 
 `Laske_PLOSComputBiol2019` is the one to read first, because it is the **mixed** case: 33 of its 42
 points are natural-log (`lnnormal`) and 9 are linear Gaussian, so its Jacobian is `Σ log(y_obs)` over
@@ -195,10 +195,10 @@ linear one.
 | `Laske_PLOSComputBiol2019` | `hours` | 276.0540613 | lin/ln | 13 | 42 | gntr | −1e−06 | ✓ | ✅ **solved** |
 | `Perelson_Science1996` | `minutes` | 222.2807689 | log10 | 3 | 16 | cmaes | 5e−7 |   | ✅ **solved** |
 | `Rahman_MBS2016` | `minutes` | 21.1534861 | lin | 9 | 23 | gntr | 0.000000 | ✓ | ✅ **solved** |
-| `Raia_CancerResearch2011` | `minutes` | 345.3097673 | lin | 39 | 205 | gntr | 0.78 † |   | 🟢 objective validated |
+| `Raia_CancerResearch2011` | `hours` | 345.3097673 | lin | 39 | 205 | gntr | 9e−06 |   | ✅ **solved** |
 | `SalazarCavazos_MBoC2020` | `minutes` | 366.8615730 | lin | 6 | 18 | gntr | 2.9e−05 |   | ✅ **solved** |
 | `Sneyd_PNAS2002` | `minutes` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 |   | ✅ **solved** |
-| `Schwen_PONE2014` | `minutes` | 952.4217251 | log10 | 30 | 286 | gntr | −8.42 † | ✓ | ⚪ setup only |
+| `Schwen_PONE2015` ‖ | `hours` | 952.4217251 | log10 | 30 | 286 | gntr | −8.42 † | ✓ | ⚪ setup only |
 | `Elowitz_Nature2000` | `hours` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † |   | ⚪ setup only |
 | `Borghans_BiophysChem1997` | `hours` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ✓ | ⚪ setup only |
 | `Zhao_QuantBiol2020` | `minutes` | 501.2270538 | lin | 28 | 82 | gntr | 5e−06 | ✓ | ✅ **solved** |
@@ -212,6 +212,17 @@ linear one.
 `k` = free parameters, `n` = scored data points.
 **† = optimality gap at the PEtab nominal point, not from a fit.** Only the fourteen ✅ rows report an
 OG from an actual optimization run.
+
+**‖ = renamed locally; upstream and Grein et al. still say `Schwen_PONE2014`.** The paper is
+[Schwen et al. 2015, *PLOS ONE* 10(7):e0133653](https://doi.org/10.1371/journal.pone.0133653) —
+published 2015-07-29, and the model's own SBML `<notes>` say 2015 — so the local slug was corrected
+to `Schwen_PONE2015` on 2026-08-07. **Nothing upstream was renamed**: the SBML file is still
+`model_Schwen_PONE2014.xml`, `upstream.json`'s `upstream_path` still points at
+`Benchmark-Models/Schwen_PONE2014/`, and `jstar.txt` still comes from the `Schwen_PONE2014` row of
+`best_fx_marvin.csv`. Because the local slug is therefore **not** a reliable join key for this one
+problem, both `nominal_check.json` and `upstream.json` record an explicit `upstream_slug`, and
+`tools/sigma_profile.py` reads that field rather than inferring the upstream directory from the
+local name. Any future tool that joins to upstream by slug must do the same.
 
 **§ = this row's `OG_nominal` is inflated by placeholder nominal σ, and is not a difficulty
 ranking.** `OG_nominal` evaluates the objective at the PEtab `nominalValue` vector — *every*

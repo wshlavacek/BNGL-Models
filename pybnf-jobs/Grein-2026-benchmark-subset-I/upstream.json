@@ -171,13 +171,15 @@
       "sha256_raw_upstream": "84dcf36f8f1d845492fd729e465beb6cf9858e9e1f0de6214510c1e9025e86ba",
       "upstream_line_endings": "LF"
     },
-    "Schwen_PONE2014": {
+    "Schwen_PONE2015": {
       "model_file": "model_Schwen_PONE2014.xml",
       "upstream_path": "Benchmark-Models/Schwen_PONE2014/model_Schwen_PONE2014.xml",
       "sha256_lf": "92b7b158a0d6131f1e81403c3ff3375d7e122aee42fc437c3c09fbf54f4d833f",
       "sha256_raw_local": "92b7b158a0d6131f1e81403c3ff3375d7e122aee42fc437c3c09fbf54f4d833f",
       "sha256_raw_upstream": "92b7b158a0d6131f1e81403c3ff3375d7e122aee42fc437c3c09fbf54f4d833f",
-      "upstream_line_endings": "LF"
+      "upstream_line_endings": "LF",
+      "upstream_slug": "Schwen_PONE2014",
+      "local_slug_note": "Renamed locally to Schwen_PONE2015: the paper is Schwen et al. 2015, PLOS ONE 10(7):e0133653 (doi 10.1371/journal.pone.0133653). The upstream directory, the model filename and Grein et al.'s own tables all still say 2014, so upstream_path and model_file below are unchanged and remain the join key to both."
     },
     "Smith_BMCSystBiol2013": {
       "model_file": "model_Smith_BMCSystBiol2013.xml",

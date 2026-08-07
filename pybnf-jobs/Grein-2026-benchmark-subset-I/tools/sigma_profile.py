@@ -47,10 +47,28 @@ def _find(d, *patterns):
     return None
 
 
-def _upstream_dir(root, slug):
-    for cand in (os.path.join(root, 'Benchmark-Models', slug), os.path.join(root, slug)):
-        if os.path.isdir(cand):
-            return cand
+def _upstream_dir(root, slug, slug_dir=None):
+    """Locate the upstream problem directory for a local slug.
+
+    Usually the two names are the same. They are not for `Schwen_PONE2015`, which is renamed
+    locally (the paper is 2015; upstream's directory, the model filename and Grein et al.'s own
+    tables all say 2014). The local slug is therefore NOT a reliable join key, and guessing is
+    what would silently skip such a slug -- so consult the `upstream_slug` the slug records in
+    its own nominal_check.json before falling back to the directory name.
+    """
+    names = [slug]
+    if slug_dir:
+        try:
+            with open(os.path.join(slug_dir, 'nominal_check.json')) as fh:
+                declared = json.load(fh).get('upstream_slug')
+            if declared and declared != slug:
+                names.insert(0, declared)
+        except (OSError, ValueError):
+            pass
+    for name in names:
+        for cand in (os.path.join(root, 'Benchmark-Models', name), os.path.join(root, name)):
+            if os.path.isdir(cand):
+                return cand
     return None
 
 
@@ -101,7 +119,7 @@ def _jacobian(scale, y):
 
 def analyse(slug_dir, upstream_root, profile=True):
     slug = os.path.basename(os.path.abspath(slug_dir))
-    up = _upstream_dir(upstream_root, slug)
+    up = _upstream_dir(upstream_root, slug, slug_dir)
     if up is None:
         raise FileNotFoundError('no upstream directory for ' + slug)
     meas, sim, obs, par = _read_tables(up)

@@ -129,7 +129,11 @@ still passed. Every instrument this corpus uses to catch a bad setup reported gr
 symptom was a fit that descended slowly and stalled — which is indistinguishable from a problem that
 needs a larger budget, and was very nearly written up as one.
 
-Fixed in `e008d345`; `Schwen_PONE2014` was the other affected slug, at 24 of 25 parameters.
+Fixed in `e008d345`. `Schwen_PONE2015` (renamed from `Schwen_PONE2014` on 2026-08-07) was the other
+affected slug: **19 of its 24 box-sampled parameters** lost their log scale. Schwen is the
+discriminating case for the fix rather than a second copy of this one — six of its parameters carry
+real `parameterScaleNormal` priors, which must survive as `log-normal` and do, and five more are
+genuinely `lin` and correctly stay `uniform`.
 
 ## Provenance
 
