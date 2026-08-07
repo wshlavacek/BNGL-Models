@@ -14,6 +14,58 @@ binding, internalization and extraction in two entities of mouse hepatocytes (*l
 *high-binding*), fitted to flow-cytometry (FACS) and ELISA data. It is the model of **Fig 11** and
 Eq 21/22, not the full four-scale framework the paper's title describes.
 
+---
+
+> ## ⚠️ READ FIRST — this problem's σ encoding is not the paper's, and it changes what a good `OG` means
+>
+> **The paper estimated an error for every data point. The PEtab problem collapses that to two free
+> σ.** Fig 11's caption says the shaded bands "correspond to the **estimated error in the data
+> points**"; the PEtab measurement table binds every row to one of exactly two noise parameters:
+>
+> | free σ | covers | points |
+> |---|---|---:|
+> | `IR_obs_std` | `observable_IR1` + `observable_IR2` + `observable_IRsum` (all FACS) | **34** |
+> | `std` | `observable_Insulin` (all ELISA) | **252** |
+>
+> Both are estimated (`estimate = 1`, `parameterScale = log10`), so with σ profiled out each group
+> contributes `nⱼ·log σⱼ + nⱼ/2` and **`∂NLL/∂log(RMSⱼ) = nⱼ`**. The ELISA assay therefore carries
+> **≈7.4× the leverage** (252 vs 34) of the FACS panel that Fig 11 publishes as *the* fit.
+>
+> **The consequence, measured at the final best point.** The published parameter vector is **not**
+> the MLE of this objective. The completed fit reaches `−315.9897` against the published point's
+> `−311.8668` — a better objective — while `observable_IR2` comes out flat or declining at all
+> three doses, where the data rise 2–3.5× and the published point tracks them closely:
+>
+> | dose | `IR2` at t=1 → t=30 | data | published | ours |
+> |---:|---|---:|---:|---:|
+> | 100 | | 4.24 → 9.25 | 3.50 → 7.74 | 5.18 → 4.83 |
+> | 1000 | | 13.57 → 47.84 | 16.21 → 48.72 | 31.59 → 29.06 |
+> | 10000 | | 61.28 → 136.19 | 73.99 → 112.79 | 92.23 → 92.04 |
+>
+> **This is not a defect and not ours to fix.** The objective reproduces the independent oracle
+> exactly (943.9993), the model is properly dose-responsive, and the encoding is the
+> Benchmarking-Initiative's. `J*` is defined on the *same* PEtab objective, so the benchmark
+> comparison is apples-to-apples and a `✅` here is sound.
+>
+> **The fitted σ show the trade directly.** `IR_obs_std` (FACS, 34 points) ran **into its upper
+> bound** at 0.056234 — the fit wanted to call the FACS misfit measurement noise and the box
+> stopped it — while `std` (ELISA, 252 points) *tightened* from 0.248324 to 0.186594, nowhere near
+> either of its own bounds.
+>
+> **What it does mean:** a good `OG` on this slug is evidence about the **PEtab objective**, not
+> evidence that the paper's Fig 11 kinetics were reproduced. Any write-up must say which. Combined
+> with `J*` being unconverged here (below), Schwen is the collection's weakest link between "solved"
+> and "recovers the published fit".
+>
+> **What is *not* a discrepancy:** that 88% of the points are ELISA. The paper fitted both assays —
+> *"A selection of the FACS data is shown Fig 11. In addition, the dose- and time dependency of
+> insulin depletion in the medium was evaluated by an ELISA."* Fig 11 plots a **selection** of one
+> assay, not the objective. Our 19 conditions match that sentence exactly: FACS dose-response at
+> 15 min (`data1`–`data4`), FACS time courses at three doses (`data5`–`data7`), ELISA dose and time
+> dependency (`data8`–`data19`).
+
+---
+
 ## The slug is named 2015; upstream says 2014
 
 This directory was `Schwen_PONE2014` until 2026-08-07. **The paper is 2015** — received 2015-04-17,
@@ -36,8 +88,12 @@ slug is deliberately **not** a reliable join key for this one problem.
 
 ## Status
 
-**Fit in progress.** Earlier revisions of this file carried two claims that are now known to be
-wrong; both are corrected here rather than quietly dropped.
+**✅ SOLVED — `OG = −12.545379`**, 100 × 1000 unbiased starts, ~2 h, 64 of 100 starts
+converging on a negligible step. See `VALIDATION.md`, and read the callout above before quoting
+that number: the reference it beats is unconverged, and the fit does not reproduce Fig 11.
+
+Earlier revisions of this file carried two claims that are now known to be wrong; both are corrected
+here rather than quietly dropped.
 
 **Correction 1 — the log10 objective is not a caveat.** This file used to say the nominal gap was
 "recorded but not asserted" because a log10 observable carries the change-of-variables Jacobian
@@ -78,29 +134,22 @@ correctly survive as `log-normal`, and its five genuinely `lin` parameters stay 
 **No fit before that date searched this problem correctly.** `Zhao_QuantBiol2020` was the other
 affected slug, at 28 of 28.
 
-## Where the likelihood lives, and a caution about reading a good OG here
+## How the 286 points divide
 
-The 286 scored points are not evenly spread across what the paper shows:
+| observable | points | share of points | governing σ |
+|---|---:|---:|---|
+| `observable_Insulin` (ELISA depletion) | 252 | 88.1% | `std` |
+| `observable_IR1` (low-binding) | 15 | 5.2% | `IR_obs_std` |
+| `observable_IR2` (high-binding) | 15 | 5.2% | `IR_obs_std` |
+| `observable_IRsum` (weighted, 0.605/0.395) | 4 | 1.4% | `IR_obs_std` |
 
-| observable | points | share |
-|---|---:|---:|
-| `observable_Insulin` (ELISA depletion) | 252 | **88.1%** |
-| `observable_IR1` (low-binding) | 15 | 5.2% |
-| `observable_IR2` (high-binding) | 15 | 5.2% |
-| `observable_IRsum` (weighted, 0.605/0.395) | 4 | 1.4% |
+These are shares of **scored points**, not of the likelihood — the two coincide only because each
+group carries its own free σ, which is the point made in the callout at the top of this file. Fig 11's
+bottom panel is the `IR1`/`IR2` time courses at three doses: **30 of 286 points**, against 252 for the
+assay the figure does not show.
 
-Fig 11's bottom panel — the one the paper publishes as *the* fit — is the `IR1`/`IR2` time courses
-at three doses, i.e. **30 of 286 points, 10.5% of the likelihood**. A fit can therefore improve its
-objective by trading that panel away, and in a provisional check of a partly-converged run it did:
-at a point scoring `−315.99` (better than the nominal `−311.87`), `observable_IR2` came out **flat
-or declining in time at all three doses**, where the data rise 2–3.5× and the published nominal
-point reproduces that rise closely (1000 nM at t=30: data 47.84, nominal 48.72, ours 29.06).
-
-That is a legitimate likelihood optimum rather than a defect — the objective reproduces the
-independent oracle exactly, and the model is properly dose-responsive — but it means **a good `OG`
-on this slug is not evidence that the published kinetics were recovered.** Read `OG` here against a
-reference that is itself unconverged, on a problem where 88% of the likelihood is a different assay
-from the one in the figure. Any write-up should say which.
+The weights `0.605`/`0.395` in `observable_IRsum` are the measured low-binding cell fraction; the
+paper reports `η_l,obs = 0.606`.
 
 ## Optimizer
 

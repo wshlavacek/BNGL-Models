@@ -198,7 +198,7 @@ linear one.
 | `Raia_CancerResearch2011` | `hours` | 345.3097673 | lin | 39 | 205 | gntr | 9e−06 |   | ✅ **solved** |
 | `SalazarCavazos_MBoC2020` | `minutes` | 366.8615730 | lin | 6 | 18 | gntr | 2.9e−05 |   | ✅ **solved** |
 | `Sneyd_PNAS2002` | `minutes` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 |   | ✅ **solved** |
-| `Schwen_PONE2015` ‖ | `hours` | 952.4217251 | log10 | 30 | 286 | gntr | −8.42 † | ✓ | ⚪ setup only |
+| `Schwen_PONE2015` ‖ | `hours` | 952.4217251 | log10 | 30 | 286 | gntr | −12.55 ¶ | ✓ | ✅ **solved** |
 | `Elowitz_Nature2000` | `hours` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † |   | ⚪ setup only |
 | `Borghans_BiophysChem1997` | `hours` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ✓ | ⚪ setup only |
 | `Zhao_QuantBiol2020` | `minutes` | 501.2270538 | lin | 28 | 82 | gntr | 5e−06 | ✓ | ✅ **solved** |
@@ -212,6 +212,20 @@ linear one.
 `k` = free parameters, `n` = scored data points.
 **† = optimality gap at the PEtab nominal point, not from a fit.** Only the fourteen ✅ rows report an
 OG from an actual optimization run.
+
+**¶ = solved on the benchmark objective, but *not* a reproduction of the source paper's fit.** Two
+things hold at once for `Schwen_PONE2015` and both must be quoted together. Its `J*` is **not
+converged** — the PEtab nominal point already scores 8.42 NLL units better, and §2c's independent
+oracle reproduces PyBNF exactly at 943.9993, so the reference is the outlier — which makes clearing
+the threshold an undemanding test. And its 286 points are bound to just **two** estimated σ
+(`IR_obs_std` over 34 FACS points, `std` over 252 ELISA points), where the source paper used
+per-point error estimates; with σ profiled, `∂OG/∂log(RMSⱼ) = nⱼ`, so the ELISA assay carries ≈7.4×
+the leverage of the panel the paper publishes as its figure. The fit takes that trade: it beats the
+published parameter vector on objective (−315.99 vs −311.87) while `observable_IR2` comes out flat or
+declining where the data rise 2–3.5×, and its FACS noise scale runs **into its upper bound**. None of
+that is a defect — the encoding is upstream's and `J*` is defined on the same objective, so the
+benchmark comparison is sound — but a good `OG` here is evidence about the **PEtab objective**, not
+about recovering the published kinetics. See that slug's `README.md` callout and `VALIDATION.md`.
 
 **‖ = renamed locally; upstream and Grein et al. still say `Schwen_PONE2014`.** The paper is
 [Schwen et al. 2015, *PLOS ONE* 10(7):e0133653](https://doi.org/10.1371/journal.pone.0133653) —
