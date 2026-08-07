@@ -331,8 +331,8 @@ without a cluster can actually run.
 
 - **A missing `information_criteria.txt` does not mean "unscoreable".** PyBNF writes it at the end
   of a *fit*, so a job never run has none whatever its objective — in the Grein subset both
-  `Smith_BMCSystBiol2013` (`sos`) and `Weber_BMC2015` (`chi_sq`) lack it because both are ⚪
-  setup-only. Genuine unscoreability means the *resolved* objective carries no per-point
+  `Smith_BMCSystBiol2013` (`sos`) and `Weber_BMC2015` (`chi_sq`) lack it because neither has been
+  fitted. Genuine unscoreability means the *resolved* objective carries no per-point
   log-likelihood, which under edition 2 essentially never happens: `objective = sos` resolves to
   `Gaussian(sigma=1)`. See `references/og-acceptance.md` §2.
 - **PEtab-exportable subset (archetype A).** `export_job` fails loud on features PEtab v2 can't

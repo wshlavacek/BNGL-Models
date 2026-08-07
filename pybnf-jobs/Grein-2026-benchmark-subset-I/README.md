@@ -202,9 +202,9 @@ linear one.
 | `Elowitz_Nature2000` | `hours` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † |   | ⚪ setup only |
 | `Borghans_BiophysChem1997` | `hours` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ✓ | ⚪ setup only |
 | `Zhao_QuantBiol2020` | `minutes` | 501.2270538 | lin | 28 | 82 | gntr | 276 † | ✓ | ⚪ setup only |
-| `Brannmark_JBC2010` | `minutes` | 141.8248543 | lin | 22 | 43 | gntr | invalid ‡ | ✗ | ⚠️ **blocked** (lanl/PyBNF#547) |
+| `Brannmark_JBC2010` | `minutes` | 141.8248543 | lin | 22 | 43 | gntr | 0.064 † | ✓ | 🟢 objective validated ‡ |
 | `Giordano_Nature2020` | `minutes` | −3488.3414981 | lin | 50 | 313 | gntr | 3.8e+03 † | ✓ | ⚪ setup only |
-| `Weber_BMC2015` | `minutes` | 296.2020025 | lin | 36 | 135 | gntr | invalid ‡ | ✗ | ⚠️ **blocked** (lanl/PyBNF#547) |
+| `Weber_BMC2015` | `minutes` | 296.2020025 | lin | 36 | 135 | gntr | −0.0002 † | ✓ | 🟢 objective validated ‡ |
 | `Okuonghae_ChaosSolitonsFractals2020` | `hours` | 373.5476580 | lin | 16 | 92 | cmaes | 4.7e+05 † |   | ⚪ setup only |
 | `Oliveira_NatCommun2021` | `minutes` | 7904.9343174 | lin | 12 | 120 | gntr | 0.011 |   | ✅ **solved** |
 | `Smith_BMCSystBiol2013` | `hours` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † |   | ⚪ setup only |
@@ -217,8 +217,9 @@ OG from an actual optimization run.
 recomputed at the nominal point straight from the upstream PEtab tables — `simulatedData` (the
 collection's own reference simulation) joined to `measurementData`, with the declared
 `observableTransformation` and nominal σ — with **no PyBNF in the loop**, and compared to what PyBNF
-reports at the same point. `✓` = reproduces PyBNF exactly (10 slugs). `✗` = disagrees, i.e. a defect
-(2 slugs, both lanl/PyBNF#547). Blank = not checked: either upstream ships no `simulatedData`
+reports at the same point. `✓` = reproduces PyBNF exactly (12 slugs). `✗` = disagrees, i.e. a defect
+— **no row carries one now**; the two that did (`Brannmark`, `Weber`) were fixed by
+lanl/PyBNF#547 and now reproduce. Blank = not checked: either upstream ships no `simulatedData`
 (`Bertozzi`, `Okuonghae`, `Oliveira`), or the rows could not be joined (`Elowitz`, `Fiedler`, `Raia`,
 `SalazarCavazos`, `Smith`), or the checker's own σ handling is the doubtful half rather than PyBNF's
 (`Armistead` and `Sneyd`, where PyBNF matches `J*` to 0.0000 and 0.0006, and `Perelson`).
@@ -227,19 +228,24 @@ reports at the same point. `✓` = reproduces PyBNF exactly (10 slugs). `✗` = 
 `✓` is a job whose objective is known good and whose nominal point simply is not the optimum
 (`Zhao`, 276 away — genuinely unrun). A ⚪ row with no mark is a job nobody has checked. Conflating
 those two is exactly how `Weber_BMC2015` sat as an ordinary ⚪ "ready-to-run" job whose objective was
-wrong by 13,740, one command away from being handed a multi-start budget.
+wrong by 13,740, one command away from being handed a multi-start budget. **That is not a
+hypothetical** — it is what happened, and this column exists because of it.
 
-**‡ = no valid OG can be computed for this slug yet.** Both rows use **pre-equilibration**, and on
-`preequilibrate: a, condition: b` PyBNF currently runs the scored phase with **`a`'s** parameters
-(lanl/PyBNF#547) — so `Brannmark`'s eight dose experiments simulate byte-identically and `Weber`'s
-trajectory is flat across the timepoint where its dose fires. The objective is therefore wrong before
-any optimizer runs. These two previously showed `OG_nominal` of `1.5e+03` and `1.4e+04`, which were
-read as "the nominal point is not the optimum" — it is. Recomputing the NLL from upstream's own
-`simulatedData` tables, with no PyBNF in the loop, puts the nominal point essentially **on** `J*`:
-`Weber` at `-0.0002` and `Brannmark` at `+0.064`. Exactly 2 of the 23 slugs pre-equilibrate and
-exactly those 2 are affected; every other slug checked that way reproduces PyBNF exactly.
+**‡ = these two rows were `⚠️ blocked` until 2026-08-07, and their old OGs should not be used.** Both
+use **pre-equilibration**, which the bngsim SBML backend silently dropped: it neither applied the
+conditions nor ran the unmeasured equilibration phase, so the scored run simulated the model exactly
+as authored. `Brannmark`'s eight dose experiments came out byte-identical and `Weber`'s trajectory
+was flat across the timepoint where its dose fires, and the objective was wrong before any optimizer
+started. They showed `OG_nominal` of `1.5e+03` and `1.4e+04`, which were recorded as "the nominal
+point is not the optimum" — it is. **lanl/PyBNF#547 (ADR-0104)** fixed it, and both now land on the
+independent NLL recomputed from upstream's own `simulatedData` tables: `Weber` at `−0.0002` and
+`Brannmark` at `+0.064`. Checked one level deeper for `Brannmark`, whose observable formulas are
+simple enough to evaluate by hand, its trajectory now agrees with that reference simulation to
+`1.4e−05` relative across all 43 measured points, where before 42 of the 43 were off by more than
+0.1% (worst: a factor of 8.5). Exactly 2 of the 23 slugs pre-equilibrate and exactly those 2 were
+affected; every other slug checked that way reproduced PyBNF exactly throughout.
 
-Three status levels, and the difference matters:
+Four status levels, and the difference matters:
 
 - ✅ **solved** — a real fit was run and reached `OG < 1.92`.
 - 🟢 **objective validated** — no fit was run, but the problem's `nominalValue` point *is* its
@@ -249,7 +255,9 @@ Three status levels, and the difference matters:
   the published optimum, so nothing about optimality is claimed. These are ready-to-run jobs.
 - ⚠️ **blocked** — the job imports and runs, but PyBNF's objective for it is *wrong*, so neither its
   OG nor any fit against it means anything until the upstream defect lands. Not a ready-to-run job:
-  do not spend a fitting budget here.
+  do not spend a fitting budget here. **No slug is in this state**; `Brannmark` and `Weber` were,
+  from 2026-08-06 until lanl/PyBNF#547 landed on 2026-08-07. The level is kept because the failure it
+  names is silent by nature and will recur.
 
 ### Coverage is now complete
 

@@ -7,15 +7,17 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Status
 
-**Setup only — not fitted.** The job runs and scores correctly; the PEtab nominal point is not this problem's published optimum, so no optimality claim is made.
+**Setup only — not fitted.** The job runs and scores correctly, and the PEtab nominal point reproduces the published optimum (`OG = 0.064`, well inside the solved threshold), so the nominal check validates PyBNF's objective against the paper's Eq. 6 NLL.
+
+> **Corrected 2026-08-07** by [lanl/PyBNF#547](https://github.com/lanl/PyBNF/issues/547) (ADR-0104). This problem pre-equilibrates, and the bngsim SBML backend silently dropped `preequilibrate:` — all eight doses simulated identically at the model's authored `insulin_dose_1 = 0.3`, and this README recorded `OG = 1531.44` as "the nominal point is not the published optimum". It is the optimum; the forward model was wrong. A dose-response whose doses all coincide is the signature to check for if this ever recurs.
 
 ## Reference
 
 | quantity | value |
 |---|---|
 | reference `J*` (Grein et al., best over all optimizer runs) | `141.82485427243665` |
-| paper-scale NLL at the PEtab nominal point | `1673.2673220511585` |
-| optimality gap at nominal | `1531.442467778722` |
+| paper-scale NLL at the PEtab nominal point | `141.88922297826417` |
+| optimality gap at nominal | `0.06436870582751908` |
 | scored data points `n` | 43 |
 | free parameters `k` | 22 |
 

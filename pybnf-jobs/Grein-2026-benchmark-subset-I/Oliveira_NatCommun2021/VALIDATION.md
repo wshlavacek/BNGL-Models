@@ -53,18 +53,19 @@ recipe lies between k=12 and k=22.
 
 ## Unverified — the caveat that keeps this at 78
 
-Ten slugs in this collection carry `obj ✓` in the coverage table: their Eq. 6 NLL has been recomputed
+Twelve slugs in this collection carry `obj ✓` in the coverage table: their Eq. 6 NLL has been recomputed
 at the nominal point directly from the upstream PEtab tables — `simulatedData` joined to
 `measurementData`, with the declared transformation and nominal σ — with no PyBNF in the loop, and it
 reproduces PyBNF exactly. **Oliveira cannot take that check**: upstream ships no `simulatedData` for
 this problem, so there is no reference trajectory to compare against.
 
-That matters because the same audit found two slugs where PyBNF and upstream disagree —
-`Brannmark_JBC2010` and `Weber_BMC2015`, both wrong by 1531 and 13,740 through lanl/PyBNF#547 — and
-in both cases the symptom was a large `OG_nominal` that had been read for weeks as "the nominal point
-is not the optimum". Oliveira's `OG_nominal = 9.6e+06` is exactly that shape. The difference is that
-Oliveira's *fit* reaches `J*` to 0.011, which a corrupted objective would not do — so the evidence
-here is good, it is just not the independent evidence the `obj ✓` rows have.
+That matters because the same audit found two slugs where PyBNF and upstream disagreed —
+`Brannmark_JBC2010` and `Weber_BMC2015`, wrong by 1531 and 13,740 through lanl/PyBNF#547 (fixed
+2026-08-07 by ADR-0104; both now reproduce) — and in both cases the symptom was a large `OG_nominal`
+that had been read for weeks as "the nominal point is not the optimum". Oliveira's
+`OG_nominal = 9.6e+06` is exactly that shape. The difference is that Oliveira's *fit* reaches `J*` to
+0.011, which a corrupted objective would not do — so the evidence here is good, it is just not the
+independent evidence the `obj ✓` rows have.
 
 Oliveira does not pre-equilibrate (no `preequilibrate:` in its conf), so it is not exposed to #547.
 

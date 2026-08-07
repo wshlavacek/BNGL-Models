@@ -7,15 +7,17 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Status
 
-**Setup only — not fitted.** The job runs and scores correctly; the PEtab nominal point is not this problem's published optimum, so no optimality claim is made.
+**Setup only — not fitted.** The job runs and scores correctly, and the PEtab nominal point reproduces the published optimum to four decimals (`OG = -0.0002`), so the nominal check validates PyBNF's objective against the paper's Eq. 6 NLL.
+
+> **Corrected 2026-08-07** by [lanl/PyBNF#547](https://github.com/lanl/PyBNF/issues/547) (ADR-0104). This problem pre-equilibrates, and the bngsim SBML backend silently dropped `preequilibrate:`. Its pre-equilibration condition is all-zeros and matches the model's authored defaults, so both experiments simulated a *completely flat* trajectory — identical to 8 significant figures at every timepoint, including across `t = 24` where `PdBu_time = 24, PdBu_dose = 1` should fire — and this README recorded `OG = 13739.87` as "the nominal point is not the published optimum". It is the optimum; the forward model was wrong. **This slug was previously queued as a tuning candidate on that reading; it is not one.** A trajectory that never moves through an event that should fire is the signature to check for if this ever recurs.
 
 ## Reference
 
 | quantity | value |
 |---|---|
 | reference `J*` (Grein et al., best over all optimizer runs) | `296.2020024574204` |
-| paper-scale NLL at the PEtab nominal point | `14036.072640146245` |
-| optimality gap at nominal | `13739.870637688824` |
+| paper-scale NLL at the PEtab nominal point | `296.20179656464325` |
+| optimality gap at nominal | `-0.00020589277715998833` |
 | scored data points `n` | 135 |
 | free parameters `k` | 36 |
 

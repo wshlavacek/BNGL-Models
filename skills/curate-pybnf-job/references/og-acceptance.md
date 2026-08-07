@@ -90,7 +90,7 @@ Their edition-2 twins score fine, which is the point of keeping both.
 **Do not read a missing `information_criteria.txt` as "unscoreable".** PyBNF writes it at the end
 of a *fit*, so a job that has never been run has none regardless of its objective. In the Grein
 subset, `Smith_BMCSystBiol2013` (`sos`) and `Weber_BMC2015` (`chi_sq`) both lack the file for the
-same reason: both are ⚪ setup-only. The objective is not what distinguishes them.
+same reason: neither has been fitted. The objective is not what distinguishes them.
 
 **Choosing the noise model** is therefore a modeling decision, not a scoreability workaround:
 

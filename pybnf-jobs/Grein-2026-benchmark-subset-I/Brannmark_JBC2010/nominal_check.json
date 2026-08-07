@@ -2,11 +2,11 @@
   "problem": "Brannmark",
   "slug": "Brannmark_JBC2010",
   "jstar": 141.82485427243665,
-  "J_paper": 1673.2751354066877,
-  "reduced_objective": 1633.760778478887,
+  "J_paper": 141.88922297826417,
+  "reduced_objective": 102.37486605046324,
   "n_scored": 43,
   "k": 22,
-  "OG_nominal": 1531.450281134251,
+  "OG_nominal": 0.06436870582751908,
   "optimizer": "gntr",
-  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective against the paper's Eq. 6 NLL. Corrected by lanl/PyBNF#547 (ADR-0104): before that fix, pre-equilibration was dropped on the bngsim SBML backend, all eight doses simulated identically, and this file recorded OG_nominal = 1531.45 as 'the nominal point is not the optimum'. It is."
 }
