@@ -151,8 +151,24 @@ PEtab `nominalValue` point is the published optimum, and evaluating PyBNF's obje
 reproduces the paper's `J*` to within the solved threshold — six to ~10⁻³ or better (four of those
 to ~10⁻⁵), plus `Fiedler_BMCSystBiol2016` at ~2e−3 (see `nominal_check.json` in each slug). That is
 an end-to-end check of the whole imported chain: SBML model → simulation → observable formulas →
-noise model → objective. (For the log10 slugs the nominal check carries the change-of-variables
-Jacobian and is recorded but not asserted as a validation.)
+noise model → objective.
+
+**The log10 Jacobian convention is settled, and it matches.** An earlier revision of this section, and
+the `nominal_check.json` of every log10 slug, hedged that `−log_likelihood` carries a change-of-variables
+Jacobian the paper's Eq. 6 `J*` "need not", so a log10 nominal check was recorded but not asserted. That
+hedge predated any log10 slug being *fitted*, and three solved slugs now settle it — each with a large
+Jacobian, each landing on `J*`:
+
+| slug | scale | Jacobian | OG **from a fit** |
+|---|---|---:|---:|
+| `Perelson_Science1996` | log10 | +233.1287 | 5.0e−07 |
+| `Blasi_CellSystems2016` | ln | −1102.0028 | −4.3e−07 |
+| `Laske_PLOSComputBiol2019` | lin/ln | +261.0897 | −1.0e−06 |
+
+Were the term absent from Eq. 6, Perelson would miss `J*` by 233 and Blasi by 1102. A *natural-log*
+Jacobian in place of log10 would offset Perelson by `n·log(ln10) = 13.34`, which the same result
+excludes. Both sides carry the identical term, so a log10 nominal OG is as much a validation as a
+linear one.
 
 > **Two nominal checks were recomputed on 2026-08-02** and their old values should not be used.
 > `Bertozzi_PNAS2020` moved from `OG = 1.79e+11` to `5.09e−06` — its nominal point *is* the
