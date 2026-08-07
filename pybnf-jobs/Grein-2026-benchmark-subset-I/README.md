@@ -175,12 +175,12 @@ Jacobian and is recorded but not asserted as a validation.)
 | `Boehm_JProteomeRes2014` | `minutes` | 138.2219682 | lin | 9 | 48 | gntr | 0.0012 | ✅ **solved** |
 | `Bruno_JExpBot2016` | `minutes` | −46.6881979 | lin | 13 | 77 | gntr | 1.1e−05 | ✅ **solved** |
 | `Crauste_CellSystems2017` | `minutes` | 190.4570655 | lin | 12 | 21 | gntr | 0.583 | ✅ **solved** |
-| `Fiedler_BMCSystBiol2016` | `minutes` | −58.5839553 | lin | 22 | 72 | gntr | −0.0022 † | 🟢 objective validated |
+| `Fiedler_BMCSystBiol2016` | `hours` | −58.5839553 | lin | 22 | 72 | gntr | 1.004 | ✅ **solved** (not saturated) |
 | `Laske_PLOSComputBiol2019` | `hours` | 276.0540613 | lin/ln | 13 | 42 | gntr | −1e−06 | ✅ **solved** |
 | `Perelson_Science1996` | `minutes` | 222.2807689 | log10 | 3 | 16 | cmaes | 5e−7 | ✅ **solved** |
-| `Rahman_MBS2016` | `minutes` | 21.1534861 | lin | 9 | 23 | gntr | 3.9e−06 † | 🟢 objective validated |
+| `Rahman_MBS2016` | `minutes` | 21.1534861 | lin | 9 | 23 | gntr | 0.000000 | ✅ **solved** |
 | `Raia_CancerResearch2011` | `minutes` | 345.3097673 | lin | 39 | 205 | gntr | 0.78 † | 🟢 objective validated |
-| `SalazarCavazos_MBoC2020` | `hours` | 366.8615730 | lin | 6 | 18 | gntr | 0.326 † | 🟢 objective validated |
+| `SalazarCavazos_MBoC2020` | `minutes` | 366.8615730 | lin | 6 | 18 | gntr | 2.9e−05 | ✅ **solved** |
 | `Sneyd_PNAS2002` | `minutes` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 | ✅ **solved** |
 | `Schwen_PONE2014` | `minutes` | 952.4217251 | log10 | 30 | 286 | gntr | −8.42 † | ⚪ setup only |
 | `Elowitz_Nature2000` | `hours` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † | ⚪ setup only |
@@ -194,7 +194,7 @@ Jacobian and is recorded but not asserted as a validation.)
 | `Smith_BMCSystBiol2013` | `hours` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † | ⚪ setup only |
 
 `k` = free parameters, `n` = scored data points.
-**† = optimality gap at the PEtab nominal point, not from a fit.** Only the nine ✅ rows report an
+**† = optimality gap at the PEtab nominal point, not from a fit.** Only the twelve ✅ rows report an
 OG from an actual optimization run.
 
 Three status levels, and the difference matters:
@@ -266,8 +266,14 @@ enough to find the reference basin. `Laske_PLOSComputBiol2019` is the worked exa
 direction, and it is now **solved**: the collection-default 20 × 500 reaches only `OG = 6.76` on it,
 while 100 × 1000 — the budget its conf now carries — reaches the reference optimum itself. Expect to tune
 `population_size` / `max_iterations`, or to switch to `cmaes` with IPOP restarts, before treating any
-⚪ or 🟢 row as a statement about PyBNF's optimizers. The nine ✅ rows are the only ones where a fit
+⚪ or 🟢 row as a statement about PyBNF's optimizers. The twelve ✅ rows are the only ones where a fit
 was actually driven to `OG < 1.92`.
+
+`SalazarCavazos_MBoC2020` is the second worked example, and the sharper one: at 20 × 500 it reaches
+`OG = 10.2` — *worse* than its own nominal point — and at 100 × 1000 it lands on `J*`. **100 × 1000 is
+now the working default for this collection**; a conf still carrying 20 × 500 is an untuned placeholder.
+The one problem where that budget has not sufficed is `Fiedler_BMCSystBiol2016`, solved at `OG = 1.004`
+without reaching a reference basin its own nominal point proves is there.
 
 ## Import + fit pipeline (reproduce)
 
