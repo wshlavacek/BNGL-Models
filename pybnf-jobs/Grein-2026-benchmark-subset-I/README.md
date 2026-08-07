@@ -183,35 +183,61 @@ linear one.
 
 ## Coverage: all 23 subset-I problems
 
-| slug | run cost | J\* | scale | k | n | optimizer | OG | status |
-|---|---|---|---|---|---|---|---|---|
-| `Armistead_CellDeathDis2024` | `minutes` | −301.9161878 | lin | 14 | 58 | gntr | 5.8e−06 | ✅ **solved** |
-| `Bertozzi_PNAS2020` | `minutes` | 158.8642627 | lin | 8 | 22 | gntr | 5.4e−06 | ✅ **solved** |
-| `Blasi_CellSystems2016` | `minutes` | −1090.5618246 | ln | 9 | 252 | gntr | −4.3e−07 | ✅ **solved** |
-| `Boehm_JProteomeRes2014` | `minutes` | 138.2219682 | lin | 9 | 48 | gntr | 0.0012 | ✅ **solved** |
-| `Bruno_JExpBot2016` | `minutes` | −46.6881979 | lin | 13 | 77 | gntr | 1.1e−05 | ✅ **solved** |
-| `Crauste_CellSystems2017` | `minutes` | 190.4570655 | lin | 12 | 21 | gntr | 0.583 | ✅ **solved** |
-| `Fiedler_BMCSystBiol2016` | `hours` | −58.5839553 | lin | 22 | 72 | gntr | 1.004 | ✅ **solved** (not saturated) |
-| `Laske_PLOSComputBiol2019` | `hours` | 276.0540613 | lin/ln | 13 | 42 | gntr | −1e−06 | ✅ **solved** |
-| `Perelson_Science1996` | `minutes` | 222.2807689 | log10 | 3 | 16 | cmaes | 5e−7 | ✅ **solved** |
-| `Rahman_MBS2016` | `minutes` | 21.1534861 | lin | 9 | 23 | gntr | 0.000000 | ✅ **solved** |
-| `Raia_CancerResearch2011` | `minutes` | 345.3097673 | lin | 39 | 205 | gntr | 0.78 † | 🟢 objective validated |
-| `SalazarCavazos_MBoC2020` | `minutes` | 366.8615730 | lin | 6 | 18 | gntr | 2.9e−05 | ✅ **solved** |
-| `Sneyd_PNAS2002` | `minutes` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 | ✅ **solved** |
-| `Schwen_PONE2014` | `minutes` | 952.4217251 | log10 | 30 | 286 | gntr | −8.42 † | ⚪ setup only |
-| `Elowitz_Nature2000` | `hours` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † | ⚪ setup only |
-| `Borghans_BiophysChem1997` | `hours` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ⚪ setup only |
-| `Zhao_QuantBiol2020` | `minutes` | 501.2270538 | lin | 28 | 82 | gntr | 276 † | ⚪ setup only |
-| `Brannmark_JBC2010` | `minutes` | 141.8248543 | lin | 22 | 43 | gntr | 1.5e+03 † | ⚪ setup only |
-| `Giordano_Nature2020` | `minutes` | −3488.3414981 | lin | 50 | 313 | gntr | 3.8e+03 † | ⚪ setup only |
-| `Weber_BMC2015` | `minutes` | 296.2020025 | lin | 36 | 135 | gntr | 1.4e+04 † | ⚪ setup only |
-| `Okuonghae_ChaosSolitonsFractals2020` | `hours` | 373.5476580 | lin | 16 | 92 | cmaes | 4.7e+05 † | ⚪ setup only |
-| `Oliveira_NatCommun2021` | `minutes` | 7904.9343174 | lin | 12 | 120 | gntr | 9.6e+06 † | ⚪ setup only |
-| `Smith_BMCSystBiol2013` | `hours` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † | ⚪ setup only |
+| slug | run cost | J\* | scale | k | n | optimizer | OG | obj ✓ | status |
+|---|---|---|---|---|---|---|---|---|---|
+| `Armistead_CellDeathDis2024` | `minutes` | −301.9161878 | lin | 14 | 58 | gntr | 5.8e−06 |   | ✅ **solved** |
+| `Bertozzi_PNAS2020` | `minutes` | 158.8642627 | lin | 8 | 22 | gntr | 5.4e−06 |   | ✅ **solved** |
+| `Blasi_CellSystems2016` | `minutes` | −1090.5618246 | ln | 9 | 252 | gntr | −4.3e−07 | ✓ | ✅ **solved** |
+| `Boehm_JProteomeRes2014` | `minutes` | 138.2219682 | lin | 9 | 48 | gntr | 0.0012 | ✓ | ✅ **solved** |
+| `Bruno_JExpBot2016` | `minutes` | −46.6881979 | lin | 13 | 77 | gntr | 1.1e−05 | ✓ | ✅ **solved** |
+| `Crauste_CellSystems2017` | `minutes` | 190.4570655 | lin | 12 | 21 | gntr | 0.583 | ✓ | ✅ **solved** |
+| `Fiedler_BMCSystBiol2016` | `hours` | −58.5839553 | lin | 22 | 72 | gntr | 1.004 |   | ✅ **solved** (not saturated) |
+| `Laske_PLOSComputBiol2019` | `hours` | 276.0540613 | lin/ln | 13 | 42 | gntr | −1e−06 | ✓ | ✅ **solved** |
+| `Perelson_Science1996` | `minutes` | 222.2807689 | log10 | 3 | 16 | cmaes | 5e−7 |   | ✅ **solved** |
+| `Rahman_MBS2016` | `minutes` | 21.1534861 | lin | 9 | 23 | gntr | 0.000000 | ✓ | ✅ **solved** |
+| `Raia_CancerResearch2011` | `minutes` | 345.3097673 | lin | 39 | 205 | gntr | 0.78 † |   | 🟢 objective validated |
+| `SalazarCavazos_MBoC2020` | `minutes` | 366.8615730 | lin | 6 | 18 | gntr | 2.9e−05 |   | ✅ **solved** |
+| `Sneyd_PNAS2002` | `minutes` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 |   | ✅ **solved** |
+| `Schwen_PONE2014` | `minutes` | 952.4217251 | log10 | 30 | 286 | gntr | −8.42 † | ✓ | ⚪ setup only |
+| `Elowitz_Nature2000` | `hours` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † |   | ⚪ setup only |
+| `Borghans_BiophysChem1997` | `hours` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ✓ | ⚪ setup only |
+| `Zhao_QuantBiol2020` | `minutes` | 501.2270538 | lin | 28 | 82 | gntr | 276 † | ✓ | ⚪ setup only |
+| `Brannmark_JBC2010` | `minutes` | 141.8248543 | lin | 22 | 43 | gntr | invalid ‡ | ✗ | ⚠️ **blocked** (lanl/PyBNF#547) |
+| `Giordano_Nature2020` | `minutes` | −3488.3414981 | lin | 50 | 313 | gntr | 3.8e+03 † | ✓ | ⚪ setup only |
+| `Weber_BMC2015` | `minutes` | 296.2020025 | lin | 36 | 135 | gntr | invalid ‡ | ✗ | ⚠️ **blocked** (lanl/PyBNF#547) |
+| `Okuonghae_ChaosSolitonsFractals2020` | `hours` | 373.5476580 | lin | 16 | 92 | cmaes | 4.7e+05 † |   | ⚪ setup only |
+| `Oliveira_NatCommun2021` | `minutes` | 7904.9343174 | lin | 12 | 120 | gntr | 9.6e+06 † |   | ⚪ setup only |
+| `Smith_BMCSystBiol2013` | `hours` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † |   | ⚪ setup only |
 
 `k` = free parameters, `n` = scored data points.
 **† = optimality gap at the PEtab nominal point, not from a fit.** Only the twelve ✅ rows report an
 OG from an actual optimization run.
+
+**obj ✓ = the objective has been checked against an independent oracle.** The Eq. 6 NLL is
+recomputed at the nominal point straight from the upstream PEtab tables — `simulatedData` (the
+collection's own reference simulation) joined to `measurementData`, with the declared
+`observableTransformation` and nominal σ — with **no PyBNF in the loop**, and compared to what PyBNF
+reports at the same point. `✓` = reproduces PyBNF exactly (10 slugs). `✗` = disagrees, i.e. a defect
+(2 slugs, both lanl/PyBNF#547). Blank = not checked: either upstream ships no `simulatedData`
+(`Bertozzi`, `Okuonghae`, `Oliveira`), or the rows could not be joined (`Elowitz`, `Fiedler`, `Raia`,
+`SalazarCavazos`, `Smith`), or the checker's own σ handling is the doubtful half rather than PyBNF's
+(`Armistead` and `Sneyd`, where PyBNF matches `J*` to 0.0000 and 0.0006, and `Perelson`).
+
+**This column is orthogonal to the status column, and that distinction is the point.** A ⚪ row with
+`✓` is a job whose objective is known good and whose nominal point simply is not the optimum
+(`Zhao`, 276 away — genuinely unrun). A ⚪ row with no mark is a job nobody has checked. Conflating
+those two is exactly how `Weber_BMC2015` sat as an ordinary ⚪ "ready-to-run" job whose objective was
+wrong by 13,740, one command away from being handed a multi-start budget.
+
+**‡ = no valid OG can be computed for this slug yet.** Both rows use **pre-equilibration**, and on
+`preequilibrate: a, condition: b` PyBNF currently runs the scored phase with **`a`'s** parameters
+(lanl/PyBNF#547) — so `Brannmark`'s eight dose experiments simulate byte-identically and `Weber`'s
+trajectory is flat across the timepoint where its dose fires. The objective is therefore wrong before
+any optimizer runs. These two previously showed `OG_nominal` of `1.5e+03` and `1.4e+04`, which were
+read as "the nominal point is not the optimum" — it is. Recomputing the NLL from upstream's own
+`simulatedData` tables, with no PyBNF in the loop, puts the nominal point essentially **on** `J*`:
+`Weber` at `-0.0002` and `Brannmark` at `+0.064`. Exactly 2 of the 23 slugs pre-equilibrate and
+exactly those 2 are affected; every other slug checked that way reproduces PyBNF exactly.
 
 Three status levels, and the difference matters:
 
@@ -221,6 +247,9 @@ Three status levels, and the difference matters:
   validates the import and the objective; it makes no claim about PyBNF's optimizer.
 - ⚪ **setup only** — the job imports, simulates, and scores correctly, but its nominal point is not
   the published optimum, so nothing about optimality is claimed. These are ready-to-run jobs.
+- ⚠️ **blocked** — the job imports and runs, but PyBNF's objective for it is *wrong*, so neither its
+  OG nor any fit against it means anything until the upstream defect lands. Not a ready-to-run job:
+  do not spend a fitting budget here.
 
 ### Coverage is now complete
 
