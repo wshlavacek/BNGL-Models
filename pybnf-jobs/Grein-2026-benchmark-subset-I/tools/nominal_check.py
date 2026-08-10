@@ -10,6 +10,7 @@ Usage:  nominal_check.py <slug-dir> <upstream-petab-dir> [--write]
 import csv
 import json
 import os
+import re
 import sys
 import tempfile
 
@@ -102,6 +103,12 @@ def main():
         'k': ic.k,
         'OG_nominal': j_paper - jstar,
     })
+    # Derive `optimizer` from the conf rather than carrying the old value forward. Every other
+    # key here is recomputed, so a stale one survived every regeneration: Okuonghae and Bruno
+    # both moved from cmaes to gntr and kept saying "cmaes" until 2026-08-10.
+    job_type = re.search(r'^\s*job_type\s*=\s*(\w+)', open(conf).read(), re.M)
+    if job_type:
+        new['optimizer'] = job_type.group(1)
     print(json.dumps({k: new[k] for k in
                       ('slug', 'jstar', 'J_paper', 'reduced_objective', 'n_scored', 'k',
                        'OG_nominal') if k in new}, indent=2))

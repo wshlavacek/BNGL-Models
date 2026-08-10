@@ -7,6 +7,6 @@
   "n_scored": 92,
   "k": 16,
   "OG_nominal": 470116.963801246,
-  "optimizer": "cmaes",
+  "optimizer": "gntr",
   "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
 }

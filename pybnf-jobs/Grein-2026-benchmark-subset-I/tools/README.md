@@ -17,6 +17,12 @@ the same way a real run does — through `likelihood_information_criteria`, whic
 `information_criteria.txt` at the end of a fit. Without `--write` it prints the new values and the
 old ones for comparison.
 
+Keys the script does not recompute are carried forward from the existing file, so anything hand-added
+there survives. `optimizer` is the exception: it is re-derived from the conf's `job_type` on every
+run, because as a carried-forward key it went stale twice — `Okuonghae` and `Bruno` both moved from
+`cmaes` to `gntr` and kept reporting `cmaes` until 2026-08-10. Any future field that mirrors the conf
+should be derived the same way rather than carried.
+
 `<upstream-petab-dir>` is the problem's directory in a checkout of
 `Benchmarking-Initiative/Benchmark-Models-PEtab` at the commit `upstream.json` pins. That checkout is
 deliberately **not** vendored here (see the collection README) and is gitignored if you keep it under
