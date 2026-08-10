@@ -1,8 +1,8 @@
 # SalazarCavazos_MBoC2020
 
-**Run cost: `hours`** — 100,000 evaluations (100 × 1,000 `gntr`), each integrating a **618-reaction**
-network, the largest model in the subset. The `hours` tier is the collection table's a-priori
-estimate; the shipped fit measured **5 min 49 s** on ten cores.
+**Run cost: `minutes`** — 100,000 evaluations (100 × 1,000 `gntr`), each integrating a
+**618-reaction** network, the largest model in the subset. The shipped fit measured **5 min 49 s** on
+ten cores; the model's size does not make this an expensive problem to fit.
 
 PyBNF fitting job imported from the [Benchmark-Models-PEtab](https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab) collection, as used
 in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).

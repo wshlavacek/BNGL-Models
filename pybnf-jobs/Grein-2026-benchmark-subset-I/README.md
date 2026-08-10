@@ -146,9 +146,9 @@ log-likelihood** at the best fit in `information_criteria.txt` (matching `scipy.
 
 exactly, for **both** linear and log10 observables.
 
-**This identity is now corroborated across the collection, not just argued.** For ten problems the
+**This identity is now corroborated across the collection, not just argued.** For twelve problems the
 PEtab `nominalValue` point is the published optimum, and evaluating PyBNF's objective there
-reproduces the paper's `J*` to within the solved threshold — six to ~10⁻³ or better (four of those
+reproduces the paper's `J*` to within the solved threshold — seven to ~10⁻³ or better (four of those
 to ~10⁻⁵), plus `Fiedler_BMCSystBiol2016` at ~2e−3 (see `nominal_check.json` in each slug). That is
 an end-to-end check of the whole imported chain: SBML model → simulation → observable formulas →
 noise model → objective.
@@ -210,7 +210,7 @@ linear one.
 | `Smith_BMCSystBiol2013` | `hours` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † |   | ⚪ setup only |
 
 `k` = free parameters, `n` = scored data points.
-**† = optimality gap at the PEtab nominal point, not from a fit.** Only the fourteen ✅ rows report an
+**† = optimality gap at the PEtab nominal point, not from a fit.** Only the eighteen ✅ rows report an
 OG from an actual optimization run.
 
 **¶ = solved on the benchmark objective, but *not* a reproduction of the source paper's fit.** Two
@@ -383,7 +383,7 @@ enough to find the reference basin. `Laske_PLOSComputBiol2019` is the worked exa
 direction, and it is now **solved**: the collection-default 20 × 500 reaches only `OG = 6.76` on it,
 while 100 × 1000 — the budget its conf now carries — reaches the reference optimum itself. Expect to tune
 `population_size` / `max_iterations`, or to switch to `cmaes` with IPOP restarts, before treating any
-⚪ or 🟢 row as a statement about PyBNF's optimizers. The fourteen ✅ rows are the only ones where a fit
+⚪ or 🟢 row as a statement about PyBNF's optimizers. The eighteen ✅ rows are the only ones where a fit
 was actually driven to `OG < 1.92`.
 
 `SalazarCavazos_MBoC2020` is the second worked example, and the sharper one: at 20 × 500 it reaches
@@ -415,5 +415,5 @@ if valid simulations on your machine are being marked as failures.
 `<id>.conf` (the runnable fit) · the SBML model (verbatim) · `experiment*.exp` (data) ·
 `*_measparams.tsv` (per-measurement observable/noise parameter tables, where the problem uses them) ·
 `jstar.txt` (the reference J\*) · `nominal_check.json` (the nominal-point evaluation) · `score.py` ·
-`README.md`. The four solved slugs additionally ship `best_fit_params.txt`,
+`README.md`. The eighteen solved slugs additionally ship `best_fit_params.txt`,
 `information_criteria.txt`, and `VALIDATION.md` from their fits.
