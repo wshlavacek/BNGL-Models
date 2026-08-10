@@ -1,13 +1,21 @@
 # Rahman_MBS2016
 
-**Run cost: `minutes`** — 10,000 evaluations (20 × 500 `gntr`) on a 16-reaction ODE model.
+**Run cost: `minutes`** — 100,000 evaluations (100 × 1,000 `gntr`) on a 16-reaction ODE model.
 
 PyBNF fitting job imported from the [Benchmark-Models-PEtab](https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab) collection, as used
 in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Status
 
-**Objective validated at the PEtab nominal point** (OG = 3.9e-06 < 1.92). No optimization run has been performed here.
+**SOLVED** — `OG = 0.000000` from a from-scratch 100-start `gntr` fit in 16 min 01 s. The fit lands
+**on** the reference optimum, not merely inside the threshold: `J_paper` and `J*` agree to all seven
+reported decimals. The PEtab nominal point is *also* this problem's published optimum
+(`OG_nominal = 3.9e-06`), so the objective is validated independently of the optimizer.
+
+This is the collection's **unit-σ** case, and its cleanest fidelity check: every measurement carries
+`_SD = 1`, so `Σ log σᵢ` is exactly zero — 23 × `log(1)` — and the restored constant is `(N/2)log(2π)`
+alone. The identity `J_paper == −lnL` holds with no σ bookkeeping to get wrong, so a discrepancy here
+could only come from the likelihood itself. See `VALIDATION.md`.
 
 ## Reference
 
@@ -25,8 +33,15 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Optimizer
 
-`job_type = gntr` — general-objective Fisher/Gauss-Newton trust region (EFIM Hessian through trf's Coleman–Li core, ADR-0068) — handles this problem's estimated noise scale, which plain `trf` refuses. The shipped recipe was
-verified to start and run on this problem.
+`job_type = gntr` — general-objective Fisher/Gauss-Newton trust region (EFIM Hessian through trf's
+Coleman–Li core, ADR-0068). `population_size = 100`, `max_iterations = 1000` — the collection's
+documented working default, not the shipped 20 × 500 placeholder. Rahman was not separately tried at
+20 × 500, so it is not itself evidence about the smaller budget.
+
+`tools/fd_check.py` verifies the assembled gradient against central differences across all 9 free
+parameters at `2.3e−05`. That matters because a wrong gradient column is silent — the objective stays
+correct and the fit merely stops short — which is the failure mode that cost
+`Laske_PLOSComputBiol2019` a solved verdict until lanl/PyBNF#534.
 
 ## Contents
 
@@ -36,6 +51,8 @@ verified to start and run on this problem.
 - `jstar.txt` — the reference `J*`
 - `nominal_check.json` — the nominal-point evaluation recorded above
 - `score.py` — scores a run against `J*`
+- `best_fit_params.txt`, `information_criteria.txt` — the shipped fit's provenance
+- `VALIDATION.md` — the full validation against `J*`
 
 ## Provenance
 

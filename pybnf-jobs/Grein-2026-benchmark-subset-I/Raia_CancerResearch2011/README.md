@@ -1,13 +1,25 @@
 # Raia_CancerResearch2011
 
-**Run cost: `minutes`** — 10,000 evaluations (20 × 500 `gntr`), 39 free parameters.
+**Run cost: `hours`** — 100,000 evaluations (100 × 1,000 `gntr`), 39 free parameters.
 
 PyBNF fitting job imported from the [Benchmark-Models-PEtab](https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab) collection, as used
 in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Status
 
-**Objective validated at the PEtab nominal point** (OG = 0.78 < 1.92). No optimization run has been performed here.
+**SOLVED** — `OG = 0.000009` from a from-scratch 100-start `gntr` fit, landing on `J*` to five decimal
+places; 83 of 100 starts retired on `step is negligible`. At k = 39, n = 205 this is the collection's
+largest 🟢 → ✅ conversion.
+
+**The fit beats its own nominal point.** `OG_nominal = 0.78` was already inside the solved threshold,
+so this problem could have been "converted" by simply holding the published parameter vector. It was
+not: unbiased box-sampled starts found a point ~87,000× closer to `J*` than the published one. That is
+the difference between showing the optimizer *holds* a known optimum and showing it *finds* one.
+
+One caveat on the numbers: `sd_pJAK2_rel` lands on its lower bound of `1e-05`. A noise scale driven to
+its floor means the corresponding observable is fitted to within the resolution the box permits, and
+`J*` is matched with it there — so the reference optimum is the same constrained one. Any
+profile-likelihood analysis should widen that box first. See `VALIDATION.md`.
 
 ## Reference
 
@@ -25,8 +37,21 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Optimizer
 
-`job_type = gntr` — general-objective Fisher/Gauss-Newton trust region (EFIM Hessian through trf's Coleman–Li core, ADR-0068) — handles this problem's estimated noise scale, which plain `trf` refuses. The shipped recipe was
-verified to start and run on this problem.
+`job_type = gntr` — general-objective Fisher/Gauss-Newton trust region (EFIM Hessian through trf's
+Coleman–Li core, ADR-0068) — handles this problem's prediction-dependent σ
+(`sigma = prediction_formula …`, one of two such problems here with `Armistead`), which plain `trf`
+refuses. `population_size = 100`, `max_iterations = 1000` — the collection's documented working
+default, not the shipped 20 × 500 placeholder.
+
+This slug is where **lanl/PyBNF#537 / ADR-0100** was found. Its gradient disagreed with central
+differences by a factor of two on one column, and was recorded as *not reproducible* after five
+attempts — because whether it fired depended on the evaluation point. The cause was an IC-seeding
+parameter whose own sensitivity axis *is* the whole derivative, with the seeded contribution summed on
+top, so the column read exactly double. Post-fix the worst relative error is `4.85e−05`.
+
+**It also retires the corpus's last `k`-based cost projection.** Issue #38 once projected 47–76 hours
+for this slug by extrapolating from k = 39; it ran in well under two hours on ten cores, alongside two
+other fits. Cost tracks stiffness and model size, not parameter count.
 
 ## Contents
 
@@ -36,6 +61,8 @@ verified to start and run on this problem.
 - `jstar.txt` — the reference `J*`
 - `nominal_check.json` — the nominal-point evaluation recorded above
 - `score.py` — scores a run against `J*`
+- `best_fit_params.txt`, `information_criteria.txt` — the shipped fit's provenance
+- `VALIDATION.md` — the full validation against `J*`
 
 ## Provenance
 

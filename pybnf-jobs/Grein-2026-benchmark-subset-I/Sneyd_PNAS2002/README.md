@@ -47,6 +47,8 @@ Multi-start **`gntr`** (the EFIM trust-region; 10 starts × 300 iterations, box-
 gives a Gaussian density > 1, so its log-density is positive; `−lnL` is the paper-scale NLL as usual.)
 Sneyd is an easy problem (329/380 Marvin runs solved it); PyBNF matches J\* to 5 significant figures.
 
+See [`VALIDATION.md`](VALIDATION.md) for the full validation against `J*`.
+
 ## Run
 
 ```bash

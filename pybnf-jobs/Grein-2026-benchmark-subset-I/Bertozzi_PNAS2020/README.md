@@ -65,6 +65,7 @@ date is not comparable with anything.
 - `jstar.txt` — the reference `J*`
 - `nominal_check.json` — the nominal-point evaluation recorded above
 - `best_fit_params.txt`, `information_criteria.txt` — the shipped fit's provenance
+- `VALIDATION.md` — the full validation against `J*`
 - `score.py` — scores a run against `J*`
 
 ## Provenance

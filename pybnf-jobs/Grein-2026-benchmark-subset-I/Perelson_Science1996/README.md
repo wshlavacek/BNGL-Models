@@ -59,6 +59,8 @@ Multi-start **`cmaes`** (24 individuals × ≤500 generations, `random_seed = 1`
 `SVD did not converge` and `lbfgs` drives the wide-bounded `sigma` (`[1e-10, 1e10]`) to `nan`. All 380
 of the paper's Marvin runs solved Perelson (min = median), and PyBNF matches to 5×10⁻⁷.
 
+See [`VALIDATION.md`](VALIDATION.md) for the full validation against `J*`.
+
 ## Run
 
 ```bash

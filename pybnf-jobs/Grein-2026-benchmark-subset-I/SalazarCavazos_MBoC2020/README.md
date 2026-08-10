@@ -1,13 +1,26 @@
 # SalazarCavazos_MBoC2020
 
-**Run cost: `hours`** — 10,000 evaluations (20 × 500 `gntr`), but each one integrates a **618-reaction** network — the largest model in the subset.
+**Run cost: `hours`** — 100,000 evaluations (100 × 1,000 `gntr`), each integrating a **618-reaction**
+network, the largest model in the subset. The `hours` tier is the collection table's a-priori
+estimate; the shipped fit measured **5 min 49 s** on ten cores.
 
 PyBNF fitting job imported from the [Benchmark-Models-PEtab](https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab) collection, as used
 in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Status
 
-**Objective validated at the PEtab nominal point** (OG = 0.326 < 1.92). No optimization run has been performed here.
+**SOLVED** — `OG = 0.000029` from a from-scratch 100-start `gntr` fit in 5 min 49 s, matching `J*` to
+five decimals. The PEtab nominal point is *also* this problem's published optimum
+(`OG_nominal = 0.326`), so the objective is validated independently of the optimizer.
+
+> **A solved objective is not a parameter-recovery result here.** The fit reaches `J*` at a parameter
+> point substantially unlike the published one: `SHC1_total__FREE` has gone to its **upper bound**
+> (`1e6`, reached to within 2e−08) and `GRB2_total__FREE` sits at ~2.2× its published value, while the
+> two dephosphorylation parameters and `ratio_kpkd_YN` are recovered closely. Two very different
+> vectors reaching the same likelihood to within 3e−05 is a **flat direction** — the two
+> total-abundance parameters trade off, and 18 scored points do not pin them down. `OG` is defined on
+> the objective, so the ✅ is correct as scored; it means *found an equally good optimum*, not
+> *recovered the published parameters*. See `VALIDATION.md`.
 
 ## Reference
 
@@ -25,8 +38,26 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Optimizer
 
-`job_type = gntr` — general-objective Fisher/Gauss-Newton trust region (EFIM Hessian through trf's Coleman–Li core, ADR-0068) — handles this problem's estimated noise scale, which plain `trf` refuses. The shipped recipe was
-verified to start and run on this problem.
+`job_type = gntr` — general-objective Fisher/Gauss-Newton trust region (EFIM Hessian through trf's
+Coleman–Li core, ADR-0068). `tools/fd_check.py` verifies its assembled gradient against central
+differences at `4.0e−06`, the best agreement of the eighteen `gntr` slugs in the corpus.
+
+### This slug is why the collection's budget is 100 × 1000
+
+The shipped default of 20 × 500 does not merely fall short here — it converges to `OG = 10.2`, which
+is **worse than doing nothing**, since the problem's own nominal point scores `0.326`. Twenty
+box-sampled starts did not contain the reference basin at k = 6.
+
+| budget | OG |
+|---|---:|
+| 20 × 500 | 10.2 |
+| **100 × 1000** | **2.9×10⁻⁵** |
+
+Together with `Laske_PLOSComputBiol2019` (k = 13: `6.76` at 20 × 500, the reference optimum at
+100 × 1000) this is the second problem showing the same thing at the opposite end of the `k` range,
+and it is what moved the corpus default. The *distribution* the starts are drawn from is unchanged and
+untested — these are box-sampled, log-uniform in log space, since every free parameter here is a
+`loguniform_var` and its prior is its box.
 
 ## Contents
 
@@ -36,6 +67,8 @@ verified to start and run on this problem.
 - `jstar.txt` — the reference `J*`
 - `nominal_check.json` — the nominal-point evaluation recorded above
 - `score.py` — scores a run against `J*`
+- `best_fit_params.txt`, `information_criteria.txt` — the shipped fit's provenance
+- `VALIDATION.md` — the full validation against `J*`
 
 ## Provenance
 

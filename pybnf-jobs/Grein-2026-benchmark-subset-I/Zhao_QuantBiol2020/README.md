@@ -1,13 +1,22 @@
 # Zhao_QuantBiol2020
 
-**Run cost: `minutes`** — 10,000 evaluations (20 × 500 `gntr`) on a 3-reaction ODE model.
+**Run cost: `minutes`** — 100,000 evaluations (100 × 1,000 `gntr`) on a 3-reaction ODE model.
 
 PyBNF fitting job imported from the [Benchmark-Models-PEtab](https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab) collection, as used
 in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Status
 
-**Setup only — not fitted.** The job runs and scores correctly; the PEtab nominal point is not this problem's published optimum, so no optimality claim is made.
+**SOLVED** — `OG = 0.000005` from a from-scratch 100-start `gntr` fit in ≈54 min: the fit lands on
+`J*` to five decimal places. The PEtab nominal point is **not** this problem's optimum
+(`OG_nominal = 276.12`), so this result comes entirely from the optimizer. The objective is
+independently corroborated against upstream's own `simulatedData` (`obj ✓`). See `VALIDATION.md`.
+
+Three of the 28 parameters — `R_Stage_I_Wuhan`, `R_Stage_I_Hubei`, `R_Stage_I_China` — land on their
+upper bound of 100. That is the problem's shape rather than a fit pathology: Stage I is the
+uncontrolled early-epidemic window, where growth rate saturates in `R` and the likelihood goes nearly
+flat. `J*` is matched to 5e−06 with them at the wall, so the reference optimum is the same
+constrained one.
 
 ## Reference
 
@@ -25,8 +34,28 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Optimizer
 
-`job_type = gntr` — general-objective Fisher/Gauss-Newton trust region (EFIM Hessian through trf's Coleman–Li core, ADR-0068) — handles this problem's estimated noise scale, which plain `trf` refuses. The shipped recipe was
-verified to start and run on this problem.
+`job_type = gntr` — general-objective Fisher/Gauss-Newton trust region (EFIM Hessian through trf's
+Coleman–Li core, ADR-0068) — handles this problem's per-measurement estimated σ, which plain `trf`
+refuses. `population_size = 100`, `max_iterations = 1000` — the collection's documented working
+default, not the shipped 20 × 500 placeholder.
+
+### The search scale was the whole difficulty
+
+All 28 estimated parameters are `parameterScale = log10` upstream, and every one of them imported as
+a *linear* `uniform_var` until **lanl/PyBNF#548** was fixed. Holding everything else constant — same
+recipe, same seed, same budget, same objective — and changing only whether they are sampled in log
+space:
+
+| configuration | best reduced objective | `OG` |
+|---|---|---|
+| linear `uniform_var` (before #548), 100 × 1000 | 717.5 and decelerating, run abandoned | ≥ 291 |
+| **log `loguniform_var` (after #548), 100 × 1000** | **425.874099** | **0.000005** |
+
+`gamma_*` live on `[1e-08, 1]` with an optimum near 0.05–0.39, and the `sd_*` on `[0.001, 1e5]` with
+MLEs of 186–5013; sampled linear-uniform, effectively no box-sampled start begins near the basin. The
+defect was silent — the objective, the `obj ✓` oracle check and the finite-difference gradient check
+all still passed — and its only symptom was a fit that stalled, which is indistinguishable from a
+problem needing a larger budget.
 
 ## Contents
 
@@ -37,6 +66,8 @@ verified to start and run on this problem.
 - `jstar.txt` — the reference `J*`
 - `nominal_check.json` — the nominal-point evaluation recorded above
 - `score.py` — scores a run against `J*`
+- `best_fit_params.txt`, `information_criteria.txt` — the shipped fit's provenance
+- `VALIDATION.md` — the full validation against `J*`
 
 ## Provenance
 

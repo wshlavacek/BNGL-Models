@@ -1,13 +1,16 @@
 # Brannmark_JBC2010
 
-**Run cost: `minutes`** — 10,000 evaluations (20 × 500 `gntr`), 22 free parameters.
+**Run cost: `minutes`** — 100,000 evaluations (100 × 1,000 `gntr`), 22 free parameters.
 
 PyBNF fitting job imported from the [Benchmark-Models-PEtab](https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab) collection, as used
 in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Status
 
-**Setup only — not fitted.** The job runs and scores correctly, and the PEtab nominal point reproduces the published optimum (`OG = 0.064`, well inside the solved threshold), so the nominal check validates PyBNF's objective against the paper's Eq. 6 NLL.
+**Objective validated at the PEtab nominal point** (`OG = 0.064`, well inside the solved threshold
+1.92). **No optimization run has been performed here.** The problem's `nominalValue` point *is* its
+published optimum, so the nominal check validates the import and PyBNF's objective against the paper's
+Eq. 6 NLL — it makes no claim about PyBNF's optimizer. This is a ready-to-run job.
 
 > **Corrected 2026-08-07** by [lanl/PyBNF#547](https://github.com/lanl/PyBNF/issues/547) (ADR-0104). This problem pre-equilibrates, and the bngsim SBML backend silently dropped `preequilibrate:` — all eight doses simulated identically at the model's authored `insulin_dose_1 = 0.3`, and this README recorded `OG = 1531.44` as "the nominal point is not the published optimum". It is the optimum; the forward model was wrong. A dose-response whose doses all coincide is the signature to check for if this ever recurs.
 
@@ -27,8 +30,10 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Optimizer
 
-`job_type = gntr` — general-objective Fisher/Gauss-Newton trust region (EFIM Hessian through trf's Coleman–Li core, ADR-0068) — handles this problem's estimated noise scale, which plain `trf` refuses. The shipped recipe was
-verified to start and run on this problem.
+`job_type = gntr` — general-objective Fisher/Gauss-Newton trust region (EFIM Hessian through trf's
+Coleman–Li core, ADR-0068) — handles this problem's estimated noise scale, which plain `trf` refuses.
+`population_size = 100`, `max_iterations = 1000` — the collection's documented working default. The
+recipe was verified to start and run on this problem; it has not been run to completion.
 
 ## Contents
 
