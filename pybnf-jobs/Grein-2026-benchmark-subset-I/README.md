@@ -203,7 +203,7 @@ linear one.
 | `Borghans_BiophysChem1997` | `hours` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ✓ | ⚪ setup only |
 | `Zhao_QuantBiol2020` | `minutes` | 501.2270538 | lin | 28 | 82 | gntr | 5e−06 | ✓ | ✅ **solved** |
 | `Brannmark_JBC2010` | `minutes` | 141.8248543 | lin | 22 | 43 | gntr | 0.064 † | ✓ | 🟢 objective validated ‡ |
-| `Giordano_Nature2020` | `minutes` | −3488.3414981 | lin | 50 | 313 | gntr | 3.8e+03 †§ | ✓ | ⚪ setup only |
+| `Giordano_Nature2020` | `hours` | −3488.3414981 | lin | 50 | 313 | gntr | 0.135 | ✓ | ✅ **solved** |
 | `Weber_BMC2015` | `minutes` | 296.2020025 | lin | 36 | 135 | gntr | −0.0002 † | ✓ | 🟢 objective validated ‡ |
 | `Okuonghae_ChaosSolitonsFractals2020` | `minutes` | 373.5476580 | lin | 16 | 92 | gntr | 0.0012 |   | ✅ **solved** |
 | `Oliveira_NatCommun2021` | `minutes` | 7904.9343174 | lin | 12 | 120 | gntr | 0.011 |   | ✅ **solved** |
