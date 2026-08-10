@@ -207,11 +207,21 @@ linear one.
 | `Weber_BMC2015` | `minutes` | 296.2020025 | lin | 36 | 135 | gntr | −0.0002 † | ✓ | 🟢 objective validated ‡ |
 | `Okuonghae_ChaosSolitonsFractals2020` | `minutes` | 373.5476580 | lin | 16 | 92 | gntr | 0.0012 |   | ✅ **solved** |
 | `Oliveira_NatCommun2021` | `minutes` | 7904.9343174 | lin | 12 | 120 | gntr | 0.011 |   | ✅ **solved** |
-| `Smith_BMCSystBiol2013` | `hours` | 20922.1642440 | lin | 25 | 62 | cmaes | 6.9e+32 † |   | ⚪ setup only |
+| `Smith_BMCSystBiol2013` ✱ | `hours` | 20922.1642440 | lin | 25 | 62 | gntr | 8.7e+05 † |   | ⚪ setup only |
 
 `k` = free parameters, `n` = scored data points.
 **† = optimality gap at the PEtab nominal point, not from a fit.** Only the eighteen ✅ rows report an
 OG from an actual optimization run.
+
+**✱ = this row's numbers depend on a PyBNF commit newer than every other row's.**
+`Smith_BMCSystBiol2013` is the only slug of the 23 whose SBML declares `hasOnlySubstanceUnits`
+species *and* gives its compartments a size other than 1 (down to `6.4e-14`). Until
+lanl/PyBNF#553 (merged 2026-08-10 as `85b36a96`) the bridge handed observable formulas each such
+species as `amount / compartment_size`, inflating all 62 scored points by up to 1.6e13 and putting
+this row's OG at `6.9e+32`. That number was an artefact of the defect, not a distance from the
+optimum; the honest one is `8.7e+05`. Every other row was produced before that fix and is
+unaffected — re-evaluating all 23 at their nominal points moves only this one, the other 22
+bit-identical. Reproducing this row needs PyBNF at or past `85b36a96`.
 
 **¶ = solved on the benchmark objective, but *not* a reproduction of the source paper's fit.** Two
 things hold at once for `Schwen_PONE2015` and both must be quoted together. Its `J*` is **not
@@ -354,11 +364,26 @@ its `VALIDATION.md`.
   gradient path genuinely refuses the problem, and for the three strongly multimodal problems
   (Borghans, Elowitz, Okuonghae), where a local method from a few starts lands in a local basin.
 
-**One** gradient-path refusal remains, and it has nothing to do with condition routing:
+**No** gradient-path refusal remains. The last one was `Smith_BMCSystBiol2013`, and it is worth
+recording how it went away, because the entry stood here after it had stopped being true.
 
-| slug | refusal | fixable by |
-|---|---|---|
-| `Smith_BMCSystBiol2013` | the model contains **discrete events** (state-dependent jumps); forward output sensitivities go stale across a jump, so bngsim cannot supply a gradient there (`_require_differentiable_dynamics`, lanl/PyBNF #461) | nothing in the ADR-0076 line — this needs event-aware sensitivities |
+The model contains discrete events (state-dependent jumps), across which forward output
+sensitivities went stale, so bngsim refused them and lanl/PyBNF#461 hoisted that refusal into a
+blanket pre-flight gate (`_require_differentiable_dynamics`). bngsim applies the event's own jump
+now, and PyBNF lifts the gate at `BNGSIM_HAS_EVENT_SENS` — which is a **version floor of exactly
+0.12.2**, not a capability probe. So the refusal ended at the 0.12.2 release, and this table was
+already stale before anyone tried `gntr` here.
+
+Two consequences worth keeping, since the version string cannot distinguish the builds:
+
+- A build that reports `0.12.2` passes the gate whether or not it carries bngsim#160/#161, which
+  emits the analytic sensitivity RHS for a cross-compartment reaction. Smith's reaction 7 is
+  `per_species_volume_scaling`; without that commit the whole model declines the analytic `df/dp`
+  and all 25 columns fall to CVODES difference quotients, which blows the wall clock and returns
+  `inf` for every start. The gate says yes and the fit still cannot run, with nothing pointing at
+  why.
+- `gntr` is the recipe here now. It was blocked by a second, unrelated defect until 2026-08-10 —
+  see the `nominal_check.json` note and lanl/PyBNF#553 below.
 
 The ADR-0076 condition-routing line is now **clear**, in two steps:
 

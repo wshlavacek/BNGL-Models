@@ -2,11 +2,12 @@
   "problem": "Smith",
   "slug": "Smith_BMCSystBiol2013",
   "jstar": 20922.16424399946,
-  "J_paper": 6.851921116400144e+32,
-  "reduced_objective": 6.851921116400144e+32,
+  "J_paper": 888198.438390848,
+  "reduced_objective": 888141.4642017893,
   "n_scored": 62,
   "k": 25,
-  "OG_nominal": 6.851921116400144e+32,
-  "optimizer": "cmaes",
-  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality."
+  "OG_nominal": 867276.2741468486,
+  "optimizer": "gntr",
+  "interpretation": "PEtab nominalValue is not the published optimum for this problem; this check verifies that the imported job simulates and scores, not optimality.",
+  "requires": "lanl/PyBNF#553 (merged as 85b36a96). Before that fix every amount-declared species read as amount/compartment_size, inflating all 62 scored points by up to 1.6e13 and putting J_paper at 6.851921116400144e+32. Smith is the only slug of the 23 with hasOnlySubstanceUnits species AND non-unit compartments, so it is the only recorded value that moved."
 }
