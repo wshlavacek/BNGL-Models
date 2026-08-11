@@ -1,6 +1,6 @@
 # tools — regenerating and verifying a slug
 
-Two scripts used to produce and check the numbers this corpus ships. Both are run from the
+Three scripts used to produce and check the numbers this corpus ships. Both are run from the
 repository with PyBNF available (`uv run --project ~/Code/PyBNF python tools/<script>.py …`).
 
 They exist because both were originally written ad hoc, and both have a non-obvious failure mode
@@ -154,3 +154,41 @@ oracle §2c uses, so this inherits exactly that coverage. Measured on the corpus
 > join silently multiplies the residual sum, which would read as a real distance. Normalizing the key
 > columns matters too: the two tables disagree on dtype wherever a cell is sometimes blank, and on
 > formatting between `1` and `1.0`.
+
+## `box_probe.py` — how many box-sampled starts integrate, and which solve fails
+
+```bash
+python tools/box_probe.py <slug-dir> [-n N] [--sens] [--atol A] [--seed S]
+```
+
+Draws `N` points from the conf's own sampling distribution and simulates each, reporting how many
+survive. **Run it twice, with and without `--sens`.** The difference isolates the forward-sensitivity
+solve from the state solve, and on two slugs that difference *was* the answer:
+
+| slug | plain forward solve | with the gradient path's sensitivity request |
+|---|---|---|
+| `Weber_BMC2015` | 7 / 11, 0.6 s | **2 / 11, 80 s** |
+| `Brannmark_JBC2010` | 30 / 30, 1.0 s | **19 / 30, 210 s** |
+
+Both had been recorded as lanl/bngsim#196 — "a scalar `atol` cannot serve a model spanning ten decades".
+Both are really the *sensitivity* solve, which CVODES scales from the state tolerances. `fd_check.py`
+always applies the sensitivity request, so a probe run through it cannot separate the two and reads as
+an unconditional failure.
+
+> **Gotcha: `--atol` writes a temporary conf rather than poking the config.** The tolerance keys are read
+> when `load_config` *builds* the model, so assigning `config.config['sbml_atol']` afterwards is a silent
+> no-op — and the symptom is a sweep whose rows are all identical, which reads as "the tolerance changes
+> nothing". The header line prints `_config_atol` so you can see it moved.
+
+> **Gotcha: an explicit `--atol` turns the ADR-0105 per-species vector OFF.** `sbml_atol` is that
+> mechanism's documented off-switch, so passing the same scalar the derivation would produce is not a
+> null comparison — it is vector-versus-scalar. On `Brannmark` both give 19/30, but the vector is 1.4×
+> faster. Compare against the no-`--atol` run to price the vector.
+
+> **Gotcha: `--sens` is the number that predicts start mortality**, because every gradient `job_type`
+> applies the union sensitivity request on each evaluation. It has held: 22/30 here forecast the 24 dead
+> starts out of 100 in Weber's real run.
+
+> **Gotcha: a dead point is not always a tolerance problem.** Points that fail both with and without
+> `--sens`, and fail fast, are bad parameter points. Weber has two such in eleven and they stay dead at
+> every tolerance.
