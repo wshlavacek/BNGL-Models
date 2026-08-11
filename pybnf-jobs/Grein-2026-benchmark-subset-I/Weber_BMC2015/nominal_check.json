@@ -2,11 +2,11 @@
   "problem": "Weber",
   "slug": "Weber_BMC2015",
   "jstar": 296.2020024574204,
-  "J_paper": 296.20179656464325,
-  "reduced_objective": -69.31567776550465,
+  "J_paper": 296.20179502327426,
+  "reduced_objective": -69.3156793068737,
   "n_scored": 135,
   "k": 36,
-  "OG_nominal": -0.00020589277715998833,
+  "OG_nominal": -0.00020743414614798894,
   "optimizer": "gntr",
-  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective against the paper's Eq. 6 NLL. Corrected by lanl/PyBNF#547 (ADR-0104): before that fix, pre-equilibration was dropped on the bngsim SBML backend, both experiments simulated a flat line, and this file recorded OG_nominal = 13739.87 as 'the nominal point is not the optimum'. It is -- to four decimals."
+  "interpretation": "PEtab nominalValue reproduces the reference optimum within the solved threshold (OG < 1.92); this validates PyBNF's objective against the paper's Eq. 6 NLL. Corrected by lanl/PyBNF#547 (ADR-0104): before that fix, pre-equilibration was dropped on the bngsim SBML backend, both experiments simulated a flat line, and this file recorded OG_nominal = 13739.87 as 'the nominal point is not the optimum'. It is -- to four decimals. Regenerated 2026-08-10 under the conf's new explicit sbml_atol = 1e-4 (see the conf's own comment and VALIDATION.md): J_paper moved from 296.20179656 to 296.20179502, i.e. the 6th decimal, which is the measurement that the tolerance change buys integrability without costing objective accuracy."
 }

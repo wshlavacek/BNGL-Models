@@ -31,16 +31,23 @@ Counting every file inside the 23 slug directories:
 
 | category | files | bytes | |
 |---|---:|---:|---|
-| SBML model, verbatim from upstream | 23 | 1,681,108 | **copied** — 80% of bytes, 7% of files |
+| SBML model, verbatim from upstream | 23 | 1,681,108 | **copied** — 7% of bytes, 6% of files |
 | `.exp` and `_measparams.tsv` — PyBNF-format *translations* of the upstream measurement tables, emitted by the importer | 185 | 141,974 | derived |
 | `jstar.txt` — one number, transcribed from the ICB-DCM suppl repository | 23 | 433 | derived |
-| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 119 | 340,630 | **written here** |
-| total | 350 | 2,164,145 | |
+| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 152 | 22,128,239 | **written here** |
+| total | 383 | 23,951,754 | |
 
-The SBML files dominate the byte count and nothing else, which is why the directory *looks* mostly
-vendored while being 93% non-copied by file count. **Editing this directory is normal**: the
-locally authored files are the deliverable, and adding a job necessarily edits the coverage matrix
-below. Nothing upstream is ever modified.
+**Not one file here is copied except the 23 SBML models**, which are now 7% of the bytes and 6% of the
+files — so the directory is 94% locally authored by file count and 93% by byte count. **Editing this
+directory is normal**: the locally authored files are the deliverable, and adding a job necessarily
+edits the coverage matrix below. Nothing upstream is ever modified.
+
+> Earlier revisions of this table read `350 files / 2,164,145 bytes`, with the SBML models called out
+> as *"80% of bytes"* and the locally written files as `119 / 340,630`. That was true before the ✅ rows
+> started shipping their fits: the 20 `best_fit_params.txt` files are 21.7 MB on their own — each is
+> the run's full sorted 5001-row parameter table — which is what moved the SBML share from 80% of bytes
+> to 7%. Counted over `git ls-files` only; the `output/` trees and `bnf_*.log` files a run leaves behind
+> are gitignored and are not part of this.
 
 ### Upstream pin
 
@@ -204,14 +211,43 @@ linear one.
 | `Zhao_QuantBiol2020` | `minutes` | 501.2270538 | lin | 28 | 82 | gntr | 5e−06 | ✓ | ✅ **solved** |
 | `Brannmark_JBC2010` | `minutes` | 141.8248543 | lin | 22 | 43 | gntr | 0.064 † | ✓ | 🟢 objective validated ‡ |
 | `Giordano_Nature2020` | `hours` | −3488.3414981 | lin | 50 | 313 | gntr | 0.135 | ✓ | ✅ **solved** |
-| `Weber_BMC2015` | `minutes` | 296.2020025 | lin | 36 | 135 | gntr | −0.0002 † | ✓ | 🟢 objective validated ‡ |
+| `Weber_BMC2015` | `minutes` | 296.2020025 | lin | 36 | 135 | gntr | 0.781 | ✓ | ✅ **solved** (not saturated) ‡ |
 | `Okuonghae_ChaosSolitonsFractals2020` | `minutes` | 373.5476580 | lin | 16 | 92 | gntr | 0.0012 |   | ✅ **solved** |
 | `Oliveira_NatCommun2021` | `minutes` | 7904.9343174 | lin | 12 | 120 | gntr | 0.011 |   | ✅ **solved** |
 | `Smith_BMCSystBiol2013` ✱ | `hours` | 20922.1642440 | lin | 25 | 62 | gntr | 0.502 | ✓ | ✅ **solved** |
 
 `k` = free parameters, `n` = scored data points.
-**† = optimality gap at the PEtab nominal point, not from a fit.** Only the nineteen ✅ rows report an
+**† = optimality gap at the PEtab nominal point, not from a fit.** Only the twenty ✅ rows report an
 OG from an actual optimization run.
+
+**"(not saturated)" = the fit cleared the threshold without reaching the best point the problem is
+known to have.** Two rows say this and they say it for different reasons, which is why the phrase is
+not a single caveat. `Fiedler_BMCSystBiol2016` ran out of budget while still descending (1.113 → 1.034
+→ 1.004 over its last ~90 min) short of a basin its own nominal point proves is there.
+`Weber_BMC2015` converged — 75 of its 100 starts retired on `step is negligible`, none on
+`max_iterations` — but to an interior optimum 0.78 NLL units above its published one, because
+**five of its 36 parameters sit exactly on their box bounds at that published optimum**
+(`a22`/`a32`/`a33` at `1e-4`, `m11` at `1e10`, `pu3` at `1e8`). The reference basin is a *corner* of
+the box, which a box-uniform multistart under a trust region reaches far less readily than an interior
+point; this fit recovers one of the five (`m11`, to within 0.005% of its bound). Neither row is a
+leverage trade in the `Schwen_PONE2015` ¶ sense — Weber's five fitted σ come back within 0.7% of their
+published values, and it *beats* the published point on three of its eleven observable/experiment
+groups. So a `(not saturated)` OG is a sound benchmark number and a weak claim about recovering
+published kinetics; read the slug's `VALIDATION.md` before quoting it as the latter.
+
+**`Weber_BMC2015` is the one row whose recipe needs a hand-set ODE tolerance**, and removing it makes
+the problem unfittable rather than merely slower. Its conf carries `sbml_atol = 1e-4` because ADR-0103
+derives `atol = rtol × median(y₀)` = `4.665e-3` for this model and then clamps it to `1e-8` — the
+derivation "only ever tightens", so it discards its own answer for one **5.7 decades tighter** — and
+ADR-0105's per-species vector clamps into `[scalar_atol, default_atol]` = `[1e-8, 1e-8]` here, so it
+is elementwise the scalar and correctly declines to engage. At the derived value **only 6 of 30
+box-sampled starts integrate** under the sensitivity request the gradient path applies, against 22 of
+30 at `1e-4`. Two things worth carrying to any future slug: the failure is in the forward-**sensitivity**
+solve rather than the state solve (the plain forward model manages 7 of 11 box points at the derived
+tolerance, in 0.6 s), and the tolerance is a pure trade against *objective* noise — the assembled
+gradient is invariant across the sweep, while the FD reference degrades from 2.78e−03 at `1e-4` to
+8.60e−02 at `4.665e-3`, which is what a line search consumes. Full sweep in that slug's
+`VALIDATION.md`.
 
 **✱ = this row — nominal point *and* fit — was produced on a stack no other row shares.** It is two
 differences, not one, and both are load-bearing.
@@ -433,7 +469,7 @@ enough to find the reference basin. `Laske_PLOSComputBiol2019` is the worked exa
 direction, and it is now **solved**: the collection-default 20 × 500 reaches only `OG = 6.76` on it,
 while 100 × 1000 — the budget its conf now carries — reaches the reference optimum itself. Expect to tune
 `population_size` / `max_iterations`, or to switch to `cmaes` with IPOP restarts, before treating any
-⚪ or 🟢 row as a statement about PyBNF's optimizers. The nineteen ✅ rows are the only ones where a fit
+⚪ or 🟢 row as a statement about PyBNF's optimizers. The twenty ✅ rows are the only ones where a fit
 was actually driven to `OG < 1.92`.
 
 `SalazarCavazos_MBoC2020` is the second worked example, and the sharper one: at 20 × 500 it reaches
@@ -465,5 +501,5 @@ if valid simulations on your machine are being marked as failures.
 `<id>.conf` (the runnable fit) · the SBML model (verbatim) · `experiment*.exp` (data) ·
 `*_measparams.tsv` (per-measurement observable/noise parameter tables, where the problem uses them) ·
 `jstar.txt` (the reference J\*) · `nominal_check.json` (the nominal-point evaluation) · `score.py` ·
-`README.md`. The nineteen solved slugs additionally ship `best_fit_params.txt`,
+`README.md`. The twenty solved slugs additionally ship `best_fit_params.txt`,
 `information_criteria.txt`, and `VALIDATION.md` from their fits.
