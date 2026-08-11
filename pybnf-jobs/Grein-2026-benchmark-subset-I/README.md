@@ -196,7 +196,7 @@ linear one.
 | `Perelson_Science1996` | `minutes` | 222.2807689 | log10 | 3 | 16 | cmaes | 5e−7 |   | ✅ **solved** |
 | `Rahman_MBS2016` | `minutes` | 21.1534861 | lin | 9 | 23 | gntr | 0.000000 | ✓ | ✅ **solved** |
 | `Raia_CancerResearch2011` | `hours` | 345.3097673 | lin | 39 | 205 | gntr | 9e−06 |   | ✅ **solved** |
-| `SalazarCavazos_MBoC2020` | `minutes` | 366.8615730 | lin | 6 | 18 | gntr | 2.9e−05 |   | ✅ **solved** |
+| `SalazarCavazos_MBoC2020` | `minutes` | 366.8615730 | lin | 6 | 18 | gntr | 2.9e−05 | ✓ | ✅ **solved** |
 | `Sneyd_PNAS2002` | `minutes` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 |   | ✅ **solved** |
 | `Schwen_PONE2015` ‖ | `hours` | 952.4217251 | log10 | 30 | 286 | gntr | −12.55 ¶ | ✓ | ✅ **solved** |
 | `Elowitz_Nature2000` | `hours` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † |   | ⚪ setup only |
@@ -297,21 +297,21 @@ a *ranking* rather than as a note about one slug.
 > estimated-σ slug.
 
 Coverage is the same as the `obj ✓` column's and for the same reason — it is the same oracle. Of the
-23 slugs, 8 are computable; the other 15 skip for a reported reason (no `simulatedData`, or rows that
-will not join one-to-one), and 4 of the 8 have no estimated σ at all, which makes profiling a no-op.
+23 slugs, 9 are computable; the other 14 skip for a reported reason (no `simulatedData`, or rows that
+will not join one-to-one), and 5 of the 9 have no estimated σ at all, which makes profiling a no-op.
 
 **obj ✓ = the objective has been checked against an independent oracle.** The Eq. 6 NLL is
 recomputed at the nominal point straight from the upstream PEtab tables — `simulatedData` (the
 collection's own reference simulation) joined to `measurementData`, with the declared
 `observableTransformation` and nominal σ — with **no PyBNF in the loop**, and compared to what PyBNF
-reports at the same point. `✓` = reproduces PyBNF (13 slugs) — twelve of them exactly, plus `Smith`
-to 3.1e−09 relative, which is integrator tolerance rather than a digit-for-digit match; see its
-`VALIDATION.md`. `✗` = disagrees, i.e. a defect — **no row carries one now**; the two that did
+reports at the same point. `✓` = reproduces PyBNF (14 slugs) — twelve of them exactly, plus `Smith`
+at 3.1e−09 and `SalazarCavazos` at 2.0e−08 relative, which is integrator tolerance rather than a
+digit-for-digit match. `✗` = disagrees, i.e. a defect — **no row carries one now**; the two that did
 (`Brannmark`, `Weber`) were fixed by lanl/PyBNF#547 and now reproduce. Blank = not checked: either
 upstream ships no `simulatedData` (`Bertozzi`, `Okuonghae`, `Oliveira`), or the rows could not be
-joined (`Elowitz`, `Fiedler`, `Raia`, `SalazarCavazos`), or the checker's own σ handling is the
-doubtful half rather than PyBNF's (`Armistead` and `Sneyd`, where PyBNF matches `J*` to 0.0000 and
-0.0006, and `Perelson`).
+joined (`Elowitz`, `Fiedler`, `Raia`), or the checker's own σ handling is the doubtful half rather
+than PyBNF's (`Armistead` and `Sneyd`, where PyBNF matches `J*` to 0.0000 and 0.0006, and
+`Perelson`).
 
 > **`Smith_BMCSystBiol2013` moved out of the "could not be joined" list on 2026-08-11, and the reason
 > is worth keeping.** Its rows always joined; the checker's key did not. `datasetId` is a PEtab

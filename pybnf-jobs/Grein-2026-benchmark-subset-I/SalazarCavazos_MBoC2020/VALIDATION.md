@@ -30,7 +30,26 @@ carries both terms:
 The `Σ log σᵢ` term is large and negative here, so this is a genuine test of the sign convention rather
 than a case where the term nearly vanishes — the complement of `Rahman_MBS2016`, where it is exactly 0.
 
-**Verdict: PASS.**
+### §2c's independent oracle applies here — the collection README said it did not
+
+This slug was listed among those whose upstream rows "could not be joined", and carried a blank
+`obj ✓`. That was wrong: `measurementData` and `simulatedData` join **18 of 18, one-to-one** on
+`(observableId, simulationConditionId, time)`. Recomputing the Eq. 6 NLL at the nominal point
+straight from the upstream tables — fixed per-point σ read from the measurement table's
+`noiseParameters` column, **no PyBNF in the loop**:
+
+| | `J_paper` at the PEtab nominal point |
+|---|---|
+| oracle, from upstream `simulatedData` | 367.1876109766393 |
+| PyBNF, same point (`nominal_check.json`) | 367.1876038082793 |
+| difference | 7.17e−06 absolute, **1.95e−08 relative** |
+
+As with `Smith_BMCSystBiol2013`, this is **integrator-tolerance agreement, not a digit-for-digit
+match** — two different integrators on the same trajectory — and the `obj ✓` it now carries should be
+read that way. `tools/sigma_profile.py` reports the same residual as its self-check, and correctly
+calls σ-profiling a no-op here because none of the six estimated parameters is a noise scale.
+
+**Verdict: PASS (internal identity + independent oracle to 2.0e−08 relative).**
 
 ## Gate B — the fit reaches the benchmark optimum
 
