@@ -44,7 +44,7 @@ edits the coverage matrix below. Nothing upstream is ever modified.
 
 > Earlier revisions of this table read `350 files / 2,164,145 bytes`, with the SBML models called out
 > as *"80% of bytes"* and the locally written files as `119 / 340,630`. That was true before the ✅ rows
-> started shipping their fits: the 21 `best_fit_params.txt` files are 23.9 MB on their own — each is
+> started shipping their fits: the 22 `best_fit_params.txt` files are 25.0 MB on their own — each is
 > the run's full sorted 5001-row parameter table — which is what moved the SBML share from 80% of bytes
 > to 6%. Counted over `git ls-files` only; the `output/` trees and `bnf_*.log` files a run leaves behind
 > are gitignored and are not part of this.
@@ -212,7 +212,7 @@ linear one.
 | `SalazarCavazos_MBoC2020` | `minutes` | 366.8615730 | lin | 6 | 18 | gntr | 2.9e−05 | ✓ | ✅ **solved** |
 | `Sneyd_PNAS2002` | `minutes` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 |   | ✅ **solved** |
 | `Schwen_PONE2015` ‖ | `hours` | 952.4217251 | log10 | 30 | 286 | gntr | −12.55 ¶ | ✓ | ✅ **solved** |
-| `Elowitz_Nature2000` | `hours` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † |   | ⚪ setup only |
+| `Elowitz_Nature2000` | `hours` | −65.6351201 | log10 | 21 | 58 | gntr | 0.000175 | ✓ | ✅ **solved** |
 | `Borghans_BiophysChem1997` | `hours` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ✓ | ⚪ setup only |
 | `Zhao_QuantBiol2020` | `minutes` | 501.2270538 | lin | 28 | 82 | gntr | 5e−06 | ✓ | ✅ **solved** |
 | `Brannmark_JBC2010` | `hours` | 141.8248543 | lin | 22 | 43 | gntr | 0.111 | ✓ | ✅ **solved** ‡ |
@@ -223,7 +223,7 @@ linear one.
 | `Smith_BMCSystBiol2013` ✱ | `hours` | 20922.1642440 | lin | 25 | 62 | gntr | 0.502 | ✓ | ✅ **solved** |
 
 `k` = free parameters, `n` = scored data points.
-**† = optimality gap at the PEtab nominal point, not from a fit.** Only the twenty-one ✅ rows report
+**† = optimality gap at the PEtab nominal point, not from a fit.** Only the twenty-two ✅ rows report
 an OG from an actual optimization run.
 
 **"(not saturated)" = the fit cleared the threshold without reaching the best point the problem is
@@ -362,35 +362,40 @@ a *ranking* rather than as a note about one slug.
 > estimated-σ slug.
 
 Coverage is the same as the `obj ✓` column's and for the same reason — it is the same oracle. Of the
-23 slugs, 9 are computable; the other 14 skip for a reported reason (no `simulatedData`, or rows that
+23 slugs, 10 are computable; the other 13 skip for a reported reason (no `simulatedData`, or rows that
 will not join one-to-one), and 5 of the 9 have no estimated σ at all, which makes profiling a no-op.
 
 **obj ✓ = the objective has been checked against an independent oracle.** The Eq. 6 NLL is
 recomputed at the nominal point straight from the upstream PEtab tables — `simulatedData` (the
 collection's own reference simulation) joined to `measurementData`, with the declared
 `observableTransformation` and nominal σ — with **no PyBNF in the loop**, and compared to what PyBNF
-reports at the same point. `✓` = reproduces PyBNF (14 slugs) — twelve of them exactly, plus `Smith`
+reports at the same point. `✓` = reproduces PyBNF (15 slugs) — twelve of them exactly, plus `Smith`
 at 3.1e−09 and `SalazarCavazos` at 2.0e−08 relative, which is integrator tolerance rather than a
 digit-for-digit match. `✗` = disagrees, i.e. a defect — **no row carries one now**; the two that did
 (`Brannmark`, `Weber`) were fixed by lanl/PyBNF#547 and now reproduce. Blank = not checked: either
 upstream ships no `simulatedData` (`Bertozzi`, `Okuonghae`, `Oliveira`), or the rows could not be
-joined (`Fiedler`, `Raia`), or the checker cannot key them (`Elowitz`, below), or the checker's own σ
+joined (`Fiedler`, `Raia`), or the checker's own σ
 handling is the doubtful half rather than PyBNF's (`Armistead` and `Sneyd`, where PyBNF matches `J*`
 to 0.0000 and 0.0006, and `Perelson`).
 
-> **`Elowitz_Nature2000` is a checker limitation, not a data property, and it is the same bug as
-> Smith's two columns over.** Its rows join **58 of 58, one-to-one** on the PEtab identity key. The
-> checker reports `joined 0 of 58` because it *also* keys on `observableParameters` and
-> `noiseParameters`, which hold different kinds of value on the two sides — parameter **names** in
-> `measurementData` (`background;scale`, `sigma`) against the **resolved numeric values** in
-> `simulatedData` (`-4.98107438218408;-0.279017032524776 `, `-1.14362512938604`, log10 scale). Those
-> can never match. Dropping the two columns is **not** the fix: verified across all 23, it breaks σ
-> resolution on nine slugs — once a column is not a join key, the merge renames it
-> `noiseParameters_meas`/`_sim` and the resolver stops finding it — and makes `Armistead`, `Fiedler`,
-> `Weber`, `Blasi` and `Schwen` over-match. The fix is to key on identity while reading σ from the
-> measurement side. Until then `Elowitz`'s oracle is **untested, not absent**, and this row's blank
-> should not be read as evidence either way. `Fiedler` and `Raia` are different: their rows genuinely
-> do not join one-to-one on identity keys at all.
+> **`Elowitz_Nature2000` earned its `obj ✓` on 2026-08-11, and it was a checker limitation all
+> along — the same bug as Smith's, two columns over.** Its rows join **58 of 58, one-to-one** on the
+> PEtab identity key. The checker reports `joined 0 of 58` because it *also* keys on
+> `observableParameters` and `noiseParameters`, which hold different kinds of value on the two
+> sides — parameter **names** in `measurementData` (`background;scale`, `sigma`) against the
+> **resolved numeric values** in `simulatedData` (`-4.98107438218408;-0.279017032524776 `,
+> `-1.14362512938604`, log10 scale). Those can never match. Recomputing the Eq. 6 NLL at the nominal
+> point on the identity key alone, with **no PyBNF in the loop**, gives `−63.2027999142` against
+> PyBNF's `−63.2027400751` — **9.5e−07 relative** — and reproduces the restored constant
+> `60.528229772493` (= `(58/2)log(2π)` `53.298434925871` + log10 Jacobian `7.229794846622`) to twelve
+> decimals. Before that it was **untested, not absent**, and the distinction mattered.
+>
+> The shared checker is still **not** patched, because dropping the two columns is not the fix:
+> verified across all 23, it breaks σ resolution on nine slugs — once a column is not a join key, the
+> merge renames it `noiseParameters_meas`/`_sim` and the resolver stops finding it — and makes
+> `Armistead`, `Fiedler`, `Weber`, `Blasi` and `Schwen` over-match. The fix is to key on identity
+> while reading σ from the measurement side, and it needs revalidating across all 23. `Fiedler` and
+> `Raia` are different again: their rows genuinely do not join one-to-one on identity keys at all.
 
 > **`Smith_BMCSystBiol2013` moved out of the "could not be joined" list on 2026-08-11, and the reason
 > is worth keeping.** Its rows always joined; the checker's key did not. `datasetId` is a PEtab
@@ -469,6 +474,11 @@ its `VALIDATION.md`.
 - **`cmaes`** with IPOP restarts (ADR-0070, restart trigger fixed in ADR-0082) — used where the
   gradient path genuinely refuses the problem, and for the three strongly multimodal problems
   (Borghans, Elowitz, Okuonghae), where a local method from a few starts lands in a local basin.
+  Two of those three have since moved to `gntr` and are solved — `Okuonghae`, and `Elowitz` on
+  2026-08-11 at `OG = 0.000175`. `Elowitz`'s reference region is a box *corner* (6 of 21 nominal
+  parameters at or essentially on a bound), which a Gaussian sampler is adversarial to and a clamping
+  gradient method reaches naturally; see that slug's `VALIDATION.md`. Only `Borghans` still carries
+  the multimodal case for `cmaes`.
 
 **No** gradient-path refusal remains. The last one was `Smith_BMCSystBiol2013`, and it is worth
 recording how it went away, because the entry stood here after it had stopped being true.
@@ -514,7 +524,7 @@ enough to find the reference basin. `Laske_PLOSComputBiol2019` is the worked exa
 direction, and it is now **solved**: the collection-default 20 × 500 reaches only `OG = 6.76` on it,
 while 100 × 1000 — the budget its conf now carries — reaches the reference optimum itself. Expect to tune
 `population_size` / `max_iterations`, or to switch to `cmaes` with IPOP restarts, before treating any
-⚪ or 🟢 row as a statement about PyBNF's optimizers. The twenty-one ✅ rows are the only ones where a
+⚪ or 🟢 row as a statement about PyBNF's optimizers. The twenty-two ✅ rows are the only ones where a
 fit was actually driven to `OG < 1.92`.
 
 `SalazarCavazos_MBoC2020` is the second worked example, and the sharper one: at 20 × 500 it reaches
@@ -546,5 +556,5 @@ if valid simulations on your machine are being marked as failures.
 `<id>.conf` (the runnable fit) · the SBML model (verbatim) · `experiment*.exp` (data) ·
 `*_measparams.tsv` (per-measurement observable/noise parameter tables, where the problem uses them) ·
 `jstar.txt` (the reference J\*) · `nominal_check.json` (the nominal-point evaluation) · `score.py` ·
-`README.md`. The twenty-one solved slugs additionally ship `best_fit_params.txt`,
+`README.md`. The twenty-two solved slugs additionally ship `best_fit_params.txt`,
 `information_criteria.txt`, and `VALIDATION.md` from their fits.
