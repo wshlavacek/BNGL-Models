@@ -7,8 +7,12 @@ in the Grein et al. (2026) optimizer benchmark (bioRxiv 2026.07.11.737731).
 
 ## Status
 
-**Setup only — not fitted.** The job runs and scores correctly; the PEtab nominal point is not
-this problem's published optimum, so no optimality claim is made.
+**✅ Solved — `OG = 0.501586`** (threshold `< 1.92`), from a from-scratch 100-start `gntr`
+multi-start with no seeding: **13 h 11 m 32 s**, 1,130,847 simulations, 88 starts retired on
+`step is negligible` and 12 on `reached max_iterations`. The fit beats its own nominal point
+(`OG_nominal = 867276.27`) by a factor of 1.7 million. See `VALIDATION.md` for Gates A/B/C, the
+provenance caveat, and the **leverage caveat** — with `σ ≡ 1` the objective is 99.96% Figures 2B, 3B
+and 2C, and is effectively blind to Figures 2D and 3C.
 
 > **Requires lanl/PyBNF#553** (merged 2026-08-10 as `85b36a96`). All 133 species here are declared
 > `hasOnlySubstanceUnits="true"` and the compartments run from `8.3e-12` down to `1e-13`. Before
@@ -31,6 +35,8 @@ this problem's published optimum, so no optimality claim is made.
 | quantity | value |
 |---|---|
 | reference `J*` (Grein et al., best over all optimizer runs) | `20922.16424399946` |
+| **paper-scale NLL at the fit** | **`20922.665830`** |
+| **optimality gap at the fit** | **`0.501586`** ✅ |
 | paper-scale NLL at the PEtab nominal point | `888198.438390848` |
 | optimality gap at nominal | `867276.2741468486` |
 | scored data points `n` | 62 |
@@ -72,8 +78,9 @@ difference-quotient fallbacks, and the event condition rooted and jumped in flig
 **And a second, unrelated blocker.** Even with a usable gradient this problem could not be
 fitted until lanl/PyBNF#553 — see Status. The gradient itself is sound: a finite-difference
 check of the assembled gradient against central differences of the objective, at the nominal
-point where the gradient has real magnitude, agrees to a worst relative error of **8.3e-05**
-across all 25 parameters, with no structurally zero columns.
+point where the gradient has real magnitude, agrees to a worst relative error of **8.30e-05**
+across all 25 parameters, with no structurally zero columns. Re-measured on the build that
+produced the fit (`dff901e`) it reproduces that figure to three significant figures.
 
 ## Contents
 
@@ -83,6 +90,9 @@ across all 25 parameters, with no structurally zero columns.
 - `jstar.txt` — the reference `J*`
 - `nominal_check.json` — the nominal-point evaluation recorded above
 - `score.py` — scores a run against `J*`
+- `best_fit_params.txt` — the solved fit's `sorted_params_final.txt`
+- `information_criteria.txt` — the full normalized log-likelihood at the best fit
+- `VALIDATION.md` — Gates A/B/C, provenance, and the figure-by-figure reading
 
 ## Provenance
 
@@ -92,6 +102,13 @@ converter preserves both `parameterScale` (lanl/PyBNF#491) and `observableTransf
 `sbml_backend = bngsim`, `wall_time_sim`) is supplied, not recovered — PEtab specifies a
 problem, not a method. `wall_time_sim = 10` caps pathological parameter points; raise it
 if valid simulations on your machine are being marked as failures.
+
+**The fit is not reproducible on the collection's usual stack.** It was run against PyBNF
+`095a5a14` (contains lanl/PyBNF#553) and a **local, editable `bngsim` working copy at `dff901e`** —
+not the released PyPI wheel, which passes PyBNF's version-floor capability gate while lacking
+bngsim#160/#161 and therefore declines this model's analytic gradient entirely. `nominal_check.json`
+still records the wheel's values; on `dff901e` the same nominal point differs by 1.12e-10 relative.
+See `VALIDATION.md` § Provenance.
 
 ## Running
 

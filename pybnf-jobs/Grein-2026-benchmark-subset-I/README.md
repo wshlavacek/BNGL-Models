@@ -119,7 +119,7 @@ These two ship a plain sum of squares and no `noise_model` line, which looks lik
 is not, and the reason is worth recording because it is not obvious from the conf alone. **Both
 problems specify σ ≡ 1 upstream**, checked against the pinned commit:
 
-- `Smith_BMCSystBiol2013` — `observables_*.tsv` carries the literal `noiseFormula = 1.0` for all seven
+- `Smith_BMCSystBiol2013` — `observables_*.tsv` carries the literal `noiseFormula = 1.0` for all nine
   observables.
 - `Oliveira_NatCommun2021` — `noiseFormula = noiseParameter1_*`, bound by the measurement table to
   `sd_cumulative_cases` / `sd_cumulative_deaths`, which `parameters_*.tsv` gives `nominalValue = 1`
@@ -207,21 +207,35 @@ linear one.
 | `Weber_BMC2015` | `minutes` | 296.2020025 | lin | 36 | 135 | gntr | −0.0002 † | ✓ | 🟢 objective validated ‡ |
 | `Okuonghae_ChaosSolitonsFractals2020` | `minutes` | 373.5476580 | lin | 16 | 92 | gntr | 0.0012 |   | ✅ **solved** |
 | `Oliveira_NatCommun2021` | `minutes` | 7904.9343174 | lin | 12 | 120 | gntr | 0.011 |   | ✅ **solved** |
-| `Smith_BMCSystBiol2013` ✱ | `hours` | 20922.1642440 | lin | 25 | 62 | gntr | 8.7e+05 † |   | ⚪ setup only |
+| `Smith_BMCSystBiol2013` ✱ | `hours` | 20922.1642440 | lin | 25 | 62 | gntr | 0.502 | ✓ | ✅ **solved** |
 
 `k` = free parameters, `n` = scored data points.
-**† = optimality gap at the PEtab nominal point, not from a fit.** Only the eighteen ✅ rows report an
+**† = optimality gap at the PEtab nominal point, not from a fit.** Only the nineteen ✅ rows report an
 OG from an actual optimization run.
 
-**✱ = this row's numbers depend on a PyBNF commit newer than every other row's.**
-`Smith_BMCSystBiol2013` is the only slug of the 23 whose SBML declares `hasOnlySubstanceUnits`
-species *and* gives its compartments a size other than 1 (down to `6.4e-14`). Until
-lanl/PyBNF#553 (merged 2026-08-10 as `85b36a96`) the bridge handed observable formulas each such
-species as `amount / compartment_size`, inflating all 62 scored points by up to 1.6e13 and putting
-this row's OG at `6.9e+32`. That number was an artefact of the defect, not a distance from the
-optimum; the honest one is `8.7e+05`. Every other row was produced before that fix and is
-unaffected — re-evaluating all 23 at their nominal points moves only this one, the other 22
-bit-identical. Reproducing this row needs PyBNF at or past `85b36a96`.
+**✱ = this row — nominal point *and* fit — was produced on a stack no other row shares.** It is two
+differences, not one, and both are load-bearing.
+
+*The objective.* `Smith_BMCSystBiol2013` is the only slug of the 23 whose SBML declares
+`hasOnlySubstanceUnits` species *and* gives its compartments a size other than 1 (down to `6.4e-14`).
+Until lanl/PyBNF#553 (merged 2026-08-10 as `85b36a96`) the bridge handed observable formulas each
+such species as `amount / compartment_size`, inflating all 62 scored points by up to 1.6e13 and
+putting this row's OG at `6.9e+32`. That number was an artefact of the defect, not a distance from
+the optimum; the honest nominal-point figure is `8.7e+05`. Every other row was produced before that
+fix and is unaffected — re-evaluating all 23 at their nominal points moves only this one, the other
+22 bit-identical.
+
+*The gradient.* The `OG = 0.502` fit additionally required a **local, editable `bngsim` working copy
+at `dff901e`**, not the released PyPI wheel. Reaction 7 (`R5f`) is `per_species_volume_scaling`, and
+without bngsim#160/#161 the whole model declines the analytic `df/dp`, all 25 columns fall back to
+CVODES difference quotients, and every start times out to `inf`. PyBNF's capability gate cannot
+detect this — `BNGSIM_HAS_EVENT_SENS` is a **version floor of exactly 0.12.2**, which the PyPI 0.12.2
+wheel passes while lacking the commit. Probe capability, never version.
+
+Reproducing this row therefore needs PyBNF at or past `85b36a96` **and** a bngsim carrying
+bngsim#161 (`'_psvs_row_divisor' in inspect.getsource(bngsim._codegen)`). It was run against PyBNF
+`095a5a14` and bngsim `dff901e`; see the slug's `VALIDATION.md` for the full provenance, including
+why `nominal_check.json` still records the wheel's value (they differ by 1.12e-10 relative).
 
 **¶ = solved on the benchmark objective, but *not* a reproduction of the source paper's fit.** Two
 things hold at once for `Schwen_PONE2015` and both must be quoted together. Its `J*` is **not
@@ -290,12 +304,23 @@ will not join one-to-one), and 4 of the 8 have no estimated σ at all, which mak
 recomputed at the nominal point straight from the upstream PEtab tables — `simulatedData` (the
 collection's own reference simulation) joined to `measurementData`, with the declared
 `observableTransformation` and nominal σ — with **no PyBNF in the loop**, and compared to what PyBNF
-reports at the same point. `✓` = reproduces PyBNF exactly (12 slugs). `✗` = disagrees, i.e. a defect
-— **no row carries one now**; the two that did (`Brannmark`, `Weber`) were fixed by
-lanl/PyBNF#547 and now reproduce. Blank = not checked: either upstream ships no `simulatedData`
-(`Bertozzi`, `Okuonghae`, `Oliveira`), or the rows could not be joined (`Elowitz`, `Fiedler`, `Raia`,
-`SalazarCavazos`, `Smith`), or the checker's own σ handling is the doubtful half rather than PyBNF's
-(`Armistead` and `Sneyd`, where PyBNF matches `J*` to 0.0000 and 0.0006, and `Perelson`).
+reports at the same point. `✓` = reproduces PyBNF (13 slugs) — twelve of them exactly, plus `Smith`
+to 3.1e−09 relative, which is integrator tolerance rather than a digit-for-digit match; see its
+`VALIDATION.md`. `✗` = disagrees, i.e. a defect — **no row carries one now**; the two that did
+(`Brannmark`, `Weber`) were fixed by lanl/PyBNF#547 and now reproduce. Blank = not checked: either
+upstream ships no `simulatedData` (`Bertozzi`, `Okuonghae`, `Oliveira`), or the rows could not be
+joined (`Elowitz`, `Fiedler`, `Raia`, `SalazarCavazos`), or the checker's own σ handling is the
+doubtful half rather than PyBNF's (`Armistead` and `Sneyd`, where PyBNF matches `J*` to 0.0000 and
+0.0006, and `Perelson`).
+
+> **`Smith_BMCSystBiol2013` moved out of the "could not be joined" list on 2026-08-11, and the reason
+> is worth keeping.** Its rows always joined; the checker's key did not. `datasetId` is a PEtab
+> *visualization grouping label*, not part of a measurement's identity, and upstream tags 13 of
+> Smith's 62 rows inconsistently across the two tables — all ten of figure 2C and all three of
+> figure 2D read `fig2C`/`fig2c`/`fig2D` in `measurementData` and `fig2A` in `simulatedData`.
+> Including the column joined 62 − 13 = 49 and the slug was written off. On the identity keys
+> `(observableId, simulationConditionId, time)` it joins 62 of 62, one-to-one. `tools/sigma_profile.py`
+> no longer keys on `datasetId`; the change was diffed across all 23 slugs and moves only this one.
 
 **This column is orthogonal to the status column, and that distinction is the point.** A ⚪ row with
 `✓` is a job whose objective is known good and whose nominal point simply is not the optimum
@@ -408,7 +433,7 @@ enough to find the reference basin. `Laske_PLOSComputBiol2019` is the worked exa
 direction, and it is now **solved**: the collection-default 20 × 500 reaches only `OG = 6.76` on it,
 while 100 × 1000 — the budget its conf now carries — reaches the reference optimum itself. Expect to tune
 `population_size` / `max_iterations`, or to switch to `cmaes` with IPOP restarts, before treating any
-⚪ or 🟢 row as a statement about PyBNF's optimizers. The eighteen ✅ rows are the only ones where a fit
+⚪ or 🟢 row as a statement about PyBNF's optimizers. The nineteen ✅ rows are the only ones where a fit
 was actually driven to `OG < 1.92`.
 
 `SalazarCavazos_MBoC2020` is the second worked example, and the sharper one: at 20 × 500 it reaches
@@ -440,5 +465,5 @@ if valid simulations on your machine are being marked as failures.
 `<id>.conf` (the runnable fit) · the SBML model (verbatim) · `experiment*.exp` (data) ·
 `*_measparams.tsv` (per-measurement observable/noise parameter tables, where the problem uses them) ·
 `jstar.txt` (the reference J\*) · `nominal_check.json` (the nominal-point evaluation) · `score.py` ·
-`README.md`. The eighteen solved slugs additionally ship `best_fit_params.txt`,
+`README.md`. The nineteen solved slugs additionally ship `best_fit_params.txt`,
 `information_criteria.txt`, and `VALIDATION.md` from their fits.

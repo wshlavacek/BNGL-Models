@@ -124,8 +124,16 @@ def analyse(slug_dir, upstream_root, profile=True):
         raise FileNotFoundError('no upstream directory for ' + slug)
     meas, sim, obs, par = _read_tables(up)
 
+    # `datasetId` is deliberately NOT a join key. PEtab defines it as a visualization
+    # grouping label, not part of a measurement's identity, and the two tables are free to
+    # disagree on it. `Smith_BMCSystBiol2013` is where that bit: 13 of its 62 rows -- all
+    # ten of figure 2C and all three of figure 2D -- are tagged `fig2C`/`fig2c`/`fig2D` in
+    # measurementData and `fig2A` in simulatedData, so including the column joined 49 of 62
+    # and the slug was recorded as having no oracle at all. On the identity keys it joins
+    # 62 of 62, one-to-one. Dropping the column cannot silently over-match: the
+    # `len(j) != len(meas)` guard below rejects any key that stops being unique.
     keys = [c for c in ('observableId', 'simulationConditionId', 'preequilibrationConditionId',
-                        'time', 'observableParameters', 'noiseParameters', 'datasetId')
+                        'time', 'observableParameters', 'noiseParameters')
             if c in meas.columns and c in sim.columns]
     # The tables disagree on dtype wherever a column is sometimes blank (NaN -> float64 on one
     # side, str on the other), and on formatting where one side writes `1` and the other `1.0`.
@@ -193,8 +201,20 @@ def analyse(slug_dir, upstream_root, profile=True):
             sigma = float(nominal[name])
             src = 'nominal' if is_est else 'fixed'
         else:
+            candidate = name
+            if kind == 'formula':
+                # No `noiseParameters` cell, so sigma is the observable's own `noiseFormula`.
+                # `sigma_key` already routes these here; this finishes the lookup it names.
+                # A literal number there is fully determined -- `Smith_BMCSystBiol2013`
+                # carries `noiseFormula = 1.0` on all nine observables, i.e. sigma == 1 --
+                # while a formula naming parameters needs the per-measurement binding whose
+                # absence put the row on this branch, so it still refuses below.
+                try:
+                    candidate = str(obs_idx.loc[name]['noiseFormula']).strip()
+                except KeyError:
+                    candidate = name
             try:
-                sigma = float(name)
+                sigma = float(candidate)
                 src = 'literal'
             except (TypeError, ValueError):
                 raise ValueError('cannot resolve sigma for ' + str(key))
