@@ -345,9 +345,23 @@ at 3.1e−09 and `SalazarCavazos` at 2.0e−08 relative, which is integrator tol
 digit-for-digit match. `✗` = disagrees, i.e. a defect — **no row carries one now**; the two that did
 (`Brannmark`, `Weber`) were fixed by lanl/PyBNF#547 and now reproduce. Blank = not checked: either
 upstream ships no `simulatedData` (`Bertozzi`, `Okuonghae`, `Oliveira`), or the rows could not be
-joined (`Elowitz`, `Fiedler`, `Raia`), or the checker's own σ handling is the doubtful half rather
-than PyBNF's (`Armistead` and `Sneyd`, where PyBNF matches `J*` to 0.0000 and 0.0006, and
-`Perelson`).
+joined (`Fiedler`, `Raia`), or the checker cannot key them (`Elowitz`, below), or the checker's own σ
+handling is the doubtful half rather than PyBNF's (`Armistead` and `Sneyd`, where PyBNF matches `J*`
+to 0.0000 and 0.0006, and `Perelson`).
+
+> **`Elowitz_Nature2000` is a checker limitation, not a data property, and it is the same bug as
+> Smith's two columns over.** Its rows join **58 of 58, one-to-one** on the PEtab identity key. The
+> checker reports `joined 0 of 58` because it *also* keys on `observableParameters` and
+> `noiseParameters`, which hold different kinds of value on the two sides — parameter **names** in
+> `measurementData` (`background;scale`, `sigma`) against the **resolved numeric values** in
+> `simulatedData` (`-4.98107438218408;-0.279017032524776 `, `-1.14362512938604`, log10 scale). Those
+> can never match. Dropping the two columns is **not** the fix: verified across all 23, it breaks σ
+> resolution on nine slugs — once a column is not a join key, the merge renames it
+> `noiseParameters_meas`/`_sim` and the resolver stops finding it — and makes `Armistead`, `Fiedler`,
+> `Weber`, `Blasi` and `Schwen` over-match. The fix is to key on identity while reading σ from the
+> measurement side. Until then `Elowitz`'s oracle is **untested, not absent**, and this row's blank
+> should not be read as evidence either way. `Fiedler` and `Raia` are different: their rows genuinely
+> do not join one-to-one on identity keys at all.
 
 > **`Smith_BMCSystBiol2013` moved out of the "could not be joined" list on 2026-08-11, and the reason
 > is worth keeping.** Its rows always joined; the checker's key did not. `datasetId` is a PEtab
