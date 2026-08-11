@@ -46,10 +46,11 @@ reproduce to four decimals, and the fit is *better* than the published point on 
 > `mxstep` failures and made a distinct one visible: 84 simulations died with
 > `CVODE made no progress … the step size has collapsed`, every one at `t = 23.999999999999996` —
 > exactly `PdBu_time = 24` / `kb_NB142_70_time = 24`, the discontinuity in this model's
-> `(time() - PdBu_time) < 0` rate law. That is
-> [lanl/bngsim#194](https://github.com/lanl/bngsim/issues/194)'s shape. #38 had ruled #194 out for
-> Weber because "the error does move with `rtol`/`atol`" — but both modes were present at once and only
-> the `mxstep` one is tolerance-sensitive. Weber is affected by **both** #196 and #194.
+> `assignmentRule u5 = piecewise(0, (time - PdBu_time) < 0, PdBu_dose)`, with `h ≈ eps·t`. **This is
+> not `lanl/bngsim#194`** (closed, and about *state* thresholds) **and the root is not missing**: the
+> loader registers `((time()-PdBu_time)<0)` and `((time()-kb_NB142_70_time)<0)` as discontinuity
+> triggers. It is a registered time root the integrator cannot advance past, which has no upstream
+> issue yet. See `VALIDATION.md` for what is and is not established.
 
 > **Corrected 2026-08-07** by [lanl/PyBNF#547](https://github.com/lanl/PyBNF/issues/547) (ADR-0104). This problem pre-equilibrates, and the bngsim SBML backend silently dropped `preequilibrate:`. Its pre-equilibration condition is all-zeros and matches the model's authored defaults, so both experiments simulated a *completely flat* trajectory — identical to 8 significant figures at every timepoint, including across `t = 24` where `PdBu_time = 24, PdBu_dose = 1` should fire — and this README recorded `OG = 13739.87` as "the nominal point is not the published optimum". It is the optimum; the forward model was wrong. **This slug was previously queued as a tuning candidate on that reading; it is not one.** A trajectory that never moves through an event that should fire is the signature to check for if this ever recurs.
 

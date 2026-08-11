@@ -12,7 +12,7 @@ than a missing capability.
 > the threshold without reproducing the reference basin. That gap is structural rather than a budget
 > shortfall (see Gate C).
 > Deductions: the model is imported, not re-derived from Weber et al. 2015; the run is a single seed;
-> 24 of 100 start points died on a *second*, still-open integration defect (bngsim#194, below); two fitted
+> 24 of 100 start points died on a *second* integration defect that has no upstream issue yet (below); two fitted
 > parameters rest on box bounds; and the recipe needs a hand-set `sbml_atol` that no derivation in
 > PyBNF will reach for on its own.
 
@@ -231,11 +231,23 @@ exactly `PdBu_time = 24` and `kb_NB142_70_time = 24`, the discontinuity in this 
 discontinuity such as an `if(t >= sigma)` rate jump, where `t + h == t`… move the discontinuity onto
 an event or a sample time so the integrator can restart across it."*
 
-**This corrects #38's reasoning about bngsim#194.** That issue was ruled out for Weber because
-"#194's own discriminator is that the error does not move with `rtol`/`atol` — and this one does: it
-disappears at `1e-6`." Both failure modes were present simultaneously, and only the `mxstep` one is
-tolerance-sensitive. Weber is affected by **both** bngsim#196 and bngsim#194; #196 alone was enough to
-make it fittable, and closing #194 should recover the 24 starts it still costs.
+**This is not bngsim#194, and the root is not missing** — two things I asserted before checking, and
+both are wrong. #194 is **closed**, and its subject is a *state*-threshold piecewise ("the state twin of
+the GH #72 time roots"); Weber's is a **time** threshold. More to the point, asking the loader directly,
+`_collect_time_discontinuity_conditions` over Weber's assignment rules returns
+`((time()-PdBu_time)<0)` and `((time()-kb_NB142_70_time)<0)` — **both crossings are registered as
+discontinuity triggers.** `(time - p) < 0` survives despite `time` not being bare on either side,
+because root registration uses `_make_time_relational_filter`, which admits a relational with *either*
+side time-dependent (bngsim GH #259); the bare-symbol requirement in `_clock_threshold_split` governs
+the *sensitivity-compensation* path, not root registration.
+
+So what remains is narrower and has no upstream issue yet: **a registered time root at which the
+integrator still cannot advance.** Two mechanisms are not separated here — a root re-detected at its own
+restart point, refining forever just below the crossing; or a post-jump RHS stiff enough at these
+box-sampled points that the step genuinely collapses (`u5` goes `0 → PdBu_dose` discontinuously). Only
+the first would be a solver bug. The model declares **0 events**, so bngsim's suggested remedy is
+available but untaken. Either way the reproducer is this slug's shipped conf: 84 occurrences in 21
+minutes across 100 starts.
 
 ## Configuration
 
@@ -269,5 +281,5 @@ integration failure was in the **sensitivity** solve rather than the state solve
 that fixes it is the one ADR-0103's own rule computes for this model and then clamps away. `OG` goes
 from "no fit has ever been run" to **0.781167**, with the gradient verified for the first time at a
 tolerance where the check is a real test. It stops short of the published corner optimum, and the
-remaining 24% start mortality is a *second* defect (bngsim#194) that this run isolated to
-`t = 24⁻`, the model's own dose discontinuity.
+remaining 24% start mortality is a *second* defect, with no upstream issue yet, that this run isolated
+to `t = 24⁻` — the model's own dose discontinuity, at a crossing bngsim already registers a root for.
