@@ -247,7 +247,10 @@ solve rather than the state solve (the plain forward model manages 7 of 11 box p
 tolerance, in 0.6 s), and the tolerance is a pure trade against *objective* noise — the assembled
 gradient is invariant across the sweep, while the FD reference degrades from 2.78e−03 at `1e-4` to
 8.60e−02 at `4.665e-3`, which is what a line search consumes. Full sweep in that slug's
-`VALIDATION.md`.
+`VALIDATION.md`. Filed upstream as **lanl/PyBNF#557**, which records that this clamp binds on **10 of
+the 22** slugs whose nominal state is readable — `Crauste`, `Laske`, `Okuonghae`, `Oliveira`,
+`Perelson`, `Rahman`, `Raia`, `Smith`, `Weber`, `Zhao` — though nine of the ten already solve at the
+clamped value, so the blast radius of changing the default is why it is an opt-in request.
 
 **✱ = this row — nominal point *and* fit — was produced on a stack no other row shares.** It is two
 differences, not one, and both are load-bearing.

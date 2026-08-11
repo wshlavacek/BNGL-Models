@@ -12,7 +12,7 @@ than a missing capability.
 > the threshold without reproducing the reference basin. That gap is structural rather than a budget
 > shortfall (see Gate C).
 > Deductions: the model is imported, not re-derived from Weber et al. 2015; the run is a single seed;
-> 24 of 100 start points died on a *second* integration defect that has no upstream issue yet (below); two fitted
+> 24 of 100 start points died on a *second* integration defect (lanl/bngsim#305, below); two fitted
 > parameters rest on box bounds; and the recipe needs a hand-set `sbml_atol` that no derivation in
 > PyBNF will reach for on its own.
 
@@ -62,7 +62,9 @@ That is exactly the tension lanl/bngsim#196 was filed about, and bngsim has sinc
 per-species vector (bngsim#211) and a trajectory-following `CVodeWFtolerances` atol
 (bngsim#213/#258). **Neither is reachable from PyBNF today** — `sbml_atol` is `Optional[float]`, and
 PyBNF contains no reference to `TrackingAtol` — so this slug takes the documented scalar off-switch
-instead. **No upstream change was needed to unblock it**, which is the headline: #38 listed Weber
+instead; the clamp is now filed as **lanl/PyBNF#557**, which records that it binds on 10 of the 22
+slugs whose nominal state is readable, not just this one. **No upstream change was needed to unblock
+it**, which is the headline: #38 listed Weber
 under an open upstream capability issue, and it was a config line.
 
 ## Gate A — objective fidelity
@@ -241,7 +243,7 @@ because root registration uses `_make_time_relational_filter`, which admits a re
 side time-dependent (bngsim GH #259); the bare-symbol requirement in `_clock_threshold_split` governs
 the *sensitivity-compensation* path, not root registration.
 
-So what remains is narrower and has no upstream issue yet: **a registered time root at which the
+So what remains is narrower, and is filed as **lanl/bngsim#305**: **a registered time root at which the
 integrator still cannot advance.** Two mechanisms are not separated here — a root re-detected at its own
 restart point, refining forever just below the crossing; or a post-jump RHS stiff enough at these
 box-sampled points that the step genuinely collapses (`u5` goes `0 → PdBu_dose` discontinuously). Only
@@ -281,5 +283,5 @@ integration failure was in the **sensitivity** solve rather than the state solve
 that fixes it is the one ADR-0103's own rule computes for this model and then clamps away. `OG` goes
 from "no fit has ever been run" to **0.781167**, with the gradient verified for the first time at a
 tolerance where the check is a real test. It stops short of the published corner optimum, and the
-remaining 24% start mortality is a *second* defect, with no upstream issue yet, that this run isolated
+remaining 24% start mortality is a *second* defect (lanl/bngsim#305) that this run isolated
 to `t = 24⁻` — the model's own dose discontinuity, at a crossing bngsim already registers a root for.
