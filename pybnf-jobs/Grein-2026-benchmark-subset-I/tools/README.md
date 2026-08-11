@@ -104,6 +104,22 @@ exactly `0` against a central difference of `-10.4`.
 > sweep were this, and nothing else. Clip the evaluation point to `[lo + 8h, hi - 8h]` and say so
 > when a parameter had to be moved.
 
+> **Gotcha: that same `8h` inset makes an `h` ladder run at a *different point* on every rung —
+> whenever `--disp` pushes a bound-sitting parameter out of the box.** The clip is
+> `[lo + 8h, hi - 8h]`, so its position depends on `h`; a parameter whose displaced value lands
+> outside the box comes back to a bound offset that *moves with the step size*. Every other column
+> then shifts too, because the evaluation point did. On `Brannmark_JBC2010` four of 22 parameters
+> (`k1d`, `k1e`, `k1f`, `k_IRP_1Step`) sit **exactly on** a bound at the PEtab nominal point, so
+> `--disp 0.03` sent all four out and the clip returned them to `bound ∓ 8h`. The symptom is an
+> *assembled* gradient that moves with `h` — `k_IRSiP_2Step` read 904 / 924 / 995 / 1202 across
+> `h` = 1e-4 … 3e-3 — which `Weber_BMC2015`'s `VALIDATION.md` correctly names as the signature of a
+> clamped point, and which reads as a 33% tolerance-induced gradient error if you do not check.
+> **The fix is to pin the point rather than to re-derive it per rung:** compute the displaced vector
+> once, inset it by a fixed fraction of each box width (0.05 is comfortably clear of `8h` for any
+> `h ≤ 3e-3`), write it to a `param-values.json`, and run the ladder with `--disp 0`. The assembled
+> gradient then reads *identical* across the whole ladder, which is what makes "the assembled side
+> holds while the central difference wanders" a statement about FD noise rather than about clipping.
+
 `param-values.json` is a `{parameterId: value}` map; without it the script uses each parameter's
 median-quantile value, which may be a meaningless point for the model. To evaluate at the PEtab
 nominal point:

@@ -31,22 +31,22 @@ Counting every file inside the 23 slug directories:
 
 | category | files | bytes | |
 |---|---:|---:|---|
-| SBML model, verbatim from upstream | 23 | 1,681,108 | **copied** — 7% of bytes, 6% of files |
+| SBML model, verbatim from upstream | 23 | 1,681,108 | **copied** — 6% of bytes, 6% of files |
 | `.exp` and `_measparams.tsv` — PyBNF-format *translations* of the upstream measurement tables, emitted by the importer | 185 | 141,974 | derived |
 | `jstar.txt` — one number, transcribed from the ICB-DCM suppl repository | 23 | 433 | derived |
-| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 152 | 22,128,239 | **written here** |
-| total | 383 | 23,951,754 | |
+| `.conf`, `score.py`, `nominal_check.json`, `README.md`, `VALIDATION.md`, `best_fit_params.txt`, `information_criteria.txt` | 155 | 24,414,524 | **written here** |
+| total | 386 | 26,238,039 | |
 
-**Not one file here is copied except the 23 SBML models**, which are now 7% of the bytes and 6% of the
-files — so the directory is 94% locally authored by file count and 93% by byte count. **Editing this
+**Not one file here is copied except the 23 SBML models**, which are now 6% of the bytes and 6% of the
+files — so the directory is 94% locally authored by file count and 94% by byte count. **Editing this
 directory is normal**: the locally authored files are the deliverable, and adding a job necessarily
 edits the coverage matrix below. Nothing upstream is ever modified.
 
 > Earlier revisions of this table read `350 files / 2,164,145 bytes`, with the SBML models called out
 > as *"80% of bytes"* and the locally written files as `119 / 340,630`. That was true before the ✅ rows
-> started shipping their fits: the 20 `best_fit_params.txt` files are 21.7 MB on their own — each is
+> started shipping their fits: the 21 `best_fit_params.txt` files are 23.9 MB on their own — each is
 > the run's full sorted 5001-row parameter table — which is what moved the SBML share from 80% of bytes
-> to 7%. Counted over `git ls-files` only; the `output/` trees and `bnf_*.log` files a run leaves behind
+> to 6%. Counted over `git ls-files` only; the `output/` trees and `bnf_*.log` files a run leaves behind
 > are gitignored and are not part of this.
 
 ### Upstream pin
@@ -94,6 +94,12 @@ by regime. Classified from each conf's `noise_model` lines and `.exp` columns:
 | **per-measurement σ** (`sigma = formula noiseParameterN_*`, bound via `_measparams.tsv` sidecars, ADR-0083) | 2 | Fiedler, Zhao | `(N/2)log(2π)` |
 | **mixed estimated + `fix_at`** | 1 | Weber | `(N/2)log(2π)` + the fixed-σ terms |
 | **unit σ** (`objective = sos`, no noise model) | 2 | Oliveira, Smith | `(N/2)log(2π)` |
+
+One slug spans two of those rows: **`Brannmark_JBC2010`** fits `sigmaY1TimR` and `sigmaYDosR` directly
+but reaches `sigmaY2Step` / `sigmaY2TimR` through `sigma = formula noiseParameter1_IRS1_P`, bound
+per-experiment by its two `_measparams.tsv` sidecars. All four are estimated and the restored constant
+is `(N/2)log(2π)` either way, so the table's purpose is unaffected — but a reader looking for the
+sidecar mechanism should find it under `Brannmark` as well as `Fiedler` and `Zhao`.
 
 The objective is the *full* Gaussian NLL (Eq. 6, with the `log(2πσ²)` normalizer) in every regime, not
 a bare sum-of-squares. The fixed-per-point identity is verified numerically against the `.exp` `_SD`
@@ -209,7 +215,7 @@ linear one.
 | `Elowitz_Nature2000` | `hours` | −65.6351201 | log10 | 21 | 58 | cmaes | 2.43 † |   | ⚪ setup only |
 | `Borghans_BiophysChem1997` | `hours` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ✓ | ⚪ setup only |
 | `Zhao_QuantBiol2020` | `minutes` | 501.2270538 | lin | 28 | 82 | gntr | 5e−06 | ✓ | ✅ **solved** |
-| `Brannmark_JBC2010` | `minutes` | 141.8248543 | lin | 22 | 43 | gntr | 0.064 † | ✓ | 🟢 objective validated ‡ |
+| `Brannmark_JBC2010` | `hours` | 141.8248543 | lin | 22 | 43 | gntr | 0.111 | ✓ | ✅ **solved** ‡ |
 | `Giordano_Nature2020` | `hours` | −3488.3414981 | lin | 50 | 313 | gntr | 0.135 | ✓ | ✅ **solved** |
 | `Weber_BMC2015` | `minutes` | 296.2020025 | lin | 36 | 135 | gntr | 0.781 | ✓ | ✅ **solved** (not saturated) ‡ |
 | `Okuonghae_ChaosSolitonsFractals2020` | `minutes` | 373.5476580 | lin | 16 | 92 | gntr | 0.0012 |   | ✅ **solved** |
@@ -217,8 +223,8 @@ linear one.
 | `Smith_BMCSystBiol2013` ✱ | `hours` | 20922.1642440 | lin | 25 | 62 | gntr | 0.502 | ✓ | ✅ **solved** |
 
 `k` = free parameters, `n` = scored data points.
-**† = optimality gap at the PEtab nominal point, not from a fit.** Only the twenty ✅ rows report an
-OG from an actual optimization run.
+**† = optimality gap at the PEtab nominal point, not from a fit.** Only the twenty-one ✅ rows report
+an OG from an actual optimization run.
 
 **"(not saturated)" = the fit cleared the threshold without reaching the best point the problem is
 known to have.** Two rows say this and they say it for different reasons, which is why the phrase is
@@ -235,19 +241,39 @@ published values, and it *beats* the published point on three of its eleven obse
 groups. So a `(not saturated)` OG is a sound benchmark number and a weak claim about recovering
 published kinetics; read the slug's `VALIDATION.md` before quoting it as the latter.
 
-**`Weber_BMC2015` is the one row whose recipe needs a hand-set ODE tolerance**, and removing it makes
-the problem unfittable rather than merely slower. Its conf carries `sbml_atol = 1e-4` because ADR-0103
-derives `atol = rtol × median(y₀)` = `4.665e-3` for this model and then clamps it to `1e-8` — the
-derivation "only ever tightens", so it discards its own answer for one **5.7 decades tighter** — and
-ADR-0105's per-species vector clamps into `[scalar_atol, default_atol]` = `[1e-8, 1e-8]` here, so it
-is elementwise the scalar and correctly declines to engage. At the derived value **only 6 of 30
-box-sampled starts integrate** under the sensitivity request the gradient path applies, against 22 of
-30 at `1e-4`. Two things worth carrying to any future slug: the failure is in the forward-**sensitivity**
-solve rather than the state solve (the plain forward model manages 7 of 11 box points at the derived
-tolerance, in 0.6 s), and the tolerance is a pure trade against *objective* noise — the assembled
-gradient is invariant across the sweep, while the FD reference degrades from 2.78e−03 at `1e-4` to
-8.60e−02 at `4.665e-3`, which is what a line search consumes. Full sweep in that slug's
-`VALIDATION.md`. Filed upstream as **lanl/PyBNF#557**, which records that this clamp binds on **10 of
+**Two rows need a hand-set ODE tolerance — `Weber_BMC2015` and `Brannmark_JBC2010` — and they need it
+for opposite reasons.** Both come from the same ADR-0103 rule `atol = rtol × median(y₀)`, clamped into
+`[1e-16, backend default]`; the clamp only ever tightens, so a model whose own scale asks for a
+*looser* tolerance cannot have one, and a model whose scale asks for a *tighter* one gets it whether
+or not that helps. Weber is the first failure mode, Brannmark the second:
+
+| | median y₀ | derivation wants | derivation applies | shipped | box points integrated (30, with sensitivities) |
+|---|---:|---:|---:|---:|---|
+| `Weber_BMC2015` | 4.67e+05 | `4.665e-03` | `1e-08` (clamped) | `1e-4` | 6 → **22** |
+| `Brannmark_JBC2010` | 3.30e-02 | `3.302e-10` | `3.302e-10` | `1e-8` | 19 → **28** |
+
+`Brannmark`'s shipped value **is** the backend default: the line exists to stop the derivation from
+tightening the model 1.5 decades below it. ADR-0105's per-species vector cannot substitute for either
+— it clamps into `[scalar_atol, default_atol]`, which is `[1e-8, 1e-8]` for Weber (elementwise the
+scalar, correctly declining to engage) and `[3.302e-10, 1e-8]` for Brannmark, where it hands the three
+principal species their default back but leaves the five below the median pinned, so it buys speed
+(210 s against 303 s) and **no** additional starts. **This corrects a prediction in lanl/PyBNF#557**,
+which names `Brannmark` as the worked example for its ask (b) — a vector — on the reasoning that "a
+single number cannot serve `IRp` at `1.8e-09` alongside `X` at `10`". It can: one scalar takes it from
+63% to 93% of its multistart budget. `Brannmark` is the mirror of ask (a), not a case for (b).
+
+Two things worth carrying to any future slug, and both generalize across the pair: the failure is in
+the forward-**sensitivity** solve rather than the state solve (Weber's plain forward model manages 7 of
+11 box points at the derived tolerance; Brannmark's manages **30 of 30**, in 0.9 s), and the tolerance
+is a pure trade against *objective* noise — the assembled gradient is invariant across the sweep on
+both (Brannmark's moves by 2.6e−06 of its norm over three decades of `atol`), while the FD reference
+degrades, and that reference is what a line search consumes. Full sweeps in the two slugs'
+`VALIDATION.md`.
+
+Removing either line makes its problem unfittable rather than merely slower — Weber discards a usable
+derived answer for one **5.7 decades tighter**, and its FD reference degrades from 2.78e−03 at `1e-4`
+to 8.60e−02 at `4.665e-3`, which is why the knee rather than the loosest value is shipped.
+Filed upstream as **lanl/PyBNF#557**, which records that this clamp binds on **10 of
 the 22** slugs whose nominal state is readable — `Crauste`, `Laske`, `Okuonghae`, `Oliveira`,
 `Perelson`, `Rahman`, `Raia`, `Smith`, `Weber`, `Zhao` — though nine of the ten already solve at the
 clamped value, so the blast radius of changing the default is why it is an opt-in request.
@@ -402,7 +428,9 @@ Four status levels, and the difference matters:
 - ✅ **solved** — a real fit was run and reached `OG < 1.92`.
 - 🟢 **objective validated** — no fit was run, but the problem's `nominalValue` point *is* its
   published optimum, and PyBNF's objective there lands within the solved threshold of `J*`. This
-  validates the import and the objective; it makes no claim about PyBNF's optimizer.
+  validates the import and the objective; it makes no claim about PyBNF's optimizer. **No slug is in
+  this state**; `Brannmark_JBC2010` was the last, and was converted to ✅ on 2026-08-11. The level is
+  kept because it is where a newly imported problem with a published optimum lands.
 - ⚪ **setup only** — the job imports, simulates, and scores correctly, but its nominal point is not
   the published optimum, so nothing about optimality is claimed. These are ready-to-run jobs.
 - ⚠️ **blocked** — the job imports and runs, but PyBNF's objective for it is *wrong*, so neither its
@@ -486,8 +514,8 @@ enough to find the reference basin. `Laske_PLOSComputBiol2019` is the worked exa
 direction, and it is now **solved**: the collection-default 20 × 500 reaches only `OG = 6.76` on it,
 while 100 × 1000 — the budget its conf now carries — reaches the reference optimum itself. Expect to tune
 `population_size` / `max_iterations`, or to switch to `cmaes` with IPOP restarts, before treating any
-⚪ or 🟢 row as a statement about PyBNF's optimizers. The twenty ✅ rows are the only ones where a fit
-was actually driven to `OG < 1.92`.
+⚪ or 🟢 row as a statement about PyBNF's optimizers. The twenty-one ✅ rows are the only ones where a
+fit was actually driven to `OG < 1.92`.
 
 `SalazarCavazos_MBoC2020` is the second worked example, and the sharper one: at 20 × 500 it reaches
 `OG = 10.2` — *worse* than its own nominal point — and at 100 × 1000 it lands on `J*`. **100 × 1000 is
@@ -518,5 +546,5 @@ if valid simulations on your machine are being marked as failures.
 `<id>.conf` (the runnable fit) · the SBML model (verbatim) · `experiment*.exp` (data) ·
 `*_measparams.tsv` (per-measurement observable/noise parameter tables, where the problem uses them) ·
 `jstar.txt` (the reference J\*) · `nominal_check.json` (the nominal-point evaluation) · `score.py` ·
-`README.md`. The twenty solved slugs additionally ship `best_fit_params.txt`,
+`README.md`. The twenty-one solved slugs additionally ship `best_fit_params.txt`,
 `information_criteria.txt`, and `VALIDATION.md` from their fits.
