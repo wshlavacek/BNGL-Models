@@ -34,6 +34,11 @@ started at a **radius-0.4 perturbation of the PEtab nominal point**: a trajector
 oscillates with the period wrong, which is the regime that transcription is for. In that regime
 multiple shooting beat `gntr` **9–0–1** over ten paired starts and never lost.
 
+The prototype, the solved vector and its re-score live in `multiple_shooting_prototype/`:
+`solved_seed3_r0.4.json` is the parameter vector, and `verify_gntr.conf` re-scores it through PyBNF's
+ordinary config surface at `-248.069154` (the prototype's own recomputation: `-248.069166`).
+`reproduce.py 3 0.4 600` replays it in about 100 s on one core.
+
 Two things keep this a basin measurement rather than a result:
 
 * **The start is privileged information.** It establishes that a basin at `OG < 0` exists and is

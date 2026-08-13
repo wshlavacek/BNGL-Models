@@ -231,8 +231,9 @@ verified on all four gates this collection applies (gradient 1.47e-07 over 23 co
 111 rows at 5.6e-07, search scale matching upstream, integration not a tolerance case), and the problem
 **has been solved once** — `OG = -1.282656`, verified three ways including through PyBNF's own
 objective — from a radius-0.4 perturbation of the nominal point, by the multiple-shooting prototype of
-lanl/PyBNF#563. What has never been demonstrated is a fit from box-sampled starts with no seeding,
-which is what ✅ means here. That is a compute-scale claim rather than an open question: 0 successes
+lanl/PyBNF#563, which ships in that slug's `multiple_shooting_prototype/`. What has never been
+demonstrated is a fit from box-sampled starts with no seeding, which is what ✅ means here. That is
+a compute-scale claim rather than an open question: 0 successes
 across 19 CMA-ES runs, 500+ `gntr` starts, 1 PSO and 1 scatter search, with the completed 15-run BIPOP
 campaign spanning `OG` 79.07 – 80.80 — a 1.74-unit spread across fifteen independent global searches
 against a 76.8-unit gap, all of it terminating at the analytic flat line (`J_paper = -51.204092`,
