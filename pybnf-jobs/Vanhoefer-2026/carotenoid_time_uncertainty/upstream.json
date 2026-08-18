@@ -1,0 +1,28 @@
+{
+  "_comment": [
+    "Provenance for the one copied file in this slug: model_carotenoid.xml, the SBML of the",
+    "carotenoid-cleavage model of Bruno et al. 2016, imported verbatim from the Benchmark-Models-",
+    "PEtab collection. It is byte-identical (LF-normalized sha256) to the model shipped by the",
+    "Grein-2026-benchmark-subset-I/Bruno_JExpBot2016 slug, which pins the same upstream commit.",
+    "Everything else in this slug is written or generated locally: perturb_times.py and the",
+    "synthetic sigmaT*/ datasets it produces from the model at theta*, the standard/marginal confs,",
+    "score.py, and this benchmark's docs. theta_star_source.txt is a copy of that slug's",
+    "best_fit_params.txt (the reference optimum theta*).",
+    "VERIFY: sha256(local_bytes.replace(CRLF, LF)) == sha256_lf."
+  ],
+  "upstream_repository": "https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab",
+  "pinned_commit": "4d2085084b289f6215a95475b1ee639fd7d42283",
+  "pinned_commit_short": "4d20850",
+  "verification_rule": "sha256 of LF-normalized content",
+  "models": {
+    "model_carotenoid.xml": {
+      "upstream_path": "Benchmark-Models/Bruno_JExpBot2016/model_Bruno_JExpBot2016.xml",
+      "sha256_lf": "c769e63b6c12f63f172fd1f4e386fee5065d48a7b1029afb27d8217aaaa90399",
+      "also_shipped_as": "pybnf-jobs/Grein-2026-benchmark-subset-I/Bruno_JExpBot2016/model_Bruno_JExpBot2016.xml"
+    }
+  },
+  "reference_optimum_source": {
+    "file": "theta_star_source.txt",
+    "note": "Copy of Grein-2026-benchmark-subset-I/Bruno_JExpBot2016/best_fit_params.txt (theta*, the reference optimum, Obj = 32.556). The synthetic data is generated from the model at this point, so theta* is the exact ground truth."
+  }
+}
