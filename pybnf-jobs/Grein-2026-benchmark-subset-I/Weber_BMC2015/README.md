@@ -23,36 +23,33 @@ one of those five (`m11`, to within 0.005% of its bound) and leaves the rest int
 leverage trade — the five fitted σ come back within 0.7% of their published values, three observables
 reproduce to four decimals, and the fit is *better* than the published point on three others.
 
-> **Unblocked 2026-08-10, and not the way this slug's history predicted.** Issue #38 and
-> [lanl/bngsim#196](https://github.com/lanl/bngsim/issues/196) both recorded Weber as unable to
-> integrate anywhere near its nominal point, at every displacement tried including zero, and #38's
-> standing instruction was "do not spend a fitting budget here yet." **No upstream change was needed.**
-> Two corrections came out of actually measuring it:
+> **Corrected 2026-08-19 — the tolerance was never what made this slug fittable.** The account
+> below stood for nine days and is wrong; it is kept because the wrong version is the memorable one.
 >
-> 1. **The failure was in the forward-*sensitivity* solve, not the state solve.** At the shipped
->    tolerance the plain forward model integrates 7 of 11 box points in 0.6 s; with the `gntr`
->    sensitivity request applied it manages 2 of 11 in 80 s. CVODES derives its sensitivity tolerances
->    from the state ones, which is why loosening the state `atol` rescues it — and why bngsim#196's own
->    footnote that this "does not reproduce on a bare model" was right without knowing the reason: a
->    bare `Simulator.run` has no sensitivity axis to fail on.
-> 2. **The fix is `sbml_atol = 1e-4`, and the reason it was unavailable is a clamp.** ADR-0103 derives
->    `atol = rtol × median(y₀)`, which for this model is `4.665e-3`; the derivation "only ever
->    tightens", so it discards its own answer for `1e-8`, **5.7 decades tighter**. ADR-0105's
->    per-species vector clamps into `[scalar_atol, default_atol]` = `[1e-8, 1e-8]` here, so it is
->    elementwise the scalar and correctly declines to engage. The conf carries the reasoning and the
->    measured sweep.
+> Until 2026-08-11 this slug would not fit at PyBNF's derived tolerance: 6 of 30 sensitivity-applied
+> box points integrated against 22 at `sbml_atol = 1e-4`, ~80% of starts died, and the conclusion
+> drawn — here, in `VALIDATION.md`, and in [lanl/PyBNF#557](https://github.com/lanl/PyBNF/issues/557)
+> — was that ADR-0103's only-ever-tighten clamp had made the model unfittable.
 >
-> **A second defect is still open and cost this run 24 of its 100 starts.** Loosening `atol` removed the
-> `mxstep` failures and made a distinct one visible: 84 simulations died with
-> `CVODE made no progress … the step size has collapsed`, every one at `t = 23.999999999999996` —
-> exactly `PdBu_time = 24` / `kb_NB142_70_time = 24`, the discontinuity in this model's
-> `assignmentRule u5 = piecewise(0, (time - PdBu_time) < 0, PdBu_dose)`, with `h ≈ eps·t`. **This is
-> not `lanl/bngsim#194`** (closed, and about *state* thresholds) **and the root is not missing**: the
-> loader registers `((time()-PdBu_time)<0)` and `((time()-kb_NB142_70_time)<0)` as discontinuity
-> triggers. It is a registered time root the integrator cannot advance past — filed as
-> [lanl/bngsim#305](https://github.com/lanl/bngsim/issues/305). See `VALIDATION.md` for what is and is
-> not established. The tolerance clamp behind item 2 above is
-> [lanl/PyBNF#557](https://github.com/lanl/PyBNF/issues/557).
+> **It was [lanl/bngsim#305](https://github.com/lanl/bngsim/issues/305)**: a registered
+> time-discontinuity root the integrator could never *reach*, so the run wedged one ulp below
+> `t = 24` — this model's `PdBu_time` / `kb_NB142_70_time` crossing. Closed 2026-08-11; the fix's own
+> changelog measures this slug and reports its step count roughly halving. The bngsim build every
+> measurement above was taken on (`114d3b3`, Aug 10 16:55) is a **provable git ancestor** of that fix
+> (`7b9140b`, Aug 11 12:27).
+>
+> Re-measured 2026-08-19 on bngsim 0.13.0, same probe, same 30 box points, same sensitivity request:
+> **every tolerance arm integrates 30/30** within 7.2 s of each other — unset, `1e-08`, `1e-04`, and
+> PyBNF's new `auto` / `tracking`.
+>
+> **What survives.** The clamp #557 describes is real and unchanged: this model's own scale asks for
+> `4.665e-03` and ADR-0103 hands it `1e-08`, with ADR-0105's vector clamping into `[1e-8, 1e-8]` and
+> correctly declining. #557 shipped the opt-in for it ([ADR-0114](https://github.com/lanl/PyBNF/blob/main/docs/adr/0114-an-only-ever-tighten-clamp-is-a-no-regression-rule-rather-than-a-property-of-the-model-so-sbml-atol-gains-an-opt-in-that-lets-the-derivation-loosen-and-one-that-follows-the-trajectory.md)),
+> so `sbml_atol = auto` now reaches that answer. **This slug deliberately does not use it** — see the
+> conf comment: `auto` costs ~7x the finite-difference disagreement at the default step size, because
+> what a looser tolerance costs is objective *smoothness*, which is what a trust-region line search
+> consumes. `1e-4` earns its place on integrator cost (78641 CVODE steps → 36154 over 20 box points)
+> and gradient agreement, not on integrability.
 
 > **Corrected 2026-08-07** by [lanl/PyBNF#547](https://github.com/lanl/PyBNF/issues/547) (ADR-0104). This problem pre-equilibrates, and the bngsim SBML backend silently dropped `preequilibrate:`. Its pre-equilibration condition is all-zeros and matches the model's authored defaults, so both experiments simulated a *completely flat* trajectory — identical to 8 significant figures at every timepoint, including across `t = 24` where `PdBu_time = 24, PdBu_dose = 1` should fire — and this README recorded `OG = 13739.87` as "the nominal point is not the published optimum". It is the optimum; the forward model was wrong. **This slug was previously queued as a tuning candidate on that reading; it is not one.** A trajectory that never moves through an event that should fire is the signature to check for if this ever recurs.
 
@@ -87,9 +84,12 @@ The shipped recipe is the collection's 100 × 1000 working default (raised from 
 placeholder on 2026-08-10) and has been run to completion: 75 of its 100 starts converged on
 `step is negligible` and none hit `max_iterations`.
 
-The conf also carries an explicit **`sbml_atol = 1e-4`**, which is what makes this problem fittable at
-all. Do not remove it without reading the comment above it: at the value PyBNF derives on its own,
-80% of box-sampled starts fail to integrate under the sensitivity request the gradient path needs.
+The conf also carries an explicit **`sbml_atol = 1e-4`**. It is no longer what makes this problem
+fittable — lanl/bngsim#305 was, and it is fixed (see the correction above) — but it is still the right
+value, and the conf comment carries the measurements: half the integrator steps of the derived
+tolerance, and the best finite-difference gradient agreement of any arm at the default step size.
+Do not replace it with `sbml_atol = auto` without re-reading that comment; `auto` is measurably worse
+here on exactly the quantity a trust-region line search consumes.
 
 ## Contents
 
