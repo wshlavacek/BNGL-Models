@@ -1,5 +1,55 @@
 # VALIDATION — Weber_BMC2015
 
+> ## Correction, 2026-08-19 — read this before the gates below
+>
+> **This document's central claim is wrong, and every measurement in it was taken on a build with a
+> solver bug that has since been fixed.** It is corrected here rather than rewritten, because the
+> gates' *reasoning* is sound and only its attribution was not.
+>
+> The claim: that ADR-0103's only-ever-tighten tolerance clamp is what made this slug unfittable, and
+> that `sbml_atol = 1e-4` is what rescued it. The evidence was real — 6 of 30 sensitivity-applied box
+> points integrating at the derived tolerance against 22 at `1e-4`, ~80% start mortality, 4164 CVODES
+> `mxstep` lines.
+>
+> The cause was **[lanl/bngsim#305](https://github.com/lanl/bngsim/issues/305)**, which this document
+> already isolated and filed (see "A second, still-open defect this run exposed", below) — and then
+> treated as a *separate, residual* problem rather than as the explanation for the first one. It is a
+> registered time-discontinuity root the integrator can never reach, so the run wedges one ulp below
+> `t = 24`. Closed 2026-08-11. The bngsim build every number here was taken on (`114d3b3`,
+> Aug 10 16:55) is a **provable git ancestor** of the fix (`7b9140b`, Aug 11 12:27), and that fix's
+> own changelog measures *this slug* and reports its step count roughly halving.
+>
+> **Re-measured 2026-08-19, bngsim 0.13.0, same probe / seed / 30 points / sensitivity request:**
+>
+> | `sbml_atol` | integrated / 30 | wall |
+> |---|---:|---:|
+> | unset (the derived `1e-08`) | **30** | 7.2 s |
+> | `1e-08` explicit | 30 | 7.2 s |
+> | `1e-04` (shipped) | 30 | 6.6 s |
+> | `auto` (`4.665e-03`, lanl/PyBNF#557) | 30 | 6.2 s |
+> | `tracking` | 30 | 7.1 s |
+>
+> **What still holds, and what does not:**
+>
+> - **Gate A (objective fidelity) — holds.** Re-measured: `J_paper` at the PEtab nominal point is
+>   296.2018011 at the derived tolerance, 296.2018264 at the shipped `1e-4`, 296.2018660 under `auto`.
+>   The 6th decimal across the whole 5.7-decade sweep, exactly as recorded.
+> - **Gate B (the gradient) — holds, and `1e-4` is now justified *by* it rather than incidentally.**
+>   Re-measured worst relative FD error over all 36 columns: `1e-08` → 9.20e-03 / 1.87e-03 / 4.74e-04
+>   at h = 3e-4 / 1e-3 / 3e-3; `1e-04` → 4.43e-03 / 1.48e-03 / 8.44e-04; `auto` → 3.29e-02 / 3.10e-02
+>   / 4.90e-03. Every row moves with `h`, so all three are FD noise rather than a defect — but `auto`
+>   is ~7x worse at the default step, which is the smoothness cost a trust-region line search pays.
+> - **Gate C (the fit) — NOT re-measured.** `OG = 0.781167` was obtained on the pre-#305 stack, where
+>   24 of 100 starts died. It is a valid result for that stack and is very likely conservative for
+>   this one (more starts now survive to converge), but the start-mortality and failure-mode counts
+>   below are stale. A refresh needs a fresh 100-start run.
+> - **The clamp itself — unchanged and still real.** This model asks for `4.665e-03` and ADR-0103
+>   hands it `1e-08`; ADR-0105's vector clamps into `[1e-8, 1e-8]` and correctly declines. lanl/PyBNF
+>   **#557** shipped the opt-in (`sbml_atol = auto`, ADR-**0114**). **This slug deliberately does not
+>   use it**, per Gate B above.
+> - **"A second, still-open defect" (below) — no longer open.** lanl/bngsim#305 is closed.
+
+
 Validation against the **Grein et al. 2026** reference objective. Oracle = the benchmark's reference
 **J\*** (best Eq. 6 NLL over all Marvin runs), corroborated for this slug by §2c's independent
 recomputation from upstream's own `simulatedData` tables (`obj ✓`). This is the slug
@@ -15,6 +65,10 @@ than a missing capability.
 > 24 of 100 start points died on a *second* integration defect (lanl/bngsim#305, below); two fitted
 > parameters rest on box bounds; and the recipe needs a hand-set `sbml_atol` that no derivation in
 > PyBNF will reach for on its own.
+> *(2026-08-19: that last deduction is now partly void — `sbml_atol = auto` reaches this model's own
+> tolerance since lanl/PyBNF#557, and the hand-set value is kept for gradient smoothness rather than
+> because nothing could reach it. The 24 dead starts were lanl/bngsim#305, since fixed. See the
+> correction at the top.)*
 
 ## What was actually blocking this slug
 
@@ -217,7 +271,13 @@ an observable scale factor compensating a smaller `PI4K3Ba/(PI4K3B + PI4K3Ba)` r
 observable's likelihood is only 0.157 worse than nominal. Both should be read as bounded rather than
 as point estimates, and any profile-likelihood work on this problem should widen those boxes first.
 
-## A second, still-open defect this run exposed
+## A second defect this run exposed — CLOSED 2026-08-11, and it was the *first* one too
+
+> Superseded by the correction at the top of this file. lanl/bngsim#305 is fixed, and it turned
+> out to explain the `mxstep` failures this section attributes to the tolerance, not merely the
+> step-collapse failures it isolates below. The analysis of the mechanism stands; the conclusion
+> that these were two independent problems does not.
+
 
 Loosening `atol` removed one failure mode and made a **different** one visible. Counting every failed
 integration across the run — not just the 24 that happened to land on a start point and kill it:
