@@ -33,8 +33,10 @@ files:
     role: variant
     description: >
       Stochastic-benchmark parameterization of Lin et al. (2019): 12.5-fold
-      higher PrPC production and a 120-subunit chain cap, run over ten days.
-      121 species, 3843 reactions.
+      higher PrPC production and a 120-subunit chain cap. Run here over ten
+      days, which is this record's horizon and not the paper's. Fig. 7 of Lin
+      et al. (2019) runs the model from 0 to 300 days. 121 species,
+      3843 reactions.
     documentation_target: standard
     scale: minutes
     min_bionetgen_version: "2.9.3"
