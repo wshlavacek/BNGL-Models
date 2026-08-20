@@ -69,6 +69,15 @@ reclassification rather than a repudiation:
 `Borghans` and `Elowitz` show the genuine wrong-basin signature and stay on `cmaes`. Only this one
 moved.
 
+> **Superseded for both, and neither correction touches the reclassification above.** `Elowitz` moved
+> to `gntr` and is **solved** at `OG = 0.000175` (2026-08-11) — its `5.82` was one run, not a property
+> of the method, and the same budget re-run as eleven independent 100-start batches found the basin.
+> `Borghans` is not a wrong-basin case at all: its attractor is the **flat line** (`OG = 80.804`
+> analytically), not a competing optimum, and `cmaes` is measurably the *worse* method there
+> (-165.98 against `gntr`'s -169.19). So of the three, only this slug's flag was applied by
+> association — the other two were wrong in the opposite direction. See that slug's README and the
+> ◊ footnote in the collection README.
+
 ## Contents
 
 - `Okuonghae_ChaosSolitonsFractals2020.conf` — the PyBNF job

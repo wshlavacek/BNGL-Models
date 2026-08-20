@@ -113,6 +113,15 @@ reclassification rather than a repudiation:
 `Borghans` and `Elowitz` show the genuine wrong-basin signature and stay on `cmaes`. Only this one
 moved.
 
+> **Superseded for both, and neither correction touches the reclassification above.** `Elowitz` moved
+> to `gntr` and is **solved** at `OG = 0.000175` (2026-08-11) — its `5.82` was one run, not a property
+> of the method, and the same budget re-run as eleven independent 100-start batches found the basin.
+> `Borghans` is not a wrong-basin case at all: its attractor is the **flat line** (`OG = 80.804`
+> analytically), not a competing optimum, and `cmaes` is measurably the *worse* method there
+> (-165.98 against `gntr`'s -169.19). So of the three, only this slug's flag was applied by
+> association — the other two were wrong in the opposite direction. See that slug's README and the
+> ◊ footnote in the collection README.
+
 ## Unverified — the caveat that keeps this at 76
 
 Upstream ships no `simulatedData_*.tsv` for this problem, so it cannot take the independent-oracle
@@ -151,7 +160,9 @@ in the SBML metadata as `http://identifiers.org/doi/10.1016/j.chaos.2020.110032`
 16 parameters against 92 points, solved at `OG = 0.0012` in under 13 minutes on a method the
 collection had recorded as unsuitable for it. The finding is not that `cmaes` is wrong in general —
 `Borghans` and `Elowitz` both go *backwards* on `gntr` — but that "multimodal" had been applied to
-this slug by association rather than by measurement, and cost it a working recipe.
+this slug by association rather than by measurement, and cost it a working recipe. *(That parenthetical
+has since been overtaken: `Elowitz` is solved on `gntr`, and on `Borghans` `gntr` is the better of the
+two. See the note above.)*
 
 The second finding is about the problem rather than the optimizer: the benchmark estimates 16
 parameters where the source paper estimated 6, freeing ten it had fixed from the literature. The

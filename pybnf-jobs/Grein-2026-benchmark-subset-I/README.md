@@ -213,7 +213,7 @@ linear one.
 | `Sneyd_PNAS2002` | `minutes` | −319.7923458 | lin | 15 | 135 | gntr | 1.4e−5 |   | ✅ **solved** |
 | `Schwen_PONE2015` ‖ | `hours` | 952.4217251 | log10 | 30 | 286 | gntr | −12.55 ¶ | ✓ | ✅ **solved** |
 | `Elowitz_Nature2000` | `hours` | −65.6351201 | log10 | 21 | 58 | gntr | 0.000175 | ✓ | ✅ **solved** |
-| `Borghans_BiophysChem1997` | `hours` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ✓ | ⚪ setup only |
+| `Borghans_BiophysChem1997` | `hours` | −132.0084765 | log10 | 23 | 111 | cmaes | 48.7 † | ✓ | ⚪ setup only ◊ |
 | `Zhao_QuantBiol2020` | `minutes` | 501.2270538 | lin | 28 | 82 | gntr | 5e−06 | ✓ | ✅ **solved** |
 | `Brannmark_JBC2010` | `hours` | 141.8248543 | lin | 22 | 43 | gntr | 0.111 | ✓ | ✅ **solved** ‡ |
 | `Giordano_Nature2020` | `hours` | −3488.3414981 | lin | 50 | 313 | gntr | 0.135 | ✓ | ✅ **solved** |
@@ -225,6 +225,22 @@ linear one.
 `k` = free parameters, `n` = scored data points.
 **† = optimality gap at the PEtab nominal point, not from a fit.** Only the twenty-two ✅ rows report
 an OG from an actual optimization run.
+
+**◊ = the one ⚪ row, and it is not an unrun experiment.** `Borghans_BiophysChem1997`'s setup is
+verified on all four gates this collection applies (gradient 1.47e-07 over 23 columns, oracle 111 of
+111 rows at 5.6e-07, search scale matching upstream, integration not a tolerance case), and the problem
+**has been solved once** — `OG = -1.282656`, verified three ways including through PyBNF's own
+objective — from a radius-0.4 perturbation of the nominal point, by the multiple-shooting prototype of
+lanl/PyBNF#563. What has never been demonstrated is a fit from box-sampled starts with no seeding,
+which is what ✅ means here. That is a compute-scale claim rather than an open question: 0 successes
+across 19 CMA-ES runs, 500+ `gntr` starts, 1 PSO and 1 scatter search, with the completed 15-run BIPOP
+campaign spanning `OG` 79.07 – 80.80 — a 1.74-unit spread across fifteen independent global searches
+against a 76.8-unit gap, all of it terminating at the analytic flat line (`J_paper = -51.204092`,
+`OG = 80.804`). The mechanism is the transcription, not the search: only a **−4.5% / +2.3% window in
+period** beats a horizontal line, so a wrong-period oscillator scores ~25 NLL units *worse* than
+fitting no dynamics at all and a global search is correctly pushed away from the one region a solve
+lives in. Grein et al. reached it with CMA-ES in 2 of 10 runs at a per-run budget well above the
+~33,000 simulations/run tried here. Full record in that slug's README and wshlavacek/BNGL-Models#38.
 
 **"(not saturated)" = the fit cleared the threshold without reaching the best point the problem is
 known to have.** Two rows say this and they say it for different reasons, which is why the phrase is
@@ -437,7 +453,10 @@ Four status levels, and the difference matters:
   this state**; `Brannmark_JBC2010` was the last, and was converted to ✅ on 2026-08-11. The level is
   kept because it is where a newly imported problem with a published optimum lands.
 - ⚪ **setup only** — the job imports, simulates, and scores correctly, but its nominal point is not
-  the published optimum, so nothing about optimality is claimed. These are ready-to-run jobs.
+  the published optimum, so nothing about optimality is claimed. These are ready-to-run jobs. One slug
+  is here, `Borghans_BiophysChem1997`, and it is the exception the level was not written for: its setup
+  is verified on every gate and it has been solved once from a privileged start, but never from an
+  uninformed one. Read ◊ above, or its README, before treating that row as unrun.
 - ⚠️ **blocked** — the job imports and runs, but PyBNF's objective for it is *wrong*, so neither its
   OG nor any fit against it means anything until the upstream defect lands. Not a ready-to-run job:
   do not spend a fitting budget here. **No slug is in this state**; `Brannmark` and `Weber` were,
@@ -472,13 +491,18 @@ its `VALIDATION.md`.
   It is PyBNF's fides-analogue and the default here. It works on log10/`lognormal` objectives too —
   the EFIM Fisher block for noise scales landed in ADR-0079/0080/0081.
 - **`cmaes`** with IPOP restarts (ADR-0070, restart trigger fixed in ADR-0082) — used where the
-  gradient path genuinely refuses the problem, and for the three strongly multimodal problems
-  (Borghans, Elowitz, Okuonghae), where a local method from a few starts lands in a local basin.
-  Two of those three have since moved to `gntr` and are solved — `Okuonghae`, and `Elowitz` on
-  2026-08-11 at `OG = 0.000175`. `Elowitz`'s reference region is a box *corner* (6 of 21 nominal
-  parameters at or essentially on a bound), which a Gaussian sampler is adversarial to and a clamping
-  gradient method reaches naturally; see that slug's `VALIDATION.md`. Only `Borghans` still carries
-  the multimodal case for `cmaes`.
+  gradient path genuinely refuses the problem, and originally for the three problems flagged strongly
+  multimodal (Borghans, Elowitz, Okuonghae), where a local method from a few starts lands in a local
+  basin. **All three of those flags turned out to be applied by association rather than by
+  measurement.** Two moved to `gntr` and are solved — `Okuonghae`, and `Elowitz` on 2026-08-11 at
+  `OG = 0.000175`. `Elowitz`'s reference region is a box *corner* (6 of 21 nominal parameters at or
+  essentially on a bound), which a Gaussian sampler is adversarial to and a clamping gradient method
+  reaches naturally; see that slug's `VALIDATION.md`. **`Borghans` no longer carries a multimodal case
+  for `cmaes` either** — measured, `cmaes` is the *worse* method there (-165.98 against `gntr`'s
+  -169.19), and both land on the same flat line rather than on competing basins. Its conf still ships
+  `cmaes` for a different reason: CMA-ES is the only method known to have solved that problem from an
+  uninformed start (Grein et al., 2 of 10 runs), so the shipped recipe is the one aligned with the
+  experiment that would settle the row. See ◊ above.
 
 **No** gradient-path refusal remains. The last one was `Smith_BMCSystBiol2013`, and it is worth
 recording how it went away, because the entry stood here after it had stopped being true.
@@ -530,8 +554,11 @@ fit was actually driven to `OG < 1.92`.
 `SalazarCavazos_MBoC2020` is the second worked example, and the sharper one: at 20 × 500 it reaches
 `OG = 10.2` — *worse* than its own nominal point — and at 100 × 1000 it lands on `J*`. **100 × 1000 is
 now the working default for this collection**; a conf still carrying 20 × 500 is an untuned placeholder.
-The one problem where that budget has not sufficed is `Fiedler_BMCSystBiol2016`, solved at `OG = 1.004`
-without reaching a reference basin its own nominal point proves is there.
+The one problem where that budget has not sufficed **for budget reasons** is
+`Fiedler_BMCSystBiol2016`, solved at `OG = 1.004` without reaching a reference basin its own nominal
+point proves is there. `Borghans_BiophysChem1997` also fails at 100 × 1000, and at 400 × 500, and under
+`cmaes`, `pso` and scatter search — but there the budget is not the axis at all, and tuning
+`population_size` / `max_iterations` is measurably not the lever. See ◊ above.
 
 ## Import + fit pipeline (reproduce)
 
