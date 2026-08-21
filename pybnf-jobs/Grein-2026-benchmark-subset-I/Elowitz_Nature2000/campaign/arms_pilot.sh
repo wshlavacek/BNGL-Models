@@ -5,17 +5,26 @@
 # question is whether any other arm uses it. If one does, that setting IS the discriminating
 # regime and no box-widening or budget escalation is needed. Same box, same budget, same
 # three seeds as arm 1, so the comparison is paired.
+#
+# Running
+#   Run from anywhere; it cd's to the job directory itself. It execs the pybnf entry
+#   point, taken from PYBNF_BIN (exported by .envrc.local) and falling back to PATH --
+#   bare `pybnf` is not on PATH while this repo's venv is the active one.
+#
+#       campaign/arms_pilot.sh
 set -u
-cd "$(dirname "$0")"
+CAMPAIGN="$(cd "$(dirname "$0")" && pwd)"
+# Run from the job directory: the confs name their model and .exp data relative to it.
+cd "$CAMPAIGN/.."
 echo "arm      seed   OG          solved   seconds"
 for ARM in a2_cmaes_gntr a3_ms a4_cmaes_ms; do
   for S in 101 102 103; do
     OUT="output_pilot_${ARM}_s${S}"; CONF="Elowitz_pilot_${ARM}_s${S}.conf"
     rm -rf "$OUT"
-    python3 make_box_conf.py --template "Elowitz_bench_${ARM}.conf" --decades 8 \
+    python3 "$CAMPAIGN/make_box_conf.py" --template "Elowitz_bench_${ARM}.conf" --decades 8 \
         --out "$CONF" --output-dir "$OUT" --seed "$S" --budget 300 > /dev/null
     T0=$(date +%s)
-    pybnf -c "$CONF" -o -l "bnf_pilot_${ARM}_s${S}" -L critical > /dev/null 2>&1
+    "${PYBNF_BIN:-pybnf}" -c "$CONF" -o -l "bnf_pilot_${ARM}_s${S}" -L critical > /dev/null 2>&1
     T1=$(date +%s)
     LINE=$(python3 score.py "$OUT" 2>/dev/null | grep -E "OPTIMALITY GAP|SOLVED|NOT solved")
     OG=$(echo "$LINE" | grep OPTIMALITY | sed 's/.*= *//')

@@ -9,8 +9,17 @@
 # be told apart.
 #
 # Arm 1 only, because it is the reference the other three are judged against.
+#
+# Running
+#   Run from anywhere; it cd's to the job directory itself. It execs the pybnf entry
+#   point, taken from PYBNF_BIN (exported by .envrc.local) and falling back to PATH --
+#   bare `pybnf` is not on PATH while this repo's venv is the active one.
+#
+#       campaign/calibrate_box.sh
 set -u
-cd "$(dirname "$0")"
+CAMPAIGN="$(cd "$(dirname "$0")" && pwd)"
+# Run from the job directory: the confs name their model and .exp data relative to it.
+cd "$CAMPAIGN/.."
 SEEDS="101 102 103"
 BUDGET=300
 
@@ -20,10 +29,10 @@ for D in 8 12 16 20; do
     OUT="output_cal_d${D}_s${S}"
     CONF="Elowitz_cal_d${D}_s${S}.conf"
     rm -rf "$OUT"
-    python3 make_box_conf.py --template Elowitz_bench_a1_cmaes.conf --decades "$D" \
+    python3 "$CAMPAIGN/make_box_conf.py" --template Elowitz_bench_a1_cmaes.conf --decades "$D" \
         --out "$CONF" --output-dir "$OUT" --seed "$S" --budget "$BUDGET" > /dev/null
     T0=$(date +%s)
-    pybnf -c "$CONF" -o -l "bnf_cal_d${D}_s${S}" -L critical > /dev/null 2>&1
+    "${PYBNF_BIN:-pybnf}" -c "$CONF" -o -l "bnf_cal_d${D}_s${S}" -L critical > /dev/null 2>&1
     T1=$(date +%s)
     LINE=$(python3 score.py "$OUT" 2>/dev/null | grep -E "OPTIMALITY GAP|SOLVED|NOT solved")
     OG=$(echo "$LINE" | grep OPTIMALITY | sed 's/.*= *//')

@@ -5,8 +5,15 @@ Validating a start is not the same as running a fit from it: a fit only tells yo
 *ended*. This evaluates the objective at the point itself, which is what says whether a
 proposed anchor is the point you think it is.
 
-Usage:  python score_point.py --starts radius_starts.json [--index 0]
-        python score_point.py --nominal            # the means of Borghans_gntr_nominal.conf
+Running
+-------
+Needs PyBNF's own interpreter, not this repo's. The `pybnf` imports here reach
+pybnf.pset / pybnf.parse, which pull in roadrunner and distributed; those live in
+PyBNF's venv and are not installed in BNGL-Models'. Under plain python3 the import
+succeeds at the top level and fails later, inside the run. `.envrc.local` exports
+PYBNF_PY for this:
+
+    "$PYBNF_PY" score_point.py --starts radius_starts.json --index 0
 """
 
 from __future__ import annotations
@@ -19,7 +26,10 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
+CAMPAIGN = Path(__file__).resolve().parent
+# The job directory. This script lives in campaign/, but the model, the .exp data and
+# every run happen one level up, and the confs' paths are relative to it.
+HERE = CAMPAIGN.parent
 os.chdir(HERE)
 # Run with the PyBNF environment's interpreter, per this collection's convention.
 # Set PYBNF_SRC to prepend a source checkout instead (that is how these runs were made).

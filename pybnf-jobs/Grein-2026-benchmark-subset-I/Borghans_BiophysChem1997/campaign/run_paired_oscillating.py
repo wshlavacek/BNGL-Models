@@ -19,7 +19,18 @@ Both methods get the SAME start, the SAME box (the benchmark's own bounds, carri
 bounded normal prior whose median IS the start point), the SAME budget and the SAME
 objective. The only difference is the transcription.
 
-Usage:  python run_paired_oscillating.py --budget 300
+Running
+-------
+Needs PyBNF's own interpreter, not this repo's. The `pybnf` imports here reach
+pybnf.pset / pybnf.parse, which pull in roadrunner and distributed; those live in
+PyBNF's venv and are not installed in BNGL-Models'. Under plain python3 the import
+succeeds at the top level and fails later, inside the run. `.envrc.local` exports
+PYBNF_PY for this:
+
+    "$PYBNF_PY" -u run_paired_oscillating.py --starts radius_starts.json \
+        --tag rad8 --ms-segments 8 --methods ms --budget 600
+
+It also execs the pybnf entry point from PYBNF_BIN, falling back to PATH.
 """
 
 from __future__ import annotations
@@ -35,7 +46,10 @@ import shutil
 import os
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
+CAMPAIGN = Path(__file__).resolve().parent
+# The job directory. This script lives in campaign/, but the model, the .exp data and
+# every run happen one level up, and the confs' paths are relative to it.
+HERE = CAMPAIGN.parent
 # Set PYBNF_BIN to the pybnf entry point; otherwise it is resolved on PATH, which is
 # what activating the PyBNF environment gives you.
 PYBNF = Path(os.environ.get("PYBNF_BIN") or shutil.which("pybnf") or "pybnf")

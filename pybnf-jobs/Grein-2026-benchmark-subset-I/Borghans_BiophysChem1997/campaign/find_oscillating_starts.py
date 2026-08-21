@@ -15,7 +15,15 @@ get wrong. So the honest test of it needs starts of exactly the kind no search w
 Draws are scored for oscillation on the observable's own trajectory (peaks + relative
 amplitude), never against the data, so nothing here uses the answer.
 
-Usage:  python find_oscillating_starts.py --n 400 --keep 12 --seed 20260814
+Running
+-------
+Needs PyBNF's own interpreter, not this repo's. The `pybnf` imports here reach
+pybnf.pset / pybnf.parse, which pull in roadrunner and distributed; those live in
+PyBNF's venv and are not installed in BNGL-Models'. Under plain python3 the import
+succeeds at the top level and fails later, inside the run. `.envrc.local` exports
+PYBNF_PY for this:
+
+    "$PYBNF_PY" find_oscillating_starts.py --n 400 --keep 12 --seed 20260814
 """
 
 from __future__ import annotations
@@ -36,7 +44,10 @@ _pybnf_src = os.environ.get("PYBNF_SRC")
 if _pybnf_src:
     sys.path.insert(0, _pybnf_src)
 
-HERE = Path(__file__).resolve().parent
+CAMPAIGN = Path(__file__).resolve().parent
+# The job directory. This script lives in campaign/, but the model, the .exp data and
+# every run happen one level up, and the confs' paths are relative to it.
+HERE = CAMPAIGN.parent
 CONF = HERE / "Borghans_bench_a3_ms.conf"
 
 #: The benchmark box for the loguniform observation parameters.

@@ -140,6 +140,9 @@ multimodal work; and `wall_time_fit`, which silently downgrades `refine = 1` to 
 - `jstar.txt` — the reference `J*`
 - `nominal_check.json` — the nominal-point evaluation recorded above
 - `score.py` — scores a run against `J*`
+- `multiple_shooting_prototype/` — the prototype that reached `OG = -1.282656` (see above)
+- `campaign/` — the drivers and conf templates behind the tallies quoted above; its
+  runs are not committed (see that directory's `README.md`)
 
 ## Provenance
 

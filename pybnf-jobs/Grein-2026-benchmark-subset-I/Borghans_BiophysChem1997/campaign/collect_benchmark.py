@@ -19,7 +19,10 @@ Two things it reports that a naive table would not:
   summarised by its median would report a null result on the axis the method was never
   claimed to improve.
 
-Usage:  python collect_benchmark.py [--tier A]
+Running
+-------
+Plain python3. Needs no PyBNF environment -- it only reads files this job already
+produced.
 """
 
 from __future__ import annotations
@@ -32,7 +35,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
+CAMPAIGN = Path(__file__).resolve().parent
+# The job directory. This script lives in campaign/, but the model, the .exp data and
+# every run happen one level up, and the confs' paths are relative to it.
+HERE = CAMPAIGN.parent
 JSTAR = float((HERE / "jstar.txt").read_text().split()[0])
 SOLVED = 1.92                      # chi^2, alpha = 0.05, 1 dof -- the Grein threshold
 

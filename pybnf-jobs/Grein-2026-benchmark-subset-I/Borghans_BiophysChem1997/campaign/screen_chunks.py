@@ -11,7 +11,10 @@ Process isolation is the only reliable answer. Each chunk is a separate interpre
 own seed and a hard subprocess timeout; because the screener writes its keeps incrementally,
 a chunk that is killed mid-integration still contributes everything it found before hanging.
 
-Usage:  python screen_chunks.py --want 8 --chunk 150 --timeout 45
+Running
+-------
+Plain python3. Needs no PyBNF environment -- it only reads files this job already
+produced.
 """
 
 from __future__ import annotations
@@ -22,7 +25,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
+CAMPAIGN = Path(__file__).resolve().parent
+# The job directory. This script lives in campaign/, but the model, the .exp data and
+# every run happen one level up, and the confs' paths are relative to it.
+HERE = CAMPAIGN.parent
 SCREEN = HERE / "find_oscillating_starts.py"
 
 

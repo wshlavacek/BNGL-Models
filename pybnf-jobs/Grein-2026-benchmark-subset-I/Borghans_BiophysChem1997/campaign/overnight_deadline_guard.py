@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Keep the host awake and stop the Borghans overnight screens by a deadline."""
+"""Keep the host awake and stop the Borghans overnight screens by a deadline.
+
+Running
+-------
+Plain python3. Needs no PyBNF environment -- it only reads files this job already
+produced.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +16,10 @@ import time
 from pathlib import Path
 
 
-HERE = Path(__file__).resolve().parent
+CAMPAIGN = Path(__file__).resolve().parent
+# The job directory. This script lives in campaign/, but the model, the .exp data and
+# every run happen one level up, and the confs' paths are relative to it.
+HERE = CAMPAIGN.parent
 
 
 def main() -> int:

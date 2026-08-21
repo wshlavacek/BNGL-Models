@@ -14,7 +14,10 @@ with the table -- "solved 6/10" means nothing without saying over what box.
 The widening is symmetric in log10 about the native box's own centre, so the native box is
 nested inside every wider one.
 
-Usage:  python make_box_conf.py --template Elowitz_bench_a1_cmaes.conf --decades 12
+Running
+-------
+Plain python3. Needs no PyBNF environment -- it only reads files this job already
+produced.
 """
 
 from __future__ import annotations
@@ -23,7 +26,10 @@ import argparse
 import re
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
+CAMPAIGN = Path(__file__).resolve().parent
+# The job directory. This script lives in campaign/, but the model, the .exp data and
+# every run happen one level up, and the confs' paths are relative to it.
+HERE = CAMPAIGN.parent
 VAR = re.compile(r"^(loguniform_var\s*=\s*(\S+)\s+)(\S+)\s+(\S+)\s*$")
 
 NATIVE_LO, NATIVE_HI = 1e-5, 1e3          # the shipped Elowitz box
@@ -55,7 +61,11 @@ def main() -> int:
     parser.add_argument("--budget", type=int, default=300)
     args = parser.parse_args()
 
-    text = (HERE / args.template).read_text()
+    # Templates ship in campaign/; the cwd is the job directory.
+    tpl = Path(args.template)
+    if not tpl.is_absolute() and not tpl.exists():
+        tpl = CAMPAIGN / tpl.name
+    text = tpl.read_text()
     text, n = rewrite(text, args.decades)
     for key, value in (("random_seed", args.seed), ("output_dir", args.output_dir),
                        ("wall_time_fit", args.budget)):

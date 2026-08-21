@@ -23,7 +23,10 @@ The perturbation is isotropic in each parameter's own sampling space (log10 for 
 loguniform parameters, linear for the three bounded initials), which is the space the
 prototype perturbed in and the space every optimizer here searches.
 
-Usage:  python make_radius_starts.py --radius 0.4 --n 10
+Running
+-------
+Plain python3. Needs no PyBNF environment -- it only reads files this job already
+produced.
 """
 
 from __future__ import annotations
@@ -36,7 +39,10 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
+CAMPAIGN = Path(__file__).resolve().parent
+# The job directory. This script lives in campaign/, but the model, the .exp data and
+# every run happen one level up, and the confs' paths are relative to it.
+HERE = CAMPAIGN.parent
 NOMINAL = HERE / "Borghans_gntr_nominal.conf"
 LINEAR = {"init_A_state", "init_Y_state", "init_Z_state"}
 LOG_BOUNDS = (1e-3, 1e5)

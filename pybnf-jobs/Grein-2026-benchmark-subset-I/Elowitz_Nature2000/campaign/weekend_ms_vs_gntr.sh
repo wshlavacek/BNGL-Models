@@ -29,8 +29,17 @@
 #
 # Append-only logging, one row per run, so the job is safe to stop at any moment and partial
 # results are usable. Output dirs are pruned to Results/ after scoring to bound disk.
+#
+# Running
+#   Run from anywhere; it cd's to the job directory itself. It execs the pybnf entry
+#   point, taken from PYBNF_BIN (exported by .envrc.local) and falling back to PATH --
+#   bare `pybnf` is not on PATH while this repo's venv is the active one.
+#
+#       campaign/weekend_ms_vs_gntr.sh <deadline>
 set -u
-cd "$(dirname "$0")"
+CAMPAIGN="$(cd "$(dirname "$0")" && pwd)"
+# Run from the job directory: the confs name their model and .exp data relative to it.
+cd "$CAMPAIGN/.."
 
 DEADLINE="${DEADLINE:-}"                 # ISO8601; empty = run until stopped
 STARTS="${STARTS:-50}"                   # smaller batches: finer progress, less cap risk
@@ -90,7 +99,7 @@ while true; do
     rm -rf "$OUT"
     make_conf "$METHOD" "$seed" "$CONF" "$OUT"
     T0=$(date +%s)
-    pybnf -c "$CONF" -o -l "bnf_wk_${METHOD}_s${seed}" -L critical >/dev/null 2>&1
+    "${PYBNF_BIN:-pybnf}" -c "$CONF" -o -l "bnf_wk_${METHOD}_s${seed}" -L critical >/dev/null 2>&1
     T1=$(date +%s)
     LINE=$(python3 score.py "$OUT" 2>/dev/null | grep -E "OPTIMALITY GAP|reduced objective|=> ")
     OG=$(echo "$LINE" | grep "OPTIMALITY GAP" | sed 's/.*= *//')

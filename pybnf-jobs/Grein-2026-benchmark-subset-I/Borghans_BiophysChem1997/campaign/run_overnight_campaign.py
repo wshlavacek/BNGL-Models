@@ -16,6 +16,15 @@ rather than merely comparable -- and it reuses everything above it.  #564 is fix
 (ADR-0107's ``wall_time_refine_frac`` reserves the refine's share up front), so a
 budgeted hybrid arm does now refine; ``Results/method_chain.json`` records whether it
 actually did, and that is what the status TSV carries rather than an assumption.
+
+Running
+-------
+Plain python3 is enough: this driver does not import pybnf, it execs the pybnf entry
+point, taken from PYBNF_BIN and falling back to PATH. `.envrc.local` exports PYBNF_BIN;
+without it, `pybnf` must be on PATH (activating PyBNF's venv does that).
+
+    python3 -u run_overnight_campaign.py --slot 1 --workers 3 \
+        --arm bench_a1 --template Borghans_bench_a1_cmaes.conf
 """
 
 from __future__ import annotations
@@ -31,8 +40,11 @@ import os
 from pathlib import Path
 
 
-HERE = Path(__file__).resolve().parent
-BASE = HERE / "Elowitz_bench_a1_cmaes.conf"
+CAMPAIGN = Path(__file__).resolve().parent
+# The job directory. This script lives in campaign/, but the model, the .exp data and
+# every run happen one level up, and the confs' paths are relative to it.
+HERE = CAMPAIGN.parent
+BASE = CAMPAIGN / "Borghans_cmaes_bipop_gntr_seed31.conf"
 # Set PYBNF_BIN to the pybnf entry point; otherwise it is resolved on PATH, which is
 # what activating the PyBNF environment gives you.
 PYBNF = Path(os.environ.get("PYBNF_BIN") or shutil.which("pybnf") or "pybnf")
@@ -50,10 +62,14 @@ def make_config(slot: int, run_index: int, seed: int, workers: int,
                 tail_budget: int | None, *, template: Path = None,
                 arm: str = "overnight", budget: int | None = None) -> tuple[Path, Path, str]:
     template = template or BASE
+    # A bare --template name means a template in campaign/, not one in the cwd the
+    # driver runs pybnf from (the job directory).
+    if not template.is_absolute() and not template.exists():
+        template = CAMPAIGN / template.name
     kind = "tail-cmaes" if tail_budget is not None else arm
     stem = f"{arm}_s{slot}_n{run_index:02d}_seed{seed}"
     output = HERE / f"output_{stem}"
-    conf = HERE / f"Elowitz_{stem}.conf"
+    conf = HERE / f"Borghans_{stem}.conf"
     text = template.read_text()
     text = replace_key(text, "parallel_count", workers)
     text = replace_key(text, "random_seed", seed)
@@ -137,7 +153,7 @@ def run_one(status, slot, run_index, seed, workers, tail_budget, *, template=Non
     """Run one fit and append its row. Returns the best reduced objective, or ``missing``."""
     conf, output, kind = make_config(slot, run_index, seed, workers, tail_budget,
                                      template=template, arm=arm, budget=budget)
-    prefix = conf.with_suffix("").name.replace("Elowitz_", "bnf_")
+    prefix = conf.with_suffix("").name.replace("Borghans_", "bnf_")
     stdout_path = HERE / f"{prefix}.out"
     started = time.time()
     started_iso = dt.datetime.now().astimezone().isoformat(timespec="seconds")
@@ -163,7 +179,7 @@ def main() -> int:
     parser.add_argument("--deadline",
                         help="Timezone-aware ISO deadline, e.g. 2026-08-13T08:00:00-06:00")
     parser.add_argument("--template", type=Path,
-                        help="Arm mode: the conf template to run (Elowitz_bench_*.conf)")
+                        help="Arm mode: the conf template to run (Borghans_bench_*.conf)")
     parser.add_argument("--arm", default="overnight",
                         help="Arm mode: label used in conf/output/status names")
     parser.add_argument("--seeds",

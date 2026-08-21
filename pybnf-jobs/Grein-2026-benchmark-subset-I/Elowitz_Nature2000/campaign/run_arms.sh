@@ -5,19 +5,28 @@
 # (pybnf/shooting/solver.py, unchanged and not separately tuned), so ms-vs-gntr at the same
 # starts and budget isolates what the TRANSCRIPTION adds and nothing else. Every other
 # contrast is confounded by a change of method.
+#
+# Running
+#   Run from anywhere; it cd's to the job directory itself. It execs the pybnf entry
+#   point, taken from PYBNF_BIN (exported by .envrc.local) and falling back to PATH --
+#   bare `pybnf` is not on PATH while this repo's venv is the active one.
+#
+#       campaign/run_arms.sh
 set -u
-cd "$(dirname "$0")"
+CAMPAIGN="$(cd "$(dirname "$0")" && pwd)"
+# Run from the job directory: the confs name their model and .exp data relative to it.
+cd "$CAMPAIGN/.."
 SEEDS="${SEEDS:-101 102 103 104 105}"
 echo "arm             seed   OG           solved  sims     seconds"
 for ARM in a1_cmaes a5_gntr a3_ms a2_cmaes_gntr a4_cmaes_ms; do
   for S in $SEEDS; do
     OUT="output_bench_${ARM}_s${S}"; CONF="Elowitz_run_${ARM}_s${S}.conf"
     rm -rf "$OUT"
-    python3 make_box_conf.py --template "Elowitz_bench_${ARM}.conf" --decades 8 \
+    python3 "$CAMPAIGN/make_box_conf.py" --template "Elowitz_bench_${ARM}.conf" --decades 8 \
         --out "$CONF" --output-dir "$OUT" --seed "$S" --budget 0 > /dev/null
     # --budget 0 would blank wall_time_fit; restore whatever the arm's own template set.
     grep -q '^wall_time_fit = 0$' "$CONF" && sed -i '' "s/^wall_time_fit = 0$/$(grep '^wall_time_fit' "Elowitz_bench_${ARM}.conf")/" "$CONF"
-    T0=$(date +%s); pybnf -c "$CONF" -o -l "bnf_bench_${ARM}_s${S}" -L critical >/dev/null 2>&1; T1=$(date +%s)
+    T0=$(date +%s); "${PYBNF_BIN:-pybnf}" -c "$CONF" -o -l "bnf_bench_${ARM}_s${S}" -L critical >/dev/null 2>&1; T1=$(date +%s)
     LINE=$(python3 score.py "$OUT" 2>/dev/null | grep -E "OPTIMALITY GAP|SOLVED|NOT solved")
     OG=$(echo "$LINE" | grep OPTIMALITY | sed 's/.*= *//')
     SOLVED=$(echo "$LINE" | grep -q "=> SOLVED" && echo YES || echo no)

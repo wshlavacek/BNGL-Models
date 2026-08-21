@@ -74,6 +74,8 @@ incremental scored checkpoints, not for speed.
 - `information_criteria.txt` — AIC/BIC/AICc and the full normalized log-likelihood at that fit
 - `VALIDATION.md` — Gates A/B/C for the solved row
 - `score.py` — scores a run against `J*`
+- `campaign/` — the drivers and conf templates behind the `ms`-vs-`gntr` tallies quoted
+  above; its runs are not committed (see that directory's `README.md`)
 
 ## Provenance
 
