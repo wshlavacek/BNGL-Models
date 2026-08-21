@@ -52,8 +52,10 @@ import bngsim
 # --------------------------------------------------------------------------- #
 # Problem constants
 # --------------------------------------------------------------------------- #
-JOB = ('/Users/l119605/Code/BNGL-Models/pybnf-jobs/Grein-2026-benchmark-subset-I/'
-       'Borghans_BiophysChem1997')
+# This file lives in <job>/multiple_shooting_prototype/, so the job directory is two
+# levels up. Derived rather than hardcoded: an absolute path here was one developer's
+# checkout and broke the prototype for every other one.
+JOB = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_XML = os.path.join(JOB, 'model_Borghans_BiophysChem1997.xml')
 DATA_EXP = os.path.join(JOB, 'experiment1.exp')
 JSTAR = -132.00847649739424
