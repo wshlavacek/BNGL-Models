@@ -42,7 +42,10 @@ The sweeps shard across processes:
 for i in 0 1 2 3; do BNGSIM_CODEGEN_CACHE_DIR=$PWD/cg OMP_NUM_THREADS=1 ~/Code/PyBNF/.venv/bin/python experiment.py sweep.jsonl $i 4 0.1,0.2,0.4,0.8 12 & done; wait
 ```
 
-To reproduce the solve (deterministic; ~100 s):
+To re-run the solved start (deterministic; ~100 s). It writes
+`rerun_seed3_r0.4.json` and diffs it against the committed `solved_seed3_r0.4.json`,
+which it never overwrites — and note that the solve is **not expected to reproduce**
+on a different build of the ODE library:
 
 ```bash
 BNGSIM_CODEGEN_CACHE_DIR=$PWD/cg ~/Code/PyBNF/.venv/bin/python reproduce.py 3 0.4 600

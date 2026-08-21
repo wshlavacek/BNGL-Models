@@ -86,6 +86,10 @@ overnight_deadline_guard.log
 proto[0-9]*.log
 proto_reproduce*.log
 
+# reproduce.py's own output. Run-scoped so a re-run cannot overwrite the committed
+# solved_*.json it is checked against.
+rerun_seed*_r*.json
+
 # Generated start points and scan results (regenerable; see the seed note above)
 _alpha_nominal.json
 _chunk_[0-9]*.json

@@ -1,5 +1,13 @@
-"""Re-run the solved start and save its parameter vector for independent verification."""
+"""Re-run the solved start and save its parameter vector for independent verification.
+
+Writes rerun_seed<seed>_r<radius>.json, NOT the committed solved_*.json beside it, and
+diffs the two when the recorded one exists. The committed file is the recorded result;
+writing there would overwrite it with whatever this run produced, and on a rebuilt ODE
+library that is routinely a much worse point -- the solve does not survive a rebuild
+(see the slug README). An earlier version of this script did overwrite it.
+"""
 import json
+import os
 import sys
 import time
 
@@ -45,13 +53,27 @@ print('  optimality gap OG   = %.6f   -> %s'
       % (M.optimality_gap(J), 'SOLVED' if M.optimality_gap(J) < 1.92 else 'not solved'))
 
 lin['sigma'] = sigma
-with open('solved_seed%d_r%s.json' % (seed, radius), 'w') as fh:
+recorded = 'solved_seed%d_r%s.json' % (seed, radius)
+out_path = 'rerun_seed%d_r%s.json' % (seed, radius)
+with open(out_path, 'w') as fh:
     json.dump({'seed': seed, 'radius': radius, 'schedule': list(schedule),
                'reduced_objective': J, 'J_paper': M.paper_nll(J),
                'OG': M.optimality_gap(J), 'sigma_profiled': sigma,
                'params_linear': lin,
                'theta_sampling_space': [float(v) for v in theta],
                'theta_names': names}, fh, indent=2)
+print()
+print('wrote %s' % out_path)
+if os.path.exists(recorded):
+    with open(recorded) as fh:
+        ref = json.load(fh)
+    dOG = M.optimality_gap(J) - ref['OG']
+    print('recorded %s: OG = %.6f   this run: OG = %.6f   delta = %+.6f'
+          % (recorded, ref['OG'], M.optimality_gap(J), dOG))
+    if abs(dOG) > 1e-6:
+        print('  the recorded result did NOT reproduce here. That is a known property of\n'
+              '  this problem, not necessarily a bug: the path to the solve does not\n'
+              '  survive a rebuild of the ODE library. %s is left untouched.' % recorded)
 print()
 print('parameters (linear scale):')
 for n in sorted(lin):
