@@ -10,6 +10,11 @@ staging/
 my_models/reference/
 dev/
 bnf_*.log
+# PyBNF console capture from a driven campaign. Same artefact as bnf_*.log above -- the
+# overnight/weekend drivers redirect to .out, and the .log-only rule let 99 of these (2.3 GB,
+# one of them 969 MB) sit untracked in the tree until a sync. A run's console is never a
+# deliverable; what ships is copied out as best_fit_params.txt / information_criteria.txt.
+bnf_*.out
 **/results_*/
 
 # PyBNF run output. A fit writes output_dir/ (Results/, FailedSimLogs/, alg_backup.bp) into the
