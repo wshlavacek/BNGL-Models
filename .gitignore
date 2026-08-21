@@ -30,3 +30,61 @@ bnf_*.out
 # README ("not one upstream PEtab problem file lives here") and upstream.json, which pins the
 # commit instead.
 pybnf-jobs/Benchmark-Models-PEtab/
+
+# Driven-campaign fan-out (issue #38: Borghans, Elowitz). The rules above cover what PyBNF
+# itself writes -- output_*/, Results/, the console capture. A *driven* campaign also writes
+# its own inputs and its own bookkeeping, and those land in the job directory beside the run
+# directories rather than inside them, so nothing above described them. That gap is how 326
+# generated files accumulated untracked across six days of runs.
+#
+# What is ignored here is strictly machine output: one config per run, expanded by a driver
+# from a committed template, plus the status tables and progress logs the drivers append to.
+# The drivers and their templates are committed -- they are the reproducible part, and a
+# generated config is recoverable by re-running the driver that emitted it. Start-point JSONs
+# regenerate exactly: make_radius_starts.py and find_oscillating_starts.py both default to
+# --seed 20260814 through np.random.default_rng.
+#
+# Deliberately narrow. Each pattern names the arm that produced it, so a new hand-written
+# template is NOT swept up by an existing rule -- Borghans_bench_a2_cmaes_gntr.conf is a
+# template and stays tracked, while Borghans_bench_a2_s1_n01_seed42.conf is a run and does not.
+
+# Borghans: per-run configs expanded by run_overnight_campaign.py / run_paired_oscillating.py
+Borghans_overnight_s*_n*_seed*.conf
+Borghans_bench_a?_s*_n*_seed*.conf
+Borghans_nom[0-9][0-9]_[gm]*.conf
+Borghans_osc[0-9][0-9]_[gm]*.conf
+Borghans_probe[0-9]*_[gm]*.conf
+Borghans_proto[0-9]*_[gm]*.conf
+Borghans_proto[0-9]*_dev_ms.conf
+Borghans_rad[0-9]*_[gm]*.conf
+Borghans_rad_b[0-9]*_[gm]*.conf
+
+# Elowitz: per-run configs expanded by weekend_ms_vs_gntr.sh / run_arms.sh / calibrate_box.sh
+Elowitz_wk_gntr_s*.conf
+Elowitz_wk_ms_s*.conf
+Elowitz_cal_d*_s*.conf
+Elowitz_pilot_a*.conf
+Elowitz_run_a*.conf
+
+# Campaign bookkeeping: status tables the drivers append a row to, and their progress logs
+*_status.tsv
+wk_lane?.tsv
+wk_lane?.log
+*_progress.log
+*_stderr.log
+arms_pilot.log
+arms_run.log
+calibration.log
+overnight_deadline_guard.log
+proto[0-9]*.log
+proto_reproduce*.log
+
+# Generated start points and scan results (regenerable; see the seed note above)
+_alpha_nominal.json
+_chunk_[0-9]*.json
+_nominal_for_alpha.json
+_nominal_start.json
+alpha_scan_results.json
+oscillating_starts.json
+prototype_seed[0-9]*_start.json
+radius_starts*.json
