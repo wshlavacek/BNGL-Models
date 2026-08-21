@@ -17,11 +17,18 @@ bnf_*.log
 bnf_*.out
 **/results_*/
 
-# PyBNF run output. A fit writes output_dir/ (Results/, FailedSimLogs/, alg_backup.bp) into the
-# job directory it runs in, so a broad `git add <slug-dir>` while a fit is in flight sweeps a
-# scratch run into the tree -- which is exactly how 15 such files reached 7e3a63b. Shipped fit
-# provenance is copied OUT of a run as best_fit_params.txt / information_criteria.txt; the run
-# directory itself is never a deliverable.
+# PyBNF run output. A fit writes output_dir/ (Results/, FailedSimLogs/, alg_backup.bp) into
+# the job directory it runs in, so a broad `git add <slug-dir>` while a fit is in flight
+# sweeps a scratch run into the tree. That happened once -- 15 files of an in-flight
+# output_tune/, plus the scratch conf behind them -- and 2c04aeb added the two rules below
+# in response; its message carries the full account.
+#
+# 2c04aeb is cited here by hash because it is stable. The hashes it and this comment
+# originally cited are not: the history was rewritten afterwards, so they now either fail
+# to resolve or, worse, land on an unrelated commit. Cite rule-commits, not incidents.
+#
+# A run directory is never a deliverable. Shipped fit provenance is copied OUT of a run as
+# best_fit_params.txt / information_criteria.txt.
 **/output/
 **/output_*/
 
