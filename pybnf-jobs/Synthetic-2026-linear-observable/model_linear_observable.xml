@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A two-state cascade A -> B -> 0, purpose-built for the lanl/PyBNF#572 evaluation.
+     Deliberately minimal: two rate constants, one observed state with a rise-and-fall
+     shape, so the simulated column s(theta) genuinely changes shape with theta rather
+     than only in amplitude. `scale`, `offset` and `sigma` are NOT model parameters:
+     they live only in the conf's observable formula and noise model, exactly as they do
+     in the imported PEtab slugs. -->
+<sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4">
+  <model id="linear_observable" name="linear_observable">
+    <listOfCompartments>
+      <compartment id="cell" size="1" constant="true"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="A" compartment="cell" initialConcentration="1" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="B" compartment="cell" initialConcentration="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="k1" value="0.8" constant="true"/>
+      <parameter id="k2" value="0.25" constant="true"/>
+    </listOfParameters>
+    <listOfReactions>
+      <reaction id="transfer" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="A" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="B" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply><times/><ci> k1 </ci><ci> A </ci></apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="clearance" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="B" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply><times/><ci> k2 </ci><ci> B </ci></apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>
