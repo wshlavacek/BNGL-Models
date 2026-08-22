@@ -28,7 +28,7 @@ re-derived closed form. That is deliberate and it is the point:
 
 Usage:
     linear_profile.py <slug-dir> [--params scale,offset] [-n N] [--seed S]
-                      [--noise-profiling] [--linear-space] [--maxiter M]
+                      [--noise-profiling] [--linear-space] [--closed-form] [--maxiter M]
                       [--point LABEL=FILE.json ...] [--json out.json]
 
 `--params` defaults to every parameter `linear_scope.py` classifies as affine in the
@@ -37,6 +37,13 @@ by PyBNF's own ADR-0108 closed form and the numeric search covers only the linea
 -- that is #572's evaluation item 2, "scale, offset and sigma all profiled". `--point` scores
 a named parameter vector before the box draws: the reference optimum, the PEtab nominal point,
 a known oscillating start, or a ladder of interpolated points to walk a section.
+
+`--closed-form` additionally computes #572's own variable-projection solution and prints its gap
+to the numeric optimum. It applies only to a linear-scale Gaussian objective, and it must be run
+with sigma **searched** rather than profiled, so that `W` is the same matrix on both sides. Where
+both can reach the same point the two agree to ~1e-14; where they differ, the projection has left
+the parameter's declared support -- see `_varpro` and
+`pybnf-jobs/Synthetic-2026-linear-observable/README.md`.
 
 The **flat** column is the objective of a *constant* prediction at its best constant -- the
 no-dynamics score, and the number the whole counter-hypothesis is about. Read it carefully,
@@ -250,6 +257,71 @@ def _flat_reference(config, scorer, prof_vars, linear_space, maxiter=2000):
     return val, {**tiny, **at}
 
 
+def _varpro(config, scorer, prof_vars):
+    """#572's own closed form, computed and scored: `c* = (Phi^T W Phi)^-1 Phi^T W d`.
+
+    Returns `(score_at_c_star, {name: value}, note)`, or `(None, {}, reason)` when the
+    construction does not apply to this slug.
+
+    `Phi` is built by *evaluating the model's own prediction* at basis coefficient vectors
+    rather than by parsing the formula: with every profiled coefficient at 0 the aligned
+    prediction is `Phi.0`, and setting coefficient `j` to 1 gives `Phi.e_j`, so
+    `Phi_j = pred(e_j) - pred(0)`. That is formula-agnostic, it needs no new sensitivity, and
+    it doubles as a check -- if `pred(0)` is not ~0 the observable is not linear in these
+    coefficients and the whole construction is inapplicable, which is reported rather than
+    silently absorbed into the intercept.
+
+    `LikelihoodObjective.aligned_prediction_data` supplies `(prediction, observation,
+    variance)` for exactly the scored points, and returns `None` unless **every** scored
+    observable is a linear-scale Gaussian -- which is precisely #572's precondition, so the
+    inapplicable case reports itself.
+
+    **Run this with sigma SEARCHED, not profiled.** `W = diag(1/sigma^2)` has to be the same
+    matrix on both sides of the comparison; under `noise_profiling` sigma moves with every
+    evaluation, so the closed form would be solving a different weighted problem than the one
+    the numeric profile converges to and the two would disagree for a reason that is not an
+    error in either.
+
+    Per-point fit weights are not on this seam. A fixture that declares none (weight 1
+    everywhere) is unaffected; a job with weights would need them folded into `W`.
+    """
+    names = [v.name for v in prof_vars]
+
+    def aligned(overrides):
+        vals = dict(scorer.base)
+        vals.update(overrides)
+        pset = [_Var(n, x) for n, x in vals.items()]
+        return config.obj.aligned_prediction_data(
+            copy.deepcopy(scorer.simdata), config.exp_data, pset)
+
+    base = aligned({n: 0.0 for n in names})
+    if base is None:
+        return None, {}, 'not a linear-scale Gaussian at every scored point'
+    p0, d, var = base
+    if np.max(np.abs(p0)) > 1e-8 * max(1.0, float(np.max(np.abs(d)))):
+        return None, {}, 'prediction at c = 0 is not zero; the observable is not linear here'
+
+    cols = []
+    for j, n in enumerate(names):
+        step = aligned({m: (1.0 if m == n else 0.0) for m in names})
+        if step is None:
+            return None, {}, 'aligned prediction unavailable at basis vector %d' % j
+        cols.append(step[0] - p0)
+    phi = np.column_stack(cols)
+
+    w = 1.0 / np.asarray(var, dtype=float)
+    if not np.all(np.isfinite(w)):
+        return None, {}, 'a scored point has non-finite variance'
+    a = phi.T @ (w[:, None] * phi)
+    b = phi.T @ (w * d)
+    try:                                  # pinv, not solve: Phi is singular wherever s is
+        c = np.linalg.solve(a, b)         # constant over the series, which a sampler visits
+    except np.linalg.LinAlgError:
+        c = np.linalg.pinv(a) @ b
+    at = {n: float(c[j]) for j, n in enumerate(names)}
+    return scorer.score(at), at, 'ok'
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('slug_dir')
@@ -265,6 +337,10 @@ def main():
                     help='a named {name: value} point to score before the box draws '
                          '(repeatable) -- the reference optimum, the PEtab nominal point, '
                          'a known oscillating start')
+    ap.add_argument('--closed-form', action='store_true',
+                    help="also compute #572's variable-projection solution and report its gap "
+                         "to the numeric optimum; requires a linear-scale Gaussian objective "
+                         "and a SEARCHED sigma (see _varpro)")
     ap.add_argument('--maxiter', type=int, default=2000,
                     help='Nelder-Mead iteration cap for the inner solve; lower it only for a\n'
                          'slug whose simulation is slow, and say so with the numbers')
@@ -347,15 +423,27 @@ def main():
         # IS the conditional optimum here", which makes the reduced objective constant.
         collapsed = (flat is not None and np.isfinite(flat)
                      and abs(profiled - flat) < 1e-6)
+        varpro = varpro_at = varpro_note = None
+        if args.closed_form:
+            varpro, varpro_at, varpro_note = _varpro(config, scorer, prof_vars)
         print('%-9s %13.6f %13.6f %10.4g %13s %-4s  %s'
               % (label, searched, profiled, gain,
                  '-' if flat is None else '%.6f' % flat,
                  'FLAT' if collapsed else '',
                  ' '.join('%s=%.4g' % kv for kv in sorted(at.items()))))
+        if args.closed_form:
+            print('%-9s %13s %13s %10s %13s %-4s  %s'
+                  % ('  varpro', '',
+                     '-' if varpro is None else '%.6f' % varpro,
+                     '' if varpro is None else '%+.3g' % (varpro - profiled),
+                     '', '',
+                     varpro_note if varpro is None
+                     else ' '.join('%s=%.4g' % kv for kv in sorted(varpro_at.items()))))
         sys.stdout.flush()
         rows.append({'label': label, 'failed': False, 'searched': searched,
                      'profiled': profiled, 'gain': gain, 'at': at, 'flat': flat,
                      'collapsed': bool(collapsed), 'inner_calls': ncalls,
+                     'varpro': varpro, 'varpro_at': varpro_at, 'varpro_note': varpro_note,
                      'theta': {k: v for k, v in vals.items() if k not in want}})
 
     ok = [r for r in rows if not r['failed'] and np.isfinite(r['searched'])

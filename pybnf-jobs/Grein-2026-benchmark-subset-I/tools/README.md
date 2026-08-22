@@ -328,3 +328,30 @@ the scale below `1e-6` — i.e. discarding the dynamics. See ADR-0123 in PyBNF.
 > **The self-check that makes the numbers trustworthy: the profiled score can never exceed the
 > searched score**, because the searched value is in the set being minimized over. It held at
 > every one of the ~250 points measured. Check it before believing any row.
+
+### `--closed-form`: checking #572's variable projection against the numeric profile
+
+Builds `Phi` by **evaluating the model's own prediction** at basis coefficient vectors — with every
+profiled coefficient at `0` the aligned prediction is `Phi.0`, and setting coefficient `j` to `1`
+gives `Phi.e_j` — then solves `c* = (Phi^T W Phi)^-1 Phi^T W d` and scores it. Formula-agnostic, no
+new sensitivity machinery, and the `pred(0) != 0` case reports itself rather than being absorbed
+into the intercept.
+
+Measured on `../../Synthetic-2026-linear-observable` (80 box draws): the closed form and the numeric
+profile agree to **1.5e-14 relative** at the 53 points where both can reach the same optimum. At the
+other 27 the projection returns a **negative `scale`** and scores a median 14.5 objective units
+better — because it is unconstrained by construction and does not know `scale` was declared
+`loguniform`. That is the finding, not a discrepancy.
+
+> **Gotcha: run it with sigma SEARCHED, never with `--noise-profiling`.** `W = diag(1/sigma^2)` has
+> to be the same matrix on both sides of the comparison. Under noise profiling sigma moves with
+> every evaluation, so the closed form solves a different weighted problem than the one the numeric
+> profile converges to, and the two disagree for a reason that is an error in neither.
+
+> **Gotcha: per-point fit weights are not on the `aligned_prediction_data` seam.** A job that
+> declares none (weight 1 everywhere) is unaffected; a job with weights would need them folded into
+> `W` before this comparison means anything.
+
+> **Gotcha: `aligned_prediction_data` returns `None` unless every scored point is a linear-scale
+> Gaussian.** That is not a limitation to work around — it is exactly #572's precondition, so the
+> inapplicable case reports itself instead of producing a number.
