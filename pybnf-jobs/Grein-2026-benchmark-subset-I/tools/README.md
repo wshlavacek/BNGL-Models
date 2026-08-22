@@ -1,10 +1,16 @@
 # tools — regenerating and verifying a slug
 
-Three scripts used to produce and check the numbers this corpus ships. Both are run from the
-repository with PyBNF available (`uv run --project ~/Code/PyBNF python tools/<script>.py …`).
+Six scripts used to produce and check the numbers this corpus ships. All are run from the
+repository with PyBNF available (`uv run --project ~/Code/PyBNF --extra tests python
+tools/<script>.py …`).
 
-They exist because both were originally written ad hoc, and both have a non-obvious failure mode
+They exist because each was originally written ad hoc, and each has a non-obvious failure mode
 that silently produces a *plausible wrong answer* rather than an error. Those are written down here.
+
+> **Run them from the PyBNF project, not from this one.** `uv run` resolves its project from the
+> working directory, so a bare `uv run --extra tests` inside `pybnf-jobs/` finds *this* repo's
+> `pyproject.toml`, which defines no such extra, and dies with `Extra 'tests' is not defined`
+> rather than with anything about the script. `--project ~/Code/PyBNF` is not optional.
 
 ## `nominal_check.py` — regenerate a slug's `nominal_check.json`
 
@@ -208,3 +214,144 @@ an unconditional failure.
 > **Gotcha: a dead point is not always a tolerance problem.** Points that fail both with and without
 > `--sens`, and fail fast, are bad parameter points. Weber has two such in eleven and they stay dead at
 > every tolerance.
+
+## `linear_scope.py` — which observable-layer parameters could a profile actually remove
+
+```bash
+python tools/linear_scope.py <slug-dir | corpus-root>... [--json out.json]
+```
+
+Static classification, no simulation. For every declared free parameter that reaches an
+observable formula — directly, or bound per data row through a measurement-params table — it
+reports whether the formula is affine in it, whether it is a *pure* multiplicative factor, what
+space its observable's noise family scores its residual in, how many series it is tied across,
+and whether any noise source also reads it.
+
+Written for lanl/PyBNF#572, which proposed profiling an observable's `scale`/`offset` out of the
+search by variable projection. The distinction the script exists to draw is the one that decided
+that issue: variable projection is a **linear least-squares** identity, so it needs the family's
+residual to be `d - y` with `y` affine in the coefficients. On a `lognormal` / `lnnormal` family
+the residual is `log d - log(a*s + b)`, which is affine in `log a` only when `b == 0`. The output
+column is therefore `closed_form ∈ {linear-lsq, log-geomean, none}`, not a yes/no.
+
+Corpus-wide result (all 23 slugs): **47** affine observable-layer parameters in 9 slugs —
+19 `linear-lsq`, 1 `log-geomean`, 27 `none`. Every coupled `(scale, offset)` pair in the corpus
+is on a log family and has no closed form; of 8 offset-role parameters exactly one
+(`Laske`'s `Int_nuc_off`) does.
+
+> **Gotcha: PEtab's parser builds symbols with assumptions, so `sympy.Symbol(name)` is not the
+> symbol in the expression.** `sp.Symbol('scale') in expr.free_symbols` is `False` for a `scale`
+> that is plainly there, `diff` against the bare symbol is identically `0`, and **every affinity
+> test then passes vacuously** — the script reports the entire corpus as linear, Michaelis-Menten
+> denominators included, and looks perfectly plausible doing it. Resolve symbols by *name* against
+> `expr.free_symbols`. This is `_symbol()`, and it is the single most dangerous line in the file.
+
+> **Gotcha: a row-varying token is a parameter too, and the placeholders are not interchangeable.**
+> `Brannmark`'s `k_IRSiP_1Step`/`k_IRSiP_2Step` never appear in an `observable:` line; they are
+> bound per row to `observableParameter1_IRS1_P`. And `Schwen`'s `observable_Insulin` is
+> `op1 + op2*g(·; op3, op4)` — two placeholders affine, two inside a Michaelis-Menten denominator.
+> Testing "are all this observable's placeholders affine" rejects the whole observable and
+> silently drops the two parameters that are exactly the partial separability #572 is about.
+> Test per placeholder and keep the binding keyed by it.
+
+> **Gotcha: a `sos` slug has no sigma, and `_spec_for` will hand you a Gaussian anyway.**
+> `Smith_BMCSystBiol2013` is `objective = sos`; the family it reports is a structural default and
+> only its `ln_base` means anything. Smith's residual *is* `sim - exp` on the linear scale, so the
+> classification stands — but the sigma-weighting question does not arise there, and reading the
+> reported family as a noise model would be wrong.
+
+> **Gotcha: "affine in each" is not "affine in the pair".** `Schwen`'s `scale*(IR1 + IR1in + offset)`
+> is affine in `scale` and affine in `offset` and quadratic in the two together. The joint test
+> (all second partials, cross terms included) is what separates a genuine two-column span from a
+> reparametrization, and the `reparam` flag records the difference.
+
+## `linear_profile.py` — what the landscape looks like once those parameters are profiled
+
+```bash
+python tools/linear_profile.py <slug-dir> [--params a,b] [-n N] [--noise-profiling]
+                               [--point LABEL=vals.json ...] [--json out.json]
+```
+
+Simulates once per point, then minimizes **PyBNF's own `evaluate_multiple`** over the named
+parameters with θ held fixed, and prints the searched score, the profiled score, and the
+no-dynamics (`flat`) reference side by side. It runs **no fit** — a `Borghans` point is one
+simulation plus a few hundred re-scorings of it.
+
+The profile is numeric on purpose. #572's closed form does not exist on four of the six slugs it
+names, and a numeric profile is the exact conditional optimum whatever the family is, so the
+landscape question can be answered separately from the closed-form question. ADR-0108 pinned its
+own sigma closed form against a numeric minimization of the reported objective for the same
+reason: re-deriving the algebra and measuring *that* confirms the algebra, not the landscape.
+
+Measured on `Borghans_BiophysChem1997` (76 box draws, `--noise-profiling`): the searched
+objective spans `[-160.9, +339.7]`; the profiled objective spans `[-167.15, -165.98]`, with
+**46 of 76 draws landing exactly on** the no-dynamics score `-165.982113` and 39 of 76 profiling
+the scale below `1e-6` — i.e. discarding the dynamics. See ADR-0123 in PyBNF.
+
+> **Gotcha: a Result can only be scored once.** The measurement layer materializes its observable
+> columns onto the `Data` in place (ADR-0036) and `_add_column` raises rather than overwriting.
+> The inner minimization scores one Result hundreds of times, so every scoring takes a `deepcopy`
+> of the simulated data. This one fails loudly, which is the good case.
+
+> **Gotcha: `FreeParameter.set_value` clamps to the box, and leaving the box is the whole point.**
+> Carrying a trial value in a `PSet` silently returns the bound instead, and the measured
+> "profiled" landscape is then a bounded-search landscape wearing the wrong name. The inner loop
+> hands `evaluate_multiple` a duck-typed `(name, value)` sequence — all it reads is
+> `{p.name: p.value for p in pset}` — and never a `PSet`.
+
+> **Gotcha: the flat reference is only a reference line when sigma is profiled.** With a searched
+> free sigma it is evaluated at whatever sigma the current draw carries and moves by *hundreds* of
+> objective units from row to row — a different number each row under the same name. The tool
+> recomputes it at every point and prints the spread for exactly this reason; a spread that is not
+> ~0 means the run needed `--noise-profiling` and every comparison against that column is void.
+
+> **Gotcha: pin the non-intercept coefficients to exactly `0`, not to their lower bound.** A
+> `loguniform_var` scale bottoms out at `1e-3`, and on a trajectory spanning ten decades
+> `1e-3 * s` is not remotely constant. The first version used the bound and produced a "flat line"
+> that varied with the draw, which reads as sigma contamination and is not.
+
+> **Gotcha: for one or two coefficients, grid before you polish.** The profiled surface of a
+> log-family offset is not convex in `log10(offset)`, and a bare local solver started at the drawn
+> value converges to whichever side of the data it started on — tens of objective units, larger
+> than the whole effect being measured.
+
+> **Gotcha: `noise_profiling = 1` is all-or-nothing and several slugs refuse it.** `Brannmark`
+> refuses (`IRS1_P` takes sigma from a `PerMeasurementFormulaSigma`); `Weber` and `Borghans`
+> accept. That is not a limitation of this script, it is ADR-0108's rule, and it is load-bearing
+> for the comparison: on `Weber`, switching sigma profiling *on* takes the observable-scale
+> profile's benefit from thirteen orders of magnitude to nothing.
+
+> **Gotcha: `$VAR` holding several arguments does not word-split in zsh.** Building a
+> `--point a --point b` list in a shell variable and passing it unquoted sends argparse one giant
+> argument and gets `unrecognized arguments`. Write the flags out, or use an array.
+
+> **The self-check that makes the numbers trustworthy: the profiled score can never exceed the
+> searched score**, because the searched value is in the set being minimized over. It held at
+> every one of the ~250 points measured. Check it before believing any row.
+
+### `--closed-form`: checking #572's variable projection against the numeric profile
+
+Builds `Phi` by **evaluating the model's own prediction** at basis coefficient vectors — with every
+profiled coefficient at `0` the aligned prediction is `Phi.0`, and setting coefficient `j` to `1`
+gives `Phi.e_j` — then solves `c* = (Phi^T W Phi)^-1 Phi^T W d` and scores it. Formula-agnostic, no
+new sensitivity machinery, and the `pred(0) != 0` case reports itself rather than being absorbed
+into the intercept.
+
+Measured on `../../Synthetic-2026-linear-observable` (80 box draws): the closed form and the numeric
+profile agree to **1.5e-14 relative** at the 53 points where both can reach the same optimum. At the
+other 27 the projection returns a **negative `scale`** and scores a median 14.5 objective units
+better — because it is unconstrained by construction and does not know `scale` was declared
+`loguniform`. That is the finding, not a discrepancy.
+
+> **Gotcha: run it with sigma SEARCHED, never with `--noise-profiling`.** `W = diag(1/sigma^2)` has
+> to be the same matrix on both sides of the comparison. Under noise profiling sigma moves with
+> every evaluation, so the closed form solves a different weighted problem than the one the numeric
+> profile converges to, and the two disagree for a reason that is an error in neither.
+
+> **Gotcha: per-point fit weights are not on the `aligned_prediction_data` seam.** A job that
+> declares none (weight 1 everywhere) is unaffected; a job with weights would need them folded into
+> `W` before this comparison means anything.
+
+> **Gotcha: `aligned_prediction_data` returns `None` unless every scored point is a linear-scale
+> Gaussian.** That is not a limitation to work around — it is exactly #572's precondition, so the
+> inapplicable case reports itself instead of producing a number.
