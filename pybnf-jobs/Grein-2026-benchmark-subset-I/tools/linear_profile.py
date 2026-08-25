@@ -183,7 +183,7 @@ def _space(var, linear_space):
     return var.to_sampling_space, var.from_sampling_space
 
 
-def _profile(scorer, prof_vars, start, linear_space, grid=21, maxiter=2000):
+def _profile(scorer, prof_vars, start, linear_space, grid=21, maxiter=2000, sweeps=2):
     """Minimize the objective over `prof_vars`, everything else fixed. Returns
     `(best_score, {name: value}, n_calls)`.
 
@@ -192,6 +192,10 @@ def _profile(scorer, prof_vars, start, linear_space, grid=21, maxiter=2000):
     and a bare local solver started at the drawn value converges to whichever side of the
     data it started on. On the corpus that difference is tens of objective units, i.e. larger
     than the whole effect being measured.
+
+    Past two coefficients the mesh is unaffordable (`grid ** n`), so the same box-wide search is
+    done one coordinate at a time. Nine coefficients is not hypothetical: it is
+    `Smith_BMCSystBiol2013`.
     """
     from scipy.optimize import minimize
 
@@ -204,17 +208,32 @@ def _profile(scorer, prof_vars, start, linear_space, grid=21, maxiter=2000):
     u0 = [to(start[v.name]) for v, (to, _fr) in zip(prof_vars, spaces)]
     starts = [np.array(u0, dtype=float)]
 
+    axes = []
+    for k, (v, (to, _fr)) in enumerate(zip(prof_vars, spaces)):
+        lo, hi = to(v.lower_bound), to(v.upper_bound)
+        if not np.isfinite(lo) or not np.isfinite(hi):
+            lo, hi = u0[k] - 5.0, u0[k] + 5.0
+        axes.append(np.linspace(lo, hi, grid))
+
     if len(prof_vars) <= 2:
-        axes = []
-        for v, (to, _fr) in zip(prof_vars, spaces):
-            lo, hi = to(v.lower_bound), to(v.upper_bound)
-            if not np.isfinite(lo) or not np.isfinite(hi):
-                lo, hi = u0[len(axes)] - 5.0, u0[len(axes)] + 5.0
-            axes.append(np.linspace(lo, hi, grid))
         mesh = np.stack([m.ravel() for m in np.meshgrid(*axes, indexing='ij')], axis=1)
         scores = np.array([at(pt) for pt in mesh])
         order = np.argsort(scores)[:3]
         starts.extend(mesh[i] for i in order if np.isfinite(scores[i]))
+    else:
+        # A full mesh is `grid ** len(prof_vars)` evaluations, which is not reachable past two
+        # coefficients: `Smith_BMCSystBiol2013` has nine. Sweep them one at a time instead,
+        # holding the rest where they are, `sweeps` times over. That is exact in one pass when
+        # the coefficients are uncoupled, which is what nine pure scales on nine different
+        # observables are, and it still walks the whole declared box in each direction -- which
+        # is the property that matters, because the conditional optimum is routinely decades
+        # from the drawn value and a local simplex started there never gets to it.
+        scan = np.array(u0, dtype=float)
+        for _ in range(max(1, sweeps)):
+            for k in range(len(prof_vars)):
+                column = [(at(np.concatenate([scan[:k], [x], scan[k + 1:]])), x) for x in axes[k]]
+                scan[k] = min(column, key=lambda pair: pair[0])[1]
+        starts.append(np.array(scan))
 
     best, best_u = np.inf, np.array(u0, dtype=float)
     for s in starts:
@@ -230,9 +249,10 @@ def _flat_reference(config, scorer, prof_vars, linear_space, maxiter=2000):
     no-dynamics score.
 
     Realized by driving every non-intercept linear coefficient to (effectively) zero and
-    profiling only the intercept, so the prediction column is a constant. Returns `None`
-    when the slug has no intercept-like coefficient, in which case a constant prediction is
-    not in the model's reach and the whole counter-hypothesis does not apply to it.
+    profiling only the intercept, so the prediction column is a constant. Where there is no
+    intercept the constant is zero rather than free -- still the no-dynamics prediction, and
+    still the right reference for a set of pure scales. `None` only when there is nothing
+    linear at all.
 
     **This number is only a property of the data when sigma is profiled too.** With a searched
     free sigma it is evaluated at whatever sigma the current draw happened to carry, so it
@@ -244,7 +264,15 @@ def _flat_reference(config, scorer, prof_vars, linear_space, maxiter=2000):
     intercepts = [v for v in prof_vars if 'offset' in v.name or 'background' in v.name]
     scales = [v for v in prof_vars if v not in intercepts]
     if not intercepts:
-        return None, {}
+        # No intercept: the model cannot reach an arbitrary constant, but it CAN reach zero, by
+        # sending every scale there. For a set of pure scales that is the no-dynamics
+        # prediction, and its score is a genuine reference -- `sum w d^2` for a least-squares
+        # objective. Without this the counter-hypothesis is unmeasurable on exactly the slugs
+        # that carry only scales, which is most of them (`Smith`, `Weber`, `Brannmark`).
+        if not scales:
+            return None, {}
+        zeros = {v.name: 0.0 for v in scales}
+        return Scorer(config, scorer.simdata, {**scorer.base, **zeros}).score({}), zeros
     # Exactly zero, not the declared lower bound. A `loguniform_var` scale bottoms out at
     # 1e-3, and on a trajectory spanning ten decades `1e-3 * s` is not remotely constant --
     # the "flat" line then moves with the draw by hundreds of objective units and reads as
@@ -322,6 +350,62 @@ def _varpro(config, scorer, prof_vars):
     return scorer.score(at), at, 'ok'
 
 
+def _resolve(path, slug_dir):
+    """A supplied path, read from wherever the caller meant it.
+
+    Every tool here `chdir`s into the slug directory, so a path on the command line can be
+    relative to two different places and both readings are natural: `--point truth=truth.json`
+    means "in the slug", `--truth Synthetic-.../truth.json` means "from where I am standing".
+    `linear_profile.py` resolved one way and `linear_race.py` the other, which is a trap rather
+    than a convention. Try the caller's directory first, then the slug's.
+    """
+    if os.path.exists(path):
+        return os.path.abspath(path)
+    return os.path.join(os.path.abspath(slug_dir), path)
+
+
+def _distances(config, rows, truth, over, swaps):
+    """Sampling-space distance from each row's theta to `truth`, minimized over `swaps`.
+
+    `over` names the parameters the distance is taken across -- the ones a search still
+    carries under BOTH landscapes, i.e. the dynamics. Ranking against a distance that included
+    the profiled coefficients would ask each landscape a different question.
+
+    `swaps` is a list of name groups whose values may be permuted without changing the fit. They
+    are not a nicety. On this corpus's own synthetic fixture, swapping `k1` and `k2` multiplies
+    the observed state by `k2/k1`, which a free `scale` absorbs exactly, so the two points ARE
+    the same fit -- and the mirror answer is only ever reached by the side that has the scale at
+    its optimum. Unmeasured, that reads as the profiled side getting further from the truth as
+    it gets better.
+    """
+    by_name = {v.name: v for v in config.variables}
+    target = np.array([by_name[n].to_sampling_space(truth[n]) for n in over])
+    candidates = [target]
+    for group in swaps:
+        index = [over.index(n) for n in group if n in over]
+        if len(index) == 2:
+            mirrored = np.array(target)
+            mirrored[index[0]], mirrored[index[1]] = target[index[1]], target[index[0]]
+            candidates.append(mirrored)
+    out = []
+    for row in rows:
+        theta = row.get('theta') or {}
+        if any(n not in theta for n in over):
+            out.append(float('nan'))
+            continue
+        point = np.array([by_name[n].to_sampling_space(theta[n]) for n in over])
+        out.append(float(min(np.linalg.norm(point - c) for c in candidates)))
+    return np.array(out)
+
+
+def _rank_corr(a, b):
+    keep = np.isfinite(a) & np.isfinite(b)
+    if keep.sum() < 3:
+        return float('nan')
+    return float(np.corrcoef(np.argsort(np.argsort(a[keep])),
+                             np.argsort(np.argsort(b[keep])))[0, 1])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('slug_dir')
@@ -341,18 +425,36 @@ def main():
                     help="also compute #572's variable-projection solution and report its gap "
                          "to the numeric optimum; requires a linear-scale Gaussian objective "
                          "and a SEARCHED sigma (see _varpro)")
+    ap.add_argument('--truth', default=None, metavar='FILE.json',
+                    help='rank each landscape against distance to this point; the decisive '
+                         'question is not how wide the landscape is but whether its ordering '
+                         'tracks the answer')
+    ap.add_argument('--over', default=None,
+                    help='comma-separated names the --truth distance is taken over '
+                         '(default: every searched parameter that is not profiled here)')
+    ap.add_argument('--swap', action='append', default=[], metavar='A,B',
+                    help='a pair of names whose values may be exchanged without changing the '
+                         'fit (repeatable); the distance is minimized over them')
+    ap.add_argument('--sweeps', type=int, default=2,
+                    help='coordinate passes in the prescan, used past two coefficients')
     ap.add_argument('--maxiter', type=int, default=2000,
                     help='Nelder-Mead iteration cap for the inner solve; lower it only for a\n'
                          'slug whose simulation is slow, and say so with the numbers')
+    ap.add_argument('--conf', default=None,
+                    help='which .conf in the slug directory to use (default: the one named '
+                         'after the directory, else the first alphabetically)')
     ap.add_argument('--json', default=None)
     args = ap.parse_args()
 
     slug_dir = os.path.abspath(args.slug_dir)
     base = os.path.basename(slug_dir)
-    conf = os.path.join(slug_dir, base + '.conf')
+    conf = os.path.join(slug_dir, args.conf or (base + '.conf'))
     if not os.path.exists(conf):
         conf = os.path.join(slug_dir, sorted(f for f in os.listdir(slug_dir)
                                              if f.endswith('.conf'))[0])
+    points_given = [(spec.partition('=')[0], _resolve(spec.partition('=')[2], slug_dir))
+                    for spec in args.point]
+    truth_path = _resolve(args.truth, slug_dir) if args.truth else None
     os.chdir(slug_dir)
 
     extra = ['noise_profiling = 1'] if args.noise_profiling else []
@@ -383,8 +485,7 @@ def main():
 
     rng = np.random.default_rng(args.seed)
     points = []
-    for spec in args.point:
-        label, _, path = spec.partition('=')
+    for label, path in points_given:
         with open(path) as fh:
             given = json.load(fh)
         missing_v = [v.name for v in config.variables if v.name not in given]
@@ -416,7 +517,7 @@ def main():
         if flat is not None and np.isfinite(flat):
             flats.append(flat)
         profiled, at, ncalls = _profile(scorer, prof_vars, vals, args.linear_space,
-                                        maxiter=args.maxiter)
+                                        maxiter=args.maxiter, sweeps=args.sweeps)
         gain = searched - profiled
         # Did the inner solve just choose the no-dynamics answer? That is the counter-
         # hypothesis made measurable: not "the flat line is available" but "the flat line
@@ -482,6 +583,30 @@ def main():
         print('Spearman rank corr searched~profiled: %.4f' % summary['rank_corr'])
         print('draws whose profile IS the flat line : %d / %d'
               % (summary['collapsed_to_flat'], len(ok)))
+
+    if truth_path:
+        with open(truth_path) as fh:
+            truth = json.load(fh)
+        over = ([n.strip() for n in args.over.split(',')] if args.over
+                else [v.name for v in config.variables if v.name not in want])
+        swaps = [[n.strip() for n in s.split(',')] for s in args.swap]
+        draws = [r for r in ok if r['label'].startswith('box')]
+        distance = _distances(config, draws, truth, over, swaps)
+        s = np.array([r['searched'] for r in draws])
+        p = np.array([r['profiled'] for r in draws])
+        print()
+        print('ranked against distance to %s over %s%s'
+              % (os.path.basename(truth_path), ', '.join(over),
+                 '' if not swaps else '  (swaps: %s)' % '; '.join(','.join(g) for g in swaps)))
+        print('  box median distance            : %.3f  (n = %d)'
+              % (np.nanmedian(distance), len(draws)))
+        for tag, arr in (('searched', s), ('profiled', p)):
+            order = np.argsort(arr)
+            print('  %-9s rank corr %+.3f   best-ranked draw %.3f   median of best 5 %.3f'
+                  % (tag, _rank_corr(arr, distance), distance[order[0]],
+                     np.nanmedian(distance[order[:5]])))
+        summary['truth_rank_corr_searched'] = _rank_corr(s, distance)
+        summary['truth_rank_corr_profiled'] = _rank_corr(p, distance)
 
     if args.json:
         with open(args.json, 'w') as fh:

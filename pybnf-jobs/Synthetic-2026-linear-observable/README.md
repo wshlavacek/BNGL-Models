@@ -79,12 +79,47 @@ sign flip in a quantity the user declared positive — and not one to fall into.
 negative *offset* are not this: `offset` is declared on the real line, both methods reach it, and
 they agree.
 
+## Two more confs, each answering one question the first cannot
+
+`linear_observable_laplace.conf` is the same problem with the loss swapped for an absolute one. It
+exists because ADR-0123's family table sorts noise families by the space their residual lives in,
+and that is the wrong axis: `gaussian` and `laplace` both have `additive_on.ln_base == 0`, so no
+rule read off that attribute can separate them. A Laplace likelihood sums **absolute** residuals, so
+its best `(scale, offset)` is a least-absolute-deviations fit and variable projection is simply
+solving a different problem. `check_loss_gate.py` prints both solves scored under both confs:
+
+| conf | `is_linear_gaussian()` | least squares | by L1 | winner |
+|---|---|---:|---:|---|
+| `linear_observable.conf` | `True` | `-62.768` | `-62.498` | least squares by `0.270` |
+| `linear_observable_laplace.conf` | `False` | `-35.370` | `-35.789` | L1 by `0.420` |
+
+The coefficients barely move between the two solves (`(3.019, 1.501)` against `(3.003, 1.498)`),
+which is what makes this cheap to get wrong: the answer looks right and is not the optimum. The
+predicate that does separate them, `LikelihoodObjective.is_linear_gaussian()`, already exists in
+PyBNF.
+
+`linear_observable_narrow.conf` narrows `k1` and `k2` from six decades to two and changes nothing
+else. It exists because "how many draws profile to the flat line" reads as a property of the method
+and is a property of the box:
+
+| | six decades per rate | two decades per rate |
+|---|---:|---:|
+| draws whose profile is the flat line | 18 of 81 | 3 of 81 |
+| draws beating the flat line | 79 of 81 | 81 of 81 |
+| rank correlation with the truth, profiled | `+0.199` | `+0.771` |
+
+Over six decades most draws are a trajectory that is flat or instantaneous, and for those the flat
+line really is the best the observation model can do. Saying so is the profile being right.
+
 ## Files
 
 | file | what |
 |---|---|
 | `model_linear_observable.xml` | SBML L2V4, 2 species, 2 reactions, `k1`/`k2` only |
 | `linear_observable.conf` | edition-2 job, `gaussian` noise, `observable: y, formula: B*scale + offset` |
+| `linear_observable_laplace.conf` | the same, with `laplace` noise; the family-gate measurement |
+| `linear_observable_narrow.conf` | the same, with `k1` and `k2` over two decades instead of six |
+| `check_loss_gate.py` | which solve is the conditional optimum under each loss |
 | `experiment1.exp` | 27 points from the closed form + N(0, 0.05) |
 | `make_data.py` | the generator; `--write` regenerates the data and `truth.json` |
 | `truth.json` | the generating vector, in `linear_profile.py --point` format |
