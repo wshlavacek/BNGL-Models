@@ -1,6 +1,6 @@
 # tools — regenerating and verifying a slug
 
-Six scripts used to produce and check the numbers this corpus ships. All are run from the
+Seven scripts used to produce and check the numbers this corpus ships. All are run from the
 repository with PyBNF available (`uv run --project ~/Code/PyBNF --extra tests python
 tools/<script>.py …`).
 
@@ -355,3 +355,101 @@ better — because it is unconstrained by construction and does not know `scale`
 > **Gotcha: `aligned_prediction_data` returns `None` unless every scored point is a linear-scale
 > Gaussian.** That is not a limitation to work around — it is exactly #572's precondition, so the
 > inapplicable case reports itself instead of producing a number.
+
+### `--truth`: does the ordering track the answer, not just how wide it is
+
+```bash
+python tools/linear_profile.py <slug-dir> --truth truth.json --over k1,k2 --swap k1,k2
+```
+
+The spread of a landscape is not the question a global search cares about. What it cares about is
+whether ranking draws by score puts the good ones first. `--truth` reports the rank correlation
+between each landscape and distance to a known point, plus how close the draws each landscape ranks
+highest actually are.
+
+`--over` names the parameters the distance is taken across, defaulting to every searched parameter
+that is not being profiled. That default matters: a distance that included the profiled coefficients
+would ask the two landscapes different questions.
+
+Measured on `../../Synthetic-2026-linear-observable` (80 draws, `--noise-profiling`): searched
+`-0.229`, profiled `+0.199`. On the same fixture with the two rate boxes narrowed to two decades
+(`linear_observable_narrow.conf`): searched `-0.094`, profiled `+0.771`. The difference is not the
+method, it is how much of the declared box is hopeless — see the flat-line note below.
+
+> **Gotcha: every tool here `chdir`s into the slug directory, so a supplied path has two natural
+> readings.** `--point truth=truth.json` means "in the slug"; `--truth Synthetic-.../truth.json`
+> means "from where I am standing". `linear_profile.py` used to resolve one way and
+> `linear_race.py` the other, which is a trap rather than a convention. Both now try the caller's
+> directory first and fall back to the slug's, so either spelling works in either tool.
+
+> **Gotcha: fold in the fixture's own symmetries or the result comes out backwards.** Swapping
+> `k1` and `k2` in that fixture multiplies the observed state by `k2/k1`, which a free `scale`
+> absorbs exactly, so the two points are the *same fit*. Only the profiled side ever reaches the
+> mirror answer, because only the profiled side always has the scale at its optimum. Unfolded, the
+> race below reads as the profiled side getting *further* from the truth as its budget grows.
+> `--swap k1,k2` folds it.
+
+> **Gotcha: a flat-line hit is a statement about the box.** 18 of 81 draws profile exactly to the
+> flat line over six decades of rate constant and 3 of 81 over two decades, on the same fixture with
+> the same everything else. Over six decades most draws are a trajectory that is flat or
+> instantaneous, and for those the flat line really is the best the observation model can do.
+> Reporting it is the profile being right. Read the count against the box before reading it as a
+> collapse.
+
+### Past two coefficients the prescan is coordinate-wise
+
+The grid prescan is a full mesh, which is `grid ** n` evaluations: fine at one or two coefficients
+and impossible at `Smith_BMCSystBiol2013`'s nine. Past two, each coefficient is swept over its own
+declared box in turn with the rest held where they are, `--sweeps` times over. That is exact in one
+pass when the coefficients are uncoupled, which nine pure scales on nine different observables are,
+and it still walks the whole box in every direction — which is the property that matters, because
+the conditional optimum is routinely decades from the drawn value.
+
+> **Gotcha: cap `--maxiter` on a slow slug and say that you did.** The default 2000 Nelder-Mead
+> iterations in nine dimensions is minutes per point on `Smith`, on top of a seventy-second
+> simulation. `--maxiter 150` was used for the numbers in ADR-0129 and costs about 2 % on the
+> profiled score at the first point, which understates the profiled side and so is the safe
+> direction to be wrong in.
+
+> **Gotcha: a slug with no intercept still has a no-dynamics reference.** A set of pure scales
+> cannot reach an arbitrary constant, but it can reach zero, and that is its no-dynamics prediction.
+> Without this the counter-hypothesis is unmeasurable on `Smith`, `Weber` and `Brannmark`, which is
+> most of the closed-form-profilable population.
+
+## `linear_race.py` — head-to-head at a matched simulation budget
+
+```bash
+python tools/linear_race.py <slug-dir> --budgets 60,120,250,500,1000 --seeds 6 \
+                            --closed-form --noise-profiling \
+                            --truth <slug-dir>/truth.json --over k1,k2 --swap k1,k2
+```
+
+The landscape is a proxy. This measures the thing it is a proxy for, which is #572's own item 3:
+whether a global optimizer given the same number of simulations ends up somewhere better when the
+linear coefficients are solved for instead of searched. Both sides run the same rand/1/bin
+differential evolution from the same seeds; the only difference is which parameters the optimizer
+carries. Both report a value of the same objective, so the two numbers compare directly.
+
+Measured on `../../Synthetic-2026-linear-observable`, optimum `-64.8803`: with sigma profiled the
+profiled side is there by 500 simulations and the searched side needs 1000; with sigma searched the
+profiled side is there by 500 to 1000 and the searched side has not arrived at 1000, its median 28
+objective units short.
+
+> **Gotcha: match simulations, not evaluations and not wall clock.** #572's whole proposal is to
+> replace the inner minimization with one linear solve, so charging its cost to the profiled side
+> prices a tool artefact rather than the feature. `--closed-form` removes the artefact entirely by
+> using `linear_profile.py`'s variable projection as the inner solve, which is what the feature
+> would compute.
+
+> **Gotcha: `--closed-form` with `--noise-profiling` is only valid where one sigma covers every
+> scored point.** With a single sigma the profiled value is a scalar multiple of the whole weight
+> matrix and the argmin is unchanged. With two estimated sigmas on different observables it is not,
+> and the closed form would be solving a different weighted problem than the search converges to.
+
+> **Gotcha: an easy problem cannot discriminate.** At 1000 simulations on this four-parameter
+> fixture both sides land on the optimum and the race says nothing. Sweep the budget downward until
+> they separate; that is the regime a model with a seventy-second simulation lives in.
+
+> **Gotcha: this is a proxy for a fit, not a fit.** PyBNF's own optimizers have restarts, refinement
+> and convergence tests this does not. The comparison is fair between the two sides and is not a
+> prediction of what `job_type = de` would do with either.
