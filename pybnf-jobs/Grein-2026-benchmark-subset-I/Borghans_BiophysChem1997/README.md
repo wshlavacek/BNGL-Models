@@ -72,20 +72,25 @@ survives, because oscillating points score ~25 NLL units worse and are dropped f
 
 ### Why: a wrong-period oscillator scores worse than no dynamics at all
 
-Rescale time by α — multiply the 9 rate constants, leave the 6 concentration constants, so
-`Z(t) → Z(αt)`. Only **α ∈ [0.9548, 1.0234]**, a **−4.5% / +2.3% window in period**, beats a horizontal
-line:
+Rescale time by α — multiply the 9 rate constants (`v0`, `v1`, `Vm2`, `Vm3`, `Kf`, `K_par`, `Vp`,
+`Vd`, `epsilon_par`), leave the 6 concentration constants, so `Z(t) → Z(αt)` exactly. From the nominal
+point, only **α ∈ [0.912, 1.048]**, a **−8.8% / +4.8% window in period**, beats a horizontal line
+(σ profiled, 0.001 grid):
 
 | α range | best reduced objective | vs. the flat line (-165.98) |
 |---|---:|---|
-| 0.50 – 0.90 | -144.9 | **worse than flat** |
-| **0.955 – 1.023** | **-198.1** | better — the only window that is |
-| 1.10 – 2.00 | -141.3 | **worse than flat** |
+| 0.50 – 0.90 | -161.7 | **worse than flat** |
+| **0.912 – 1.048** | **-198.2** | better — the only window that is |
+| 1.10 – 2.00 | -157.9 | **worse than flat** |
+
+(Corrected 2026-09-10. The earlier table, and the −4.5% / +2.3% window quoted from ADR-0109, came from a
+7-parameter rescale that omitted `Kf` and `epsilon_par`; that set is not a symmetry of the equations,
+so those numbers measured a shape change as well as a period change.)
 
 So under single shooting the flat line is the **ceiling over essentially the whole box**, and a global
 search ranking candidates by the objective is *correctly* pushed away from the only region a solve
-lives in. The chance that a box-uniform draw lands in a ~3% period window across 20 log dimensions over
-8 decades is effectively zero. This is a statement about the **transcription**, not the search — which
+lives in. The chance that a box-uniform draw lands in a ~14% period window across 20 log dimensions over
+8 decades is effectively zero — and a box draw that oscillates at all, at any timescale, is ~1 in 8,000. This is a statement about the **transcription**, not the search — which
 is why more starts, a better global method, and a gradient polish all return the same answer.
 
 ### What would settle it

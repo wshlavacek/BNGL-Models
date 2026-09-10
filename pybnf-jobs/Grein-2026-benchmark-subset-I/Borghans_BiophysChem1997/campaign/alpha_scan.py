@@ -7,12 +7,16 @@ dynamics at all. So the objective actively steers a search away from the region 
 pass through, and finding that window by search in a 20-dimensional box spanning 8 decades
 per axis is what nobody has reliably done.
 
-But period is not really 20-dimensional here. `find_time_rescaling.py` establishes -- from the
-model's equations alone, numerically, at three unrelated points -- that
+But period is not really 20-dimensional here. Scaling every rate in the right-hand side by
+alpha -- the six velocities plus Kf, K_par and epsilon_par, S = RESCALE below -- gives
 
-    y(t ; theta with S*alpha) == y(alpha*t ; theta)   to 1.3e-08,  S = RESCALE below
+    y(t ; theta with S*alpha) == y(alpha*t ; theta)   (verified to 1e-10 by find_time_rescaling.py)
 
 so alpha is an exact one-dimensional direction that moves period at fixed trajectory shape.
+(Until 2026-09-10 RESCALE omitted Kf and epsilon_par. That set is NOT a symmetry -- it mismatches
+y(alpha*t) by 78-100 % of range -- so every result this script produced before then measured a
+shape change, not a period change, and is void. The finder passed it because it tested at box
+draws that had already settled to a steady state, where any set passes.)
 That turns "find a 3 % window in 20-D" into "scan a line", which costs ~100 simulations
 instead of ~33,000.
 
@@ -68,7 +72,11 @@ CONF = "Borghans_alpha_scoring.conf"
 #: The exact time-rescaling set, determined numerically by find_time_rescaling.py rather than
 #: guessed from parameter names -- the six velocities alone give a 0.37 mismatch, so K_par is
 #: essential and easy to miss.
-RESCALE = ("K_par", "Vd", "Vm2", "Vm3", "Vp", "v0", "v1")
+# Every term of the right-hand side must scale with time: the six velocities, the three
+# first-order rate constants (Kf, K_par, epsilon_par). Corrected 2026-09-10 -- the first
+# version omitted Kf and epsilon_par, which is not a symmetry (78-100 % of range mismatch
+# against y(alpha*t)); see find_time_rescaling.py for the test that now catches that.
+RESCALE = ("K_par", "Kf", "Vd", "Vm2", "Vm3", "Vp", "epsilon_par", "v0", "v1")
 
 BOX = {"log": (1e-3, 1e5), "lin": (0.0, 1.0)}
 LINEAR = {"init_A_state", "init_Y_state", "init_Z_state"}
