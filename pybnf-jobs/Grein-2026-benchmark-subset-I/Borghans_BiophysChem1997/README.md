@@ -164,6 +164,25 @@ lives in. The chance that a box-uniform draw lands in a ~14% period window acros
 8 decades is effectively zero — and a box draw that oscillates at all, at any timescale, is ~1 in 8,000. This is a statement about the **transcription**, not the search — which
 is why more starts, a better global method, and a gradient polish all return the same answer.
 
+### Starting from a named vector
+
+Three confs at the top level run the job's own problem — same box, same objective — from a
+documented parameter vector, with a gradient polish (`gntr`, 200 iterations) as the recipe. `gntr`
+scores the start before it moves, so the first objective it reports is the vector's own; set
+`max_iterations = 0` to only score it. Each was verified to load and score at these values through
+PyBNF on 2026-09-10.
+
+| conf | vector | dynamics | reduced objective at the start | `OG` |
+|---|---|---|---:|---:|
+| `Borghans_start_best_ever_ramp.conf` | the `OG = -1.28` vector (`multiple_shooting_prototype/verify_best_fit_params.txt`) | excitable transient on a calcium-loading ramp; no attractor within reach | −248.069 | −1.28 |
+| `Borghans_start_paper_fig8.conf` | Borghans 1997 Fig. 8 values (BioModels BIOMD0000000044); `scale`/`offset` profiled against the data, PEtab nominal initial values, σ at the residual | periodic bursting, two spikes per burst | −176.148 | 70.6 |
+| `Borghans_start_best_periodic.conf` | `best_periodic_fit.json` | periodic, one spike per period | −208.948 | 37.8 |
+
+The paper's values never saw these data, so the middle row is what the published mechanism scores
+as published, not a fit. The other two are fits of the same likelihood that differ by 39 `OG` units
+and by whether the model oscillates at all; which one is "better" depends on whether periodic
+dynamics is part of the question, and the likelihood alone says it is not.
+
 ### What would settle it
 
 Grein et al. solved this slug with CMA-ES in **2 of 10 runs**, at a per-run budget evidently well above
@@ -217,6 +236,7 @@ multimodal work; and `wall_time_fit`, which silently downgrades `refine = 1` to 
 - `nominal_check.json` — the nominal-point evaluation recorded above
 - `score.py` — scores a run against `J*`
 - `best_periodic_fit.json` — the best *periodic* fit known (`OG = 37.8`); the `OG = -1.28` vector is not periodic
+- `Borghans_start_best_ever_ramp.conf`, `Borghans_start_paper_fig8.conf`, `Borghans_start_best_periodic.conf` — the job started from each named vector (see *Starting from a named vector*)
 - `campaign/is_periodic.py`, `campaign/borghans_ode.py` — the dynamics diagnostic and the scipy model it runs on (no PyBNF needed)
 - `multiple_shooting_prototype/` — the prototype that reached `OG = -1.282656` (see above)
 - `campaign/` — the drivers and conf templates behind the tallies quoted above; its
