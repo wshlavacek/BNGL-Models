@@ -27,9 +27,11 @@ Its nominal σ is also **not** a placeholder (0.104923 against an MLE of 0.10170
 ### It has been solved, from a privileged start
 
 `OG = -1.282656`, reduced objective `-248.069154`, verified three independent ways including through
-PyBNF's own objective with `gntr` seeded at the vector (`-248.0691541186748`). The fit is a real
-oscillator — Pearson `r = 0.864` against the data, three peaks, profiled σ = 0.0649 (~16% relative) —
-not a degenerate flat trajectory. It came from the multiple-shooting prototype of lanl/PyBNF#563,
+PyBNF's own objective with `gntr` seeded at the vector (`-248.0691541186748`). The fit reproduces the
+record — Pearson `r = 0.864` against the data, three spikes inside the record and a fourth just past
+it, profiled σ = 0.0649 (~16% relative) — **but it is not an oscillator**: simulated past the record
+it never spikes again, and store calcium grows without bound (see *What the fits are, dynamically*).
+It came from the multiple-shooting prototype of lanl/PyBNF#563,
 started at a **radius-0.4 perturbation of the PEtab nominal point**: a trajectory that already
 oscillates with the period wrong, which is the regime that transcription is for. In that regime
 multiple shooting beat `gntr` **9–0–1** over ten paired starts and never lost.
@@ -48,12 +50,81 @@ Two things keep this a basin measurement rather than a result:
   of ~8,400 changes the answer, and three legitimate builds of bngsim give three different answers from
   an identical start. The basin is a fact; the trajectory to it is not a property of any method.
 
+### What the fits are, dynamically
+
+A fit only ever simulates to the last measurement (t = 8.98), so its score says nothing about what
+the model does afterwards. `campaign/is_periodic.py` runs each reference vector to t = 400 and
+applies three checks on the second half of that horizon: the peak train (count, spacing and its
+coefficient of variation, amplitude trend), the boundedness of the **state** (largest state norm
+over successive windows), and the fixed point with its Jacobian eigenvalues. `OG` is from
+`campaign/borghans_ode.py`, an independent scipy implementation whose objective differences match
+PyBNF's to 0.01.
+
+| vector | `OG` | peaks, spacing, amplitude trend, envelope growth on [200, 400] | verdict |
+|---|---:|---|---|
+| paper, Fig. 8 values (BioModels BIOMD0000000044) | 70.6* | 212 / 0.39 (CV 0.89) / 1.000 / 1.000 | **periodic bursting**, two spikes per burst, burst period 2.83 |
+| PEtab nominal | 48.6 | 72 / 2.76 (CV 0.00) / 1.000 / 1.000 | **periodic**, one spike per period |
+| `best_periodic_fit.json` | 37.8 | 71 / 2.81 (CV 0.00) / 1.000 / 1.000 | **periodic**, one spike per period |
+| the `OG = -1.28` vector | −1.28 | 0 / – / – / **1.333** | **no attractor within reach** |
+
+\* The paper never fitted these data; 70.6 is its Fig. 8 parameter set scored with the PEtab nominal
+initial values and only `scale`/`offset` profiled.
+
+**The `OG = -1.28` vector is four excitable spikes on a calcium-loading ramp.** Its net calcium
+inflow is `v0 + beta*v1 = 3.19` per time unit against an efflux rate `K_par = 0.075` and a store leak
+`Kf = 0.003`, so the cell takes in calcium it cannot excrete and stores it: `Y` is 29 at t = 9, 634 at
+t = 200, 18,890 at t = 6,000, rising 3.2 per time unit, while `A` pins at 0.2236 and cytosolic `Z`
+creeps from 0.13 to 0.75. The system has exactly one fixed point, `Z* = 42.6, Y* = 48,711,
+A* = 0.2236` (`Ca* = 43`, forty times the data's range), a stable node — eigenvalues −4.28, −0.077,
+−0.003, all real — and the trajectory reaches it at t ≈ 20,000. So "aperiodic" and "a fixed point
+after a transient" are both literally true and both misleading: the transient is 2,000 times longer
+than the record, it is a monotone ramp rather than a decaying oscillation, and the fixed point is
+unphysical. The four spikes are the fitted initial values kicking an excitable system once, in the
+first 0.05 % of a trajectory that is filling the cell with calcium. This is also why nothing near the
+vector converges to it: there is no basin in the usual sense. From ten per-coordinate 0.4-decade
+kicks of it, `gntr` ended on the flat line eight times, at `OG` 54–57 twice, and returned zero times.
+
+**What follows for the benchmark.** The PEtab problem is a likelihood over 111 points on
+[0.03, 8.98] and nothing else, so a cell that is filling with calcium is a legal optimum of the
+problem as posed, and the benchmark cannot tell it from an oscillator. Grein's `J*` is 1.28 units
+from this vector; whether their optimum is of the same kind is unknown (they publish objective
+values, not parameter vectors). A *meaningful* solution needs a requirement the problem does not
+contain — bounded, periodic dynamics — and a fit conditioned on that is a different problem with a
+different optimum. Its value is **not known**. The best periodic fit known is `best_periodic_fit.json`
+at `OG = 37.8` (a sustained oscillator, period 2.80; see *From an uninformed start* below for where
+it came from); nothing says that is the periodic floor.
+
+**What PyBNF (1.8.1) can express.** BPSL has no periodicity primitive. A usable proxy is a
+constraint-only experiment run past the record — `experiment: qualitative, data: late.prop,
+t_end: 40` with `Ca > 0.7 once between 30, 40` and `Ca < 0.4 once between 30, 40` — which the
+loading-ramp vector fails and every periodic vector above passes. But `gntr`, `lbfgs` and `ms` all
+refuse a fit that carries property files, which leaves the metaheuristics; a CMA-ES seeded tightly
+around each of the vectors above did not stay local and produced nothing usable. So the
+periodic-conditioned optimum remains unmeasured. An objective on the Jacobian's eigenvalues (an
+unstable fixed point as the condition for oscillation) does not exist in PyBNF either.
+
+Reproduce the table with any interpreter that has numpy and scipy (PyBNF's venv does):
+
+```bash
+python3 campaign/is_periodic.py                                  # the four reference vectors
+python3 campaign/is_periodic.py output/Results/sorted_params_final.txt   # any PyBNF result
+```
+
 ### From an uninformed start, everything lands on the same flat line
 
 Running tally across every PyBNF configuration tried: **0 successes in 19 CMA-ES runs, 500+ `gntr`
 starts, 1 PSO, 1 scatter search**, plus a 24-start box-drawn sweep run through both single and multiple
-shooting (0/24 either way). Best `OG` anywhere is **77.6** (`gntr`, 100 × 1000), against a threshold of
-1.92.
+shooting (0/24 either way). Best `OG` from a plain search is **77.6** (`gntr`, 100 × 1000), against a
+threshold of 1.92.
+
+One start that is *not* a plain search did better: a random box draw that oscillates (about 1 in
+8,000 does, at any timescale), its period set to the data's 2.70 by the exact nine-rate time rescale,
+its phase set by taking the limit-cycle state 0.79 before a peak as the initial values, brought into
+the box by the unit symmetries and clipping, with `scale`/`offset` profiled — no nominal point and no
+fitted vector involved. From that start `ms` (8 segments, coarsening 2) reached `OG 38.3` in-box and a
+`gntr` polish `37.8`: `best_periodic_fit.json`, a sustained oscillator. Kicks and continuations from
+it stall at 38–42. The start-construction scripts are not in `campaign/` yet; the vector is committed
+so its score and dynamics are reproducible.
 
 The completed 15-run BIPOP-CMA-ES campaign (λ₀ = 32, 12 restarts, `cmaes_run_maxgen = 300`, ~33,000
 simulations per run) is the sharpest form of it:
@@ -92,6 +163,25 @@ search ranking candidates by the objective is *correctly* pushed away from the o
 lives in. The chance that a box-uniform draw lands in a ~14% period window across 20 log dimensions over
 8 decades is effectively zero — and a box draw that oscillates at all, at any timescale, is ~1 in 8,000. This is a statement about the **transcription**, not the search — which
 is why more starts, a better global method, and a gradient polish all return the same answer.
+
+### Starting from a named vector
+
+Three confs at the top level run the job's own problem — same box, same objective — from a
+documented parameter vector, with a gradient polish (`gntr`, 200 iterations) as the recipe. `gntr`
+scores the start before it moves, so the first objective it reports is the vector's own; set
+`max_iterations = 0` to only score it. Each was verified to load and score at these values through
+PyBNF on 2026-09-10.
+
+| conf | vector | dynamics | reduced objective at the start | `OG` |
+|---|---|---|---:|---:|
+| `Borghans_start_best_ever_ramp.conf` | the `OG = -1.28` vector (`multiple_shooting_prototype/verify_best_fit_params.txt`) | excitable transient on a calcium-loading ramp; no attractor within reach | −248.069 | −1.28 |
+| `Borghans_start_paper_fig8.conf` | Borghans 1997 Fig. 8 values (BioModels BIOMD0000000044); `scale`/`offset` profiled against the data, PEtab nominal initial values, σ at the residual | periodic bursting, two spikes per burst | −176.148 | 70.6 |
+| `Borghans_start_best_periodic.conf` | `best_periodic_fit.json` | periodic, one spike per period | −208.948 | 37.8 |
+
+The paper's values never saw these data, so the middle row is what the published mechanism scores
+as published, not a fit. The other two are fits of the same likelihood that differ by 39 `OG` units
+and by whether the model oscillates at all; which one is "better" depends on whether periodic
+dynamics is part of the question, and the likelihood alone says it is not.
 
 ### What would settle it
 
@@ -145,6 +235,9 @@ multimodal work; and `wall_time_fit`, which silently downgrades `refine = 1` to 
 - `jstar.txt` — the reference `J*`
 - `nominal_check.json` — the nominal-point evaluation recorded above
 - `score.py` — scores a run against `J*`
+- `best_periodic_fit.json` — the best *periodic* fit known (`OG = 37.8`); the `OG = -1.28` vector is not periodic
+- `Borghans_start_best_ever_ramp.conf`, `Borghans_start_paper_fig8.conf`, `Borghans_start_best_periodic.conf` — the job started from each named vector (see *Starting from a named vector*)
+- `campaign/is_periodic.py`, `campaign/borghans_ode.py` — the dynamics diagnostic and the scipy model it runs on (no PyBNF needed)
 - `multiple_shooting_prototype/` — the prototype that reached `OG = -1.282656` (see above)
 - `campaign/` — the drivers and conf templates behind the tallies quoted above; its
   runs are not committed (see that directory's `README.md`)

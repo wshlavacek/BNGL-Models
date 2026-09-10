@@ -1,0 +1,32 @@
+{
+ "what": "Best PERIODIC fit known for this problem (OG 37.8): a sustained oscillator, period 2.80, one spike per period. See README, 'What the fits are, dynamically'.",
+ "provenance": "2026-09-10. Start built by reasoning from a random box draw: exact 9-rate time rescale to the data's period 2.70, phase from the limit-cycle state 0.79 before a peak, unit symmetries + clipping into the box, scale/offset profiled; then PyBNF ms (8 segments, coarsening 2, wall 400 s) to OG 38.34 and a gntr polish (4000 iterations) to OG 37.84. The start-construction scripts are not in campaign/ yet; this vector is committed so its score and dynamics are reproducible: python3 campaign/is_periodic.py",
+ "reduced_objective_pybnf": -208.94758210183332,
+ "OG": 37.84,
+ "sigma_profiled_log10": 0.09232775282796726,
+ "params": {
+  "K2": 0.0010000010228136496,
+  "K_par": 14.921128947538502,
+  "Ka": 0.0010000013278033825,
+  "Kd": 0.0010000110332448655,
+  "Kf": 2.2883454394500604,
+  "Kp": 0.0010000000039445244,
+  "Ky": 0.0011199483902439912,
+  "Kz": 0.0021116571099237275,
+  "Vd": 0.001044964793868325,
+  "Vm2": 2.562121337572667,
+  "Vm3": 0.864300616470878,
+  "Vp": 347.22238709049896,
+  "beta_par": 0.002861916160789646,
+  "epsilon_par": 0.9343738956591455,
+  "init_A_state": 0.9990276172418382,
+  "init_Y_state": 0.7113071184963144,
+  "init_Z_state": 0.0022555062868194094,
+  "n_par": 1.2788150170293313,
+  "offset": 0.14927567275601347,
+  "scale": 111.36981742059618,
+  "v0": 0.04645651727104362,
+  "v1": 0.0010878345237072043,
+  "sigma": 0.09232775282796726
+ }
+}
