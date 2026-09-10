@@ -49,8 +49,13 @@ ic = {}
 for l in open(ic_path):
     if l.startswith("#") or not l.strip():
         continue
-    k_, v_ = l.split()
-    ic[k_] = v_
+    # Tab-separated key/value; a value may itself contain spaces (since lanl/PyBNF#676 the
+    # stochastic-fit fields read e.g. "n/a (one simulation)"), so split on the first separator.
+    parts = l.rstrip("\n").split("\t", 1) if "\t" in l else l.split(None, 1)
+    if len(parts) != 2:
+        continue
+    k_, v_ = parts
+    ic[k_] = v_.strip()
 n = int(ic["n"]); k = int(ic["k"])
 lnL = float(ic["log_likelihood"])
 

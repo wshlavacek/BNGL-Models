@@ -49,6 +49,10 @@ CAMPAIGN = Path(__file__).resolve().parent
 # every run happen one level up, and the confs' paths are relative to it.
 HERE = CAMPAIGN.parent
 CONF = HERE / "Borghans_bench_a3_ms.conf"
+if not CONF.exists():
+    # The drivers expand this template into the job directory; without a driver run it
+    # only exists here. Its model/data paths are relative to the job directory (chdir below).
+    CONF = CAMPAIGN / "Borghans_bench_a3_ms.conf"
 
 #: The benchmark box for the loguniform observation parameters.
 BOX_LO, BOX_HI = 1e-3, 1e5
@@ -114,24 +118,34 @@ def load_observations(path):
 
 
 def oscillation(times, values):
-    """``(n_peaks, relative amplitude)`` of one trajectory.
+    """``(n_peaks, relative amplitude)`` of the SUSTAINED part of one trajectory.
 
-    A peak is a strict interior local maximum that rises at least 5 % of the trajectory's
-    range above the lower of its two flanking minima -- enough to reject numerical ripple on
-    a monotone or flat curve without tuning to any particular period.
+    Judged on the last 60 % of the simulated span only. The first version looked at the whole
+    trajectory and counted any interior maximum 5 % above the lower of its flanking minima,
+    which fires on the damped ringing of the initial transient: every start it kept on
+    2026-08-14 rings for a few milliseconds and is flat by the first data point at t = 0.03,
+    and all eight scored within 1.3 NLL units of the flat line -- so the paired runs made from
+    them tested nothing. Sustained oscillation means peaks that are still there late in the
+    window, each with a prominence of at least 20 % of that tail's range, and a tail range of
+    at least 5 % of its mean. Measured that way, sustained oscillators are ~1 in 8,000 draws
+    of this box (4 in 32,000, timescale-agnostic), not 1 in 31.
     """
+    from scipy.signal import find_peaks
+    times = np.asarray(times, dtype=float)
     values = np.asarray(values, dtype=float)
     if values.size < 5 or not np.all(np.isfinite(values)):
         return 0, 0.0
-    span = float(np.max(values) - np.min(values))
-    scale = max(abs(float(np.mean(values))), 1e-30)
-    relative = span / scale
-    if span <= 0.0:
+    tail = times >= times[0] + 0.4 * (times[-1] - times[0])
+    v = values[tail]
+    if v.size < 5:
         return 0, 0.0
-    interior = np.flatnonzero((values[1:-1] > values[:-2]) & (values[1:-1] > values[2:])) + 1
-    peaks = [i for i in interior
-             if values[i] - min(np.min(values[:i]), np.min(values[i:])) > 0.05 * span]
-    return len(peaks), relative
+    span = float(np.max(v) - np.min(v))
+    scale = max(abs(float(np.mean(v))), 1e-30)
+    relative = span / scale
+    if span <= 0.0 or relative < 0.05:
+        return 0, relative
+    peaks, _ = find_peaks(v, prominence=0.2 * span)
+    return int(len(peaks)), relative
 
 
 def main() -> int:
