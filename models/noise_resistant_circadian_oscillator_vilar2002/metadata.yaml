@@ -1,0 +1,187 @@
+# metadata.yaml — noise_resistant_circadian_oscillator_vilar2002
+id: noise_resistant_circadian_oscillator_vilar2002
+created: 2026-09-14
+
+point_of_contact:
+  name: William S. Hlavacek
+  email: hlavacek@lanl.gov
+  orcid: 0000-0003-4383-8711
+  github: wshlavacek
+
+source:
+  tags: [literature, adapted_from_ode, ai_assisted]
+  description: >
+    Curated from Vilar, Kueh, Barkai and Leibler (2002), PNAS 99:5988-5992. The
+    paper states the model as the nine rate equations of Eq. 1 and the network
+    diagram of Fig. 1; the rules here were written from those two and generate
+    exactly the published nine species and sixteen reactions. Every rate
+    constant and initial condition is from the Fig. 1 caption, and no parameter
+    was fitted or adjusted.
+    One modelling decision is not forced by the source and is recorded in the
+    file: the activator carries a single binding site rather than separate sites
+    for DNA and for the repressor. Eq. 1 contains no species in which the
+    activator is bound to a promoter and to the repressor at once, so two
+    independent sites would generate four species the published model does not
+    have.
+    Three files cover the paper's three parameter regimes, with the primary at
+    the Fig. 1 values, the _stable_fixed_point variant at the Fig. 5 value of
+    delta_R, and the _low_mrna variant at the Fig. 7 rescaling of the
+    translation and transcript degradation rates.
+    Verification found one statement that does not carry over to the full
+    network. The paper reports that scaling translation and transcript turnover
+    together leaves protein dynamics unchanged in the deterministic limit; that
+    holds for the two-variable reduction of Eq. 2, in which mRNA has been
+    adiabatically eliminated, but not for Eq. 1, where the deterministic period
+    falls from 25.6 h to 21.6 h and the repressor peak from 1,717 to 1,251
+    molecules. The _low_mrna header states this.
+    Figs. 7b and 7d are excluded from the quantitative level-2 comparison. They
+    plot transcript spikes one pixel wide on a 150 ppi raster, and the time
+    average of the digitized envelope moves from 0.51 to 0.67 molecules across
+    ink thresholds of 160 to 210, so it is not a measurement. The qualitative
+    claim the panels exist to make, that the transcript time average is below
+    one molecule, holds on both sides.
+
+files:
+  - name: noise_resistant_circadian_oscillator_vilar2002.bngl
+    role: primary
+    documentation_target: standard
+    scale: trivial
+    description: >
+      Fig. 1 parameterization. Deterministically a relaxation limit cycle of
+      period 25.6 h; stochastically the same oscillation, essentially
+      undegraded, which is the noise resistance of the title.
+  - name: noise_resistant_circadian_oscillator_vilar2002_stable_fixed_point.bngl
+    role: variant
+    documentation_target: standard
+    scale: trivial
+    description: >
+      Fig. 5 parameterization, delta_R lowered from 0.2 to 0.05 /h. The trace of
+      Eq. 3 turns negative, so the deterministic system relaxes to a stable
+      fixed point at R = 123.3 molecules and stays there, while the Gillespie
+      process on the same network oscillates indefinitely with a period near
+      70 h. The converse of the primary model: an oscillation that exists only
+      because of noise.
+  - name: noise_resistant_circadian_oscillator_vilar2002_low_mrna.bngl
+    role: variant
+    documentation_target: standard
+    scale: trivial
+    description: >
+      Fig. 7 parameterization, both translation rates and both transcript
+      degradation rates multiplied by one hundred. Transcript counts fall to
+      0.14 and 0.17 molecules on time average while the protein oscillation
+      continues, which is the claim made in the paper's abstract.
+  - name: verify_vilar2002.ipynb
+    role: verification
+    scale: minutes
+    description: >
+      Both verification levels for all three files. Runs BioNetGen in a
+      temporary directory and checks the committed reference output reproduces,
+      including the seeded SSA; compares the ODE against an independent SciPy
+      integration of Eq. 1 and the SSA against an independent pure-Python
+      Gillespie ensemble; and compares both against the digitized figures. The
+      64-replicate BioNetGen ensembles and 16-replicate pure-Python ensembles,
+      not the model, are what make this artifact minutes rather than trivial.
+  - name: verify_vilar2002.png
+    role: figure
+    description: >
+      The verification figure: both levels, the disagreement in each as a
+      residual, parity or ensemble-range panel, the metrics, and the verdict.
+  - name: independent_vilar2002.py
+    role: verification
+    description: >
+      Independent implementation transcribed from Eq. 1 and the Fig. 1 diagram:
+      a SciPy right-hand side and a direct-method Gillespie simulator over the
+      sixteen reactions. It never reads the BioNetGen-generated network and
+      shares no code with BioNetGen.
+  - name: digitize_vilar2002.py
+    role: verification
+    description: >
+      Regenerates the ten digitized CSVs from the article PDF. Extracts the
+      embedded 150 ppi figure bitmaps with pdfimages, finds panel frames by
+      their shared contiguous span, calibrates on the tick marks with an
+      assertion that every interior tick lands on the implied grid, and records
+      the per-column upper and lower ink envelope.
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002.net
+    role: reference
+    description: Generated network of the primary model, 9 species and 16 reactions.
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_ode.net
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_ode.gdat
+    role: reference
+    description: Deterministic limit cycle, t = 0 to 400 h; Fig. 2 a and b.
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_ode.cdat
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_ssa.net
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_ssa.gdat
+    role: reference
+    description: >
+      Seeded Gillespie trajectory at seed 92133899, t = 0 to 400 h; Fig. 2 c
+      and d. Re-running the file reproduces this exactly.
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_ssa.cdat
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_stable_fixed_point.net
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_stable_fixed_point_ode.net
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_stable_fixed_point_ode.gdat
+    role: reference
+    description: Relaxation to the stable fixed point; Fig. 5 a.
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_stable_fixed_point_ode.cdat
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_stable_fixed_point_ssa.net
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_stable_fixed_point_ssa.gdat
+    role: reference
+    description: Noise-induced oscillation on the same network; Fig. 5 b.
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_stable_fixed_point_ssa.cdat
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_low_mrna.net
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_low_mrna_ode.net
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_low_mrna_ode.gdat
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_low_mrna_ode.cdat
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_low_mrna_ssa.net
+    role: reference
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_low_mrna_ssa.gdat
+    role: reference
+    description: Sub-single-copy transcripts with the protein oscillation intact; Fig. 7.
+  - name: reference/noise_resistant_circadian_oscillator_vilar2002_low_mrna_ssa.cdat
+    role: reference
+  - name: reference/vilar2002_fig2_a_digitized.csv
+    role: reference
+    description: >
+      Fig. 2a, deterministic activator. Per-column upper and lower ink envelope
+      in molecules; produced by digitize_vilar2002.py.
+  - name: reference/vilar2002_fig2_b_digitized.csv
+    role: reference
+    description: Fig. 2b, deterministic repressor.
+  - name: reference/vilar2002_fig2_c_digitized.csv
+    role: reference
+    description: Fig. 2c, stochastic activator, one published realization.
+  - name: reference/vilar2002_fig2_d_digitized.csv
+    role: reference
+    description: Fig. 2d, stochastic repressor, one published realization.
+  - name: reference/vilar2002_fig5_a_digitized.csv
+    role: reference
+    description: Fig. 5a, deterministic repressor at delta_R = 0.05 /h.
+  - name: reference/vilar2002_fig5_b_digitized.csv
+    role: reference
+    description: Fig. 5b, stochastic repressor at delta_R = 0.05 /h.
+  - name: reference/vilar2002_fig7_a_digitized.csv
+    role: reference
+    description: Fig. 7a, stochastic activator under the rescaled mRNA rates.
+  - name: reference/vilar2002_fig7_b_digitized.csv
+    role: reference
+    description: >
+      Fig. 7b, activator transcript. Not used as a quantitative acceptance
+      statistic; see the threshold sensitivity recorded in source.description.
+  - name: reference/vilar2002_fig7_c_digitized.csv
+    role: reference
+    description: Fig. 7c, stochastic repressor under the rescaled mRNA rates.
+  - name: reference/vilar2002_fig7_d_digitized.csv
+    role: reference
+    description: Fig. 7d, repressor transcript; same caveat as Fig. 7b.
