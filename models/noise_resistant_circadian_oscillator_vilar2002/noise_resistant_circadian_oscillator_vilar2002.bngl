@@ -1,0 +1,243 @@
+begin model
+
+#@title: Noise-resistant circadian oscillator (Vilar et al., 2002)
+
+#@description: |
+#  Minimal circadian clock built from one positive and one negative element.
+#  An activator gene and a repressor gene are each transcribed and translated;
+#  the activator protein A binds both promoters and raises their transcription
+#  rates, so A is the positive element, while the repressor protein R is the
+#  negative element and acts by sequestering A into an inactive complex C.
+#  All fourteen rules are mass action, and the complex decays by degradation of
+#  the activator inside it, releasing free R.
+#  Deterministically the system is a relaxation oscillator with a period near
+#  25 h: free A spikes to roughly 1,400 molecules, free R follows a quarter
+#  cycle later and reaches roughly 1,700, and the cycle then repeats
+#  identically forever. Run as a discrete Gillespie process at the same
+#  parameters the oscillation survives with the same period and amplitude and
+#  only slight cycle-to-cycle variation, which is the noise resistance of the
+#  title: the dynamics are carried by the two slow variables R and C, while
+#  the fast species enter only through their averages.
+#  Two companion files cover the paper's other two regimes. The
+#  _stable_fixed_point suffix shows the converse of noise resistance, an
+#  oscillation that exists only stochastically; the _low_mrna suffix drives the
+#  transcript counts below one molecule on average and the protein oscillation
+#  survives anyway.
+
+#@keyword: |
+#  circadian rhythm, gene regulation, genetic oscillator, relaxation
+#  oscillator, limit cycle, positive feedback, negative feedback, protein
+#  sequestration, noise resistance, intrinsic noise, mass action, Gillespie
+#  algorithm, generic
+
+#@reference: |
+#  Vilar JMG, Kueh HY, Barkai N, Leibler S (2002). Mechanisms of
+#  noise-resistance in genetic oscillators. Proceedings of the National Academy
+#  of Sciences USA 99:5988-5992. doi:10.1073/pnas.092133899
+
+#@note: |
+#  Population-based model: every amount is a number of molecules and every rate
+#  constant is per molecule per hour or per hour, exactly as tabulated in the
+#  Fig. 1 caption. The paper sets the cellular volume to unity "so that
+#  concentrations and number of molecules are equivalent", so no conversion
+#  through NA and a volume is applied anywhere; NA and V_ref appear in the
+#  parameters block as bookkeeping only and do not enter the dynamics.
+#  Time is in hours throughout.
+
+#@note: |
+#  Notation map to Vilar et al. (2002). Da(a) is D_A and Da(a!+) is D_A';
+#  Dr(a) is D_R and Dr(a!+) is D_R'; Ma() is M_A and Mr() is M_R; A(s) is the
+#  free activator A, R(a) is the free repressor R, and A(s!1).R(a!1) is the
+#  inactive complex C. Rate constants keep the paper's names with the
+#  subscripts spelled out: alpha_A and alpha_A_act are its alpha_A and
+#  alpha_A', and likewise for the repressor gene.
+
+#@note: |
+#  The activator carries a single binding site s, which binds either promoter
+#  or the repressor. One site rather than two is what makes the generated
+#  network the paper's nine species exactly: Eq. 1 has no species in which A is
+#  bound to DNA and to R at the same time, and giving A two independent sites
+#  would generate four such species that the published model does not contain.
+#  The single site also states the biology the model assumes, that sequestration
+#  by R is what keeps A off the promoters.
+
+#@note: |
+#  delta_A appears twice, on two different rules, and this is deliberate — the
+#  paper says so explicitly in the Fig. 1 caption. Free A degrades at delta_A,
+#  and the complex C decays at delta_A because it is the activator inside it
+#  that degrades, leaving free R behind. There is no independent complex
+#  dissociation or complex degradation constant. Two further asymmetries in
+#  Eq. 1 are worth stating because they are easy to normalize away by accident:
+#  activator bound to a promoter does not degrade at all, and repressor inside
+#  the complex does not degrade at delta_R.
+
+begin parameters
+  # Population-conversion constants and bookkeeping reactor volume
+  NA     6.02214076e23  # molecules/mol
+  V_ref  1.0            # L/reactor
+
+  # Transcription rates from unbound and activator-bound promoters;
+  # Fig. 1 caption in Vilar et al. (2002)
+  alpha_A      50     # /h
+  alpha_A_act  500    # /h
+  alpha_R      0.01   # /h
+  alpha_R_act  50     # /h
+
+  # Translation rates
+  beta_A  50  # /h
+  beta_R  5   # /h
+
+  # Spontaneous degradation rates
+  delta_MA  10   # /h
+  delta_MR  0.5  # /h
+  delta_A   1    # /h
+  delta_R   0.2  # /h
+
+  # Binding of the activator to the two promoters and to the repressor
+  gamma_A  1  # /(molecule*h)
+  gamma_R  1  # /(molecule*h)
+  gamma_C  2  # /(molecule*h)
+
+  # Unbinding of the activator from the two promoters
+  theta_A  50   # /h
+  theta_R  100  # /h
+
+  # Single-copy genes and an otherwise empty cell; Fig. 1 caption
+  Da_init  1  # molecules
+  Dr_init  1  # molecules
+end parameters
+
+begin molecule types
+  # Activator gene promoter; site a binds one activator protein
+  Da(a)
+  # Repressor gene promoter; site a binds one activator protein
+  Dr(a)
+  # Activator mRNA
+  Ma()
+  # Repressor mRNA
+  Mr()
+  # Activator protein; the single site s binds a promoter or the repressor,
+  # never both at once
+  A(s)
+  # Repressor protein; site a binds one activator protein
+  R(a)
+end molecule types
+
+begin seed species
+  # One copy of each gene, both promoters unbound, and no transcript, protein
+  # or complex present at t = 0
+  Da(a)  Da_init  # molecules
+  Dr(a)  Dr_init  # molecules
+end seed species
+
+begin observables
+  # Free activator and free repressor protein; the A and R of Figs. 2 and 7
+  Molecules Obs_A  A(s)
+  Molecules Obs_R  R(a)
+
+  # Inactive activator-repressor complex; the C of Figs. 3 and 4
+  Molecules Obs_C  A(s!1).R(a!1)
+
+  # Transcript counts; the M_A and M_R of Fig. 7, both below one on average
+  Molecules Obs_Ma  Ma()
+  Molecules Obs_Mr  Mr()
+
+  # Promoter occupancy; D_A' and D_R', each zero or one
+  Molecules Obs_Da_bound  Da(a!+)
+  Molecules Obs_Dr_bound  Dr(a!+)
+
+  # Activator in every form, free plus promoter-bound plus sequestered
+  Molecules Obs_A_tot  A()
+end observables
+
+begin reaction rules
+  # Reversible binding of the activator to its own promoter, converting
+  # D_A into D_A'
+  R_bind_Da: A(s) + Da(a) <-> A(s!1).Da(a!1)  gamma_A, theta_A
+
+  # Reversible binding of the activator to the repressor promoter, converting
+  # D_R into D_R'
+  R_bind_Dr: A(s) + Dr(a) <-> A(s!1).Dr(a!1)  gamma_R, theta_R
+
+  # Basal and activated transcription of the activator gene
+  R_transcribe_A_basal: Da(a) -> Da(a) + Ma()  alpha_A
+  R_transcribe_A_act: Da(a!+) -> Da(a!+) + Ma()  alpha_A_act
+
+  # Basal and activated transcription of the repressor gene
+  R_transcribe_R_basal: Dr(a) -> Dr(a) + Mr()  alpha_R
+  R_transcribe_R_act: Dr(a!+) -> Dr(a!+) + Mr()  alpha_R_act
+
+  # Translation of both transcripts
+  R_translate_A: Ma() -> Ma() + A(s)  beta_A
+  R_translate_R: Mr() -> Mr() + R(a)  beta_R
+
+  # Spontaneous degradation of both transcripts
+  R_degrade_Ma: Ma() -> 0  delta_MA
+  R_degrade_Mr: Mr() -> 0  delta_MR
+
+  # Spontaneous degradation of free activator and free repressor. The patterns
+  # match the unbound proteins only: promoter-bound activator does not degrade,
+  # and repressor inside the complex does not degrade at delta_R.
+  R_degrade_A: A(s) -> 0  delta_A
+  R_degrade_R: R(a) -> 0  delta_R
+
+  # Irreversible sequestration of the activator by the repressor into the
+  # inactive complex C; Eq. 1 gives the complex no dissociation route
+  R_sequester: A(s) + R(a) -> A(s!1).R(a!1)  gamma_C
+
+  # The complex decays by degradation of the activator inside it, releasing
+  # free repressor, which is why delta_A appears on this rule as well as on
+  # R_degrade_A. DeleteMolecules removes the activator alone rather than the
+  # whole complex.
+  R_degrade_A_in_C: A(s!1).R(a!1) -> R(a)  delta_A  DeleteMolecules
+end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})  # 9 species, 16 reactions
+  saveConcentrations()
+
+  # Deterministic limit cycle
+
+  #@protocol: |
+  #  Integrate the reaction rate equations of Eq. 1 from the empty initial
+  #  state over t = 0..400 h, sampling every 0.1 h. After a first transient
+  #  peak the system settles onto a limit cycle of period near 24 h in which
+  #  free A spikes to roughly 1,200 molecules and free R to roughly 1,600,
+  #  R lagging A by about a quarter cycle. Every cycle is identical to the
+  #  previous one.
+
+  #@figure: Fig. 2 a and b in Vilar et al. (2002)
+
+  resetConcentrations()
+  simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>400,n_steps=>4000,\
+    atol=>1e-10,rtol=>1e-10})
+
+  # Noise-resistant stochastic oscillation
+
+  #@protocol: |
+  #  Simulate one seeded Gillespie trajectory of the same network from the same
+  #  initial state over t = 0..400 h, sampling every 0.1 h. The oscillation
+  #  persists with the deterministic period and amplitude, varying slightly
+  #  from cycle to cycle, even though each mRNA averages below one molecule.
+  #  The seed makes the committed reference output reproducible;
+  #  verify_vilar2002.ipynb compares an ensemble of seeded runs against the
+  #  figure rather than relying on one realization.
+
+  #@figure: Fig. 2 c and d in Vilar et al. (2002)
+
+  resetConcentrations()
+  simulate({method=>"ssa",suffix=>"ssa",t_start=>0,t_end=>400,n_steps=>4000,\
+    seed=>92133899})
+
+  # Partial-scaling SSA alternative
+#  resetConcentrations()
+#  simulate({method=>"ssa",poplevel=>100,suffix=>"psa",t_start=>0,t_end=>400,\
+#    n_steps=>4000,seed=>92133899})
+
+  # Network-free SSA alternative
+#  resetConcentrations()
+#  simulate({method=>"nf",suffix=>"nfr",t_start=>0,t_end=>400,n_steps=>4000,\
+#    seed=>92133899,complex=>1})
+end actions
