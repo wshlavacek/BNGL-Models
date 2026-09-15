@@ -99,7 +99,7 @@ t_end()=if(t<365,fD_2021*(365-d_2021-0)+0+d_2021,\
         if(t<1096,fD_2023*(1096-d_2023-730)+730+d_2023,\
         if(t<=1461,fD_2024*(1461-d_2024-1096)+1096+d_2024,fD_2024*(1461-d_2024-1096)+1096+d_2024))))
 duration()=(t_end()-t_start())/7 # weeks
-scaled_time()=if(t>=t_start() && t<=t_end(),(t-t_start())/(t_end()-t_start()),0)
+scaled_time()=if(t>t_start() && t<=t_end(),(t-t_start())/(t_end()-t_start()),0) # opens on t>t_start(), not t>=t_start(): lanl/bngsim#545
 # Kumaraswamy distribution for a,b>=1
 f()=(1/fmax())*a()*b()*((scaled_time())^(a()-1))*(1-(scaled_time())^a())^(b()-1)
 beta_K()=(beta_min+(beta_max-beta_min)*f())
