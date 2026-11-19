@@ -1,0 +1,85 @@
+Third-party files in this directory: lang2024_upstream_*
+=========================================================
+
+The files named lang2024_upstream_* (other than this NOTICE) are verbatim, byte-for-byte
+copies of files from the authors' repository
+
+  https://github.com/paulflang/cell_cycle_petab
+  commit 362b6667a2096b6c1cab43ddc3a92d4174c5a087 (2024-01-14, "Update to MIT LICENCE")
+
+They are NOT covered by this repository's CC BY 4.0 licence. They are distributed under the
+MIT License of that repository, reproduced in full in lang2024_upstream_LICENCE:
+
+  MIT License
+  Copyright (c) 2024 Paul F Lang, David R Penas, Daniel Weindl, Julio Banga
+
+They accompany
+
+  Lang PF, Penas DR, Banga JR, Weindl D, Novak B (2024). Reusable rule-based cell cycle model
+  explains compartment-resolved dynamics of 16 observables in RPE-1 cells. PLoS Comput Biol
+  20(1):e1011151. doi:10.1371/journal.pcbi.1011151
+
+Only the "lang2024_upstream_" prefix (and, for the results_20220421 files, the flattened
+directory name) was added to each filename. The contents are unchanged.
+
+Provenance (upstream path, sha256)
+----------------------------------
+
+  lang2024_upstream_LICENCE
+      LICENCE
+      d2d58b863fb4b29b94ac30dac13e825911592b031370b494d9d1e2f6a593d4aa
+  lang2024_upstream_cell_cycle_v3.2.0.bngl
+      versions/v3.2.0/cell_cycle_v3.2.0.bngl
+      0f23b3e866aff406a0b0ad7c7a404085b01322d2f4a350a6986a57d2589e04ed
+  lang2024_upstream_cell_cycle_v3.2.0_sbml.xml
+      versions/v3.2.0/cell_cycle_v3.2.0_sbml.xml
+      5ac5ea95131f7b57ddbed04702d54cce331ec13edc93741a1a0eef50045812db
+  lang2024_upstream_cell_cycle_v3.2.0_petab.xml
+      versions/v3.2.0/cell_cycle_v3.2.0_petab.xml
+      f8a15a57f71d334fe187d3905cef7bc2eb5f98a396afc9d2c570318a989da3c7
+  lang2024_upstream_parameters_v3.2.0.tsv
+      versions/v3.2.0/parameters_v3.2.0.tsv
+      a0d2cb24f0a16138e8608e500a4fe5518855943c761607ac31c15368c419bf63
+  lang2024_upstream_experimentalCondition_v3.2.0.tsv
+      versions/v3.2.0/experimentalCondition_v3.2.0.tsv
+      28c13f5038df7c41deca257b7cc54f295ff8470355821f5dff8f7d5da360942d
+  lang2024_upstream_observables_v3.2.0.tsv
+      versions/v3.2.0/observables_v3.2.0.tsv
+      ecd9a4cbd24424eec29c591d7658b474e2a200c73be1ccf033e5c9f3cd4722c1
+  lang2024_upstream_results_20220421_parameters_v3.2.0_optimized.tsv
+      versions/v3.2.0/results_20220421/parameters_v3.2.0_optimized.tsv
+      dc8c0d9547880395a8570e85f930e49c8eb24b354dc73134af5be8b59a9d6987
+  lang2024_upstream_results_20220421_optimisation.tsv
+      versions/v3.2.0/results_20220421/optimisation.tsv
+      371f0abfde46fa770577ee2a6c85d14925e8799df0be341708dc59f6be2802b6
+  lang2024_upstream_results_20220421_v3.2.0_plot.yaml
+      versions/v3.2.0/results_20220421/v3.2.0_plot.yaml
+      e5bf731211fa8cf576e6024713e72a5e9df5c07d1a431cc498fb58c4083c2c35
+
+The same table is held in generator/build_lang2024_fitted.py (PINS). Both the generator and
+verify_lang2024_fitted.ipynb refuse to run if any of these files does not match it.
+
+The nine versions/v3.2.0/ files above are byte-identical at commit
+d562d3d4d19921ff851c06d0854b8b3f05c63d85 (2023-05-04), the commit this collection first cited.
+They are also unchanged at the repository HEAD of 2024-07-16,
+874d13a44f41ab663ccaa2f5a1e031f1e4f0dc53. At d562d3d the repository carried an earlier
+"Academic Use Licence" (University of Oxford, 2022). It was replaced by the MIT License in
+commit 362b666 without any change to these files. The copies here are therefore taken at, and
+licensed under, 362b666.
+
+What the files are
+------------------
+
+  cell_cycle_v3.2.0.bngl         the authors' BNGL model, a manual translation of their SBML
+  cell_cycle_v3.2.0_sbml.xml     the SBML written from it by BioNetGen 2.3.1 (species names are
+                                 BioNetGen species strings)
+  cell_cycle_v3.2.0_petab.xml    the same SBML with PEtab species ids (the PEtab model file)
+  parameters_v3.2.0.tsv          PEtab parameter table, pre-fit nominal values
+  experimentalCondition_*.tsv    PEtab condition table (the single condition, wt)
+  observables_v3.2.0.tsv         PEtab observable table (8 nuclear observables)
+  results_20220421/
+    parameters_v3.2.0_optimized.tsv   the fitted parameter table (saCeSS optimum)
+    v3.2.0_plot.yaml                  the PEtab problem simulated with that table
+    optimisation.tsv                  the authors' AMICI simulation of that problem: 8
+                                      observables x 600 time points, plotted as the model
+                                      curves of the v3.2.0 fit figure

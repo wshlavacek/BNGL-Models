@@ -1,0 +1,639 @@
+# Created by BioNetGen 2.9.3
+begin parameters
+    1 kPhRbD                                                                                                0.001088481  # Constant
+    2 kPhRbE                                                                                                0.026024343  # Constant
+    3 kDpRb                                                                                                 0.0057882  # Constant
+    4 kPhRb                                                                                                 0.023155243  # Constant
+    5 kSyCe1                                                                                                0.000139498  # Constant
+    6 kSyCe2                                                                                                1.045823052  # Constant
+    7 kDeCe                                                                                                 0.000979552  # Constant
+    8 kDiE2fRb                                                                                              7.53501e-05  # Constant
+    9 kAsE2fRb                                                                                              0.597101762  # Constant
+   10 kSyE2f1                                                                                               6.30687e-05  # Constant
+   11 kSyE2f2                                                                                               6.64568184  # Constant
+   12 kDeE2f1                                                                                               3.31498e-05  # Constant
+   13 kDeE2f2                                                                                               0.001508046  # Constant
+   14 kPhE2f                                                                                                0.004546695  # Constant
+   15 kDpE2f2                                                                                               0.076167436  # Constant
+   16 kSyEmi1                                                                                               0.000322045  # Constant
+   17 kSyEmi2                                                                                               15.32670782  # Constant
+   18 kDeEmi1                                                                                               1.64574e-05  # Constant
+   19 kDeEmi2                                                                                               0.001060284  # Constant
+   20 kDeEmi3                                                                                               0.01375476  # Constant
+   21 kPhEmiA                                                                                               3.79063e-07  # Constant
+   22 kPhEmiB                                                                                               0.002768967  # Constant
+   23 kDpEmi                                                                                                4.26272e-08  # Constant
+   24 kSyCa1                                                                                                6.46385e-06  # Constant
+   25 kSyCa2                                                                                                0.139555845  # Constant
+   26 kDeCa1                                                                                                6.93149e-08  # Constant
+   27 kDeCa2                                                                                                0.002290617  # Constant
+   28 kDeCa3                                                                                                0.004191463  # Constant
+   29 kDpCdh                                                                                                0.002529724  # Constant
+   30 kPhCdhA                                                                                               0.003687191  # Constant
+   31 kPhCdhE                                                                                               6.93e-05  # Constant
+   32 kPhCdhB                                                                                               0.002543414  # Constant
+   33 kDiACE                                                                                                0.00178481  # Constant
+   34 kAsACE                                                                                                0.035977865  # Constant
+   35 kDiACdh                                                                                               3.47e-06  # Constant
+   36 kAsACdh                                                                                               0.003859147  # Constant
+   37 kPhCeA                                                                                                6.93001e-05  # Constant
+   38 kPhCeE                                                                                                0.000693001  # Constant
+   39 kPhFoxE                                                                                               6.93e-06  # Constant
+   40 kPhFoxA                                                                                               5.28592e-05  # Constant
+   41 kPhFoxB                                                                                               0.005815083  # Constant
+   42 kDpFox                                                                                                2.04339e-05  # Constant
+   43 kSyCb1                                                                                                6.20973e-06  # Constant
+   44 kSyCb2                                                                                                0.38857712  # Constant
+   45 kDeCb1                                                                                                6.31596e-06  # Constant
+   46 kDeCb2                                                                                                0.000155053  # Constant
+   47 kDeCb3                                                                                                0.001019924  # Constant
+   48 kPhEnsa                                                                                               0.000169614  # Constant
+   49 kDpEnsa                                                                                               0.001595053  # Constant
+   50 kPhGw                                                                                                 0.003018672  # Constant
+   51 kDpGw1                                                                                                0.003052087  # Constant
+   52 kDpGw2                                                                                                0.012744545  # Constant
+   53 kWee1                                                                                                 6.94414e-07  # Constant
+   54 kWee2                                                                                                 0.001065984  # Constant
+   55 kPhWeeA                                                                                               0.000834151  # Constant
+   56 kPhWeeB                                                                                               0.071921364  # Constant
+   57 kDpWee                                                                                                0.068578828  # Constant
+   58 kCdc25_1                                                                                              2.71514e-05  # Constant
+   59 kCdc25_2                                                                                              0.021452792  # Constant
+   60 kDpCdc25                                                                                              0.024031313  # Constant
+   61 kDipEB55                                                                                              4.71e-07  # Constant
+   62 kAspEB55                                                                                              3.950103658  # Constant
+   63 kSyCdc_1                                                                                              2.11115e-06  # Constant
+   64 kSyCdc_2                                                                                              5.257399897  # Constant
+   65 kDeCdc_1                                                                                              2.77e-07  # Constant
+   66 kDeCdc_2                                                                                              2.77027e-06  # Constant
+   67 kDipACdc                                                                                              1.08437e-05  # Constant
+   68 kAspACdc                                                                                              0.003623498  # Constant
+   69 kPhApcA                                                                                               0.000693001  # Constant
+   70 kDpApc_1                                                                                              0.0  # Constant
+   71 kDpApc_2                                                                                              2.586986386  # Constant
+   72 kSyFox1                                                                                               7.09943e-07  # Constant
+   73 kSyFox2                                                                                               0.052755808  # Constant
+   74 kDeFox1                                                                                               8.71115e-07  # Constant
+   75 kDeFox2                                                                                               0.030644773  # Constant
+   76 kAsEPx                                                                                                0.039441855  # Constant
+   77 kDiEPx                                                                                                0.010007457  # Constant
+   78 kAsFPcb                                                                                               0.43202553  # Constant
+   79 kDiFPcb                                                                                               0.028463248  # Constant
+   80 kAsFPcdc                                                                                              0.034996662  # Constant
+   81 kDiFPcdc                                                                                              0.191486631  # Constant
+   82 kPhC25B                                                                                               0.018451055  # Constant
+   83 kPhCAEE                                                                                               0.00454289  # Constant
+   84 kPhCAEA                                                                                               0.020747153  # Constant
+   85 kPhCAEB                                                                                               0.082332189  # Constant
+   86 kDpE2f1                                                                                               0.0  # Constant
+   87 kPhC25A                                                                                               0.0  # Constant
+   88 kSySkp2                                                                                               0.000485827  # Constant
+   89 kDeSkp2_1                                                                                             0.000340855  # Constant
+   90 kDeSkp2_2                                                                                             0.029577557  # Constant
+   91 kAsTP53PCDKN1A                                                                                        0.486795757  # Constant
+   92 kDiTP53PCDKN1A                                                                                        0.095030071  # Constant
+   93 kSyCDKN1A_1                                                                                           7.6538e-05  # Constant
+   94 kSyCDKN1A_2                                                                                           2.79194512  # Constant
+   95 kDeCDKN1A_1                                                                                           0.000413049  # Constant
+   96 kDeCDKN1A_2                                                                                           0.00025  # Constant
+   97 kAsCdkn1aC                                                                                            0.062723053  # Constant
+   98 kDiCdkn1aC                                                                                            0.000380578  # Constant
+   99 kPhCDKN1AByCe                                                                                         5.02071e-05  # Constant
+  100 kPhCDKN1AByCa                                                                                         0.000115077  # Constant
+  101 kPhCDKN1AByCb                                                                                         0.000403404  # Constant
+  102 kDpCDKN1A                                                                                             0.019999999  # Constant
+  103 kAsFOXOPCDKN1B                                                                                        0.56824615  # Constant
+  104 kDiFOXOPCDKN1B                                                                                        0.0015  # Constant
+  105 kSyCDKN1B_1                                                                                           2.27379e-05  # Constant
+  106 kSyCDKN1B_2                                                                                           0.203819947  # Constant
+  107 kDeCDKN1B_1                                                                                           0.000251363  # Constant
+  108 kDeCDKN1B_2                                                                                           0.001056432  # Constant
+  109 kAsCdkn1bC                                                                                            0.004161339  # Constant
+  110 kDiCdkn1bC                                                                                            6.52055e-05  # Constant
+  111 kPhCDKN1BByCe                                                                                         0.051862418  # Constant
+  112 kPhCDKN1BByCa                                                                                         0.0005  # Constant
+  113 kPhCDKN1BByCb                                                                                         5.04534e-06  # Constant
+  114 kDpCDKN1B                                                                                             0.014756773  # Constant
+  115 oCCNA                                                                                                 0.30562705  # Constant
+  116 oCCNB                                                                                                 0.534931024  # Constant
+  117 oCCNE                                                                                                 0.622607004  # Constant
+  118 oE2F                                                                                                  0.710586766  # Constant
+  119 oRB1_pSer807Ser811                                                                                    0.066634062  # Constant
+  120 oSKP2                                                                                                 0.325469221  # Constant
+  121 oCDKN1A                                                                                               0.569668517  # Constant
+  122 oCDKN1B                                                                                               0.532343119  # Constant
+  123 sCCNA                                                                                                 3.004923644  # Constant
+  124 sCCNB                                                                                                 1.567629917  # Constant
+  125 sCCNE                                                                                                 2.113295668  # Constant
+  126 sE2F                                                                                                  0.106904309  # Constant
+  127 sRB1_pSer807Ser811                                                                                    0.354030425  # Constant
+  128 sSKP2                                                                                                 0.941844285  # Constant
+  129 sCDKN1A                                                                                               3.067916  # Constant
+  130 sCDKN1B                                                                                               4.645943184  # Constant
+  131 noiseParameter1                                                                                       0.0  # Constant
+  132 noiseParameter2                                                                                       1.0  # Constant
+  133 ic_wt_cell__CCND                                                                                      3.857236589  # Constant
+  134 ic_wt_cell__CCNE_CDKN1A_B_                                                                            0.366015703  # Constant
+  135 ic_wt_cell__E2F_DBD_RB1_Ser332u_                                                                      0.099199998  # Constant
+  136 ic_wt_cell__E2F_DBD_RB1_Ser332p_                                                                      0.034799999  # Constant
+  137 ic_wt_cell__CCNA_CDKN1A_B_                                                                            0.055205093  # Constant
+  138 ic_wt_cell__CCNB_CDK1_Thr14_Tyr15u_CDKN1A_                                                            0.236008538  # Constant
+  139 ic_wt_cell__E2F_DBD_RB1_1_Ser332u__RB1_E2F_1_Ser807_Ser811u_                                          0.208999997  # Constant
+  140 ic_wt_cell__E2F_DBD_RB1_1_Ser332p__RB1_E2F_1_Ser807_Ser811u_                                          0.046737014  # Constant
+  141 ic_wt_cell__RB1_E2F_Ser807_Ser811u_                                                                   0.729492942  # Constant
+  142 ic_wt_cell__RB1_E2F_Ser807_Ser811p_                                                                   3.096243575  # Constant
+  143 ic_wt_cell__PPP2R2B_ENSA_ARPP19_                                                                      0.001150224  # Constant
+  144 ic_wt_cell__APC_FBXO5_FZR1_CDC20_Ser355u_                                                             36.19062603  # Constant
+  145 ic_wt_cell__CDC20_APC_                                                                                0.021600039  # Constant
+  146 ic_wt_cell__APC_FBXO5_FZR1_CDC20_1_Ser355p__CDC20_APC_1_                                              0.132083079  # Constant
+  147 ic_wt_cell__APC_FBXO5_FZR1_CDC20_Ser355p_                                                             4.142409633  # Constant
+  148 ic_wt_cell__APC_FBXO5_FZR1_CDC20_1_Ser355u__FZR1_APC_1_FBXO5_nTermu_                                  0.239893982  # Constant
+  149 ic_wt_cell__FZR1_APC_FBXO5_nTermu_                                                                    0.0207  # Constant
+  150 ic_wt_cell__FZR1_APC_FBXO5_nTermp_                                                                    0.091360525  # Constant
+  151 ic_wt_cell__APC_FBXO5_1_FZR1_CDC20_2_Ser355u__FBXO5_APC_1_FZR1_3_Ser182u__FZR1_APC_2_FBXO5_3_nTermu_  0.015962941  # Constant
+  152 ic_wt_cell__FBXO5_APC_FZR1_Ser182u_                                                                   0.492130281  # Constant
+  153 ic_wt_cell__APC_FBXO5_1_FZR1_CDC20_2_Ser355p__FBXO5_APC_1_FZR1_3_Ser182u__FZR1_APC_2_FBXO5_3_nTermu_  0.103999998  # Constant
+  154 ic_wt_cell__APC_FBXO5_FZR1_CDC20_1_Ser355p__FZR1_APC_1_FBXO5_nTermu_                                  0.019437575  # Constant
+  155 ic_wt_cell__FBXO5_APC_FZR1_Ser182p_                                                                   0.026115125  # Constant
+  156 ic_wt_cell__FOXM1_DBD_Thr600u_                                                                        0.003940009  # Constant
+  157 ic_wt_cell__FOXM1_DBD_Thr600p_                                                                        0.062900115  # Constant
+  158 ic_wt_cell__WEE1_Ser123u_                                                                             0.263482622  # Constant
+  159 ic_wt_cell__CCNB_CDK1_Thr14_Tyr15p_CDKN1A_                                                            0.002167134  # Constant
+  160 ic_wt_cell__WEE1_Ser123p_                                                                             6.381711542  # Constant
+  161 ic_wt_cell__CDC25_pSitesp_                                                                            0.186941482  # Constant
+  162 ic_wt_cell__CDC25_pSitesu_                                                                            0.007048923  # Constant
+  163 ic_wt_cell__MASTL_Thr198u_                                                                            0.060676609  # Constant
+  164 ic_wt_cell__MASTL_Thr198p_                                                                            3.084642742  # Constant
+  165 ic_wt_cell__ENSA_ARPP19_PPP2R2B_Ser62_Ser67u_                                                         2.862084705  # Constant
+  166 ic_wt_cell__ENSA_ARPP19_PPP2R2B_Ser62_Ser67p_                                                         0.968695703  # Constant
+  167 ic_wt_cell__ENSA_ARPP19_PPP2R2B_1_Ser62_Ser67p__PPP2R2B_ENSA_ARPP19_1_                                0.265177693  # Constant
+  168 ic_wt_cell__CDKN1A_CCNE_A_B_Ser130u_                                                                  0.173668515  # Constant
+  169 ic_wt_cell__CDKN1B_CCNE_A_Thr187u_                                                                    0.021533874  # Constant
+  170 ic_wt_cell__CCNA_CDKN1A_B_1__CDKN1A_CCNE_A_B_1_Ser130u_                                               0.045916081  # Constant
+  171 ic_wt_cell__CCNE_CDKN1A_B_1__CDKN1A_CCNE_A_B_1_Ser130u_                                               0.00049177  # Constant
+  172 ic_wt_cell__CCNB_CDK1_Thr14_Tyr15u_CDKN1A_1__CDKN1A_CCNE_A_B_1_Ser130u_                               0.069994412  # Constant
+  173 ic_wt_cell__CCNB_CDK1_Thr14_Tyr15p_CDKN1A_1__CDKN1A_CCNE_A_B_1_Ser130u_                               0.003069893  # Constant
+  174 ic_wt_cell__CDKN1A_CCNE_A_B_Ser130p_                                                                  0.099828935  # Constant
+  175 ic_wt_cell__CCNA_CDKN1A_B_1__CDKN1B_CCNE_A_1_Thr187u_                                                 0.028384822  # Constant
+  176 ic_wt_cell__CCNE_CDKN1A_B_1__CDKN1B_CCNE_A_1_Thr187u_                                                 0.003409842  # Constant
+  177 ic_wt_cell__CDKN1B_CCNE_A_Thr187p_                                                                    0.090063602  # Constant
+  178 ic_wt_cell__CCNA_CDKN1A_B_1__CDKN1B_CCNE_A_1_Thr187p_                                                 0.033142717  # Constant
+  179 ic_wt_cell__CCNE_CDKN1A_B_1__CDKN1B_CCNE_A_1_Thr187p_                                                 0.005444253  # Constant
+  180 ic_wt_cell__CCNB_promoter_FOXM1_1__FOXM1_DBD_1_Thr600p_                                               1.9e-07  # Constant
+  181 ic_wt_cell__CCNB_promoter_FOXM1_                                                                      0.0001  # Constant
+  182 ic_wt_cell__CDC20_promoter_FOXM1_                                                                     0.0001  # Constant
+  183 ic_wt_cell__CDC20_promoter_FOXM1_1__FOXM1_DBD_1_Thr600p_                                              0.0  # Constant
+  184 ic_wt_cell__CCNE_promoter_E2F_                                                                        0.0001  # Constant
+  185 ic_wt_cell__CCNA_promoter_E2F_                                                                        0.0001  # Constant
+  186 ic_wt_cell__E2F_promoter_E2F_                                                                         0.0001  # Constant
+  187 ic_wt_cell__FBXO5_promoter_E2F_                                                                       0.0001  # Constant
+  188 ic_wt_cell__FOXM1_promoter_E2F_                                                                       0.0001  # Constant
+  189 ic_wt_cell__CCNE_promoter_E2F_1__E2F_DBD_1_RB1_Ser332u_                                               0.0  # Constant
+  190 ic_wt_cell__CCNA_promoter_E2F_1__E2F_DBD_1_RB1_Ser332u_                                               0.0  # Constant
+  191 ic_wt_cell__E2F_DBD_1_RB1_Ser332u__E2F_promoter_E2F_1_                                                0.0  # Constant
+  192 ic_wt_cell__E2F_DBD_1_RB1_Ser332u__FBXO5_promoter_E2F_1_                                              0.0  # Constant
+  193 ic_wt_cell__E2F_DBD_1_RB1_Ser332u__FOXM1_promoter_E2F_1_                                              0.0  # Constant
+  194 ic_wt_cell__CCNE_promoter_E2F_1__E2F_DBD_1_RB1_Ser332p_                                               0.0  # Constant
+  195 ic_wt_cell__CCNA_promoter_E2F_1__E2F_DBD_1_RB1_Ser332p_                                               0.0  # Constant
+  196 ic_wt_cell__E2F_DBD_1_RB1_Ser332p__E2F_promoter_E2F_1_                                                0.0  # Constant
+  197 ic_wt_cell__E2F_DBD_1_RB1_Ser332p__FBXO5_promoter_E2F_1_                                              0.0  # Constant
+  198 ic_wt_cell__E2F_DBD_1_RB1_Ser332p__FOXM1_promoter_E2F_1_                                              0.0  # Constant
+  199 ic_wt_cell__SKP2                                                                                      1.0  # Constant
+  200 ic_wt_cell__TP53_DBD_Ser15p_                                                                          0.0  # Constant
+  201 ic_wt_cell__CDKN1A_promoter_TP53_                                                                     0.0001  # Constant
+  202 ic_wt_cell__FOXO_DBD_                                                                                 1.0  # Constant
+  203 ic_wt_cell__CDKN1B_promoter_FOXO_                                                                     0.0001  # Constant
+  204 ic_wt_cell__CDKN1A_promoter_TP53_1__TP53_DBD_1_Ser15p_                                                0.0  # Constant
+  205 ic_wt_cell__CDKN1B_promoter_FOXO_1__FOXO_DBD_1_                                                       0.0  # Constant
+  206 _rateLaw1                                                                                             0  # Constant
+end parameters
+begin functions
+    1 obs_cycA__nuc_median() oCCNA+(sCCNA*tCCNA)
+    2 obs_cycB1__nuc_median() oCCNB+(sCCNB*tCCNB)
+    3 obs_cycE__nuc_median() oCCNE+(sCCNE*tCCNE)
+    4 obs_E2F1__nuc_median() oE2F+(sE2F*(tE2F-E2F_pSer332_prom))
+    5 obs_pRB__nuc_median() oRB1_pSer807Ser811+(sRB1_pSer807Ser811*pRB)
+    6 obs_Skp2__nuc_median() oSKP2+(sSKP2*tSKP2)
+    7 obs_p21__nuc_median() oCDKN1A+(sCDKN1A*tCDKN1A)
+    8 obs_p27__nuc_median() oCDKN1B+(sCDKN1B*tCDKN1B)
+end functions
+begin species
+    1 @cell::CCND() ic_wt_cell__CCND
+    2 @cell::CCNE(CDKN1A_B) ic_wt_cell__CCNE_CDKN1A_B_
+    3 @cell::E2F(DBD,RB1,Ser332~u) ic_wt_cell__E2F_DBD_RB1_Ser332u_
+    4 @cell::E2F(DBD,RB1,Ser332~p) ic_wt_cell__E2F_DBD_RB1_Ser332p_
+    5 @cell::CCNA(CDKN1A_B) ic_wt_cell__CCNA_CDKN1A_B_
+    6 @cell::CCNB(CDK1_Thr14_Tyr15~u,CDKN1A) ic_wt_cell__CCNB_CDK1_Thr14_Tyr15u_CDKN1A_
+    7 @cell::E2F(DBD,RB1!1,Ser332~u).RB1(E2F!1,Ser807_Ser811~u) ic_wt_cell__E2F_DBD_RB1_1_Ser332u__RB1_E2F_1_Ser807_Ser811u_
+    8 @cell::E2F(DBD,RB1!1,Ser332~p).RB1(E2F!1,Ser807_Ser811~u) ic_wt_cell__E2F_DBD_RB1_1_Ser332p__RB1_E2F_1_Ser807_Ser811u_
+    9 @cell::RB1(E2F,Ser807_Ser811~u) ic_wt_cell__RB1_E2F_Ser807_Ser811u_
+   10 @cell::RB1(E2F,Ser807_Ser811~p) ic_wt_cell__RB1_E2F_Ser807_Ser811p_
+   11 @cell::PPP2R2B(ENSA_ARPP19) ic_wt_cell__PPP2R2B_ENSA_ARPP19_
+   12 @cell::APC(FBXO5,FZR1_CDC20,Ser355~u) ic_wt_cell__APC_FBXO5_FZR1_CDC20_Ser355u_
+   13 @cell::CDC20(APC) ic_wt_cell__CDC20_APC_
+   14 @cell::APC(FBXO5,FZR1_CDC20!1,Ser355~p).CDC20(APC!1) ic_wt_cell__APC_FBXO5_FZR1_CDC20_1_Ser355p__CDC20_APC_1_
+   15 @cell::APC(FBXO5,FZR1_CDC20,Ser355~p) ic_wt_cell__APC_FBXO5_FZR1_CDC20_Ser355p_
+   16 @cell::APC(FBXO5,FZR1_CDC20!1,Ser355~u).FZR1(APC!1,FBXO5,nTerm~u) ic_wt_cell__APC_FBXO5_FZR1_CDC20_1_Ser355u__FZR1_APC_1_FBXO5_nTermu_
+   17 @cell::FZR1(APC,FBXO5,nTerm~u) ic_wt_cell__FZR1_APC_FBXO5_nTermu_
+   18 @cell::FZR1(APC,FBXO5,nTerm~p) ic_wt_cell__FZR1_APC_FBXO5_nTermp_
+   19 @cell::APC(FBXO5!1,FZR1_CDC20!2,Ser355~u).FBXO5(APC!1,FZR1!3,Ser182~u).FZR1(APC!2,FBXO5!3,nTerm~u) ic_wt_cell__APC_FBXO5_1_FZR1_CDC20_2_Ser355u__FBXO5_APC_1_FZR1_3_Ser182u__FZR1_APC_2_FBXO5_3_nTermu_
+   20 @cell::FBXO5(APC,FZR1,Ser182~u) ic_wt_cell__FBXO5_APC_FZR1_Ser182u_
+   21 @cell::APC(FBXO5!1,FZR1_CDC20!2,Ser355~p).FBXO5(APC!1,FZR1!3,Ser182~u).FZR1(APC!2,FBXO5!3,nTerm~u) ic_wt_cell__APC_FBXO5_1_FZR1_CDC20_2_Ser355p__FBXO5_APC_1_FZR1_3_Ser182u__FZR1_APC_2_FBXO5_3_nTermu_
+   22 @cell::APC(FBXO5,FZR1_CDC20!1,Ser355~p).FZR1(APC!1,FBXO5,nTerm~u) ic_wt_cell__APC_FBXO5_FZR1_CDC20_1_Ser355p__FZR1_APC_1_FBXO5_nTermu_
+   23 @cell::FBXO5(APC,FZR1,Ser182~p) ic_wt_cell__FBXO5_APC_FZR1_Ser182p_
+   24 @cell::FOXM1(DBD,Thr600~u) ic_wt_cell__FOXM1_DBD_Thr600u_
+   25 @cell::FOXM1(DBD,Thr600~p) ic_wt_cell__FOXM1_DBD_Thr600p_
+   26 @cell::CCNB_promoter(FOXM1!1).FOXM1(DBD!1,Thr600~p) ic_wt_cell__CCNB_promoter_FOXM1_1__FOXM1_DBD_1_Thr600p_
+   27 @cell::CCNB_promoter(FOXM1) ic_wt_cell__CCNB_promoter_FOXM1_
+   28 @cell::CDC20_promoter(FOXM1) ic_wt_cell__CDC20_promoter_FOXM1_
+   29 @cell::CDC20_promoter(FOXM1!1).FOXM1(DBD!1,Thr600~p) ic_wt_cell__CDC20_promoter_FOXM1_1__FOXM1_DBD_1_Thr600p_
+   30 @cell::WEE1(Ser123~u) ic_wt_cell__WEE1_Ser123u_
+   31 @cell::CCNB(CDK1_Thr14_Tyr15~p,CDKN1A) ic_wt_cell__CCNB_CDK1_Thr14_Tyr15p_CDKN1A_
+   32 @cell::WEE1(Ser123~p) ic_wt_cell__WEE1_Ser123p_
+   33 @cell::CDC25(pSites~p) ic_wt_cell__CDC25_pSitesp_
+   34 @cell::CDC25(pSites~u) ic_wt_cell__CDC25_pSitesu_
+   35 @cell::MASTL(Thr198~u) ic_wt_cell__MASTL_Thr198u_
+   36 @cell::MASTL(Thr198~p) ic_wt_cell__MASTL_Thr198p_
+   37 @cell::ENSA_ARPP19(PPP2R2B,Ser62_Ser67~u) ic_wt_cell__ENSA_ARPP19_PPP2R2B_Ser62_Ser67u_
+   38 @cell::ENSA_ARPP19(PPP2R2B,Ser62_Ser67~p) ic_wt_cell__ENSA_ARPP19_PPP2R2B_Ser62_Ser67p_
+   39 @cell::ENSA_ARPP19(PPP2R2B!1,Ser62_Ser67~p).PPP2R2B(ENSA_ARPP19!1) ic_wt_cell__ENSA_ARPP19_PPP2R2B_1_Ser62_Ser67p__PPP2R2B_ENSA_ARPP19_1_
+   40 @cell::CCNE_promoter(E2F) ic_wt_cell__CCNE_promoter_E2F_
+   41 @cell::CCNA_promoter(E2F) ic_wt_cell__CCNA_promoter_E2F_
+   42 @cell::E2F_promoter(E2F) ic_wt_cell__E2F_promoter_E2F_
+   43 @cell::FBXO5_promoter(E2F) ic_wt_cell__FBXO5_promoter_E2F_
+   44 @cell::FOXM1_promoter(E2F) ic_wt_cell__FOXM1_promoter_E2F_
+   45 @cell::CCNE_promoter(E2F!1).E2F(DBD!1,RB1,Ser332~u) ic_wt_cell__CCNE_promoter_E2F_1__E2F_DBD_1_RB1_Ser332u_
+   46 @cell::CCNA_promoter(E2F!1).E2F(DBD!1,RB1,Ser332~u) ic_wt_cell__CCNA_promoter_E2F_1__E2F_DBD_1_RB1_Ser332u_
+   47 @cell::E2F(DBD!1,RB1,Ser332~u).E2F_promoter(E2F!1) ic_wt_cell__E2F_DBD_1_RB1_Ser332u__E2F_promoter_E2F_1_
+   48 @cell::E2F(DBD!1,RB1,Ser332~u).FBXO5_promoter(E2F!1) ic_wt_cell__E2F_DBD_1_RB1_Ser332u__FBXO5_promoter_E2F_1_
+   49 @cell::E2F(DBD!1,RB1,Ser332~u).FOXM1_promoter(E2F!1) ic_wt_cell__E2F_DBD_1_RB1_Ser332u__FOXM1_promoter_E2F_1_
+   50 @cell::CCNE_promoter(E2F!1).E2F(DBD!1,RB1,Ser332~p) ic_wt_cell__CCNE_promoter_E2F_1__E2F_DBD_1_RB1_Ser332p_
+   51 @cell::CCNA_promoter(E2F!1).E2F(DBD!1,RB1,Ser332~p) ic_wt_cell__CCNA_promoter_E2F_1__E2F_DBD_1_RB1_Ser332p_
+   52 @cell::E2F(DBD!1,RB1,Ser332~p).E2F_promoter(E2F!1) ic_wt_cell__E2F_DBD_1_RB1_Ser332p__E2F_promoter_E2F_1_
+   53 @cell::E2F(DBD!1,RB1,Ser332~p).FBXO5_promoter(E2F!1) ic_wt_cell__E2F_DBD_1_RB1_Ser332p__FBXO5_promoter_E2F_1_
+   54 @cell::E2F(DBD!1,RB1,Ser332~p).FOXM1_promoter(E2F!1) ic_wt_cell__E2F_DBD_1_RB1_Ser332p__FOXM1_promoter_E2F_1_
+   55 @cell::SKP2() ic_wt_cell__SKP2
+   56 @cell::TP53(DBD,Ser15~p) ic_wt_cell__TP53_DBD_Ser15p_
+   57 @cell::CDKN1A_promoter(TP53) ic_wt_cell__CDKN1A_promoter_TP53_
+   58 @cell::FOXO(DBD) ic_wt_cell__FOXO_DBD_
+   59 @cell::CDKN1B_promoter(FOXO) ic_wt_cell__CDKN1B_promoter_FOXO_
+   60 @cell::CDKN1A_promoter(TP53!1).TP53(DBD!1,Ser15~p) ic_wt_cell__CDKN1A_promoter_TP53_1__TP53_DBD_1_Ser15p_
+   61 @cell::CDKN1A(CCNE_A_B,Ser130~u) ic_wt_cell__CDKN1A_CCNE_A_B_Ser130u_
+   62 @cell::CDKN1B_promoter(FOXO!1).FOXO(DBD!1) ic_wt_cell__CDKN1B_promoter_FOXO_1__FOXO_DBD_1_
+   63 @cell::CDKN1B(CCNE_A,Thr187~u) ic_wt_cell__CDKN1B_CCNE_A_Thr187u_
+   64 @cell::CCNA(CDKN1A_B!1).CDKN1A(CCNE_A_B!1,Ser130~u) ic_wt_cell__CCNA_CDKN1A_B_1__CDKN1A_CCNE_A_B_1_Ser130u_
+   65 @cell::CCNE(CDKN1A_B!1).CDKN1A(CCNE_A_B!1,Ser130~u) ic_wt_cell__CCNE_CDKN1A_B_1__CDKN1A_CCNE_A_B_1_Ser130u_
+   66 @cell::CCNB(CDK1_Thr14_Tyr15~u,CDKN1A!1).CDKN1A(CCNE_A_B!1,Ser130~u) ic_wt_cell__CCNB_CDK1_Thr14_Tyr15u_CDKN1A_1__CDKN1A_CCNE_A_B_1_Ser130u_
+   67 @cell::CCNB(CDK1_Thr14_Tyr15~p,CDKN1A!1).CDKN1A(CCNE_A_B!1,Ser130~u) ic_wt_cell__CCNB_CDK1_Thr14_Tyr15p_CDKN1A_1__CDKN1A_CCNE_A_B_1_Ser130u_
+   68 @cell::CDKN1A(CCNE_A_B,Ser130~p) ic_wt_cell__CDKN1A_CCNE_A_B_Ser130p_
+   69 @cell::CCNA(CDKN1A_B!1).CDKN1B(CCNE_A!1,Thr187~u) ic_wt_cell__CCNA_CDKN1A_B_1__CDKN1B_CCNE_A_1_Thr187u_
+   70 @cell::CCNE(CDKN1A_B!1).CDKN1B(CCNE_A!1,Thr187~u) ic_wt_cell__CCNE_CDKN1A_B_1__CDKN1B_CCNE_A_1_Thr187u_
+   71 @cell::CDKN1B(CCNE_A,Thr187~p) ic_wt_cell__CDKN1B_CCNE_A_Thr187p_
+   72 @cell::CCNA(CDKN1A_B!1).CDKN1B(CCNE_A!1,Thr187~p) ic_wt_cell__CCNA_CDKN1A_B_1__CDKN1B_CCNE_A_1_Thr187p_
+   73 @cell::CCNE(CDKN1A_B!1).CDKN1B(CCNE_A!1,Thr187~p) ic_wt_cell__CCNE_CDKN1A_B_1__CDKN1B_CCNE_A_1_Thr187p_
+end species
+begin reactions
+    1 0 3 1*kSyE2f1 #SyE2f1 unit_conversion=1
+    2 25,27 26 1*kAsFPcb #AspFoxPcb unit_conversion=1/1
+    3 26 25,27 kDiFPcb #_reverse_AspFoxPcb
+    4 47 3,47 kSyE2f2 #SyE2f2
+    5 52 3,52 kSyE2f2 #SyE2f2
+    6 3 0 kDeE2f1 #DeE2f1
+    7 4 0 kDeE2f1 #DeE2f1
+    8 7 9 kDeE2f1 #DeE2f1
+    9 8 9 kDeE2f1 #DeE2f1
+   10 45 40 kDeE2f1 #DeE2f1
+   11 46 41 kDeE2f1 #DeE2f1
+   12 47 42 kDeE2f1 #DeE2f1
+   13 48 43 kDeE2f1 #DeE2f1
+   14 49 44 kDeE2f1 #DeE2f1
+   15 50 40 kDeE2f1 #DeE2f1
+   16 51 41 kDeE2f1 #DeE2f1
+   17 52 42 kDeE2f1 #DeE2f1
+   18 53 43 kDeE2f1 #DeE2f1
+   19 54 44 kDeE2f1 #DeE2f1
+   20 1,7 1,3,10 1*kPhRbD #PhRbE2fByCd unit_conversion=1/1
+   21 1,8 1,4,10 1*kPhRbD #PhRbE2fByCd unit_conversion=1/1
+   22 2,7 2,3,10 1*kPhRbE #PhRbE2fByCe unit_conversion=1/1
+   23 2,8 2,4,10 1*kPhRbE #PhRbE2fByCe unit_conversion=1/1
+   24 5,7 3,5,10 1*kPhRb #PhRbE2fByCa unit_conversion=1/1
+   25 5,8 4,5,10 1*kPhRb #PhRbE2fByCa unit_conversion=1/1
+   26 6,7 3,6,10 1*kPhRb #PhRbE2fByCb unit_conversion=1/1
+   27 6,8 4,6,10 1*kPhRb #PhRbE2fByCb unit_conversion=1/1
+   28 3,5 4,5 1*kPhE2f #PhE2fByCa unit_conversion=1/1
+   29 5,7 5,8 1*kPhE2f #PhE2fByCa unit_conversion=1/1
+   30 5,45 5,50 1*kPhE2f #PhE2fByCa unit_conversion=1/1
+   31 5,46 5,51 1*kPhE2f #PhE2fByCa unit_conversion=1/1
+   32 5,47 5,52 1*kPhE2f #PhE2fByCa unit_conversion=1/1
+   33 5,48 5,53 1*kPhE2f #PhE2fByCa unit_conversion=1/1
+   34 5,49 5,54 1*kPhE2f #PhE2fByCa unit_conversion=1/1
+   35 3,6 4,6 1*kPhE2f #PhE2fByCb unit_conversion=1/1
+   36 6,7 6,8 1*kPhE2f #PhE2fByCb unit_conversion=1/1
+   37 6,45 6,50 1*kPhE2f #PhE2fByCb unit_conversion=1/1
+   38 6,46 6,51 1*kPhE2f #PhE2fByCb unit_conversion=1/1
+   39 6,47 6,52 1*kPhE2f #PhE2fByCb unit_conversion=1/1
+   40 6,48 6,53 1*kPhE2f #PhE2fByCb unit_conversion=1/1
+   41 6,49 6,54 1*kPhE2f #PhE2fByCb unit_conversion=1/1
+   42 4 3 kDpE2f1 #DppE2f
+   43 8 7 kDpE2f1 #DppE2f
+   44 50 45 kDpE2f1 #DppE2f
+   45 51 46 kDpE2f1 #DppE2f
+   46 52 47 kDpE2f1 #DppE2f
+   47 53 48 kDpE2f1 #DppE2f
+   48 54 49 kDpE2f1 #DppE2f
+   49 4,11 3,11 1*kDpE2f2 #DppE2fByB55 unit_conversion=1/1
+   50 8,11 7,11 1*kDpE2f2 #DppE2fByB55 unit_conversion=1/1
+   51 11,50 11,45 1*kDpE2f2 #DppE2fByB55 unit_conversion=1/1
+   52 11,51 11,46 1*kDpE2f2 #DppE2fByB55 unit_conversion=1/1
+   53 11,52 11,47 1*kDpE2f2 #DppE2fByB55 unit_conversion=1/1
+   54 11,53 11,48 1*kDpE2f2 #DppE2fByB55 unit_conversion=1/1
+   55 11,54 11,49 1*kDpE2f2 #DppE2fByB55 unit_conversion=1/1
+   56 4,55 55 1*kDeE2f2 #DeE2f2 unit_conversion=1/1
+   57 8,55 9,55 1*kDeE2f2 #DeE2f2 unit_conversion=1/1
+   58 50,55 40,55 1*kDeE2f2 #DeE2f2 unit_conversion=1/1
+   59 51,55 41,55 1*kDeE2f2 #DeE2f2 unit_conversion=1/1
+   60 52,55 42,55 1*kDeE2f2 #DeE2f2 unit_conversion=1/1
+   61 53,55 43,55 1*kDeE2f2 #DeE2f2 unit_conversion=1/1
+   62 54,55 44,55 1*kDeE2f2 #DeE2f2 unit_conversion=1/1
+   63 1,9 1,10 1*kPhRbD #PhRbByCd unit_conversion=1/1
+   64 2,9 2,10 1*kPhRbE #PhRbByCe unit_conversion=1/1
+   65 5,9 5,10 1*kPhRb #PhRbByCa unit_conversion=1/1
+   66 6,9 6,10 1*kPhRb #PhRbByCb unit_conversion=1/1
+   67 0 2 1*kSyCe1 #SyCe1 unit_conversion=1
+   68 46 5,46 kSyCa2 #SyCa2
+   69 51 5,51 kSyCa2 #SyCa2
+   70 2 0 kDeCe #DeCe1
+   71 65 61 kDeCe #DeCe1
+   72 70 63 kDeCe #DeCe1
+   73 73 71 kDeCe #DeCe1
+   74 2,2 2 1*kPhCeE #DeCe2 unit_conversion=1/1
+   75 2,65 2,61 1*kPhCeE #DeCe2 unit_conversion=1/1
+   76 2,70 2,63 1*kPhCeE #DeCe2 unit_conversion=1/1
+   77 2,73 2,71 1*kPhCeE #DeCe2 unit_conversion=1/1
+   78 10 9 kDpRb #DpRb
+   79 14 12,13 kDpApc_1 #DppApcCdc20_1
+   80 11,14 11,12,13 1*kDpApc_2 #DppApcCdc20 unit_conversion=1/1
+   81 5,12 5,15 1*kPhApcA #PhApcByCa unit_conversion=1/1
+   82 5,16 5,22 1*kPhApcA #PhApcByCa unit_conversion=1/1
+   83 5,19 5,21 1*kPhApcA #PhApcByCa unit_conversion=1/1
+   84 6,12 6,15 1*kPhApcA #PhApcByCb unit_conversion=1/1
+   85 6,16 6,22 1*kPhApcA #PhApcByCb unit_conversion=1/1
+   86 6,19 6,21 1*kPhApcA #PhApcByCb unit_conversion=1/1
+   87 15 12 kDpApc_1 #DppApcByB55_1
+   88 21 19 kDpApc_1 #DppApcByB55_1
+   89 22 16 kDpApc_1 #DppApcByB55_1
+   90 11,15 11,12 1*kDpApc_2 #DppApcByB55_2 unit_conversion=1/1
+   91 11,21 11,19 1*kDpApc_2 #DppApcByB55_2 unit_conversion=1/1
+   92 11,22 11,16 1*kDpApc_2 #DppApcByB55_2 unit_conversion=1/1
+   93 5,16 5,12,18 1*kPhCdhA #PhCdhApcByCa unit_conversion=1/1
+   94 5,22 5,15,18 1*kPhCdhA #PhCdhApcByCa unit_conversion=1/1
+   95 2,19 2,12,18,20 1*kPhCAEE #PhCAEByCe unit_conversion=1/1
+   96 2,21 2,15,18,20 1*kPhCAEE #PhCAEByCe unit_conversion=1/1
+   97 5,19 5,12,18,20 1*kPhCAEA #PhCAEByCa unit_conversion=1/1
+   98 5,21 5,15,18,20 1*kPhCAEA #PhCAEByCa unit_conversion=1/1
+   99 6,19 6,12,18,20 1*kPhCAEB #PhCAEByCb unit_conversion=1/1
+  100 6,21 6,15,18,20 1*kPhCAEB #PhCAEByCb unit_conversion=1/1
+  101 2,16 2,12,18 1*kPhCdhE #PhCdhApcByCe unit_conversion=1/1
+  102 2,22 2,15,18 1*kPhCdhE #PhCdhApcByCe unit_conversion=1/1
+  103 19 16 kDeEmi1 #DeEmi1
+  104 20 0 kDeEmi1 #DeEmi1
+  105 21 22 kDeEmi1 #DeEmi1
+  106 23 0 kDeEmi1 #DeEmi1
+  107 19 16 kDeEmi2 #DeEmi2
+  108 21 22 kDeEmi2 #DeEmi2
+  109 5,19 5,16,23 1*kPhEmiA #PhEACByCa unit_conversion=1/1
+  110 5,21 5,22,23 1*kPhEmiA #PhEACByCa unit_conversion=1/1
+  111 6,19 6,16,23 1*kPhEmiB #PhEACByCb unit_conversion=1/1
+  112 6,21 6,22,23 1*kPhEmiB #PhEACByCb unit_conversion=1/1
+  113 5,20 5,23 1*kPhEmiA #PhEmiByCa unit_conversion=1/1
+  114 6,20 6,23 1*kPhEmiB #PhEmiByCb unit_conversion=1/1
+  115 23 20 kDpEmi #DppEmi
+  116 23 0 kDeEmi3 #DeEmi3
+  117 0 24 1*kSyFox1 #SyFox1 unit_conversion=1
+  118 48 20,48 kSyEmi2 #SyEmi2
+  119 53 20,53 kSyEmi2 #SyEmi2
+  120 2,17 2,18 1*kPhCdhE #PhCdhByCe unit_conversion=1/1
+  121 5,17 5,18 1*kPhCdhA #PhCdhByCa unit_conversion=1/1
+  122 6,17 6,18 1*kPhCdhB #PhCdhByCb unit_conversion=1/1
+  123 18 17 kDpCdh #DppCdh
+  124 0 5 1*kSyCa1 #SyCa1 unit_conversion=1
+  125 5 0 kDeCa1 #DeCa1
+  126 64 61 kDeCa1 #DeCa1
+  127 69 63 kDeCa1 #DeCa1
+  128 72 71 kDeCa1 #DeCa1
+  129 2,5 5 1*kPhCeA #DeCe3 unit_conversion=1/1
+  130 5,65 5,61 1*kPhCeA #DeCe3 unit_conversion=1/1
+  131 5,70 5,63 1*kPhCeA #DeCe3 unit_conversion=1/1
+  132 5,73 5,71 1*kPhCeA #DeCe3 unit_conversion=1/1
+  133 5,16 16 1*kDeCa2 #DeCa2 unit_conversion=1/1
+  134 5,22 22 1*kDeCa2 #DeCa2 unit_conversion=1/1
+  135 16,64 16,61 1*kDeCa2 #DeCa2 unit_conversion=1/1
+  136 22,64 22,61 1*kDeCa2 #DeCa2 unit_conversion=1/1
+  137 16,69 16,63 1*kDeCa2 #DeCa2 unit_conversion=1/1
+  138 22,69 22,63 1*kDeCa2 #DeCa2 unit_conversion=1/1
+  139 16,72 16,71 1*kDeCa2 #DeCa2 unit_conversion=1/1
+  140 22,72 22,71 1*kDeCa2 #DeCa2 unit_conversion=1/1
+  141 5,14 14 1*kDeCa3 #DeCa3 unit_conversion=1/1
+  142 14,64 14,61 1*kDeCa3 #DeCa3 unit_conversion=1/1
+  143 14,69 14,63 1*kDeCa3 #DeCa3 unit_conversion=1/1
+  144 14,72 14,71 1*kDeCa3 #DeCa3 unit_conversion=1/1
+  145 49 24,49 kSyFox2 #SyFox2
+  146 54 24,54 kSyFox2 #SyFox2
+  147 24 0 kDeFox1 #DeFox
+  148 25 0 kDeFox1 #DeFox
+  149 26 27 kDeFox1 #DeFox
+  150 29 28 kDeFox1 #DeFox
+  151 16,24 16 1*kDeFox2 #DeFoxByApcCdh unit_conversion=1/1
+  152 22,24 22 1*kDeFox2 #DeFoxByApcCdh unit_conversion=1/1
+  153 16,25 16 1*kDeFox2 #DeFoxByApcCdh unit_conversion=1/1
+  154 22,25 22 1*kDeFox2 #DeFoxByApcCdh unit_conversion=1/1
+  155 16,26 16,27 1*kDeFox2 #DeFoxByApcCdh unit_conversion=1/1
+  156 22,26 22,27 1*kDeFox2 #DeFoxByApcCdh unit_conversion=1/1
+  157 16,29 16,28 1*kDeFox2 #DeFoxByApcCdh unit_conversion=1/1
+  158 22,29 22,28 1*kDeFox2 #DeFoxByApcCdh unit_conversion=1/1
+  159 2,24 2,25 1*kPhFoxE #PhFoxByCe unit_conversion=1/1
+  160 5,24 5,25 1*kPhFoxA #PhFoxByCa unit_conversion=1/1
+  161 6,24 6,25 1*kPhFoxB #PhFoxByCb unit_conversion=1/1
+  162 25 24 kDpFox #DppFox_1
+  163 29 24,28 kDpFox #DppFox_2
+  164 26 24,27 kDpFox #DppFox_3
+  165 0 6 1*kSyCb1 #SyCb1 unit_conversion=1
+  166 26 6,26 kSyCb2 #SyCb2
+  167 6 0 kDeCb1 #DeCb
+  168 31 0 kDeCb1 #DeCb
+  169 66 61 kDeCb1 #DeCb
+  170 67 61 kDeCb1 #DeCb
+  171 6,16 16 1*kDeCb2 #DeCbByApcCdh unit_conversion=1/1
+  172 6,22 22 1*kDeCb2 #DeCbByApcCdh unit_conversion=1/1
+  173 16,31 16 1*kDeCb2 #DeCbByApcCdh unit_conversion=1/1
+  174 22,31 22 1*kDeCb2 #DeCbByApcCdh unit_conversion=1/1
+  175 16,66 16,61 1*kDeCb2 #DeCbByApcCdh unit_conversion=1/1
+  176 22,66 22,61 1*kDeCb2 #DeCbByApcCdh unit_conversion=1/1
+  177 16,67 16,61 1*kDeCb2 #DeCbByApcCdh unit_conversion=1/1
+  178 22,67 22,61 1*kDeCb2 #DeCbByApcCdh unit_conversion=1/1
+  179 6,14 14 1*kDeCb3 #DeCbByApcCdc unit_conversion=1/1
+  180 14,31 14 1*kDeCb3 #DeCbByApcCdc unit_conversion=1/1
+  181 14,66 14,61 1*kDeCb3 #DeCbByApcCdc unit_conversion=1/1
+  182 14,67 14,61 1*kDeCb3 #DeCbByApcCdc unit_conversion=1/1
+  183 13 0 kDeCdc_1 #DeCdc
+  184 14 15 kDeCdc_1 #DeCdc
+  185 13,16 16 1*kDeCdc_2 #DeCdcByApcCdh unit_conversion=1/1
+  186 13,22 22 1*kDeCdc_2 #DeCdcByApcCdh unit_conversion=1/1
+  187 14,16 15,16 1*kDeCdc_2 #DeCdcByApcCdh unit_conversion=1/1
+  188 14,22 15,22 1*kDeCdc_2 #DeCdcByApcCdh unit_conversion=1/1
+  189 0 13 1*kSyCdc_1 #SyCdc20_1 unit_conversion=1
+  190 29 13,29 kSyCdc_2 #SyCdc20_2
+  191 25,28 29 1*kAsFPcdc #AspFoxPcdc unit_conversion=1/1
+  192 29 25,28 kDiFPcdc #_reverse_AspFoxPcdc
+  193 6,30 30,31 1*kWee2 #PhCbByWee unit_conversion=1/1
+  194 30,66 30,67 1*kWee2 #PhCbByWee unit_conversion=1/1
+  195 6,32 31,32 1*kWee1 #PhCbBypWee unit_conversion=1/1
+  196 32,66 32,67 1*kWee1 #PhCbBypWee unit_conversion=1/1
+  197 31,33 6,33 1*kCdc25_2 #DppCbBypCdc25 unit_conversion=1/1
+  198 33,67 33,66 1*kCdc25_2 #DppCbBypCdc25 unit_conversion=1/1
+  199 31,34 6,34 1*kCdc25_1 #DppCbByCdc25 unit_conversion=1/1
+  200 34,67 34,66 1*kCdc25_1 #DppCbByCdc25 unit_conversion=1/1
+  201 6,34 6,33 1*kPhC25B #PhCdc25ByCb unit_conversion=1/1
+  202 5,34 5,33 1*kPhC25A #PhCdc25ByCa unit_conversion=1/1
+  203 11,33 11,34 1*kDpCdc25 #DppCdc25 unit_conversion=1/1
+  204 11,32 11,30 1*kDpWee #DppWee unit_conversion=1/1
+  205 5,30 5,32 1*kPhWeeA #PhWeeByCa unit_conversion=1/1
+  206 6,30 6,32 1*kPhWeeB #PhWeeByCb unit_conversion=1/1
+  207 6,35 6,36 1*kPhGw #PhGw unit_conversion=1/1
+  208 36 35 kDpGw1 #DppGw
+  209 11,36 11,35 1*kDpGw2 #DppGwByB55 unit_conversion=1/1
+  210 36,37 36,38 1*kPhEnsa #PhEnsa unit_conversion=1/1
+  211 39 11,37 kDpEnsa #DppEB55
+  212 0 20 1*kSyEmi1 #SyEmi1 unit_conversion=1
+  213 45 2,45 kSyCe2 #SyCe2
+  214 50 2,50 kSyCe2 #SyCe2
+  215 6,16 6,12,18 1*kPhCdhB #PhCdhApcByCb unit_conversion=1/1
+  216 6,22 6,15,18 1*kPhCdhB #PhCdhApcByCb unit_conversion=1/1
+  217 3,9 7 1*kAsE2fRb #AsE2fRb unit_conversion=1/1
+  218 4,9 8 1*kAsE2fRb #AsE2fRb unit_conversion=1/1
+  219 7 3,9 kDiE2fRb #_reverse_AsE2fRb
+  220 8 4,9 kDiE2fRb #_reverse_AsE2fRb
+  221 12,17 16 1*kAsACdh #AsApcCdh unit_conversion=1/1
+  222 15,17 22 1*kAsACdh #AsApcCdh unit_conversion=1/1
+  223 16 12,17 kDiACdh #_reverse_AsApcCdh
+  224 22 15,17 kDiACdh #_reverse_AsApcCdh
+  225 16,20 19 1*kAsACE #AsACE unit_conversion=1/1
+  226 20,22 21 1*kAsACE #AsACE unit_conversion=1/1
+  227 19 16,20 kDiACE #_reverse_AsACE
+  228 21 20,22 kDiACE #_reverse_AsACE
+  229 13,15 14 1*kAspACdc #AspApcCdc20 unit_conversion=1/1
+  230 14 13,15 kDipACdc #_reverse_AspApcCdc20
+  231 11,38 39 1*kAspEB55 #AspEB55 unit_conversion=1/1
+  232 39 11,38 kDipEB55 #_reverse_AspEB55
+  233 3,40 45 1*kAsEPx #AsE2fProCe unit_conversion=1/1
+  234 4,40 50 1*kAsEPx #AsE2fProCe unit_conversion=1/1
+  235 45 3,40 kDiEPx #_reverse_AsE2fProCe
+  236 50 4,40 kDiEPx #_reverse_AsE2fProCe
+  237 3,41 46 1*kAsEPx #AsE2fProCa unit_conversion=1/1
+  238 4,41 51 1*kAsEPx #AsE2fProCa unit_conversion=1/1
+  239 46 3,41 kDiEPx #_reverse_AsE2fProCa
+  240 51 4,41 kDiEPx #_reverse_AsE2fProCa
+  241 3,42 47 1*kAsEPx #AsE2fProE2f unit_conversion=1/1
+  242 4,42 52 1*kAsEPx #AsE2fProE2f unit_conversion=1/1
+  243 47 3,42 kDiEPx #_reverse_AsE2fProE2f
+  244 52 4,42 kDiEPx #_reverse_AsE2fProE2f
+  245 3,43 48 1*kAsEPx #AsE2fProEmi unit_conversion=1/1
+  246 4,43 53 1*kAsEPx #AsE2fProEmi unit_conversion=1/1
+  247 48 3,43 kDiEPx #_reverse_AsE2fProEmi
+  248 53 4,43 kDiEPx #_reverse_AsE2fProEmi
+  249 3,44 49 1*kAsEPx #AsE2fProFox unit_conversion=1/1
+  250 4,44 54 1*kAsEPx #AsE2fProFox unit_conversion=1/1
+  251 49 3,44 kDiEPx #_reverse_AsE2fProFox
+  252 54 4,44 kDiEPx #_reverse_AsE2fProFox
+  253 0 55 1*kSySkp2 #SySkp2 unit_conversion=1
+  254 55 0 kDeSkp2_1 #DeSkp2_1
+  255 16,55 16 1*kDeSkp2_2 #DeSkp2_2 unit_conversion=1/1
+  256 22,55 22 1*kDeSkp2_2 #DeSkp2_2 unit_conversion=1/1
+  257 56,57 60 1*kAsTP53PCDKN1A #AsTP53PCDKN1A unit_conversion=1/1
+  258 60 56,57 kDiTP53PCDKN1A #_reverse_AsTP53PCDKN1A
+  259 0 61 1*kSyCDKN1A_1 #SyCDKN1A_1 unit_conversion=1
+  260 60 60,61 kSyCDKN1A_2 #SyCDKN1A_2
+  261 61 0 kDeCDKN1A_1 #DeCDKN1A_1
+  262 64 5 kDeCDKN1A_1 #DeCDKN1A_1
+  263 65 2 kDeCDKN1A_1 #DeCDKN1A_1
+  264 66 6 kDeCDKN1A_1 #DeCDKN1A_1
+  265 67 31 kDeCDKN1A_1 #DeCDKN1A_1
+  266 68 0 kDeCDKN1A_1 #DeCDKN1A_1
+  267 55,68 55 1*kDeCDKN1A_2 #DeCDKN1A_2 unit_conversion=1/1
+  268 55,61 55 1*kDeCDKN1A_2 #DeCDKN1A_3 unit_conversion=1/1
+  269 55,64 5,55 1*kDeCDKN1A_2 #DeCDKN1A_3 unit_conversion=1/1
+  270 55,65 2,55 1*kDeCDKN1A_2 #DeCDKN1A_3 unit_conversion=1/1
+  271 55,66 6,55 1*kDeCDKN1A_2 #DeCDKN1A_3 unit_conversion=1/1
+  272 55,67 31,55 1*kDeCDKN1A_2 #DeCDKN1A_3 unit_conversion=1/1
+  273 5,61 64 1*kAsCdkn1aC #AsCDKN1ACCNA unit_conversion=1/1
+  274 64 5,61 kDiCdkn1aC #_reverse_AsCDKN1ACCNA
+  275 2,61 65 1*kAsCdkn1aC #AsCDKN1ACCNE unit_conversion=1/1
+  276 65 2,61 kDiCdkn1aC #_reverse_AsCDKN1ACCNE
+  277 6,61 66 1*kAsCdkn1aC #AsCDKN1ACCNB unit_conversion=1/1
+  278 31,61 67 1*kAsCdkn1aC #AsCDKN1ACCNB unit_conversion=1/1
+  279 66 6,61 kDiCdkn1aC #_reverse_AsCDKN1ACCNB
+  280 67 31,61 kDiCdkn1aC #_reverse_AsCDKN1ACCNB
+  281 2,61 2,68 1*kPhCDKN1AByCe #PhCDKN1AByCe unit_conversion=1/1
+  282 2,64 2,5,68 1*kPhCDKN1AByCe #PhCdkn1aCaByCe unit_conversion=1/1
+  283 2,65 2,2,68 1*kPhCDKN1AByCe #PhCdkn1aCeByCe unit_conversion=1/1
+  284 2,66 2,6,68 1*kPhCDKN1AByCe #PhCdkn1aCbByCe unit_conversion=1/1
+  285 2,67 2,31,68 1*kPhCDKN1AByCe #PhCdkn1aCbByCe unit_conversion=1/1
+  286 5,61 5,68 1*kPhCDKN1AByCa #PhCDKN1AByCa unit_conversion=1/1
+  287 5,64 5,5,68 1*kPhCDKN1AByCa #PhCdkn1aCaByCa unit_conversion=1/1
+  288 5,65 2,5,68 1*kPhCDKN1AByCa #PhCdkn1aCeByCa unit_conversion=1/1
+  289 5,66 5,6,68 1*kPhCDKN1AByCa #PhCdkn1aCbByCa unit_conversion=1/1
+  290 5,67 5,31,68 1*kPhCDKN1AByCa #PhCdkn1aCbByCa unit_conversion=1/1
+  291 6,61 6,68 1*kPhCDKN1AByCb #PhCDKN1AByCb unit_conversion=1/1
+  292 6,64 5,6,68 1*kPhCDKN1AByCb #PhCdkn1aCaByCb unit_conversion=1/1
+  293 6,65 2,6,68 1*kPhCDKN1AByCb #PhCdkn1aCeByCb unit_conversion=1/1
+  294 6,66 6,6,68 1*kPhCDKN1AByCb #PhCdkn1aCbByCb unit_conversion=1/1
+  295 6,67 6,31,68 1*kPhCDKN1AByCb #PhCdkn1aCbByCb unit_conversion=1/1
+  296 68 61 kDpCDKN1A #DpCDKN1A
+  297 58,59 62 1*kAsFOXOPCDKN1B #AsFOXOPCDKN1B unit_conversion=1/1
+  298 62 58,59 kDiFOXOPCDKN1B #_reverse_AsFOXOPCDKN1B
+  299 0 63 1*kSyCDKN1B_1 #SyCDKN1B_1 unit_conversion=1
+  300 62 62,63 kSyCDKN1B_2 #SyCDKN1B_2
+  301 63 0 kDeCDKN1B_1 #DeCDKN1B_1
+  302 69 5 kDeCDKN1B_1 #DeCDKN1B_1
+  303 70 2 kDeCDKN1B_1 #DeCDKN1B_1
+  304 71 0 kDeCDKN1B_1 #DeCDKN1B_1
+  305 72 5 kDeCDKN1B_1 #DeCDKN1B_1
+  306 73 2 kDeCDKN1B_1 #DeCDKN1B_1
+  307 55,71 55 1*kDeCDKN1B_2 #DeCDKN1B_2 unit_conversion=1/1
+  308 55,72 5,55 1*kDeCDKN1B_2 #DeCDKN1B_2 unit_conversion=1/1
+  309 55,73 2,55 1*kDeCDKN1B_2 #DeCDKN1B_2 unit_conversion=1/1
+  310 55,63 55 1*_rateLaw1 #DeCDKN1B_3 unit_conversion=1/1
+  311 55,69 5,55 1*_rateLaw1 #DeCDKN1B_3 unit_conversion=1/1
+  312 55,70 2,55 1*_rateLaw1 #DeCDKN1B_3 unit_conversion=1/1
+  313 5,63 69 1*kAsCdkn1bC #AsCDKN1BCCNA unit_conversion=1/1
+  314 5,71 72 1*kAsCdkn1bC #AsCDKN1BCCNA unit_conversion=1/1
+  315 69 5,63 kDiCdkn1bC #_reverse_AsCDKN1BCCNA
+  316 72 5,71 kDiCdkn1bC #_reverse_AsCDKN1BCCNA
+  317 2,63 70 1*kAsCdkn1bC #AsCDKN1BCCNE unit_conversion=1/1
+  318 2,71 73 1*kAsCdkn1bC #AsCDKN1BCCNE unit_conversion=1/1
+  319 70 2,63 kDiCdkn1bC #_reverse_AsCDKN1BCCNE
+  320 73 2,71 kDiCdkn1bC #_reverse_AsCDKN1BCCNE
+  321 2,63 2,71 1*kPhCDKN1BByCe #PhCDKN1BByCe unit_conversion=1/1
+  322 2,69 2,72 1*kPhCDKN1BByCe #PhCDKN1BByCe unit_conversion=1/1
+  323 2,70 2,73 1*kPhCDKN1BByCe #PhCDKN1BByCe unit_conversion=1/1
+  324 5,63 5,71 1*kPhCDKN1BByCa #PhCDKN1BByCa unit_conversion=1/1
+  325 5,69 5,72 1*kPhCDKN1BByCa #PhCDKN1BByCa unit_conversion=1/1
+  326 5,70 5,73 1*kPhCDKN1BByCa #PhCDKN1BByCa unit_conversion=1/1
+  327 6,63 6,71 1*kPhCDKN1BByCb #PhCDKN1BByCb unit_conversion=1/1
+  328 6,69 6,72 1*kPhCDKN1BByCb #PhCDKN1BByCb unit_conversion=1/1
+  329 6,70 6,73 1*kPhCDKN1BByCb #PhCDKN1BByCb unit_conversion=1/1
+  330 71 63 kDpCDKN1B #DpCDKN1B
+  331 72 69 kDpCDKN1B #DpCDKN1B
+  332 73 70 kDpCDKN1B #DpCDKN1B
+end reactions
+begin groups
+    1 tCCNA                5,64,69,72
+    2 tCCNB                6,31,66,67
+    3 tCCNE                2,65,70,73
+    4 tSKP2                55
+    5 tCDKN1A              61,64,65,66,67,68
+    6 tCDKN1B              63,69,70,71,72,73
+    7 pRB                  10
+    8 tE2F                 3,4,7,8,45,46,47,48,49,50,51,52,53,54
+    9 E2F_pSer332_prom     50,51,52,53,54
+end groups
