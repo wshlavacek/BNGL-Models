@@ -1,0 +1,68 @@
+{
+  "_comment": [
+    "Provenance pin for the only files in this folder copied from the authors' release:",
+    "the MARM2.0 PySB model definition and its calibrated parameter table. Both are byte-",
+    "identical to upstream; run_frohlich2023.py refuses to run if either sha256 differs.",
+    "Everything else in the folder is written or generated here."
+  ],
+  "publication": "Fröhlich F, Gerosa L, Muhlich JL, Sorger PK (2023). Mechanistic model of MAPK signaling reveals how allostery and rewiring contribute to drug resistance. Mol Syst Biol 19:e10988. doi:10.15252/msb.202210988",
+  "upstream_repository": "https://github.com/labsyspharm/marm2-supplement",
+  "pinned_commit": "7e977899045e3c82199c827a37d79797f4fcf1a9",
+  "pinned_commit_date": "2022-08-10T11:03:22Z",
+  "pinned_ref": "tag/branch `resubmission` (and `main`) both point at the pinned commit",
+  "zenodo_archive": "doi:10.5281/zenodo.6979792 (labsyspharm/marm2-supplement: Resubmission)",
+  "publisher_copy": {
+    "item": "Code EV1 of the article, MSB-19-e10988-s004.zip",
+    "retrieved_from": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC9912026/supplementaryFiles",
+    "sha256": "a3a46c487e849070e98ec880e8cea5627f0c68e3826571f6a2bc7a70782f1e4f",
+    "note": "A GitHub archive of the pinned commit (its zip comment is the commit hash); the two vendored files are byte-identical in it and at the commit."
+  },
+  "license": {
+    "applies_via": "Code EV1, published as supplementary material of the open-access article",
+    "name": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "article_statement": "© 2023 The Authors. Published under the terms of the CC BY 4.0 license.",
+    "github_repository_license": "none declared (no LICENSE file; GitHub reports license null)",
+    "zenodo_license": "other-open (no specific licence named)",
+    "attribution": "Fröhlich F, Gerosa L, Muhlich JL, Sorger PK (2023), Mol Syst Biol 19:e10988, Code EV1 / github.com/labsyspharm/marm2-supplement @ 7e97789.",
+    "changes": "None. Files are renamed with a frohlich2023_marm2_ prefix to sit in the flat reference/ directory; their bytes are unmodified."
+  },
+  "verified": "2026-11-19",
+  "files": {
+    "reference/frohlich2023_marm2_RTKERK__pRAF.py": {
+      "upstream_path": "MARM/pysb_flat/RTKERK__pRAF.py",
+      "sha256": "4416f21967296fe708b6bcbe8fd30360a1dc154251b2da0f2c087f376f2ecf1d",
+      "role": "The flattened PySB export of MARM2.0, variant pRAF (with RAF phosphorylation), the variant shown in the manuscript. It defines rules, energy patterns, initials and observables at placeholder parameter values."
+    },
+    "reference/frohlich2023_marm2_RTKERK_pRAF_EGF_EGFR_MEKi_PRAFi_RAFi.csv": {
+      "upstream_path": "MARM/parameters/RTKERK_pRAF_EGF_EGFR_MEKi_PRAFi_RAFi.csv",
+      "sha256": "6a25c61d1e6373cf504cee162de561f60fceee92bcc779691e0066ccefa27ee4",
+      "role": "The 50 best calibrated parameter sets, sorted by objective value (fval). Row 0 is the best-ranked set used here. Values are linear; drug-specific names carry the drug (bind_Vemurafenib_RAF_kf for the model's bind_RAFi_RAF_kf)."
+    }
+  },
+  "not_vendored": {
+    "MARM/data/processed_EGF_EGFR_MEKi_PRAFi_RAFi.csv": {
+      "sha256": "0b206d7149b4233b1346e161945244d9e9cc920c31a66e489574de77d066329b",
+      "used_for": "The Fig. 2A condition, rows 0-9. Its measurement columns are already committed as reference/frohlich2023_fig2a_vemurafenib1um_egf100ngml_measurements.csv. Its protocol columns fix the simulation run_frohlich2023.py reproduces and are recorded here instead of vendoring 166 kB.",
+      "fig2a_rows_0_9_protocol": {
+        "Vemurafenib_0": 1.0,
+        "Vemurafenib_0_preeq": 1.0,
+        "Vemurafenib_0_presim": 1.0,
+        "EGF_0": 100.0,
+        "EGF_0_preeq": 0.0,
+        "EGF_0_presim": 0.0,
+        "t_presim": 0.0,
+        "EGFR_crispr": 1.0,
+        "all_other_drugs_0": 0.0,
+        "N_Avogadro": 6.02214076e+23,
+        "volume": 1e-12,
+        "m_Da_EGF": 6200.0
+      },
+      "meaning": "AMICI semantics (MARM/estimation.py get_edata -> amici.getEdataFromDataFrame): the *_preeq columns define a pre-equilibration to steady state at 1 uM vemurafenib with no EGF; t_presim = 0 means no finite-time pre-simulation; the main simulation then runs at EGF_0 = 100 ng/mL with the free EGF state re-initialized (reinitialization_state_idxs_sim). The paper: 'model simulations were pre-equilibrated to these conditions' (the 24 h drug adaptation approximated as a pseudo steady state).",
+      "contrast": "The same table encodes a finite drug pre-treatment differently: its 22 pre-treatment time-course rows (291-312, t_presim 0.5-24 h) set Vemurafenib_0_preeq = 0 and Vemurafenib_0_presim = 1, i.e. the drug-free steady state followed by t_presim hours with drug; that includes a 24 h arm (rows 300, 310-312). t_presim is 0 in the other 562 rows, rows 0-9 among them. No row starts from the model's raw initial values."
+    },
+    "MARM/model.py, MARM/estimation.py, MARM/analysis.py": {
+      "used_for": "Read, not run (they import amici and pypesto). run_frohlich2023.py re-implements the two steps it needs: get_model_instance (drop the PRAFi and MEKi initials for the EGF_RAFi instance) and the solver settings of get_solver (rtol 1e-9, atol 1e-11)."
+    }
+  }
+}

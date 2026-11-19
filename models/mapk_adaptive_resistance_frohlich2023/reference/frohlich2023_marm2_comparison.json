@@ -1,0 +1,210 @@
+{
+  "_comment": "Written by run_frohlich2023.py; do not edit by hand.",
+  "bngl_sha256": "51856655ec20a825bb8f457bfa0615a789fad4d01157c839de5a0c4b2ae09452",
+  "authors_release": {
+    "repository": "https://github.com/labsyspharm/marm2-supplement",
+    "commit": "7e977899045e3c82199c827a37d79797f4fcf1a9",
+    "files": {
+      "reference/frohlich2023_marm2_RTKERK__pRAF.py": "4416f21967296fe708b6bcbe8fd30360a1dc154251b2da0f2c087f376f2ecf1d",
+      "reference/frohlich2023_marm2_RTKERK_pRAF_EGF_EGFR_MEKi_PRAFi_RAFi.csv": "6a25c61d1e6373cf504cee162de561f60fceee92bcc779691e0066ccefa27ee4"
+    },
+    "parameter_row": 0,
+    "drug": "Vemurafenib"
+  },
+  "protocol": {
+    "adaptation_condition": {
+      "RAFi_0": 1.0,
+      "EGF_0": 0.0,
+      "EGFR_crispr": 1.0,
+      "N_Avogadro": 6.02214076e+23,
+      "volume": 1e-12,
+      "m_Da_EGF": 6200.0
+    },
+    "simulation_condition": {
+      "RAFi_0": 1.0,
+      "EGF_0": 100.0,
+      "EGFR_crispr": 1.0,
+      "N_Avogadro": 6.02214076e+23,
+      "volume": 1e-12,
+      "m_Da_EGF": 6200.0
+    },
+    "authors": "steady state at the adaptation condition (AMICI pre-equilibration; processed data rows 0-9: *_preeq set, t_presim 0)",
+    "24h": "24 h at the adaptation condition from the model's initial values",
+    "steady_state_reached": {
+      "t_h": 200.0,
+      "since_h": 100.0,
+      "max_rel_change": 3.786653461299812e-09
+    },
+    "pulse_times_h": [
+      0.0,
+      2.0,
+      201
+    ],
+    "rtol": 1e-09,
+    "atol": 1e-11
+  },
+  "software": {
+    "pysb": "1.17.0",
+    "scipy": "1.17.1",
+    "numpy": "2.4.6",
+    "sympy": "1.11.1",
+    "bionetgen": "2.9.3",
+    "pysb_compiler": "cython",
+    "cython": "3.3.1"
+  },
+  "model": {
+    "parameters_max_rel": {
+      "value": 1.2872656840042467e-13,
+      "tol": 1e-12,
+      "pass": true,
+      "why": "the same IEEE doubles; the .bngl prints them to 17 significant digits, so only last-digit rounding may differ",
+      "n_calibrated": 97,
+      "worst": "catalyze_EGFR_u_kcatr",
+      "doses_match": true
+    },
+    "network": {
+      "species": 1612,
+      "reactions": 17516,
+      "species_bijection": true,
+      "reactions_identical_per_rule": true,
+      "pass": true
+    },
+    "rhs_max_rel_to_gross_flux": {
+      "value": 6.950059802887004e-14,
+      "tol": 1e-10,
+      "pass": true,
+      "why": "identical equations evaluated in a different summation order; the denominator is each species' gross turnover sum_j |S_ij r_j|, so cancellation cannot inflate it",
+      "states": [
+        "curated seeds",
+        "authors' steady state + EGF",
+        "authors' 24 h state + EGF",
+        "authors' t = 0.1 h (steady-state protocol)",
+        "random state 1",
+        "random state 2"
+      ]
+    },
+    "jacobian_max_rel_to_row_max": {
+      "value": 1.0462484457763621e-14,
+      "tol": 1e-10,
+      "pass": true,
+      "why": "the two analytic Jacobians, PySB-derived and hand-written, at the same six states; each row relative to its largest entry",
+      "states": [
+        "curated seeds",
+        "authors' steady state + EGF",
+        "authors' 24 h state + EGF",
+        "authors' t = 0.1 h (steady-state protocol)",
+        "random state 1",
+        "random state 2"
+      ]
+    }
+  },
+  "protocols": {
+    "authors": {
+      "seeds_max_rel": {
+        "value": 0.022629498162089288,
+        "tol": 1e-05,
+        "pass": false,
+        "why": "the .bngl prints its seeds to 13 significant digits, and both arms integrate at rtol 1e-9; relative to max(|value|, 1e-09 uM)",
+        "n_seeded": 333,
+        "median": 8.483203521138279e-05,
+        "worst": "@PM::EGFR(KD!1,Tyr~u,rtkf,ub~false).EGFR(KD,Tyr~u!1,rtkf,ub~false)",
+        "unseeded_authors_max_uM": 9.410999117159987e-16,
+        "pERK_IF_at_t0": {
+          "bngl": 0.11797462389583364,
+          "authors": 0.11798133943991851
+        }
+      },
+      "pERK_IF_max_rel": {
+        "value": 0.011447397147598511,
+        "tol": 1e-05,
+        "pass": false,
+        "why": "two right-hand-side implementations, each integrated at rtol 1e-9 / atol 1e-11, from states that agree to the seed tolerance; relative to max(|value|, 1e-6 x peak)",
+        "at_time_h": 0.78,
+        "max_abs": 0.003363974713083917,
+        "authors_peak": 1.8144639033531864,
+        "authors_peak_time_h": 0.1
+      },
+      "pMEK_IF_max_rel": {
+        "value": 0.006442107887746433,
+        "tol": 1e-05,
+        "pass": false,
+        "why": "as pERK_IF_obs"
+      },
+      "observables_max_rel": {
+        "value": 0.021063225749321637,
+        "tol": 1e-05,
+        "pass": false,
+        "why": "as pERK_IF_obs, for each of the 30 observables",
+        "n": 30,
+        "worst": "gdpRAS"
+      },
+      "species_max_rel_to_peak": {
+        "value": 0.03745374583443625,
+        "tol": 1e-05,
+        "pass": false,
+        "why": "per species, max_t |diff| / max(peak_t |x_i|, 1e-09 uM); below the floor is under a thousandth of a molecule per cell",
+        "n": 1612,
+        "worst": "@EM::EGF(rtk!1)@CP.EGF(rtk!2)@CP.EGFR(KD!3,Tyr~p,rtkf!1,ub~true).EGFR(KD,Tyr~u!3,rtkf!2,ub~true)",
+        "median": 0.0020533223573677806
+      }
+    },
+    "24h": {
+      "seeds_max_rel": {
+        "value": 3.1310762582987406e-07,
+        "tol": 1e-05,
+        "pass": true,
+        "why": "the .bngl prints its seeds to 13 significant digits, and both arms integrate at rtol 1e-9; relative to max(|value|, 1e-09 uM)",
+        "n_seeded": 333,
+        "median": 1.9278609696377275e-09,
+        "worst": "@CP::SPRY(SH3m)",
+        "unseeded_authors_max_uM": 9.403217012227091e-16,
+        "pERK_IF_at_t0": {
+          "bngl": 0.11797462389583364,
+          "authors": 0.11797462404340701
+        }
+      },
+      "pERK_IF_max_rel": {
+        "value": 9.050873315122862e-08,
+        "tol": 1e-05,
+        "pass": true,
+        "why": "two right-hand-side implementations, each integrated at rtol 1e-9 / atol 1e-11, from states that agree to the seed tolerance; relative to max(|value|, 1e-6 x peak)",
+        "at_time_h": 0.77,
+        "max_abs": 2.9783776889225066e-08,
+        "authors_peak": 1.8134682572286736,
+        "authors_peak_time_h": 0.1
+      },
+      "pMEK_IF_max_rel": {
+        "value": 1.1081143573755031e-08,
+        "tol": 1e-05,
+        "pass": true,
+        "why": "as pERK_IF_obs"
+      },
+      "observables_max_rel": {
+        "value": 1.9291435604024886e-07,
+        "tol": 1e-05,
+        "pass": true,
+        "why": "as pERK_IF_obs, for each of the 30 observables",
+        "n": 30,
+        "worst": "tSPRY"
+      },
+      "species_max_rel_to_peak": {
+        "value": 9.403217012227091e-07,
+        "tol": 1e-05,
+        "pass": true,
+        "why": "per species, max_t |diff| / max(peak_t |x_i|, 1e-09 uM); below the floor is under a thousandth of a molecule per cell",
+        "n": 1612,
+        "worst": "@CP::BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!2).BRAF(AA600~E,RBD,T753~p,mek,raf!1,rafi!3).RAFi(raf!2).RAFi(raf!3)",
+        "median": 1.2063874244442973e-08
+      }
+    }
+  },
+  "bngl_seeds_steadiness": {
+    "note": "dy/dt of the model at the .bngl seeds with free EGF removed, against the authors' steady state; AMICI's pre-equilibration stops below WRMS 1",
+    "amici_wrms_dydt_at_bngl_seeds": 785.0685275519807,
+    "amici_wrms_dydt_at_authors_steady_state": 1.5073362723930388e-05,
+    "max_rel_rate_per_h_seeded_above_floor": 0.09273979229913439,
+    "n_unseeded_produced": 16
+  },
+  "model_equivalent": true,
+  "all_pass": false
+}

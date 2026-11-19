@@ -37,6 +37,18 @@ digitize = [
   "pillow>=10.0",
   "pymupdf>=1.24",
 ]
+# The authors'-model check for mapk_adaptive_resistance_frohlich2023 (its run_frohlich2023.py).
+# Not installed by default: only that driver needs PySB, which builds the authors' own MARM2.0
+# model from their published definition, generates its network through BioNetGen's BNG2.pl
+# (set BNGPATH) and compiles its right-hand side. Cython (plus setuptools, which sympy's
+# autowrap builds with, and a C compiler) is PySB's fast backend; `--compiler python` runs
+# without it. PySB and Cython are pinned exactly, because the numbers the driver commits came
+# from these versions. Install with `uv sync --group marm2`.
+marm2 = [
+  "cython==3.3.1",
+  "pysb==1.17.0",
+  "setuptools>=70",
+]
 
 [tool.uv]
 package = false

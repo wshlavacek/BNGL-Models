@@ -15,7 +15,19 @@ source:
     distributed with Fröhlich et al. (2023), Molecular Systems Biology
     19:e10988. The primary file uses the best-ranked calibrated parameter set
     and the source-model state after 24 h adaptation to 1 uM vemurafenib, then
-    applies the 100 ng/mL EGF pulse from Fig. 2A.
+    applies the 100 ng/mL EGF pulse from Fig. 2A. The authors' release is
+    github.com/labsyspharm/marm2-supplement at 7e977899 (tag `resubmission`,
+    Zenodo doi:10.5281/zenodo.6979792), also published as Code EV1 of the
+    CC BY 4.0 article; the model definition and parameter table are vendored
+    byte-identical under reference/, pinned with licence and attribution in
+    reference/frohlich2023_marm2_upstream.json. run_frohlich2023.py finds the
+    network, parameters and rate laws identical to that release, and finds
+    that the seed populations are not the authors' Fig. 2A adaptation: they
+    are the model's raw initial values integrated 24 h at 1 uM vemurafenib
+    (seeds within 3.1e-7 of that state), whereas the authors' pipeline
+    pre-equilibrates to steady state at 1 uM vemurafenib (seeds up to 2.3e-2
+    from it; pERK_IF_obs up to 1.1e-2 relative, 0.0034 IF units, over the
+    2 h pulse). Not yet resolved in the .bngl; see the comparison JSON.
 
 files:
   - name: mapk_adaptive_resistance_frohlich2023.bngl
@@ -42,9 +54,12 @@ files:
   - name: reference/frohlich2023_fig2a_vemurafenib1um_source_model.csv
     role: reference
     description: >
-      Tabular pERK trajectory regenerated from the authors' supplementary
-      RTKERK__pRAF.py model with calibrated parameter row 0 and the Fig. 2A
-      1 uM vemurafenib plus 100 ng/mL EGF condition.
+      Read by the notebook as the authors' source-model trajectory, but no
+      committed code generates it, and it is bit-identical (13 significant
+      digits, all 201 points) to pERK_IF_obs in the curated BioNetGen .gdat,
+      so its agreement is not evidence. The authors'-model trajectories that
+      run_frohlich2023.py does generate are the two frohlich2023_marm2_fig2a_*
+      files below.
   - name: reference/frohlich2023_fig2a_vemurafenib1um_egf100ngml_measurements.csv
     role: reference
     description: >
@@ -60,3 +75,65 @@ files:
     role: reference
   - name: reference/mapk_adaptive_resistance_frohlich2023_ode.cdat
     role: reference
+  - name: independent_frohlich2023.py
+    role: verification
+    description: >
+      The curated arm of run_frohlich2023.py: the notebook's level-1 .net
+      integrator factored out unchanged in behaviour, plus an analytic sparse
+      Jacobian. The notebook still carries its own inline copy.
+  - name: run_frohlich2023.py
+    role: verification
+    scale: minutes
+    description: >
+      Compares the pinned .bngl with the authors' own MARM2.0 release, never
+      using bngsim. A driver script rather than a notebook cell because it
+      needs PySB, Cython and a C compiler (`uv sync --group marm2`), which the
+      notebook environment does not; about 4 minutes on one core. It builds
+      the authors' PySB model at calibrated row 0 as the Fig. 2A (EGF_RAFi)
+      instance, re-implementing the two AMICI-bound steps of their pipeline it
+      needs, and checks parameters, a species bijection with identical
+      reactions, and dy/dt and two independently derived Jacobians at six
+      states; then, for two adaptation protocols (the authors' steady state,
+      and the 24 h from initial values that the .bngl seeds encode), the seeds
+      and the 0-2 h trajectories of pERK_IF_obs, pMEK_IF_obs, all observables
+      and all species. Exits 1 unless the authors' protocol also passes.
+  - name: reference/frohlich2023_marm2_RTKERK__pRAF.py
+    role: reference
+    description: >
+      The authors' flattened PySB model, variant pRAF (MARM/pysb_flat/
+      RTKERK__pRAF.py at labsyspharm/marm2-supplement 7e97789), byte-identical;
+      CC BY 4.0 via Code EV1 of the article.
+  - name: reference/frohlich2023_marm2_RTKERK_pRAF_EGF_EGFR_MEKi_PRAFi_RAFi.csv
+    role: reference
+    description: >
+      The authors' 50 best calibrated parameter sets (MARM/parameters/ at the
+      same commit), byte-identical; row 0, the best-ranked, is the one used.
+  - name: reference/frohlich2023_marm2_upstream.json
+    role: reference
+    description: >
+      Provenance pin for the two vendored files (repository, commit, upstream
+      paths, sha256, the Code EV1 checksum, licence and attribution) and the
+      Fig. 2A protocol columns of the authors' processed data table.
+  - name: reference/frohlich2023_marm2_fig2a_authors_protocol.csv
+    role: reference
+    description: >
+      The authors' model under their own Fig. 2A protocol (steady state at
+      1 uM vemurafenib without EGF, then 100 ng/mL EGF): every output
+      expression and observable on the 0-2 h grid. Written by run_frohlich2023.py.
+  - name: reference/frohlich2023_marm2_fig2a_24h_protocol.csv
+    role: reference
+    description: >
+      The same outputs after 24 h at 1 uM vemurafenib from the model's initial
+      values, the adaptation the .bngl seeds encode. Written by run_frohlich2023.py.
+  - name: reference/frohlich2023_marm2_adapted_state.csv
+    role: reference
+    description: >
+      Per .net species, the .bngl seed beside the authors' state at t = 0
+      under each protocol (free EGF re-initialized at 100 ng/mL). Written by
+      run_frohlich2023.py.
+  - name: reference/frohlich2023_marm2_comparison.json
+    role: reference
+    description: >
+      Every metric, tolerance, reason and verdict of run_frohlich2023.py, with
+      the sha256 of the .bngl it checked, the pinned authors' files, the
+      protocols and the software versions.
