@@ -55,8 +55,20 @@ Comparisons (tolerances and reasons in TOLERANCES below):
   per       the `.bngl` seeds against the authors' state at t = 0; pERK_IF_obs and
   protocol  pMEK_IF_obs, all 30 observables and all 1,612 species over 0-2 h
 
-Verdicts: `model_equivalent` is the model comparisons plus the 24 h protocol; `all_pass`
-also requires the authors' protocol. The exit status is 1 unless all_pass.
+The primary passes the model comparisons and the 24 h protocol and fails the authors'
+protocol (its seeds differ by up to 2.3e-2, its pERK_IF_obs by up to 1.1e-2). That deviation
+is recorded, not asserted.
+
+The `_preeq` variant (mapk_adaptive_resistance_frohlich2023_preeq.bngl) is the primary
+seeded with the authors' steady state; generator/build_frohlich2023_preeq.py writes it from
+this driver's adapted-state CSV. When it and its BioNetGen output are present, the driver
+verifies it under the authors' protocol, against the same tolerances: its parameters and
+dy/dt; its own BNG2.pl network against the authors'; its seeds against the authors' steady
+state (with the EGF step); its network integrated from its seeds by the independent SciPy
+code against the authors' trajectory (pERK_IF_obs, pMEK_IF_obs, observables, species); and
+its committed run_network `.gdat` against both. It draws verify_frohlich2023_preeq.png.
+
+Exit status 0 only if the primary is model-equivalent and the `_preeq` variant verifies.
 
 Usage
 -----
@@ -64,17 +76,17 @@ Usage
     uv sync --group marm2
     uv run --group marm2 python models/mapk_adaptive_resistance_frohlich2023/run_frohlich2023.py
 
-Runs offline: it reads only committed files. About 4 minutes on one core (3 min 53 s on a
-Xeon E7-8890 v4), half of it BNG2.pl expanding the two networks and PySB compiling the
-right-hand side. `--compiler python` avoids the C compiler PySB's Cython backend needs, at
-roughly 30x the right-hand-side cost.
+Runs offline: it reads only committed files. About 6 minutes on one core (5 min 46 s on a
+Xeon E7-8880 v3), close to half of it BNG2.pl expanding the three networks. `--compiler
+python` avoids the C compiler PySB's Cython backend needs, at roughly 30x the
+right-hand-side cost.
 
-Writes into reference/ (overwriting):
-    frohlich2023_marm2_fig2a_authors_protocol.csv   authors' model, steady-state adaptation
-    frohlich2023_marm2_fig2a_24h_protocol.csv       authors' model, the .bngl's 24 h adaptation
-    frohlich2023_marm2_adapted_state.csv            .bngl seeds beside both authors' states
-    frohlich2023_marm2_comparison.json              every metric, tolerance and verdict
-The outputs are written before the verdict, so a failure can be read.
+Writes (overwriting), before the verdict so a failure can be read:
+    reference/frohlich2023_marm2_fig2a_authors_protocol.csv  authors' model, steady state
+    reference/frohlich2023_marm2_fig2a_24h_protocol.csv      authors' model, 24 h adaptation
+    reference/frohlich2023_marm2_adapted_state.csv           primary seeds, both authors' states
+    reference/frohlich2023_marm2_comparison.json             every metric, tolerance, verdict
+    verify_frohlich2023_preeq.png                            the _preeq verification figure
 """
 
 from __future__ import annotations
@@ -119,6 +131,11 @@ OUT_TRAJECTORY = {"authors": REF / "frohlich2023_marm2_fig2a_authors_protocol.cs
                   "24h": REF / "frohlich2023_marm2_fig2a_24h_protocol.csv"}
 OUT_STATE = REF / "frohlich2023_marm2_adapted_state.csv"
 OUT_JSON = REF / "frohlich2023_marm2_comparison.json"
+# The variant seeded with the authors' steady state (generator/build_frohlich2023_preeq.py
+# writes it from OUT_STATE), its BioNetGen run_network output, and its verification figure.
+VARIANT = HERE / f"{STEM}_preeq.bngl"
+VARIANT_GDAT = REF / f"{STEM}_preeq_ode.gdat"
+OUT_FIGURE = HERE / "verify_frohlich2023_preeq.png"
 
 # The authors' solver settings (MARM/estimation.py get_solver), used in both arms.
 RTOL, ATOL = 1e-9, 1e-11
@@ -142,6 +159,9 @@ BNGL_NAME = {"N_Avogadro": "NA", "volume": "V_ref"}
 ADAPT_24H = 24.0
 CHECKPOINTS = [1.0, 3.0, 10.0, ADAPT_24H, 30.0, 100.0, 200.0, 300.0, 400.0, 600.0, 800.0, 1000.0]
 STEADY_SPAN, STEADY_DRIFT = 100.0, 1e-8
+# AMICI's steady-state test with the authors' settings (get_solver: rtol 1e-7, atol 1e-9):
+# converged when the weighted RMS of dx/dt is below 1.
+AMICI_SS_RTOL, AMICI_SS_ATOL = 1e-7, 1e-9
 FLOOR = 1e-9                                  # uM, ~6e-4 molecules per 1 pL cell
 
 TOLERANCES = {
@@ -162,6 +182,9 @@ TOLERANCES = {
                               "tolerance; relative to max(|value|, 1e-6 x peak)"),
     "pMEK_IF_max_rel": (1e-5, "as pERK_IF_obs"),
     "observables_max_rel": (1e-5, "as pERK_IF_obs, for each of the 30 observables"),
+    "bng_gdat_max_rel": (1e-5, "BioNetGen's run_network (CVODE) output against the reference, "
+                               "for pERK_IF_obs, pMEK_IF_obs and the 30 observables; "
+                               "relative to max(|value|, 1e-6 x peak)"),
     "species_max_rel_to_peak": (1e-5, "per species, max_t |diff| / max(peak_t |x_i|, "
                                       f"{FLOOR:g} uM); below the floor is under a thousandth "
                                       "of a molecule per cell"),
@@ -281,25 +304,25 @@ def strip_net(text):
 # ------------------------------------------------------------------------- curated arm
 
 
-def curated_network(workdir, bngpath):
-    """Expand the pinned `.bngl` with BNG2.pl (generate_network only) and parse it."""
-    text = BNGL.read_text(encoding="utf-8")
+def curated_network(workdir, bngpath, bngl=BNGL):
+    """Expand a curated `.bngl` with BNG2.pl (generate_network only) and parse it."""
+    text = bngl.read_text(encoding="utf-8")
     start = text.index("begin actions")
     end = text.index("end actions") + len("end actions")
-    run_dir = workdir / "curated"
+    run_dir = workdir / bngl.stem
     run_dir.mkdir()
-    (run_dir / BNGL.name).write_text(
+    (run_dir / bngl.name).write_text(
         text[:start] + "begin actions\n  generate_network({overwrite=>1})\nend actions"
         + text[end:], encoding="utf-8")
-    proc = subprocess.run(["perl", str(Path(bngpath) / "BNG2.pl"), BNGL.name], cwd=run_dir,
+    proc = subprocess.run(["perl", str(Path(bngpath) / "BNG2.pl"), bngl.name], cwd=run_dir,
                           capture_output=True, text=True)
     if proc.returncode:
-        sys.exit(f"BNG2.pl failed on the curated model:\n{proc.stdout[-3000:]}\n{proc.stderr}")
-    net_path = run_dir / f"{STEM}.net"
-    committed = (REF / f"{STEM}.net").read_text(encoding="utf-8")
+        sys.exit(f"BNG2.pl failed on {bngl.name}:\n{proc.stdout[-3000:]}\n{proc.stderr}")
+    net_path = run_dir / f"{bngl.stem}.net"
+    committed = (REF / f"{bngl.stem}.net").read_text(encoding="utf-8")
     if strip_net(net_path.read_text(encoding="utf-8")) != strip_net(committed):
-        sys.exit("the regenerated .net does not match reference/ structurally; regenerate the "
-                 "committed reference output before running this check")
+        sys.exit(f"the regenerated {net_path.name} does not match reference/ structurally; "
+                 "regenerate the committed reference output before running this check")
     version = re.search(r"BioNetGen version ([\d.]+)", proc.stdout)
     return net_path, (version.group(1) if version else "unknown")
 
@@ -427,10 +450,17 @@ def integrate_authors(rhs, jac, t_span, y0, t_eval=None):
 def adapt(rhs, jac, y_start, log):
     """Integrate from the model's initial values at 1 uM vemurafenib, no EGF.
 
-    Returns the 24 h state and the steady state. The authors' AMICI pre-equilibration also
-    reaches its steady state by simulation (their get_solver sets Newton steps to 0).
+    Returns the 24 h state, the steady state and how converged it is. The steady state is the
+    state at the first checkpoint whose change over the preceding STEADY_SPAN hours or more is
+    at most STEADY_DRIFT (relative, above FLOOR); main() also requires AMICI's own test of it.
+    The authors' AMICI pre-equilibration also reaches its steady state by simulation (their
+    get_solver sets Newton steps to 0). Integrating on from the steady state is not a usable
+    extra check: restarted there at these tolerances, BDF in this arm had advanced only from
+    t = 200 h to 201.25 h after 41 minutes, at steps of about 2e-5 h, and the independent arm
+    did not finish the next 200 h within 160 s either.
     """
     y, t0, at_24h, previous = np.asarray(y_start, dtype=float), 0.0, None, {}
+    drift = np.inf
     for t1 in CHECKPOINTS:
         start = time.time()
         y = integrate_authors(rhs, jac, (t0, t1), y).y[:, -1]
@@ -447,9 +477,6 @@ def adapt(rhs, jac, y_start, log):
         if drift <= STEADY_DRIFT:
             return at_24h, y, {"t_h": t1, "since_h": span_start, "max_rel_change": drift}
     sys.exit(f"no steady state by t = {CHECKPOINTS[-1]:g} h (last change {drift:.2e})")
-
-
-# ----------------------------------------------------------------------------- metrics
 
 
 def cython_version():
@@ -529,6 +556,142 @@ def write_trajectory(path, result):
             writer.writerow([f"{t:.10g}"]
                             + [f"{result.expressions[n][k]:.15g}" for n in expressions]
                             + [f"{result.observables[n][k]:.15g}" for n in observables])
+
+
+def gdat_metrics(header, data, reference):
+    """Worst relative error of `.gdat` columns against {column name: reference trajectory}."""
+    worst, worst_name = 0.0, ""
+    for name, ref in reference.items():
+        ref = np.asarray(ref, dtype=float)
+        mine = data[:, header.index(name)]
+        peak = float(np.max(np.abs(ref)))
+        err = (float(np.max(np.abs(mine))) if peak == 0.0
+               else float(np.max(rel_err(mine, ref, 1e-6 * peak))))
+        if err > worst:
+            worst, worst_name = err, name
+    return worst, worst_name
+
+
+def outputs_of(net, y):
+    """pERK_IF_obs, pMEK_IF_obs and every observable of a `.net` along a trajectory."""
+    p = net["params"]
+    out = {"pERK_IF_obs": ind.perk_if(net, y),
+           "pMEK_IF_obs": (ind.group_value(net, "pMEK", y) / ind.group_value(net, "tMEK", y)
+                           * p["pMEK_IF_scale"] + p["pMEK_IF_offset"])}
+    out.update({name: ind.group_value(net, name, y) for name in net["groups"]})
+    return out
+
+
+def draw_variant_figure(path, bng, scipy_out, authors_out, seeds, authors_t0, results,
+                        measurements):
+    """verify_frohlich2023_preeq.png, to the figure contract of skills/curate-model/SKILL.md."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    sys.path.insert(0, str(HERE.parents[1] / "skills" / "curate-model" / "scripts"))
+    from verification_figure import (
+        Comparison,
+        overlay_axis,
+        parity_axis,
+        residual_axis,
+        summarize,
+        verdict_footer,
+    )
+
+    tol = TOLERANCES["pERK_IF_max_rel"][0]
+    perk = bng["pERK_IF_obs"]
+    floor = 1e-6 * float(np.max(np.abs(authors_out["pERK_IF_obs"])))
+    level1 = Comparison("independent SciPy (.net)", scipy_out["pERK_IF_obs"], tol=tol,
+                        floor=floor)
+    level2 = Comparison("authors' MARM2.0, their protocol", authors_out["pERK_IF_obs"],
+                        tol=tol, floor=floor)
+    fig, axes = plt.subplots(2, 4, figsize=(22, 9.4), gridspec_kw={"height_ratios": [2, 1]})
+    xlabel = "time after EGF (h)"
+    overlay_axis(axes[0, 0], TIMES, perk, [level1], model_label="BioNetGen run_network",
+                 ylabel="pERK_IF_obs (IF a.u.)", xlabel=xlabel,
+                 title="Level 1: BioNetGen vs independent SciPy")
+    residual_axis(axes[1, 0], TIMES, perk, level1, xlabel=xlabel)
+    overlay_axis(axes[0, 1], TIMES, perk, [level2], model_label="BioNetGen run_network",
+                 ylabel="pERK_IF_obs (IF a.u.)", xlabel=xlabel,
+                 title="Level 2: BioNetGen vs the authors' own model")
+    residual_axis(axes[1, 1], TIMES, perk, level2, xlabel=xlabel)
+
+    # every output, BioNetGen against the authors, each scaled by its own peak
+    names = [n for n in authors_out if n in bng]
+    mine = np.concatenate([bng[n] / (np.max(np.abs(authors_out[n])) or 1.0) for n in names])
+    ref = np.concatenate([authors_out[n] / (np.max(np.abs(authors_out[n])) or 1.0)
+                          for n in names])
+    groups = np.repeat(["IF readouts" if n.endswith("_obs") else "observables" for n in names],
+                       len(TIMES))
+    parity_axis(axes[0, 2], mine, ref, groups=groups, tol=tol,
+                label=f"all {len(names)} outputs x {len(TIMES)} times, scaled by peak",
+                xlabel="authors' MARM2.0 / peak", ylabel="BioNetGen / peak")
+    gd = results["bng_gdat_vs_authors"]
+    axes[0, 2].text(0.03, 0.84, f"max rel err {gd['value']:.2g} ({gd['worst']})\n"
+                    f"tol {gd['tol']:g} {'PASS' if gd['pass'] else 'FAIL'}",
+                    transform=axes[0, 2].transAxes, fontsize=8, va="top")
+
+    seeded = seeds != 0
+    ax = axes[0, 3]
+    ax.loglog(authors_t0[seeded], seeds[seeded], "o", ms=4, mfc="none", mec="tab:purple")
+    lim = [min(authors_t0[seeded].min(), seeds[seeded].min()) / 3,
+           max(authors_t0[seeded].max(), seeds[seeded].max()) * 3]
+    ax.plot(lim, lim, "-", color="0.3", lw=1)
+    sd = results["seeds_max_rel"]
+    ax.set(xlabel="authors' steady state + EGF step (uM)", ylabel="_preeq seed (uM)",
+           title=f"Seeds: {int(seeded.sum())} seeded species vs the authors' state")
+    ax.text(0.03, 0.96, f"max rel err {sd['value']:.2g} (tol {sd['tol']:g}, floor {FLOOR:g} uM)"
+            f"\nunseeded: authors' max {sd['unseeded_authors_max_uM']:.1g} uM",
+            transform=ax.transAxes, fontsize=8, va="top",
+            bbox={"fc": "white", "ec": "0.7", "alpha": 0.9, "pad": 2.5})
+    ax.grid(alpha=0.25, which="both")
+
+    ax = axes[1, 2]
+    ax.plot(TIMES, perk, "-", color="tab:blue", lw=1.5, label="BioNetGen run_network")
+    ax.errorbar(measurements["time_h"], measurements["mean"], yerr=measurements["std"],
+                fmt="s", ms=4, mfc="none", color="0.25", capsize=2,
+                label="Fig. 2A measurements (mean +/- SD)")
+    ax.set(xlim=(-0.05, 2.05), xlabel=xlabel, ylabel="pERK IF (a.u.)",
+           title="Fig. 2A data (descriptive, no tolerance)")
+    ax.text(0.97, 0.95, f"RMSE {measurements['rmse']:.3f} IF units (0-2 h)\n"
+            "best-ranked parameter set\n(row 0) only", transform=ax.transAxes, fontsize=8,
+            ha="right", va="top")
+    ax.legend(fontsize=8, loc="center right")
+    ax.grid(alpha=0.25)
+
+    ax = axes[1, 3]
+    signed = (seeds - authors_t0) / np.maximum(np.abs(authors_t0), FLOOR)
+    ax.axhspan(-sd["tol"], sd["tol"], color="tab:green", alpha=0.15,
+               label=f"tolerance +/-{sd['tol']:g}")
+    ax.axhline(0, color="0.4", lw=0.8)
+    ax.semilogx(np.maximum(authors_t0[seeded], 1e-18), signed[seeded], ".", ms=4,
+                color="tab:red")
+    span = max(float(np.max(np.abs(signed[seeded]))), sd["tol"])
+    ax.set_ylim(-1.45 * span, 2.1 * span)
+    ax.set(xlabel="authors' steady state + EGF step (uM)", ylabel="relative residual",
+           title="residual: seed vs authors' state")
+    ax.legend(fontsize=8, loc="lower right")
+    ax.grid(alpha=0.25)
+
+    fig.suptitle("Verification of mapk_adaptive_resistance_frohlich2023_preeq.bngl against the "
+                 "authors' MARM2.0 release (labsyspharm/marm2-supplement @ 7e97789, row 0),\n"
+                 "their Fig. 2A protocol: steady state at 1 uM vemurafenib, then 100 ng/mL EGF. "
+                 "Lines = BioNetGen; open markers = reference", fontsize=11)
+    fig.tight_layout(rect=(0, 0.075, 1, 0.95))
+    m1, m2 = summarize(TIMES, perk, level1), summarize(TIMES, perk, level2)
+    sc, mo = results["scipy_vs_authors"], results["model"]
+    extra = (f"model: parameters {mo['parameters']:.1g} (tol 1e-12), network "
+             f"{mo['species']} species / {mo['reactions']} reactions identical, dy/dt "
+             f"{mo['rhs']:.1g} (tol 1e-10) | .net + SciPy vs authors: pERK_IF "
+             f"{sc['pERK_IF_max_rel']:.1g}, pMEK_IF {sc['pMEK_IF_max_rel']:.1g}, observables "
+             f"{sc['observables_max_rel']:.1g}, species {sc['species_max_rel_to_peak']:.1g} "
+             f"(tol 1e-5) | seeds {sd['value']:.1g} (tol {sd['tol']:g}) | "
+             f"verdict: {'PASS' if results['verified'] else 'FAIL'}")
+    verdict_footer(fig, [m1, m2], extra=extra)
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
 
 
 def main():
@@ -671,7 +834,15 @@ def main():
 
         def amici_wrms(state):
             f = rhs_c(0.0, state)[moving]
-            return float(np.sqrt(np.mean((f / (1e-7 * np.abs(state[moving]) + 1e-9)) ** 2)))
+            scale = AMICI_SS_RTOL * np.abs(state[moving]) + AMICI_SS_ATOL
+            return float(np.sqrt(np.mean((f / scale) ** 2)))
+
+        # The authors' steady state must also pass the authors' own convergence test.
+        steady["amici_wrms_dxdt"] = amici_wrms(steady_c)
+        if steady["amici_wrms_dxdt"] >= 1.0:
+            sys.exit(f"steady state fails AMICI's test: WRMS {steady['amici_wrms_dxdt']:.2e}")
+        log(f"  AMICI steady-state test at it: WRMS of dx/dt {steady['amici_wrms_dxdt']:.2e} "
+            "(converged below 1)")
 
         f_seeds = rhs_c(0.0, seeds_without_egf)
         above = moving & (seeds_without_egf > FLOOR)
@@ -710,7 +881,150 @@ def main():
 
         model_ok = passed(model_results) and doses_ok
         model_equivalent = model_ok and passed(protocols["24h"])
-        all_pass = model_equivalent and passed(protocols["authors"])
+        primary_reproduces_authors = model_equivalent and passed(protocols["authors"])
+
+        # --- the _preeq variant: the authors' protocol, written into a .bngl ---------------
+        variant = None
+        authors_result = pulses["authors"][1]
+        if VARIANT.exists() and VARIANT_GDAT.exists():
+            vnet_path, _ = curated_network(workdir, args.bngpath, VARIANT)
+            vnet = ind.parse_net(vnet_path)
+            species_v, reactions_v = net_sections(vnet_path.read_text(encoding="utf-8"))
+            label_v = [canonical_species(s) for s in species_v]
+            if len(set(label_v)) != len(label_v) or set(label_v) != set(label_a):
+                sys.exit("the _preeq network does not have the authors' species")
+            index_v = {label: i for i, label in enumerate(label_v)}
+            to_variant = np.array([index_v[label] for label in label_a])
+            if (Counter(reaction_key(*r, identity) for r in reactions_v)
+                    != Counter(reaction_key(*r, to_variant) for r in reactions_a)):
+                sys.exit("the _preeq network does not have the authors' reactions")
+
+            def variant_order(x):
+                out = np.empty_like(x)
+                out[to_variant] = x
+                return out
+
+            log(f"_preeq .bngl expanded by BNG2.pl: {len(vnet['y0'])} species, "
+                f"{len(vnet['reactions'])} reactions, identical to the authors' (matches "
+                f"reference/{VARIANT.stem}.net)")
+            p_v = vnet["params"]
+            v_param = max(abs(p_v[BNGL_NAME.get(n, n)] - v) / abs(v) if v
+                          else abs(p_v[BNGL_NAME.get(n, n)]) for n, v in applied.items())
+            v_doses = p_v["RAFi_0"] == CONDITION_SIM["RAFi_0"] and \
+                p_v["EGF_0"] == CONDITION_SIM["EGF_0"]
+            rhs_v, abs_sv, moving_v = ind.make_rhs(vnet), abs(vnet["S"]), ~vnet["fixed"]
+            v_rhs = 0.0
+            for state in (vnet["y0"], variant_order(t0_states["authors"]),
+                          10.0 ** rng.uniform(-6, 0, len(vnet["y0"]))):
+                f_v = rhs_v(0.0, state)
+                f_a = variant_order(np.asarray(rhs_a(0.0, state[to_variant]),
+                                               dtype=float).ravel())
+                gross = abs_sv @ np.abs(ind.fluxes(vnet, state))
+                v_rhs = max(v_rhs, float(np.max(np.abs(f_v - f_a)[moving_v]
+                                                / np.maximum(gross[moving_v], 1e-300))))
+            vsol = ind.integrate(vnet, TIMES, rtol=RTOL, atol=ATOL, analytic_jacobian=True)
+            log("_preeq network integrated 0-2 h from its seeds (independent SciPy BDF)")
+            v_proto = protocol_metrics(vnet, vsol.y, variant_order(pulses["authors"][0]),
+                                       variant_order(t0_states["authors"]), authors_result,
+                                       species_v)
+            gh, gd = ind.load_gdat(VARIANT_GDAT)
+            if gd.shape[0] != len(TIMES) or np.max(np.abs(gd[:, 0] - TIMES)) > 1e-9:
+                sys.exit(f"{VARIANT_GDAT.name} is not on the 0-2 h, 200-step grid")
+            scipy_out = outputs_of(vnet, vsol.y)
+            authors_out = {"pERK_IF_obs": authors_result.expressions["pERK_IF_obs"],
+                           "pMEK_IF_obs": authors_result.expressions["pMEK_IF_obs"]}
+            authors_out.update({n: authors_result.observables[n] for n in vnet["groups"]})
+            authors_out = {k: np.asarray(v, dtype=float) for k, v in authors_out.items()}
+            bng_out = {n: gd[:, gh.index(n)] for n in scipy_out}
+            l1, l1_name = gdat_metrics(gh, gd, scipy_out)
+            l2, l2_name = gdat_metrics(gh, gd, authors_out)
+            # How steady the seeds are, by AMICI's test. The seeds differ from the authors'
+            # steady state by 13-digit rounding and by the species left unseeded below the
+            # seed floor; zeroing exactly those species in the authors' state isolates the
+            # second.
+            seeds_off = vnet["y0"].copy()
+            seeds_off[int(to_variant[egf_free])] = 0.0
+            unseeded_v = moving_v & (vnet["y0"] == 0)
+            seeded_v = moving_v & ~unseeded_v
+            steady_v = variant_order(y_steady)
+            floored = steady_v.copy()
+            floored[unseeded_v] = 0.0
+            f_off = rhs_v(0.0, seeds_off)
+
+            def wrms_v(state, mask=moving_v):
+                f = rhs_v(0.0, state)[mask]
+                scale = AMICI_SS_RTOL * np.abs(state[mask]) + AMICI_SS_ATOL
+                return float(np.sqrt(np.mean((f / scale) ** 2)))
+            measurements = np.genfromtxt(
+                REF / "frohlich2023_fig2a_vemurafenib1um_egf100ngml_measurements.csv",
+                delimiter=",", names=True)
+            within = measurements["time_h"] <= TIMES[-1]
+            rmse = float(np.sqrt(np.mean((np.interp(measurements["time_h"][within], TIMES,
+                                                    bng_out["pERK_IF_obs"])
+                                          - measurements["pERK_IF_mean"][within]) ** 2)))
+            # How far the primary is from this file: seeds, and the two committed run_network
+            # outputs, each relative to the _preeq value (descriptive, no tolerance).
+            primary_seeds = variant_order(net["y0"][to_curated])
+            either = (primary_seeds != 0) | (vnet["y0"] != 0)
+            seed_shift = rel_err(primary_seeds, vnet["y0"], FLOOR)
+            ph, pd = ind.load_gdat(REF / f"{STEM}_ode.gdat")
+            shift, shift_name = gdat_metrics(ph, pd, bng_out)
+            perk_shift = np.abs(pd[:, ph.index("pERK_IF_obs")] - bng_out["pERK_IF_obs"])
+            variant = {
+                "file": VARIANT.name, "sha256": sha256(VARIANT),
+                "model": {"parameters": v_param, "doses_match": bool(v_doses),
+                          "same_parameters_as_primary": p_v == p_c,
+                          "species": len(label_v), "reactions": len(reactions_v),
+                          "rhs": v_rhs},
+                "parameters_max_rel": verdict("parameters_max_rel", v_param),
+                "rhs_max_rel_to_gross_flux": verdict("rhs_max_rel_to_gross_flux", v_rhs),
+                **v_proto,
+                "bng_gdat_vs_scipy": verdict("bng_gdat_max_rel", l1, {"worst": l1_name}),
+                "bng_gdat_vs_authors": verdict("bng_gdat_max_rel", l2, {"worst": l2_name}),
+                "scipy_vs_authors": {k: v_proto[k]["value"] for k in v_proto},
+                "seeds_steadiness": {
+                    "note": "AMICI's steady-state test (WRMS of dy/dt, rtol 1e-7, atol 1e-9; "
+                            "converged below 1) at the seeds with free EGF removed, over every "
+                            "species and over the seeded ones only; and at the authors' steady "
+                            "state, as computed and with the species this file leaves unseeded "
+                            "set to zero, which isolates the seed floor. Descriptive",
+                    "amici_wrms_dydt_at_seeds": wrms_v(seeds_off),
+                    "amici_wrms_dydt_at_seeds_seeded_species_only": wrms_v(seeds_off, seeded_v),
+                    "amici_wrms_dydt_at_authors_steady_state": wrms_v(steady_v),
+                    "amici_wrms_dydt_at_authors_steady_state_unseeded_zeroed": wrms_v(floored),
+                    "n_unseeded": int(np.sum(unseeded_v)),
+                    "n_unseeded_produced": int(np.sum(unseeded_v & (f_off > 0))),
+                    "max_dydt_unseeded_uM_per_h": float(np.max(np.abs(f_off[unseeded_v]))),
+                    "max_rel_rate_per_h_seeded": float(np.max(
+                        np.abs(f_off[seeded_v]) / seeds_off[seeded_v]))},
+                "fig2a_rmse_IF_units_0_2h": rmse,
+                "primary_vs_preeq": {
+                    "note": "the primary's seeds and committed run_network .gdat against this "
+                            "file's, relative to max(|_preeq|, floor); descriptive",
+                    "seeds_max_rel": float(np.max(seed_shift[either])),
+                    "seeds_median_rel": float(np.median(seed_shift[either])),
+                    "seeds_worst": species_v[int(np.argmax(np.where(either, seed_shift, 0.0)))],
+                    "gdat_max_rel": shift, "gdat_worst": shift_name,
+                    "pERK_IF_max_rel": float(np.max(rel_err(
+                        pd[:, ph.index("pERK_IF_obs")], bng_out["pERK_IF_obs"],
+                        1e-6 * float(np.max(np.abs(bng_out["pERK_IF_obs"])))))),
+                    "pERK_IF_max_abs": float(np.max(perk_shift)),
+                    "pERK_IF_max_abs_at_time_h": float(TIMES[int(np.argmax(perk_shift))])},
+            }
+            variant["verified"] = bool(
+                v_param <= TOLERANCES["parameters_max_rel"][0] and v_doses
+                and v_rhs <= TOLERANCES["rhs_max_rel_to_gross_flux"][0]
+                and passed(v_proto) and variant["bng_gdat_vs_scipy"]["pass"]
+                and variant["bng_gdat_vs_authors"]["pass"])
+            draw_variant_figure(OUT_FIGURE, bng_out, scipy_out, authors_out, vnet["y0"],
+                                variant_order(t0_states["authors"]), variant,
+                                {"time_h": measurements["time_h"],
+                                 "mean": measurements["pERK_IF_mean"],
+                                 "std": measurements["pERK_IF_std"], "rmse": rmse})
+            log(f"drew {OUT_FIGURE.name}")
+        else:
+            log(f"{VARIANT.name} or {VARIANT_GDAT.name} absent: build it with "
+                "generator/build_frohlich2023_preeq.py and run BioNetGen, then re-run")
 
         # --- outputs -----------------------------------------------------------------------
         for label, path in OUT_TRAJECTORY.items():
@@ -721,8 +1035,8 @@ def main():
                              "authors_steady_state_uM", "authors_24h_uM"])
             steady_c, h24_c = curated_order(t0_states["authors"]), curated_order(t0_states["24h"])
             for i, text in enumerate(species_c):
-                writer.writerow([i + 1, text, f"{net['y0'][i]:.15g}", f"{steady_c[i]:.15g}",
-                                 f"{h24_c[i]:.15g}"])
+                writer.writerow([i + 1, text, repr(float(net["y0"][i])), repr(float(steady_c[i])),
+                                 repr(float(h24_c[i]))])
         summary = {
             "_comment": "Written by run_frohlich2023.py; do not edit by hand.",
             "bngl_sha256": sha256(BNGL),
@@ -745,11 +1059,14 @@ def main():
             "protocols": protocols,
             "bngl_seeds_steadiness": seeds_steadiness,
             "model_equivalent": bool(model_equivalent),
-            "all_pass": bool(all_pass),
+            "primary_reproduces_authors_protocol": bool(primary_reproduces_authors),
+            "preeq_variant": variant,
+            "exit_ok": bool(model_equivalent and variant is not None and variant["verified"]),
         }
         OUT_JSON.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n",
                             encoding="utf-8")
         log("wrote " + ", ".join(p.name for p in (*OUT_TRAJECTORY.values(), OUT_STATE, OUT_JSON)))
+        exit_ok = summary["exit_ok"]
     finally:
         if args.keep:
             log(f"scratch kept in {workdir}")
@@ -773,9 +1090,32 @@ def main():
         print(f"\n{title}")
         for name, res in protocols[label].items():
             show(name, res)
-    print(f"\nmodel equivalent to the authors' release: {'YES' if model_equivalent else 'NO'}")
-    print(f"reproduces the authors' Fig. 2A protocol:  {'YES' if all_pass else 'NO'}")
-    return 0 if all_pass else 1
+    print(f"\nprimary: model equivalent to the authors' release: "
+          f"{'YES' if model_equivalent else 'NO'}")
+    print(f"primary: reproduces the authors' Fig. 2A protocol:  "
+          f"{'YES' if primary_reproduces_authors else 'NO (documented deviation)'}")
+    if variant is not None:
+        print(f"\n{VARIANT.name} under the authors' protocol")
+        for name in ("parameters_max_rel", "rhs_max_rel_to_gross_flux", *v_proto,
+                     "bng_gdat_vs_scipy", "bng_gdat_vs_authors"):
+            show(name, variant[name])
+        print(f"  {'PASS' if variant['model']['doses_match'] else 'FAIL'}  "
+              f"{'doses in the .bngl':28s} as above")
+        print(f"  PASS  {'network':28s} {variant['model']['species']} species, "
+              f"{variant['model']['reactions']} reactions, identical to the authors'")
+        print(f"_preeq verified: {'YES' if variant['verified'] else 'NO'}")
+        st = variant["seeds_steadiness"]
+        print(f"_preeq seeds, AMICI steady-state WRMS (descriptive): "
+              f"{st['amici_wrms_dydt_at_seeds']:.2e} (seeded species only "
+              f"{st['amici_wrms_dydt_at_seeds_seeded_species_only']:.2e}; the authors' state "
+              f"with the unseeded zeroed "
+              f"{st['amici_wrms_dydt_at_authors_steady_state_unseeded_zeroed']:.2e})")
+        shift = variant["primary_vs_preeq"]
+        print(f"primary vs _preeq (descriptive): seeds {shift['seeds_max_rel']:.2e}, .gdat "
+              f"{shift['gdat_max_rel']:.2e} ({shift['gdat_worst']}), pERK_IF_obs "
+              f"{shift['pERK_IF_max_rel']:.2e} ({shift['pERK_IF_max_abs']:.2g} IF units at "
+              f"{shift['pERK_IF_max_abs_at_time_h']:g} h)")
+    return 0 if exit_ok else 1
 
 
 if __name__ == "__main__":
