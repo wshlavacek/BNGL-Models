@@ -1,0 +1,34 @@
+{
+  "_comment": [
+    "Provenance pin for the authors' model this slug is checked against. Nothing is copied:",
+    "the authors' repository grants no licence (see `license`), so the file is pinned by",
+    "commit, path and sha256 and fetched at check time (compare_upstream.py --fetch, into the",
+    "git-ignored dev/upstream/ cache) or read from a local checkout (--upstream DIR).",
+    "cstar_upstream.authors_file refuses a file whose sha256 differs.",
+    "cstar_skmel133_bmra_exact.bngl is the authors' file with documented edits (its header, its",
+    "inline rate-law comments, ../cstar_skmel133/cstar_skmel133.bngl); the comparison that",
+    "establishes it is upstream_comparison.json, written by compare_upstream.py."
+  ],
+  "publication": "Rukhlenko OS, Halasz M, Rauch N, Zhernovkov V, Prince T, Wynne K, Maher S, Kashdan E, MacLeod K, Carragher NO, Kolch W, Kholodenko BN (2022). Control of cell state transitions. Nature 609:975-985. doi:10.1038/s41586-022-05194-y",
+  "upstream_repository": "https://github.com/OleksiiR/cSTAR_Nature",
+  "pinned_commit": "bfb092f2e4bffcfc43b3de01c301303fc6d4fd36",
+  "pinned_commit_short": "bfb092f",
+  "pinned_commit_date": "2022-05-04T16:21:02Z",
+  "pinned_ref": "HEAD of main when pinned (2026-11-23); the repository's last push is this commit",
+  "license": {
+    "name": "none granted",
+    "statement": "All rights reserved. No licence is granted, express or implied, to use, copy, modify, or distribute the software code and/or data in this repository. Copyright 2021-2022 University College Dublin.",
+    "source": "README.md at the pinned commit; GitHub reports license null (no LICENSE file)",
+    "consequence": "not vendored: pinned by URL and sha256 only"
+  },
+  "verification_rule": "sha256 of the raw bytes at the pinned commit",
+  "file": {
+    "upstream_path": "SKMEL-133_models/SKMEL-133-3.bngl",
+    "raw_url": "https://raw.githubusercontent.com/OleksiiR/cSTAR_Nature/bfb092f2e4bffcfc43b3de01c301303fc6d4fd36/SKMEL-133_models/SKMEL-133-3.bngl",
+    "sha256": "b2e0ae87e5e7a68048a47420bd502117befb878609a3cfdcb415f18ab502cdca",
+    "git_blob": "abb8409f1f7a4e53f75ed61f5ce92be9b67d156b",
+    "last_changed_in": "5d8be86628ece3b02305c273811da27ba0d639e1 (2022-05-04, 'Add files via upload'); unchanged to the pinned commit",
+    "role": "The authors' SKMEL-133 melanoma model (44 species, 56 reactions) with their fitted parameters and their actions block, which is the published protocol: equilibrate 86400 s without inhibitors, then from that state each inhibitor arm (AKTi, IRSi and their combination for 30000 s; ERK, AKT, PKC, SRC, mTOR and CDK inhibitors at two doses for 86400 s)."
+  },
+  "verified": "2026-11-23"
+}
