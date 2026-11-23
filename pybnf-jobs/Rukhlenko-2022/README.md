@@ -145,6 +145,17 @@ deposition.
 | `RPPA_DA/RPPA_data_trusted.csv`, `RPPA_data_Trk_normalized_new.csv` | Trk fold-change targets |
 | `SKMEL-133_models/SKMEL-133-3.bngl`, `SKMEL-133_preproc/*.exp` | `cstar_skmel133`, `cstar_skmel133_bpsl` |
 
+**Pinned, not vendored.** The authors' repository is pinned at commit
+`bfb092f2e4bffcfc43b3de01c301303fc6d4fd36` (2022-05-04, its last push). It grants no licence
+(its README: "All rights reserved. No licence is granted, express or implied, to use, copy,
+modify, or distribute the software code and/or data in this repository."), so the checks
+against the authors' models copy none of its files. A slug checked that way pins its authors'
+file in `upstream.json` (path and sha256), and its `compare_upstream.py` fetches the file from
+the pinned commit (`--fetch`, into the git-ignored `dev/upstream/`) or reads a local checkout
+(`--upstream DIR`), then compares the two with BioNetGen alone. The shared code is
+[`cstar_upstream.py`](cstar_upstream.py); `tests/test_rukhlenko2022_upstream.py` keeps each
+pin, slug model and committed comparison in step.
+
 ## Run
 
 ```bash
