@@ -54,6 +54,17 @@ files:
     min_bionetgen_version: "2.9.3"
   - name: verify_samoilov2005.ipynb
     role: verification
+    description: >
+      Fresh BioNetGen output against the committed reference; BNG ODE against
+      an independent SciPy integration of Eqs. S5; BNG SSA against an
+      independent pure-Python Gillespie of Expressions 7 and 8; the reported
+      fixed point; and the digitized Fig. 3A trace. For _unordered_pair the
+      Fig. 3A check is asserted: the trace's mean X, mean X* and low-state
+      occupancy inside the central 95% of a 64-replicate BNG ensemble (|z| <=
+      1.96), and exactly two X* density modes within 15 molecules of the
+      published 108 and 292, on the notebook's seeds 1-64 and on eight further
+      disjoint 64-seed blocks. For the primary, which fails Fig. 3A, it is
+      printed. About 19 minutes on one node with 8 threads.
   - name: verify_samoilov2005.png
     role: figure
   # Reference simulation data
