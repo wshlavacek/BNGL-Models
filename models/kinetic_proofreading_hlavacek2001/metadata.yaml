@@ -30,6 +30,24 @@ files:
     role: verification
   - name: verify_hlavacek2001.png
     role: figure
+  - name: verify_hlavacek2001_steady_state.ipynb
+    role: verification
+    description: >
+      Steady states of the primary file over a koff dose-response: BNG2.pl (parameter_scan,
+      20 log-spaced koff from 1e-3 to 1 /s, each point run to 20000 s at rtol = atol = 1e-10)
+      against the exact steady state, i.e. the closed form D_i/D = alpha^i (1 - alpha) for
+      i < 5 and D_5/D = alpha^5, and every species from detailed balance of the two binding
+      steps plus the two conservation laws (one scalar root, no integration). Max relative
+      error 4.1e-12 on the dimer fractions and 2.9e-11 on the nine species, tolerance 1e-6
+      (reference exact; slowest relaxation 0.0099 /s); runs converged to 9.9e-12 between the
+      last two outputs (tolerance 1e-9). Also reports, without asserting, that the file's own
+      30-point scan (t_end = 1000 s) has not reached steady state below koff ~ 0.05 /s: free
+      ligand is 24% off and D_i/D 2.7e-4 off at koff = 1e-3.
+  - name: verify_hlavacek2001_steady_state.png
+    role: figure
+    description: >
+      Dimer fractions and species against the exact steady state at 20 doses, residuals with
+      the 1e-6 tolerance, and the committed 1000 s scan's distance from steady state.
   # Reference simulation data (reference/ subdirectory)
   - name: reference/kinetic_proofreading_hlavacek2001.net
     role: reference
