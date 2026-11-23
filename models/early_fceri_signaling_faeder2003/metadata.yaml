@@ -20,6 +20,16 @@ source:
     Src activation-loop transphosphorylation; this extension is beyond the
     published paper. It corrects a rule ("Fyn phosphorylation by SH2-bound
     Lyn") that is unreachable-as-distributed and generates zero reactions.
+    The primary reproduces Fig. 3 of the paper (model curves after 1.6 nM IgE
+    dimer, 0-70 min) when its model block, unchanged, is run at that dose
+    (Lig_tot = 963.5 scaled molecules): verify_faeder2003.ipynb compares it
+    with the nine curves digitized by digitize_faeder2003.py from the
+    publisher's figure raster, and with the numbers the Results section reads
+    off them. The file's own active protocol is a different published
+    condition: Lig_tot = 6000 is 10 nM at 1e6 cells/ml, run for 10 min, the
+    condition of Figs. 4 and 7, although the .bngl header describes it as a
+    Fig. 3-style time course. The .bngl is left unchanged (sha256 7dc745c0...,
+    pinned downstream).
 
 files:
   - name: early_fceri_signaling_faeder2003.bngl
@@ -46,12 +56,30 @@ files:
   - name: verify_faeder2003.ipynb
     role: verification
     description: >
-      Runs BioNetGen, confirms committed reference output, independently
-      integrates the generated mass-action ODE network with SciPy, and
-      overlays BioNetGen and SciPy observables. Covers both the primary
-      354-species model and the 1281-species _fyn variant.
+      Runs BioNetGen, confirms committed reference output, and independently
+      integrates the generated mass-action ODE network with SciPy, for the
+      primary 354-species model and the 1281-species _fyn variant. For the
+      primary it then runs the committed model block under the Fig. 3
+      protocol (1.6 nM IgE dimer, 70 min, ODE) and asserts the nine Fig. 3
+      model curves, computed from the species by an independent
+      classification, against the digitized curves (per curve RMSE <= 0.5%
+      and max <= 1% of panel full scale, half a plotted stroke), shows that
+      0.9x and 1.1x the dose fail, and asserts the nine numbers stated in the
+      Results at their quoted precision.
+  - name: digitize_faeder2003.py
+    role: verification
+    description: >
+      Recovers the nine model curves of Fig. 3 from the publisher's raster of
+      the figure (im0735521003.jpeg, sha256-checked, not committed;
+      dev/papers/Faeder2003/), with tick-fitted calibration, and regenerates
+      the four reference/faeder2003_fig3*_digitized.csv byte for byte. The
+      densitometry points are not digitized.
   - name: verify_faeder2003.png
     role: figure
+    description: >
+      Level 1 (BNG vs SciPy, both protocols), the aggregate parity of all
+      digitized Fig. 3 points, the dose sensitivity of the check, and the four
+      Fig. 3 panels redrawn with residuals and tolerance bands.
   - name: verify_faeder2003_fyn.png
     role: figure
   - name: reference/early_fceri_signaling_faeder2003.net
@@ -62,6 +90,28 @@ files:
     role: reference
   - name: reference/early_fceri_signaling_faeder2003_ode.cdat
     role: reference
+  - name: reference/faeder2003_fig3a_receptor_aggregation_digitized.csv
+    role: reference
+    description: >
+      Fig. 3a model curve, receptors in aggregates (% of receptors), digitized.
+  - name: reference/faeder2003_fig3b_receptor_phosphorylation_digitized.csv
+    role: reference
+    description: >
+      Fig. 3b model curves, receptors with gamma / beta ITAM phosphorylated
+      (% of receptors), digitized; no samples within 17 px of a data point's
+      error bar, so none before about 10 min.
+  - name: reference/faeder2003_fig3c_lyn_redistribution_digitized.csv
+    role: reference
+    description: >
+      Fig. 3c model curves, Lyn free / weakly associated / SH2-bound (% of
+      receptor number), digitized from 8 min on; the overlapping free and
+      weakly associated strokes are read by their edges (read = edge).
+  - name: reference/faeder2003_fig3d_syk_phosphorylation_digitized.csv
+    role: reference
+    description: >
+      Fig. 3d model curves, Syk phosphorylated by Lyn or Syk (total), by Syk
+      (auto, one sample per isolated dash) and by Lyn (one per isolated dot),
+      % of receptor number, digitized.
   - name: reference/early_fceri_signaling_faeder2003_fyn.net
     role: reference
   - name: reference/early_fceri_signaling_faeder2003_fyn_ode.net
