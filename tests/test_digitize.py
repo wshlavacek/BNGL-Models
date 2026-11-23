@@ -1,9 +1,10 @@
 """`skills/curate-model/scripts/digitize.py` holds the machinery shared by the committed
 figure digitizers, so a change to it can silently move every digitized value in the collection.
-Two guards: the module's own self-test over every helper, and a byte-for-byte replay of the two
-digitizers whose source PDFs are obtainable — mu2010 (vector, `pdftocairo -svg`) and
-malleshaiah2010 (raster, `pdftoppm` plus colour separation), which between them exercise both
-routes. The replays skip when the uncommitted PDF or an optional dependency is absent."""
+Two guards: the module's own self-test over every helper, and a byte-for-byte replay of the
+digitizers whose sources are obtainable — mu2010 (vector, `pdftocairo -svg`), malleshaiah2010
+(raster, `pdftoppm` plus colour separation) and faeder2003 (a publisher's JPEG, read in
+greyscale), which between them exercise both routes. The replays skip when the uncommitted
+source or an optional dependency is absent."""
 
 import importlib.util
 import shutil
@@ -86,4 +87,23 @@ def test_malleshaiah2010_digitizer_reproduces_committed_csvs():
         MALLESHAIAH / "digitize_malleshaiah2010.py",
         [],
         sorted((MALLESHAIAH / "reference").glob("malleshaiah2010_fig3b_*_digitized.csv")),
+    )
+
+
+FAEDER = Path("models/early_fceri_signaling_faeder2003")
+FAEDER_IMAGE = Path("dev/papers/Faeder2003/im0735521003.jpeg")
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("PIL") is None,
+    reason="pillow not installed (uv sync --group digitize)",
+)
+def test_faeder2003_digitizer_reproduces_committed_csvs():
+    """The raster route on a publisher JPEG (no PDF), with tick-fitted calibration."""
+    if not FAEDER_IMAGE.exists():
+        pytest.skip("Faeder2003 Fig. 3 image is not committed and is not present in dev/papers/")
+    _replay(
+        FAEDER / "digitize_faeder2003.py",
+        [str(FAEDER_IMAGE)],
+        sorted((FAEDER / "reference").glob("faeder2003_fig3*_digitized.csv")),
     )
