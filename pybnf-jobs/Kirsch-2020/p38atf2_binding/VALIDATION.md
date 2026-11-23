@@ -15,6 +15,15 @@ found a **wrong-observable defect** and re-scoped the job into **two** faithful 
 > curves were not reconstructed — the remaining "full joint fit"), and slug B rests on a
 > 4-point figure digitization.
 
+> **Correction (2026-11-23), `p38atf2_binding` only.** The Gate 3a claim that this slug
+> "reproduces" Fig. 4a at the published parameters does not hold at the data's stated precision:
+> the published point undershoots the WT control peak (1.39 vs 1.63-fold) with 3 of 19 points
+> beyond 3 SE (½χ² = 41.6). The published values were fitted jointly to the control and the
+> JNK-IN-8 NanoBit curves (Methods), and they sit above the second (½χ² = 33.0; joint 74.6), so
+> the single-curve comparison is reported, not asserted. Gate 2 is now a committed, asserted
+> BNG2.pl check (`check_author_file.py`). The confidence score above predates this correction and
+> is left as it was; Gates 2 and 3a below carry the details.
+
 Primary sources (in the untracked `dev/papers/Kirsch-2020/`; not redistributed):
 - Model + data paper: Kirsch K et al., *Nat Commun* 2020;11:5769. PMC7666158 /
   DOI 10.1038/s41467-020-19582-3 (`41467_2020_Article_19582.pdf`).
@@ -88,6 +97,13 @@ authors' file by hand. The only adaptations are cosmetic/functionally-equivalent
 (`k7_act()`, `k6_act()`) reproduce the authors' `setParameter(kstim7,keq7)` equilibration
 idiom exactly (max rel. diff 0.0); fitted constants declared `id nominal`, bound by name.
 
+**Committed, asserted check (2026-11-23).** The diff above ran on an untracked copy. The
+authors' file is now vendored byte-identical in `reference/` and pinned by URL and sha256 in
+`upstream.json`, and `check_author_file.py` runs both through BNG2.pl (no bngsim) and asserts
+(a) the same 48 species and 152 reactions, rate laws identical except `kstim7`/`kstim6` →
+`k7_act()`/`k6_act()`, and (b) under the authors' own equilibrate → stimulate protocol all four
+observables on their 2401-point grid agree to max |Δ| = 0.0 (tol 1e-6 of peak).
+
 **Verdict: PASS (identical generated network; functionally-equivalent refactor).**
 
 ## Gate 3a — Reproduce at the paper's parameters
@@ -96,14 +112,21 @@ Both slugs, model set to Supplementary Table 2 WT values (reproduced by running 
 authors' own file and the reconstruction identically):
 
 - **`p38atf2_binding`** (`p38ATF2all` ÷basal vs Fig. 4a WT NanoBit): **median 5.8 %**
-  rel-err (max 15.3 %) — captures the peak-decay transient.
+  rel-err (max 15.3 %) — the peak-decay shape, but **not within the data's uncertainty**: the
+  Source Data error bars are propagated SE (n = 3), and at 3 of 19 points (411–685 s) the model
+  lies 3.9–4.6 SE below the data (½χ² = 41.6; model peak 1.39 at 469 s, data 1.63 at 548 s).
+  The authors fitted `kstim6`, `dp2`, `dp4` to this curve **and** the WT + JNK-IN-8 curve
+  (k1 = k2 = 0); there the published point lies above the data (z up to +4.28, ½χ² = 33.0),
+  so the joint ½χ² is 74.6. Reported by `check_author_file.py`, not asserted.
 - **`ppatf2_phospho`** (`pT69pT71` absolute vs digitized Fig. 7b, two conditions): **CTR
   median 6.1 %**; **JNK-IN-8 median 12.5 %** (its 10-min point sits below the authors' own
   `calc-JNK-IN-8` line too). Both match the authors' published `calc` curves (CTR
   0.21→0.75 µM; JNK-IN-8 → 0.45 µM).
 
-**Verdict: PASS** — the model at the paper's own parameters reproduces the paper's own
-Fig. 4a / Fig. 7b curves, once mapped to the correct observables.
+**Verdict:** `ppatf2_phospho` PASS. `p38atf2_binding` **shape only, not asserted** (corrected
+2026-11-23): the correct observable has the published rise and fall, but the published point
+is a compromise between two curves and fits neither within its stated SE; the slug's
+verification rests on the asserted author-file check (Gate 2).
 
 ## Gate 3b — Recover the paper's parameters by fitting
 
@@ -146,8 +169,9 @@ The model is a byte-identical reconstruction of the authors' published BNGL, and
 are real Kirsch-2020 measurements — the defect was purely a **wrong observable mapping**
 (NanoBit p38-ATF2 *binding* fit to the ATF2 *phosphorylation* observable), now corrected by
 splitting into a binding slug (`p38atf2_binding`, tabulated data, `p38ATF2all`) and a
-phosphorylation slug (`ppatf2_phospho`, digitized Fig. 7b, `pT69pT71`). Both reproduce at
-the paper's parameters and recover their fitted params within ≤1.3×. The single most
+phosphorylation slug (`ppatf2_phospho`, digitized Fig. 7b, `pT69pT71`). Both have the published
+dynamics at the paper's parameters (for `p38atf2_binding` the shape, not within its SE; see
+Gate 3a) and recover their fitted params within ≤1.3×. The single most
 valuable next step to reach the paper's *full* determination is to digitize the Fig. 7b
 **pp-JNK** and **pp-p38** absolute-µM panels and run the 8-parameter **joint** fit across
 all datasets (pp-JNK + pp-p38 + pp-ATF2 + NanoBit) — the only piece not reconstructed here.

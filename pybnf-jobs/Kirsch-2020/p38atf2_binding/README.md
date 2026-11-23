@@ -71,7 +71,8 @@ basal/t=0 value = treated/untreated).
 - **No `begin actions` block** — the protocol is synthesized from the conf.
 - **`Stim` gate** (0/1) selects basal (`keq*`) vs stimulated (`kstim*`) MAPK-activation
   rates through two `functions`, replacing the authors' `setParameter(kstim7, keq7)`
-  equilibration idiom. Reproduces the authors' trajectories exactly (max rel. diff 0.0).
+  equilibration idiom. Reproduces the authors' trajectories exactly (max difference 0.0,
+  asserted by `check_author_file.py`; see "Author-file check" below).
 - Fitted constants are bare `id nominal` declarations at the published values; the conf's
   `*_var` free params bind to them **by name** (ADR-0034, no `__FREE`).
 
@@ -95,16 +96,60 @@ The data are treated/untreated ratios → `normalization = init`, which PyBNF's 
 cannot express in PEtab v2 (`NotImplementedError`), like `igf1r.conf` and the
 `Rukhlenko-2022/cstar_trka` example. Verified **without** the PEtab round-trip.
 
-## Verification (all pass)
+## Verification
 
 - **Tier-1** (`check_conf.py`): edition 2, `job_type=de`, data bound, 4 free params bind by
   id, no `__FREE`. **PASS.**
-- **Gate 3a — reproduce at published params** (BNG2.pl): `p38ATF2all` ÷basal reproduces the
-  Fig. 4a WT binding curve to **median 5.8 % rel. err** (max 15.3 %), capturing the
-  peak-decay transient.
+- **Author-file check** (BNG2.pl, asserted): the exact file is the authors' model on the
+  authors' protocol; below. **PASS.**
+- **Gate 3a — the data at published params** (BNG2.pl; reported, **not asserted**):
+  `p38ATF2all` ÷basal has the Fig. 4a WT peak-decay shape, median 5.8 % rel. err (max
+  15.3 %), but it does **not** fit the curve within the data's stated uncertainty; see
+  "The data at the published point" below.
 - **Gate 3b — recover by fitting** (`de`, ~19 s): all 4 params recovered within ~1.3× of
   published (table above); best-fit reproduces to **median 4.2 %** (obj 16.7 < published's).
+  That fit, like `nominal_check.json`, comes from bngsim; it is not independent evidence.
 - **Reproduction figure** `p38atf2_binding_reproduction.png` (published vs best-fit vs data).
+
+## Author-file check (BNG2.pl, asserted)
+
+[`check_author_file.py`](check_author_file.py) runs this exact file and the authors' own model
+through BNG2.pl, nothing else. The authors' file is Supplementary Software 1
+(`Bionetgen_JNK-p38-ATF2_model.bngl`; their ReadMe: "used for generating Figure_7b"), vendored
+byte-identical as [`reference/upstream_Bionetgen_JNK-p38-ATF2_model.bngl`](reference/) and pinned
+by URL and sha256 in [`upstream.json`](upstream.json); the script refuses a copy whose sha256
+differs. Its actions block is the published stimulation protocol: 20000 s of equilibration at the
+basal rates (`kstim7 = keq7`, `kstim6 = keq6` by `setParameter`), then 2400 s at the stimulated
+rates. This file runs the same protocol with `Stim = 0` then `Stim = 1`. Tolerances were fixed
+before the run; it writes [`reference/author_file_check.json`](reference/author_file_check.json)
+and [`p38atf2_binding_author_file_check.png`](p38atf2_binding_author_file_check.png), and exits 1
+if (a) or (b) fails. The file checked is `p38atf2_binding.bngl` with sha256 `bedf1d89…5df0`.
+
+| check | result | tolerance |
+|---|---|---|
+| (a) generated networks | 48 species and 152 reactions in both, same reactants and products; rate laws identical except the two activation steps (`kstim7`/`kstim6` there, `k7_act()`/`k6_act()` here) | identical |
+| (b) all four observables on the authors' 2401-point grid (0–2400 s), equilibrated state at t = 0 included | max \|Δ\| = **0.0** for every observable | 1e-6 of peak |
+
+## The data at the published point (reported, not asserted)
+
+The same script also scores the published point against the Fig. 4a NanoBit curves, as
+treated/untreated = `p38ATF2all(t)/p38ATF2all(0)` under the stimulated protocol. The Source Data
+error rows are headed SD but are propagated standard errors of n = 3 (cell C27), 2.3–7.7 % of the
+value; the t = 0 point, where the ratio must be exactly 1, reads 1.044 (+1.2 SE).
+
+| curve | ½χ² | median \|rel\| (max) | z range | points beyond 3 SE | peak, data vs model |
+|---|---|---|---|---|---|
+| WT control (`p38atf2_binding.exp`, the curve this job fits) | 41.6 | 5.8 % (15.3 %) | −4.60 … +0.89 | **3 / 19** (411, 548, 685 s) | 1.634 at 548 s vs 1.390 at 469 s |
+| WT + JNK-IN-8 (`reference/fig4a_wt_jnkin8.exp`, k1 = k2 = 0) | 33.0 | 4.8 % (12.1 %) | −0.18 … +4.28 | 1 / 19 | 2.384 at 2055 s vs 2.440 at 2466 s |
+| both curves (the authors' objective) | **74.6** | | | | |
+
+So at the data's own precision the published point does **not** reproduce the control curve: the
+model undershoots its peak (excess over baseline 0.39 against 0.63). The reason is in the Methods:
+`kstim6`, `dp2` and `dp4` were fitted with PyBioNetFit to **both** NanoBit curves, the control
+and JNK-IN-8 (simulated with k1 = k2 = 0), and the published point sits below the first and above
+the second, residuals of opposite sign. A single-curve comparison is therefore not the authors'
+objective, and no tolerance justified by these error bars passes it; it is recorded here, not
+asserted. The job itself still fits the control curve alone.
 
 ## Run
 
@@ -112,6 +157,7 @@ cannot express in PEtab v2 (`NotImplementedError`), like `igf1r.conf` and the
 export BNGPATH="$HOME/Simulations/BioNetGen-2.9.3"   # folder with BNG2.pl
 cd pybnf-jobs/Kirsch-2020/p38atf2_binding
 pybnf -c p38atf2_binding.conf
+BNGPATH=$BNGPATH uv run python check_author_file.py   # author-file check (BNG2.pl only)
 ```
 
 ## `_manifest.py` entry (if promoted to the PyBNF real-world corpus)
