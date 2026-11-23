@@ -69,7 +69,11 @@ files:
     role: verification
     description: >
       Both verification levels, the network structural checks, and the
-      measurement that settles the reaction-limited k_on. Committed with outputs.
+      measurement that settles the reaction-limited k_on, each asserted with a
+      stated tolerance (level 1 against the exact null space 1e-6; level 2 RMSE
+      0.02 of full scale over all 80 curves); the Hill-number insets are
+      reported, not asserted. Also asserts that the fresh run reproduces the
+      committed .net and .scan files. Committed with outputs.
     scale: trivial
   - name: verify_dushek2011.png
     role: figure
