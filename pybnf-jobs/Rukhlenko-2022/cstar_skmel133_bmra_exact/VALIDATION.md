@@ -81,10 +81,20 @@ from `chi_sq` (11 arms = dose1×6 + dose2×5).
 ## Gate 2 — Model fidelity: **PASS (equiv)**
 `cstar_skmel133_bmra_exact.bngl` = `../cstar_skmel133_bmra.bngl` with its 20 `cc_<edge>` sign
 carriers replaced by the 20 exact `r_<tgt>_<src>()` functions (the 3 `cc_S*` DPD sign carriers and
-the conserved `totERK` are kept). Its generated network is byte-identical to the authors'
-`SKMEL-133-3.bngl` (44 species / 56 reactions); **no reaction rule, rate law, initial condition, or
-parameter value is changed** — the `r_ij()` are pure post-hoc functions of existing observables and
-parameters. All published γ/K/β nominals = the authors' `SKMEL-133-3.bngl` values.
+the conserved `totERK` are kept). Its generated network is identical to the authors'
+`SKMEL-133-3.bngl` (44 species / 56 reactions); **no reaction rule is changed** — the `r_ij()` are
+pure post-hoc functions of existing observables and parameters. All published γ/K/β nominals = the
+authors' `SKMEL-133-3.bngl` values. Two edits are not post-hoc: the eight inhibitor doses are 0
+(the DMSO baseline), and the ERK, AKT and SRC phosphorylation rate laws read the dose as the
+parameter `I_X_conc` instead of the fixed inhibitor species `I_X` (equivalent at equal values).
+
+> **Committed and re-runnable since 2026-11-23:** [`compare_upstream.py`](compare_upstream.py)
+> pins `SKMEL-133-3.bngl` at OleksiiR/cSTAR_Nature@bfb092f by sha256 (`upstream.json`; not
+> vendored, the repository grants no licence) and checks, with BioNetGen only, that the two
+> networks are identical (species and reactions in bijection, rate coefficients and dy/dt equal at
+> sampled states, the differences exactly the ones above) and that this `.bngl` reproduces the
+> authors' own actions block (the 86400 s equilibration and all 15 inhibitor arms) to the printed
+> digits. Results: `upstream_comparison.json`; summary in the README.
 
 ## Gate 3a — Reproduce at the paper's parameters: **PASS**
 At the authors' published parameters the model reproduces the 11 single-drug 24 h fold-change arms

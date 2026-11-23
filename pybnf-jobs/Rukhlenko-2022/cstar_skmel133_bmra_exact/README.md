@@ -92,6 +92,9 @@ separatrix. The published parameters satisfy it with wide margin (`Sval = +9.95`
 | `prep_exp.py` | the mechanical `.exp` edits (src = authors' `SKMEL-133_preproc/`) |
 | `make_reproduction.py` · `cstar_skmel133_bmra_exact_reproduction.png` | Gate-3a reproduction figure (11 arms + the exact BMRA-CI test) |
 | `VALIDATION.md` | the earned-confidence gate write-up (**90/100**) |
+| `upstream.json` | pin of the authors' `SKMEL-133-3.bngl` (commit, path, sha256); not vendored |
+| `compare_upstream.py` | BioNetGen-only comparison of the `.bngl` with the authors' file |
+| `upstream_comparison.json` | what that comparison measured, against which tolerance |
 
 ## ⚠️ Native-only (not PEtab-v2-exportable)
 
@@ -114,6 +117,38 @@ Both `normalization = init` (fold-change data) **and** the BPSL `.prop` make thi
   bringing **3 of the 4** published-out-of-band edges into their CI (AKT←ERK, AKT←PKC, MYC←CDK) and
   keeping all 3 DPD signs. AKT←IRS remains just outside (the structurally-hardest AKT edge); a full
   pop-12 × 50-iter run closes the residual further.
+
+## Checked against the authors' file (BioNetGen only)
+
+`compare_upstream.py` compares `cstar_skmel133_bmra_exact.bngl` as committed with the authors'
+`SKMEL-133_models/SKMEL-133-3.bngl` at
+[OleksiiR/cSTAR_Nature@bfb092f](https://github.com/OleksiiR/cSTAR_Nature/tree/bfb092f2e4bffcfc43b3de01c301303fc6d4fd36)
+(sha256 `b2e0ae87...`, pinned in `upstream.json`). That repository grants no licence ("All
+rights reserved"), so the file is not copied here: `--fetch` downloads it from the pinned commit
+into the git-ignored `dev/upstream/` and checks its sha256, or `--upstream DIR` reads a local
+checkout. Nothing uses bngsim; the shared code is `../cstar_upstream.py`. Every number below is
+in `upstream_comparison.json` (BioNetGen 2.9.3):
+
+| check | measured | asserted |
+|---|---|---|
+| species (canonical labels), reactions (canonical reactants and products) | 44 = 44, 56 = 56, both bijections, same order | bijection |
+| rate coefficients, dy/dt (to each species' gross flux), functions, observables at 32 sampled states (`Sval` over every `if()` branch), with `I_ERK/AKT/SRC_conc` equal to the authors' inhibitor species | 0 | ≤ 1e-12 |
+| differences | the eight inhibitor doses (0 here); the ERK, AKT and SRC phosphorylation rate laws read `1/(1+I_X_conc)` where the authors' read `1/(1+I_X)`; the added `totERK` observable and 32 constraint functions, none used by a rate law | exactly these |
+| trajectories under the published protocol: the 86400 s equilibration and all 15 inhibitor arms (AKTi, IRSi and both for 30000 s; ERK, AKT, PKC, SRC, mTOR, CDK inhibitors at two doses for 86400 s), every species, observable and function | 15 phases identical to the printed digits, one at 2.7e-14 | ≤ 1e-9 of peak |
+
+The published protocol is the authors' own actions block, run verbatim on their file. The slug's
+file runs the same actions, translated mechanically: an inhibitor's `setConcentration` is kept,
+and for ERK, AKT and SRC the matching `I_X_conc` parameter is set to the same value before each
+`simulate` (a dose the slug sets to 0 is written out as the authors' value). Run to steady state
+instead of for 86400 s (reported, not asserted), the pre-equilibrated state moves by at most
+3.0e-5 and every arm by at most 2.9e-5 (`Sval` at the end of each of the 15 arms by at most
+7.8e-7, relative), so here a steady-state pre-equilibration is an adequate stand-in; BioNetGen's
+default tolerances are accurate to 4.4e-6 of peak (`solver_error`).
+
+```bash
+export BNGPATH="$HOME/Simulations/BioNetGen-2.9.3"   # folder with BNG2.pl
+uv run python pybnf-jobs/Rukhlenko-2022/cstar_skmel133_bmra_exact/compare_upstream.py --fetch
+```
 
 ## Run
 

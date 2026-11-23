@@ -1,0 +1,1633 @@
+{
+ "slug": "cstar_skmel133_bmra_exact",
+ "generated_by": "pybnf-jobs/Rukhlenko-2022/cstar_skmel133_bmra_exact/compare_upstream.py",
+ "bionetgen_version": "2.9.3",
+ "job_file": {
+  "path": "cstar_skmel133_bmra_exact.bngl",
+  "sha256": "4098c494a4ee0661455b7b66113695de829198cec3d8ca99d2a90b7aa6f0ae35"
+ },
+ "authors_file": {
+  "repository": "https://github.com/OleksiiR/cSTAR_Nature",
+  "commit": "bfb092f2e4bffcfc43b3de01c301303fc6d4fd36",
+  "path": "SKMEL-133_models/SKMEL-133-3.bngl",
+  "sha256": "b2e0ae87e5e7a68048a47420bd502117befb878609a3cfdcb415f18ab502cdca"
+ },
+ "protocol": {
+  "authors_actions": [
+   "generate_network({overwrite=>1})",
+   "writeSBML()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"equilibration1\",method=>\"ode\",t_end=>86400,n_steps=>8640,print_functions=>1})",
+   "saveConcentrations()",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",3)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"AKTinh\",method=>\"ode\",t_end=>30000,n_steps=>3000,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",4)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"IRSinh\",method=>\"ode\",t_end=>30000,n_steps=>3000,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",2)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",1.5)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"combo\",method=>\"ode\",t_end=>30000,n_steps=>3000,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",\"I_ERK_conc\")",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"dose1_S_ERKinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",\"2*I_ERK_conc\")",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"dose2_S_ERKinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",\"I_AKT_conc\")",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"dose1_S_AKTinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",\"2*I_AKT_conc\")",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"dose2_S_AKTinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",\"I_PKC_conc\")",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"dose1_S_PKCinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",\"2*I_PKC_conc\")",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"dose2_S_PKCinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",\"I_SRC_conc\")",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"dose1_S_SRCinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",\"2*I_SRC_conc\")",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"dose2_S_SRCinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",\"I_mTOR_conc\")",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"dose1_S_mTORinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",\"2*I_mTOR_conc\")",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"dose2_S_mTORinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",\"I_CDK_conc\")",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"dose1_S_CDKinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",\"2*I_CDK_conc\")",
+   "setConcentration(\"IMYC()\",0)",
+   "simulate({suffix=>\"dose2_S_CDKinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})"
+  ],
+  "job_actions": [
+   "generate_network({overwrite=>1})",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"0\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"equilibration1\",method=>\"ode\",t_end=>86400,n_steps=>8640,print_functions=>1})",
+   "saveConcentrations()",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",3)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"3\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"AKTinh\",method=>\"ode\",t_end=>30000,n_steps=>3000,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",4)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"0\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"IRSinh\",method=>\"ode\",t_end=>30000,n_steps=>3000,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",2)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",1.5)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"1.5\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"combo\",method=>\"ode\",t_end=>30000,n_steps=>3000,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",\"(1.3122028733013222)\")",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"(1.3122028733013222)\")",
+   "setParameter(\"I_AKT_conc\",\"0\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"dose1_S_ERKinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",\"2*(1.3122028733013222)\")",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"2*(1.3122028733013222)\")",
+   "setParameter(\"I_AKT_conc\",\"0\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"dose2_S_ERKinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",\"(4.32073354133792)\")",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"(4.32073354133792)\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"dose1_S_AKTinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",\"2*(4.32073354133792)\")",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"2*(4.32073354133792)\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"dose2_S_AKTinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",\"(1.7250107623770197)\")",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"0\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"dose1_S_PKCinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",\"2*(1.7250107623770197)\")",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"0\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"dose2_S_PKCinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",\"(0.5173293874300976)\")",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"0\")",
+   "setParameter(\"I_SRC_conc\",\"(0.5173293874300976)\")",
+   "simulate({suffix=>\"dose1_S_SRCinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",\"2*(0.5173293874300976)\")",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"0\")",
+   "setParameter(\"I_SRC_conc\",\"2*(0.5173293874300976)\")",
+   "simulate({suffix=>\"dose2_S_SRCinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",\"(1.3510883690081217)\")",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"0\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"dose1_S_mTORinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",\"2*(1.3510883690081217)\")",
+   "setConcentration(\"ICDK(CDKBD)\",0)",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"0\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"dose2_S_mTORinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",\"(3.128238440223784)\")",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"0\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"dose1_S_CDKinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"IIRS(IRSBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IPKC(PKCBD)\",0)",
+   "setConcentration(\"ISRC(SRCBD)\",0)",
+   "setConcentration(\"ImTOR(mTORBD)\",0)",
+   "setConcentration(\"ICDK(CDKBD)\",\"2*(3.128238440223784)\")",
+   "setConcentration(\"IMYC()\",0)",
+   "setParameter(\"I_ERK_conc\",\"0\")",
+   "setParameter(\"I_AKT_conc\",\"0\")",
+   "setParameter(\"I_SRC_conc\",\"0\")",
+   "simulate({suffix=>\"dose2_S_CDKinh\",method=>\"ode\",t_end=>86400,n_steps=>864,print_functions=>1})"
+  ]
+ },
+ "tolerances": {
+  "rate_coefficient_max_rel": {
+   "value": 1e-12,
+   "reason": "both sides are the same IEEE doubles: the slug's file only multiplies some constants by a gate equal to 1 or replaces a fixed species by a parameter of the same value"
+  },
+  "rhs_max_rel_to_gross_flux": {
+   "value": 1e-12,
+   "reason": "dy/dt of both networks at the same states, relative to each species' gross turnover sum_j |S_ij r_j|"
+  },
+  "common_functions_max_rel": {
+   "value": 1e-12,
+   "reason": "every function both files define, at the same states (the observable and function columns of the .gdat)"
+  },
+  "common_observables_max_rel": {
+   "value": 1e-12,
+   "reason": "every observable both files define, at the same states"
+  },
+  "trajectory_max_rel_to_peak": {
+   "value": 1e-09,
+   "reason": "max_t |authors - slug| / max(peak, 1e-8) for every species, observable and function of a phase. The two runs give the same run_network binary the same equations, parameter doubles and initial state (the translation keeps the authors' expressions, which BNG2.pl passes on in full precision), and CVODE is deterministic, so they must agree to the 13 significant digits BioNetGen prints; 1e-9 allows only last-digit rounding. 1e-8 is the solver's absolute tolerance, below which values are solver noise. The bound is far below the solver's own error (solver_error), so even an equivalent reformulation that changed CVODE's step sequence would be flagged: the claim is identity"
+  }
+ },
+ "notes": {
+  "protocol": "The published protocol is the authors' actions block, run verbatim. Its pre-equilibration is a finite 86400 s phase; protocol_sensitivity reports how far a steady-state pre-equilibration moves the state and each arm."
+ },
+ "network": {
+  "species": {
+   "authors": 44,
+   "job": 44,
+   "only_authors": [],
+   "only_job": [],
+   "bijection": true,
+   "same_order": true
+  },
+  "reactions": {
+   "authors": 56,
+   "job": 56,
+   "unmatched": [],
+   "multiplicity_mismatch": 0,
+   "bijection": true,
+   "same_order_and_rate_law_text": true
+  },
+  "observables": {
+   "only_authors": [],
+   "only_job": [
+    "totERK"
+   ],
+   "differing_definition": []
+  },
+  "functions": {
+   "only_authors": [],
+   "only_job": [
+    "C_AKT",
+    "C_CDK",
+    "C_ERK",
+    "C_SRC",
+    "C_mTOR",
+    "cc_SPKC",
+    "cc_SSRC",
+    "cc_SmTOR",
+    "r_AKT_CDK",
+    "r_AKT_ERK",
+    "r_AKT_IRS",
+    "r_AKT_MYC",
+    "r_AKT_PKC",
+    "r_CDK_ERK",
+    "r_CDK_MYC",
+    "r_CDK_mTOR",
+    "r_ERK_CDK",
+    "r_ERK_IRS",
+    "r_ERK_SRC",
+    "r_ERK_mTOR",
+    "r_MYC_CDK",
+    "r_SRC_ERK",
+    "r_SRC_MYC",
+    "r_SRC_PKC",
+    "r_mTOR_AKT",
+    "r_mTOR_CDK",
+    "r_mTOR_PKC",
+    "r_mTOR_SRC",
+    "sl_AKT",
+    "sl_ERK",
+    "sl_SRC",
+    "sl_mTOR"
+   ],
+   "only_job_used_by_rate_laws": [],
+   "differing_text": {
+    "_rateLaw10": {
+     "authors": "((((((vpERK*alpha_IRSERK())*alpha_mTORERK())*alpha_SRCERK())*alpha_CDKERK())/KpERK)*(1/(1+I_ERK)))/(1.0+(nERK/KpERK))",
+     "job": "((((((vpERK*alpha_IRSERK())*alpha_mTORERK())*alpha_SRCERK())*alpha_CDKERK())/KpERK)*(1/(1+I_ERK_conc)))/(1.0+(nERK/KpERK))"
+    },
+    "_rateLaw12": {
+     "authors": "(((((((vpAKT*alpha_IRSAKT())*alpha_ERKAKT())*alpha_CDKAKT())*alpha_PKCAKT())*alpha_MYCAKT())/KpAKT)*(1/(1+I_AKT)))/(1.0+(nAKT/KpAKT))",
+     "job": "(((((((vpAKT*alpha_IRSAKT())*alpha_ERKAKT())*alpha_CDKAKT())*alpha_PKCAKT())*alpha_MYCAKT())/KpAKT)*(1/(1+I_AKT_conc)))/(1.0+(nAKT/KpAKT))"
+    },
+    "_rateLaw16": {
+     "authors": "(((((vpSRC*alpha_ERKSRC())*alpha_PKCSRC())*alpha_MYCSRC())/KpSRC)*(1/(1+I_SRC)))/(1.0+(nSRC/KpSRC))",
+     "job": "(((((vpSRC*alpha_ERKSRC())*alpha_PKCSRC())*alpha_MYCSRC())/KpSRC)*(1/(1+I_SRC_conc)))/(1.0+(nSRC/KpSRC))"
+    }
+   }
+  },
+  "parameters": {
+   "only_authors": [],
+   "only_job": {},
+   "differing_value": {
+    "I_IRS_conc": {
+     "authors": 0.5,
+     "job": 0.0
+    },
+    "I_MYC_conc": {
+     "authors": 0.5,
+     "job": 0.0
+    },
+    "I_AKT_conc": {
+     "authors": 4.32073354133792,
+     "job": 0.0
+    },
+    "I_ERK_conc": {
+     "authors": 1.3122028733013222,
+     "job": 0.0
+    },
+    "I_PKC_conc": {
+     "authors": 1.7250107623770197,
+     "job": 0.0
+    },
+    "I_SRC_conc": {
+     "authors": 0.5173293874300976,
+     "job": 0.0
+    },
+    "I_mTOR_conc": {
+     "authors": 1.3510883690081217,
+     "job": 0.0
+    },
+    "I_CDK_conc": {
+     "authors": 3.128238440223784,
+     "job": 0.0
+    }
+   },
+   "differing_text": [
+    "I_AKT_conc",
+    "I_CDK_conc",
+    "I_ERK_conc",
+    "I_IRS_conc",
+    "I_MYC_conc",
+    "I_PKC_conc",
+    "I_SRC_conc",
+    "I_mTOR_conc"
+   ]
+  },
+  "conditions": {
+   "inhibitors as sampled; the slug's I_ERK/AKT/SRC_conc = the authors' species": {
+    "states": 32,
+    "rate_coefficient_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "rhs_max_rel_to_gross_flux": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "common_functions_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "common_observables_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    }
+   }
+  },
+  "documented_differences": {
+   "parameters_only_job": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "parameters_only_authors": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "parameters_differing_value": {
+    "found": [
+     "I_AKT_conc",
+     "I_CDK_conc",
+     "I_ERK_conc",
+     "I_IRS_conc",
+     "I_MYC_conc",
+     "I_PKC_conc",
+     "I_SRC_conc",
+     "I_mTOR_conc"
+    ],
+    "documented": [
+     "I_AKT_conc",
+     "I_CDK_conc",
+     "I_ERK_conc",
+     "I_IRS_conc",
+     "I_MYC_conc",
+     "I_PKC_conc",
+     "I_SRC_conc",
+     "I_mTOR_conc"
+    ],
+    "pass": true
+   },
+   "observables_only_job": {
+    "found": [
+     "totERK"
+    ],
+    "documented": [
+     "totERK"
+    ],
+    "pass": true
+   },
+   "observables_only_authors": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "observables_differing_definition": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "functions_only_job_used_by_rate_laws": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "functions_only_authors": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "functions_differing_text": {
+    "found": [
+     "_rateLaw10",
+     "_rateLaw12",
+     "_rateLaw16"
+    ],
+    "documented": [
+     "_rateLaw10",
+     "_rateLaw12",
+     "_rateLaw16"
+    ],
+    "pass": true
+   }
+  }
+ },
+ "trajectories": {
+  "equilibration1": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 8641,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "AKTinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 3001,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "IRSinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 3001,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "combo": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 3001,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "dose1_S_ERKinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 865,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "dose2_S_ERKinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 865,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "dose1_S_AKTinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 865,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "dose2_S_AKTinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 865,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "dose1_S_PKCinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 865,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "dose2_S_PKCinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 865,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "dose1_S_SRCinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 2.7094930316857002e-14,
+    "max_abs": 2.7094930316857e-22,
+    "worst": "S6",
+    "identical": false
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 2.7094930316857002e-14,
+    "max_abs": 9.214999852969632e-19,
+    "worst": "I_IRS",
+    "identical": false
+   },
+   "time_points": 865,
+   "species_max_rel_to_peak": {
+    "value": 2.7094930316857002e-14,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 2.7094930316857002e-14,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "dose2_S_SRCinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 865,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "dose1_S_mTORinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 865,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "dose2_S_mTORinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 865,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "dose1_S_CDKinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 865,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "dose2_S_CDKinh": {
+   "species": {
+    "compared": 44,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 99,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "tIRS",
+    "identical": true
+   },
+   "time_points": 865,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  }
+ },
+ "solver_error": {
+  "equilibration1": {
+   "species_max_rel_to_peak": 3.609270111841907e-07,
+   "species_max_abs": 8.616890010415545e-07,
+   "species_worst": "S31",
+   "observables_max_rel_to_peak": 4.3917484716674e-07,
+   "observables_max_abs": 1.0486719997260252e-05,
+   "observables_worst": "r_CDK_mTOR"
+  },
+  "AKTinh": {
+   "species_max_rel_to_peak": 5.060658552848367e-07,
+   "species_max_abs": 6.518139983313631e-07,
+   "species_worst": "S40",
+   "observables_max_rel_to_peak": 1.2757852121708754e-06,
+   "observables_max_abs": 3.6719900009529738e-06,
+   "observables_worst": "Seq"
+  },
+  "IRSinh": {
+   "species_max_rel_to_peak": 9.355824714775693e-07,
+   "species_max_abs": 6.205430000960632e-07,
+   "species_worst": "S28",
+   "observables_max_rel_to_peak": 2.2638884098522314e-06,
+   "observables_max_abs": 4.797719999061201e-06,
+   "observables_worst": "Seq"
+  },
+  "combo": {
+   "species_max_rel_to_peak": 6.925258767508838e-07,
+   "species_max_abs": 6.89271299991745e-06,
+   "species_worst": "S25",
+   "observables_max_rel_to_peak": 1.2935029873742339e-06,
+   "observables_max_abs": 6.89271299991745e-06,
+   "observables_worst": "Seq"
+  },
+  "dose1_S_ERKinh": {
+   "species_max_rel_to_peak": 1.1625761494086687e-06,
+   "species_max_abs": 7.35462999834624e-07,
+   "species_worst": "S34",
+   "observables_max_rel_to_peak": 3.445178087018886e-06,
+   "observables_max_abs": 1.0817060001500067e-05,
+   "observables_worst": "Seq"
+  },
+  "dose2_S_ERKinh": {
+   "species_max_rel_to_peak": 1.7235061381674238e-06,
+   "species_max_abs": 1.1410230000841182e-06,
+   "species_worst": "S34",
+   "observables_max_rel_to_peak": 3.625513802411366e-06,
+   "observables_max_abs": 1.4449440000063873e-05,
+   "observables_worst": "Seq"
+  },
+  "dose1_S_AKTinh": {
+   "species_max_rel_to_peak": 5.249486451201312e-07,
+   "species_max_abs": 5.2248160999912585e-06,
+   "species_worst": "S25",
+   "observables_max_rel_to_peak": 8.593402161588376e-07,
+   "observables_max_abs": 5.2248160999912585e-06,
+   "observables_worst": "Seq"
+  },
+  "dose2_S_AKTinh": {
+   "species_max_rel_to_peak": 5.07645754012441e-07,
+   "species_max_abs": 3.6872819999533846e-06,
+   "species_worst": "S40",
+   "observables_max_rel_to_peak": 6.085575154428904e-07,
+   "observables_max_abs": 3.7856400005864543e-06,
+   "observables_worst": "Seq"
+  },
+  "dose1_S_PKCinh": {
+   "species_max_rel_to_peak": 4.3692896955654735e-06,
+   "species_max_abs": 1.0493450002257987e-06,
+   "species_worst": "S42",
+   "observables_max_rel_to_peak": 2.4214375349724178e-06,
+   "observables_max_abs": 6.35574999918731e-06,
+   "observables_worst": "pPKCt"
+  },
+  "dose2_S_PKCinh": {
+   "species_max_rel_to_peak": 2.1811596867657073e-07,
+   "species_max_abs": 9.617370000380987e-07,
+   "species_worst": "S42",
+   "observables_max_rel_to_peak": 5.107510749157762e-07,
+   "observables_max_abs": 3.640170000096532e-06,
+   "observables_worst": "Seq"
+  },
+  "dose1_S_SRCinh": {
+   "species_max_rel_to_peak": 5.366413273562042e-07,
+   "species_max_abs": 7.52591000185987e-07,
+   "species_worst": "S40",
+   "observables_max_rel_to_peak": 2.8555686951760082e-06,
+   "observables_max_abs": 2.9959300000825806e-06,
+   "observables_worst": "Seq"
+  },
+  "dose2_S_SRCinh": {
+   "species_max_rel_to_peak": 5.308713529482157e-07,
+   "species_max_abs": 6.276699995311219e-07,
+   "species_worst": "S40",
+   "observables_max_rel_to_peak": 2.2755169262606056e-06,
+   "observables_max_abs": 3.1115199981002206e-06,
+   "observables_worst": "Seq"
+  },
+  "dose1_S_mTORinh": {
+   "species_max_rel_to_peak": 1.5543807188894903e-06,
+   "species_max_abs": 2.8818070001435103e-06,
+   "species_worst": "S40",
+   "observables_max_rel_to_peak": 1.5543807188894903e-06,
+   "observables_max_abs": 9.552830000814083e-06,
+   "observables_worst": "pS6K"
+  },
+  "dose2_S_mTORinh": {
+   "species_max_rel_to_peak": 1.2136151948377621e-06,
+   "species_max_abs": 1.4896870004221796e-06,
+   "species_worst": "S40",
+   "observables_max_rel_to_peak": 1.2136151948377621e-06,
+   "observables_max_abs": 7.663459999918132e-06,
+   "observables_worst": "pS6K"
+  },
+  "dose1_S_CDKinh": {
+   "species_max_rel_to_peak": 1.2968656469598963e-07,
+   "species_max_abs": 7.881899999340192e-07,
+   "species_worst": "S41",
+   "observables_max_rel_to_peak": 3.924486004358584e-07,
+   "observables_max_abs": 1.492209996456495e-06,
+   "observables_worst": "Seq"
+  },
+  "dose2_S_CDKinh": {
+   "species_max_rel_to_peak": 2.63083178946676e-07,
+   "species_max_abs": 2.618468000203933e-06,
+   "species_worst": "S25",
+   "observables_max_rel_to_peak": 3.2746732492385004e-07,
+   "observables_max_abs": 4.012979999856725e-06,
+   "observables_worst": "Seq"
+  }
+ },
+ "protocol_sensitivity": {
+  "steady_state_pre_equilibration": {
+   "states": {
+    "equilibration1 vs equilibration1": {
+     "end_state_max_rel": 3.031211871805069e-05,
+     "worst": "S41",
+     "worst_species": "IRS(A~P,I~P,IBD)",
+     "probe_last_interval_drift_max_rel": 0.0,
+     "probe_end_time": 100000000.0,
+     "authors_end_time": 86400.0,
+     "watched_at_end": {
+      "Sval": {
+       "authors": 9.953004222209,
+       "probe": 9.953030553285
+      },
+      "tIRS": {
+       "authors": 1.674741950248,
+       "probe": 1.674786566309
+      },
+      "FC_pERK": {
+       "authors": 0.1194105084611,
+       "probe": 0.1194105986627
+      },
+      "FC_pAKT": {
+       "authors": 0.1578550322533,
+       "probe": 0.1578551568275
+      }
+     }
+    }
+   },
+   "trajectories": {
+    "AKTinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.516459707005213e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 1.517607190342,
+       "probe": 1.517608368915
+      },
+      "tIRS": {
+       "authors": 1.853774796892,
+       "probe": 1.853776587161
+      },
+      "FC_pERK": {
+       "authors": 0.1020808794555,
+       "probe": 0.1020808848227
+      },
+      "FC_pAKT": {
+       "authors": 0.05802718964872,
+       "probe": 0.05802719426649
+      }
+     }
+    },
+    "IRSinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.7993366479134008e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 5.725479289128,
+       "probe": 5.725479273554
+      },
+      "tIRS": {
+       "authors": 1.73236725747,
+       "probe": 1.732369021482
+      },
+      "FC_pERK": {
+       "authors": 0.09744474622067,
+       "probe": 0.09744474616681
+      },
+      "FC_pAKT": {
+       "authors": 0.1235746407771,
+       "probe": 0.1235746406849
+      }
+     }
+    },
+    "combo": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.7993366479134008e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -3.129145829348,
+       "probe": -3.129144645837
+      },
+      "tIRS": {
+       "authors": 1.890969048897,
+       "probe": 1.890971001102
+      },
+      "FC_pERK": {
+       "authors": 0.08730123035964,
+       "probe": 0.08730123219929
+      },
+      "FC_pAKT": {
+       "authors": 0.06186103780004,
+       "probe": 0.06186104046582
+      }
+     }
+    },
+    "dose1_S_ERKinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.665216198339293e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 5.233465281489,
+       "probe": 5.233465284323
+      },
+      "tIRS": {
+       "authors": 1.755070981948,
+       "probe": 1.755070985696
+      },
+      "FC_pERK": {
+       "authors": 0.05040529409101,
+       "probe": 0.05040529409399
+      },
+      "FC_pAKT": {
+       "authors": 0.2203445361034,
+       "probe": 0.2203445361252
+      }
+     }
+    },
+    "dose2_S_ERKinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.582391430111284e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 3.47083953928,
+       "probe": 3.470839542256
+      },
+      "tIRS": {
+       "authors": 1.80866258288,
+       "probe": 1.808662586721
+      },
+      "FC_pERK": {
+       "authors": 0.03441007459183,
+       "probe": 0.03441007459374
+      },
+      "FC_pAKT": {
+       "authors": 0.2542853392441,
+       "probe": 0.2542853392754
+      }
+     }
+    },
+    "dose1_S_AKTinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.438238434251555e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -3.295699353957,
+       "probe": -3.295699349857
+      },
+      "tIRS": {
+       "authors": 1.910315237335,
+       "probe": 1.910315253125
+      },
+      "FC_pERK": {
+       "authors": 0.1015005356035,
+       "probe": 0.1015005356513
+      },
+      "FC_pAKT": {
+       "authors": 0.04683591656721,
+       "probe": 0.046835916604
+      }
+     }
+    },
+    "dose2_S_AKTinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.3209517634789752e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -4.49027611021,
+       "probe": -4.490276067956
+      },
+      "tIRS": {
+       "authors": 2.00201172935,
+       "probe": 2.002011791678
+      },
+      "FC_pERK": {
+       "authors": 0.1014661908966,
+       "probe": 0.101466191183
+      },
+      "FC_pAKT": {
+       "authors": 0.02931755471316,
+       "probe": 0.02931755486933
+      }
+     }
+    },
+    "dose1_S_PKCinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.6692369915822503e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 2.659415616677,
+       "probe": 2.659415619479
+      },
+      "tIRS": {
+       "authors": 1.752551119457,
+       "probe": 1.752551123195
+      },
+      "FC_pERK": {
+       "authors": 0.1304400770653,
+       "probe": 0.1304400770762
+      },
+      "FC_pAKT": {
+       "authors": 0.1829952217847,
+       "probe": 0.1829952217991
+      }
+     }
+    },
+    "dose2_S_PKCinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.6315756147020528e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 1.223149623504,
+       "probe": 1.223149626424
+      },
+      "tIRS": {
+       "authors": 1.776444991592,
+       "probe": 1.776444995359
+      },
+      "FC_pERK": {
+       "authors": 0.1342537609806,
+       "probe": 0.1342537609925
+      },
+      "FC_pAKT": {
+       "authors": 0.1905228608376,
+       "probe": 0.190522860853
+      }
+     }
+    },
+    "dose1_S_SRCinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.714520458976305e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 6.740710349354,
+       "probe": 6.740710351855
+      },
+      "tIRS": {
+       "authors": 1.724669283073,
+       "probe": 1.724669286809
+      },
+      "FC_pERK": {
+       "authors": 0.1050701180672,
+       "probe": 0.1050701180749
+      },
+      "FC_pAKT": {
+       "authors": 0.1829364690425,
+       "probe": 0.1829364690582
+      }
+     }
+    },
+    "dose2_S_SRCinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.657750204983925e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 5.265605088042,
+       "probe": 5.265605090648
+      },
+      "tIRS": {
+       "authors": 1.75976948448,
+       "probe": 1.759769488259
+      },
+      "FC_pERK": {
+       "authors": 0.09953838350048,
+       "probe": 0.09953838350845
+      },
+      "FC_pAKT": {
+       "authors": 0.1997194768351,
+       "probe": 0.1997194768556
+      }
+     }
+    },
+    "dose1_S_mTORinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "_rateLaw9": 2.003151694701381e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -6.962873575246,
+       "probe": -6.962873597731
+      },
+      "tIRS": {
+       "authors": 2.403201663508,
+       "probe": 2.40320164538
+      },
+      "FC_pERK": {
+       "authors": 0.1075513309918,
+       "probe": 0.1075513307537
+      },
+      "FC_pAKT": {
+       "authors": 0.4377416035487,
+       "probe": 0.4377416021157
+      }
+     }
+    },
+    "dose2_S_mTORinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "_rateLaw9": 1.8284277121947016e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -9.008027335647,
+       "probe": -9.008027195061
+      },
+      "tIRS": {
+       "authors": 3.256291527658,
+       "probe": 3.256291929378
+      },
+      "FC_pERK": {
+       "authors": 0.122333206682,
+       "probe": 0.1223332143462
+      },
+      "FC_pAKT": {
+       "authors": 0.6249311940157,
+       "probe": 0.624931246763
+      }
+     }
+    },
+    "dose1_S_CDKinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.589451247343451e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 1.877856723347,
+       "probe": 1.877856725709
+      },
+      "tIRS": {
+       "authors": 1.803965424389,
+       "probe": 1.803965428347
+      },
+      "FC_pERK": {
+       "authors": 0.2338495154067,
+       "probe": 0.2338495154359
+      },
+      "FC_pAKT": {
+       "authors": 0.1645998222249,
+       "probe": 0.1645998222426
+      }
+     }
+    },
+    "dose2_S_CDKinh": {
+     "max_rel_to_peak": 2.933676948126589e-05,
+     "worst": {
+      "pIRSI": 2.933676948126589e-05,
+      "FC_IRSI": 2.933676948126589e-05,
+      "pIRSA": 2.5266990410160875e-05
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -3.972442185839,
+       "probe": -3.972442158865
+      },
+      "tIRS": {
+       "authors": 1.84660575373,
+       "probe": 1.846605823686
+      },
+      "FC_pERK": {
+       "authors": 0.321510471597,
+       "probe": 0.3215104724892
+      },
+      "FC_pAKT": {
+       "authors": 0.1572718457648,
+       "probe": 0.1572718461217
+      }
+     }
+    }
+   }
+  }
+ },
+ "verdict": "PASS"
+}
