@@ -53,6 +53,17 @@ above the axis (13 molecules in Fig. 2) rather than reaching 0. Treat any lower
 envelope at that floor as "at or below the floor", which is how the notebook
 treats it.
 
+Threshold sensitivity of the transcript panels
+----------------------------------------------
+Figs. 7b and 7d plot transcript counts that sit at zero and spike to one or two
+copies for a few hours; on this raster each spike is about one anti-aliased
+column. For those two panels the script also prints the time average of the
+digitized upper envelope at curve-ink thresholds 160, 190 and 210, the measurement
+behind their exclusion from the notebook's quantitative comparison (it moves by
+about 30% across that range). It is printed, not written: nothing downstream
+compares against it. The notebook reads only the committed CSVs and never this
+PDF.
+
 Usage
 -----
     uv run python digitize_vilar2002.py
@@ -82,6 +93,10 @@ OUT = HERE / "reference"
 
 INK_CURVE = 160  # strict: curve ink only
 INK_LINE = 210  # loose: JPEG-washed frames and tick marks
+# Curve-ink thresholds over which the transcript panels' envelope average is reported
+SENSITIVITY_THRESHOLDS = (160, 190, 210)
+# Panels plotting transcript counts, whose one-column spikes make that average unstable
+TRANSCRIPT_PANELS = {(7, "b"), (7, "d")}
 
 # Figure layout. `image` indexes the pdfimages extraction of pages 2-5. `t_max`
 # and each panel's y_max are read off the printed axis labels; y_min is 0 in
@@ -296,6 +311,25 @@ def envelope(curve_ink, top: int, bottom: int, c0: int, c1: int, y_max: float):
     return cols, hi, lo
 
 
+def threshold_sensitivity(grey, top: int, bottom: int, c0: int, c1: int, y_max: float):
+    """Time average of the per-column upper ink envelope at each sensitivity threshold.
+
+    Columns with no interior ink count as zero (the curve lies on the bottom axis).
+    No tick masking is applied: the quantity is how much the plain envelope average
+    depends on where the ink threshold is put.
+    """
+    span = bottom - top
+    out = []
+    for thr in SENSITIVITY_THRESHOLDS:
+        ink = grey < thr
+        vals = []
+        for c in range(c0, c1 + 1):
+            rows = np.where(ink[top + 1 : bottom, c])[0]
+            vals.append(y_max * (span - (rows.min() + 1)) / span if rows.size else 0.0)
+        out.append(float(np.mean(vals)))
+    return out
+
+
 def write_csv(path: Path, header, rows, comments) -> None:
     lines = [f"# {c}" for c in comments]
     lines.append(",".join(header))
@@ -388,6 +422,14 @@ def main() -> int:
                     f"x-grid {x_grid['step_units']:g} h (err {x_grid['max_err_px']:.2f} px), "
                     f"y-grid {y_grid['step_units']:g} (err {y_grid['max_err_px']:.2f} px)"
                 )
+                if (fig, label) in TRANSCRIPT_PANELS:
+                    sens = threshold_sensitivity(grey, top, bottom, trace_lo, trace_hi, y_max)
+                    print(
+                        f"Fig. {fig}{label}: envelope time average at ink threshold "
+                        + "/".join(str(t) for t in SENSITIVITY_THRESHOLDS)
+                        + " = "
+                        + " / ".join(f"{v:.2f}" for v in sens)
+                    )
     return 0
 
 
