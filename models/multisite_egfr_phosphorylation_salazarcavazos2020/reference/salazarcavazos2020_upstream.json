@@ -1,0 +1,77 @@
+{
+  "_comment": [
+    "Provenance for the published-fit check of verify_salazarcavazos2020.ipynb (section 3).",
+    "The four salazarcavazos2020_petab_* tables and the collection's licence are vendored",
+    "byte-identical from the PEtab benchmark collection at the pinned commit; the notebook refuses",
+    "to read one whose sha256 differs. The authors' own supplement is CC BY-NC-SA 3.0 and is NOT",
+    "vendored into this CC BY 4.0 repository; it is pinned here by sha256 so the statements below",
+    "about it can be re-checked. VERIFY: sha256(file bytes) == sha256."
+  ],
+  "publication": "Salazar-Cavazos E, Franco Nitta C, Mitra ED, Wilson BS, Lidke KA, Hlavacek WS, Lidke DS (2020). Multisite EGFR phosphorylation is regulated by adaptor protein abundances and dimer lifetimes. Mol Biol Cell 31(7):695-708. doi:10.1091/mbc.E19-09-0548 (PMC7202077)",
+  "petab_benchmark_collection": {
+    "repository": "https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab",
+    "pinned_commit": "4d2085084b289f6215a95475b1ee639fd7d42283",
+    "problem": "Benchmark-Models/SalazarCavazos_MBoC2020",
+    "added_by": "pull request #64 'Model Salazar-Cavazos MBoC2020' (Dilan Pathirana), merged 2020-03-25 as ea4a0c809d; the simulatedData table has not changed since that commit",
+    "independence": "The simulated values were published with the problem in March 2020, before BNGsim existed. They are the collection's own simulation of the authors' model at its nominal parameters, which are the authors' best fit.",
+    "license": {
+      "name": "BSD 3-Clause License",
+      "file": "reference/salazarcavazos2020_petab_LICENSE",
+      "changes": "None. Files are renamed with a salazarcavazos2020_petab_ prefix to sit in the flat reference/ directory; their bytes are unmodified."
+    },
+    "files": {
+      "reference/salazarcavazos2020_petab_measurementData_SalazarCavazos_MBoC2020.tsv": {
+        "upstream_path": "Benchmark-Models/SalazarCavazos_MBoC2020/measurementData_SalazarCavazos_MBoC2020.tsv",
+        "sha256": "fc7dff703b7ed03ad2b2a74f1cccd21ba8d5a15b78b939b6e35d75561267b82d",
+        "role": "The 18 SiMPull measurements with their noise SDs (Fig 2A doses 0.5/5/50 nM at 300 s; Fig 2D 25 nM at 60/120/300 s). Equal value for value to the authors' dose_resp.exp and EGF_25nM.exp (checked 2026-11-23)."
+      },
+      "reference/salazarcavazos2020_petab_simulatedData_SalazarCavazos_MBoC2020.tsv": {
+        "upstream_path": "Benchmark-Models/SalazarCavazos_MBoC2020/simulatedData_SalazarCavazos_MBoC2020.tsv",
+        "sha256": "11d4c8d651d2f234fd9e7b3ff46ae597534fa8ed149c33e48a66c4f0f2e2f9dd",
+        "role": "The collection's simulated observable at each of the 18 measurements, at the nominal (best-fit) parameters. Against measurementData it gives 1/2 chi^2 = sum 0.5((sim - meas)/sd)^2 = 359.70568, the published value the notebook asserts against."
+      },
+      "reference/salazarcavazos2020_petab_parameters_SalazarCavazos_MBoC2020.tsv": {
+        "upstream_path": "Benchmark-Models/SalazarCavazos_MBoC2020/parameters_SalazarCavazos_MBoC2020.tsv",
+        "sha256": "17bfddd7e83ae3bceec8509eeb62e7f6ca8ddeb4edd8aafea82faa907b8554d5",
+        "role": "The six estimated parameters with their nominal values, equal digit for digit to the six values of the authors' 190127_CHO_EGFR_best-fit.bngl (checked 2026-11-23)."
+      },
+      "reference/salazarcavazos2020_petab_observables_SalazarCavazos_MBoC2020.tsv": {
+        "upstream_path": "Benchmark-Models/SalazarCavazos_MBoC2020/observables_SalazarCavazos_MBoC2020.tsv",
+        "sha256": "b16d187f9bc9daf6520bcfafad1e8c1f653af197d20bebd7d6d682b0b1d048eb",
+        "role": "The observable formulas behind simulatedData: 100*pY1068/EGFRtot, 100*pY1173/EGFRtot, 100*(EGFRtot-unphosR)/EGFRtot, normal noise with the measurement table's SD."
+      },
+      "reference/salazarcavazos2020_petab_LICENSE": {
+        "upstream_path": "LICENSE",
+        "sha256": "cc90c22f2dea14cbd36d4054ea79a46d6e69d875b1c664bcf66386294a7c6799",
+        "role": "The collection's BSD 3-Clause License, which these four tables are distributed under."
+      }
+    }
+  },
+  "authors_supplement_not_vendored": {
+    "license": "Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported (the article's licence, two months after publication)",
+    "retrieved_from": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7202077/supplementaryFiles",
+    "note": "Europe PMC assembles that bundle per request, so the bundle's own sha256 changes; the items inside it do not.",
+    "items": {
+      "mbc-31-695-s002.zip": {
+        "is": "Supplemental File S1",
+        "sha256": "d67c577b9038311191bf001771cd4c8ba40b09992c5c45c426a8f1a833e36893",
+        "contains": {
+          "190127_CHO_EGFR_best-fit.bngl": "1771e8c6e56a9516ea80bdd210b32acaf42fe2daa55c7244ae376b99fe812a37"
+        }
+      },
+      "mbc-31-695-s003.zip": {
+        "is": "Supplemental File S2 (the PyBioNetFit setup)",
+        "sha256": "789aa76da183b99e0f34184eb19180feede0eb4e6da8012887847ac4812e7c65",
+        "contains": {
+          "190127_CHO_EGFR_best-fit.bngl": "1771e8c6e56a9516ea80bdd210b32acaf42fe2daa55c7244ae376b99fe812a37",
+          "PyBNF-fitting-setup/190127_CHO_EGFR_forBNF.bngl": "f0697bdb0e7d53d0096698344b40e3908c09c04a8850de36fc4206c2b80372c5",
+          "PyBNF-fitting-setup/dose_resp.exp": "fcb5d19687f6b8d4bdf801ac8cf7f10414e0286f6e474f7145a084efbce1f83c",
+          "PyBNF-fitting-setup/EGF_25nM.exp": "cdc6d8e632eef7b1c8c685c759a38f0ff9bf21f89c314c19c688344e69d07b4a",
+          "PyBNF-fitting-setup/fit_v1_28.conf": "7a5029479972c85e8e6f02d6494ce9044345bba7892bde4e73a0f464305f7246"
+        }
+      }
+    },
+    "objective_value": "Neither the article nor its supplement states the objective value of the fit; fit_v1_28.conf shows it was PyBioNetFit's chi_sq (differential evolution, population 200). The value asserted against is therefore the collection's, above."
+  },
+  "verified": "2026-11-23"
+}
