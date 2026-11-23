@@ -1,0 +1,1236 @@
+{
+ "slug": "cstar_trkb",
+ "generated_by": "pybnf-jobs/Rukhlenko-2022/cstar_trkb/compare_upstream.py",
+ "bionetgen_version": "2.9.3",
+ "job_file": {
+  "path": "cstar_trkb.bngl",
+  "sha256": "b2483eea6b958393d8df7916981e768e7d633e776e8de61e7e82ab479a51c8c5"
+ },
+ "authors_file": {
+  "repository": "https://github.com/OleksiiR/cSTAR_Nature",
+  "commit": "bfb092f2e4bffcfc43b3de01c301303fc6d4fd36",
+  "path": "Trk_AB_models/TrkB_S_model.bngl",
+  "sha256": "6086bdef466687e8e4ee3d6b34f07b0eda9cfca057d5edd9f0e7889c22019cbb"
+ },
+ "protocol": {
+  "authors_actions": [
+   "generate_network({overwrite=>1})",
+   "writeSBML()",
+   "setConcentration(\"TRKl(Rec)\",0)",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "simulate({suffix=>\"equilibration1\",method=>\"ode\",t_end=>50000,n_steps=>100,print_functions=>1})",
+   "setConcentration(\"S\",\"2*S0\")",
+   "simulate({suffix=>\"equilibration2\",method=>\"ode\",t_end=>50000,n_steps=>100,print_functions=>1})",
+   "saveConcentrations()",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "simulate({suffix=>\"timecourse2_B_S\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",\"I_AKT_conc\")",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "simulate({suffix=>\"timecourse2_B_S_AKTinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",\"I_ERK_conc\")",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "simulate({suffix=>\"timecourse2_B_S_ERKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",\"I_JNK_conc\")",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "simulate({suffix=>\"timecourse2_B_S_JNKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",\"I_RSK_conc\")",
+   "simulate({suffix=>\"timecourse2_B_S_RSKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",\"I_S6K_conc\")",
+   "simulate({suffix=>\"timecourse2_B_S_S6Kinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "setConcentration(\"ITRK(TRKBD)\",\"I_TRK_conc\")",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "simulate({suffix=>\"timecourse2_B_S_TRKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})"
+  ],
+  "job_actions": [
+   "generate_network({overwrite=>1})",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setParameter(\"Lig_on\",\"0\")",
+   "simulate({suffix=>\"equilibration1\",method=>\"ode\",t_end=>50000,n_steps=>100,print_functions=>1})",
+   "setConcentration(\"S\",\"2*S0\")",
+   "setParameter(\"Lig_on\",\"0\")",
+   "simulate({suffix=>\"equilibration2\",method=>\"ode\",t_end=>50000,n_steps=>100,print_functions=>1})",
+   "saveConcentrations()",
+   "resetConcentrations()",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_B_S\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",\"(1.42)\")",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_B_S_AKTinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",\"(0.5)\")",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_B_S_ERKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",\"(11)\")",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_B_S_JNKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",\"(1.7)\")",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_B_S_RSKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",\"(25)\")",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_B_S_S6Kinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"ITRK(TRKBD)\",\"(26)\")",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_B_S_TRKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})"
+  ]
+ },
+ "tolerances": {
+  "rate_coefficient_max_rel": {
+   "value": 1e-12,
+   "reason": "both sides are the same IEEE doubles: the slug's file only multiplies some constants by a gate equal to 1 or replaces a fixed species by a parameter of the same value"
+  },
+  "rhs_max_rel_to_gross_flux": {
+   "value": 1e-12,
+   "reason": "dy/dt of both networks at the same states, relative to each species' gross turnover sum_j |S_ij r_j|"
+  },
+  "common_functions_max_rel": {
+   "value": 1e-12,
+   "reason": "every function both files define, at the same states (the observable and function columns of the .gdat)"
+  },
+  "common_observables_max_rel": {
+   "value": 1e-12,
+   "reason": "every observable both files define, at the same states"
+  },
+  "trajectory_max_rel_to_peak": {
+   "value": 1e-09,
+   "reason": "max_t |authors - slug| / max(peak, 1e-8) for every species, observable and function of a phase. The two runs give the same run_network binary the same equations, parameter doubles and initial state (the translation keeps the authors' expressions, which BNG2.pl passes on in full precision), and CVODE is deterministic, so they must agree to the 13 significant digits BioNetGen prints; 1e-9 allows only last-digit rounding. 1e-8 is the solver's absolute tolerance, below which values are solver noise. The bound is far below the solver's own error (solver_error), so even an equivalent reformulation that changed CVODE's step sequence would be flagged: the claim is identity"
+  }
+ },
+ "notes": {
+  "protocol": "The published protocol is the authors' actions block, run verbatim. Its pre-equilibration is two finite 50000 s phases with S reset to 2*S0 between them, not a steady state; protocol_sensitivity reports how far a steady-state pre-equilibration moves the state and the trajectories."
+ },
+ "network": {
+  "species": {
+   "authors": 114,
+   "job": 114,
+   "only_authors": [],
+   "only_job": [],
+   "bijection": true,
+   "same_order": true
+  },
+  "reactions": {
+   "authors": 645,
+   "job": 645,
+   "unmatched": [],
+   "multiplicity_mismatch": 0,
+   "bijection": true,
+   "same_order_and_rate_law_text": true
+  },
+  "observables": {
+   "only_authors": [],
+   "only_job": [],
+   "differing_definition": []
+  },
+  "functions": {
+   "only_authors": [],
+   "only_job": [],
+   "only_job_used_by_rate_laws": [],
+   "differing_text": {}
+  },
+  "parameters": {
+   "only_authors": [],
+   "only_job": {
+    "Lig_on": 0.0
+   },
+   "differing_value": {
+    "I_AKT_conc": {
+     "authors": 1.42,
+     "job": 0.0
+    },
+    "I_ERK_conc": {
+     "authors": 0.5,
+     "job": 0.0
+    },
+    "I_TRK_conc": {
+     "authors": 26.0,
+     "job": 0.0
+    },
+    "I_JNK_conc": {
+     "authors": 11.0,
+     "job": 0.0
+    },
+    "I_S6K_conc": {
+     "authors": 25.0,
+     "job": 0.0
+    },
+    "I_RSK_conc": {
+     "authors": 1.7,
+     "job": 0.0
+    },
+    "_rateLaw1": {
+     "authors": 0.057735026918962574,
+     "job": 0.0
+    },
+    "_rateLaw3": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw5": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw7": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw9": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw19": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw21": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw23": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw25": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw34": {
+     "authors": 0.8908708063747479,
+     "job": 0.0
+    },
+    "_rateLaw36": {
+     "authors": 0.8908708063747479,
+     "job": 0.0
+    },
+    "_rateLaw38": {
+     "authors": 0.8908708063747479,
+     "job": 0.0
+    },
+    "_rateLaw40": {
+     "authors": 0.8908708063747479,
+     "job": 0.0
+    }
+   },
+   "differing_text": [
+    "I_AKT_conc",
+    "I_ERK_conc",
+    "I_JNK_conc",
+    "I_RSK_conc",
+    "I_S6K_conc",
+    "I_TRK_conc",
+    "_rateLaw1",
+    "_rateLaw19",
+    "_rateLaw21",
+    "_rateLaw23",
+    "_rateLaw25",
+    "_rateLaw3",
+    "_rateLaw34",
+    "_rateLaw36",
+    "_rateLaw38",
+    "_rateLaw40",
+    "_rateLaw5",
+    "_rateLaw7",
+    "_rateLaw9"
+   ]
+  },
+  "conditions": {
+   "BDNF added: Lig_on = 1, the same state": {
+    "states": 32,
+    "rate_coefficient_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "rhs_max_rel_to_gross_flux": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "common_functions_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "common_observables_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    }
+   },
+   "equilibration: authors TRKl(Rec) = 0; slug Lig_on = 0, TRKl(Rec) = 10": {
+    "states": 32,
+    "rhs_max_rel_to_gross_flux": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "common_functions_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "common_observables_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    }
+   }
+  },
+  "documented_differences": {
+   "parameters_only_job": {
+    "found": [
+     "Lig_on"
+    ],
+    "documented": [
+     "Lig_on"
+    ],
+    "pass": true
+   },
+   "parameters_only_authors": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "parameters_differing_value": {
+    "found": [
+     "I_AKT_conc",
+     "I_ERK_conc",
+     "I_JNK_conc",
+     "I_RSK_conc",
+     "I_S6K_conc",
+     "I_TRK_conc",
+     "_rateLaw1",
+     "_rateLaw19",
+     "_rateLaw21",
+     "_rateLaw23",
+     "_rateLaw25",
+     "_rateLaw3",
+     "_rateLaw34",
+     "_rateLaw36",
+     "_rateLaw38",
+     "_rateLaw40",
+     "_rateLaw5",
+     "_rateLaw7",
+     "_rateLaw9"
+    ],
+    "documented": [
+     "I_AKT_conc",
+     "I_ERK_conc",
+     "I_JNK_conc",
+     "I_RSK_conc",
+     "I_S6K_conc",
+     "I_TRK_conc",
+     "_rateLaw1",
+     "_rateLaw19",
+     "_rateLaw21",
+     "_rateLaw23",
+     "_rateLaw25",
+     "_rateLaw3",
+     "_rateLaw34",
+     "_rateLaw36",
+     "_rateLaw38",
+     "_rateLaw40",
+     "_rateLaw5",
+     "_rateLaw7",
+     "_rateLaw9"
+    ],
+    "pass": true
+   },
+   "observables_only_job": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "observables_only_authors": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "observables_differing_definition": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "functions_only_job_used_by_rate_laws": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "functions_only_authors": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "functions_differing_text": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   }
+  }
+ },
+ "trajectories": {
+  "equilibration1": {
+   "species": {
+    "compared": 113,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S2",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 77,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 101,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "gated_species": {
+    "TRKl(Rec)": {
+     "authors_value": 0.0,
+     "job_value": 10.0,
+     "authors_max_dev": 0.0,
+     "job_max_dev": 0.0,
+     "pass": true
+    }
+   }
+  },
+  "equilibration2": {
+   "species": {
+    "compared": 113,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S2",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 77,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 101,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "gated_species": {
+    "TRKl(Rec)": {
+     "authors_value": 0.0,
+     "job_value": 10.0,
+     "authors_max_dev": 0.0,
+     "job_max_dev": 0.0,
+     "pass": true
+    }
+   }
+  },
+  "timecourse2_B_S": {
+   "species": {
+    "compared": 114,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 77,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "timecourse2_B_S_AKTinh": {
+   "species": {
+    "compared": 114,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 77,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "timecourse2_B_S_ERKinh": {
+   "species": {
+    "compared": 114,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 77,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "timecourse2_B_S_JNKinh": {
+   "species": {
+    "compared": 114,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 77,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "timecourse2_B_S_RSKinh": {
+   "species": {
+    "compared": 114,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 77,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "timecourse2_B_S_S6Kinh": {
+   "species": {
+    "compared": 114,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 77,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "timecourse2_B_S_TRKinh": {
+   "species": {
+    "compared": 114,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 77,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  }
+ },
+ "solver_error": {
+  "equilibration1": {
+   "species_max_rel_to_peak": 1.352527052867624e-05,
+   "species_max_abs": 8.597494999929012e-06,
+   "species_worst": "S21",
+   "observables_max_rel_to_peak": 1.352527052867624e-05,
+   "observables_max_abs": 8.597494999929012e-06,
+   "observables_worst": "RTKdim0"
+  },
+  "equilibration2": {
+   "species_max_rel_to_peak": 4.402451940748048e-06,
+   "species_max_abs": 4.3413180000895224e-07,
+   "species_worst": "S68",
+   "observables_max_rel_to_peak": 4.402451940748048e-06,
+   "observables_max_abs": 1.8108349999490514e-06,
+   "observables_worst": "RTKdim2"
+  },
+  "timecourse2_B_S": {
+   "species_max_rel_to_peak": 0.002161670186385087,
+   "species_max_abs": 0.00010380617200000941,
+   "species_worst": "S54",
+   "observables_max_rel_to_peak": 0.00038730907506669176,
+   "observables_max_abs": 0.00010380617200000941,
+   "observables_worst": "TRKdim0"
+  },
+  "timecourse2_B_S_AKTinh": {
+   "species_max_rel_to_peak": 0.0021616223014582084,
+   "species_max_abs": 0.00042341853599991985,
+   "species_worst": "S54",
+   "observables_max_rel_to_peak": 0.0003873014712600766,
+   "observables_max_abs": 0.00042341853599991985,
+   "observables_worst": "TRKdim0"
+  },
+  "timecourse2_B_S_ERKinh": {
+   "species_max_rel_to_peak": 0.002161674718339244,
+   "species_max_abs": 0.0005961525589999184,
+   "species_worst": "S54",
+   "observables_max_rel_to_peak": 0.0003873099980246649,
+   "observables_max_abs": 0.0005961525589999184,
+   "observables_worst": "TRKdim0"
+  },
+  "timecourse2_B_S_JNKinh": {
+   "species_max_rel_to_peak": 6.443823089661641e-05,
+   "species_max_abs": 3.4752237000112984e-05,
+   "species_worst": "S77",
+   "observables_max_rel_to_peak": 5.5981155380534785e-05,
+   "observables_max_abs": 3.4752237000112984e-05,
+   "observables_worst": "pTRKmon"
+  },
+  "timecourse2_B_S_RSKinh": {
+   "species_max_rel_to_peak": 0.0021600367994176234,
+   "species_max_abs": 0.00018266685199996857,
+   "species_worst": "S54",
+   "observables_max_rel_to_peak": 0.00038705053731365586,
+   "observables_max_abs": 0.00018266685199996857,
+   "observables_worst": "TRKdim0"
+  },
+  "timecourse2_B_S_S6Kinh": {
+   "species_max_rel_to_peak": 7.601994593908443e-05,
+   "species_max_abs": 0.0002539170619999531,
+   "species_worst": "S68",
+   "observables_max_rel_to_peak": 0.0007771695728119849,
+   "observables_max_abs": 0.0002539170619999531,
+   "observables_worst": "S_FSforce"
+  },
+  "timecourse2_B_S_TRKinh": {
+   "species_max_rel_to_peak": 0.014512794794228614,
+   "species_max_abs": 4.4831296600045256e-07,
+   "species_worst": "S92",
+   "observables_max_rel_to_peak": 5.0329392417834066e-05,
+   "observables_max_abs": 5.489669999914071e-06,
+   "observables_worst": "Seq"
+  }
+ },
+ "protocol_sensitivity": {
+  "steady_state_from_seeds": {
+   "states": {
+    "equilibration2 vs equilibration1": {
+     "end_state_max_rel": 1.9464282758688674,
+     "worst": "S17",
+     "worst_species": "S()",
+     "probe_last_interval_drift_max_rel": 2.6651000081503104e-18,
+     "probe_end_time": 100000000.0,
+     "authors_end_time": 50000.0,
+     "watched_at_end": {
+      "Sval": {
+       "authors": -4.139945624715,
+       "probe": 4.374283535553
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01158846310557,
+       "probe": 0.01144099329465
+      },
+      "FC_ppERK": {
+       "authors": 0.008742631774374,
+       "probe": 0.008695532204668
+      },
+      "FC_pAKT": {
+       "authors": 0.03222583149068,
+       "probe": 0.03204884312381
+      }
+     }
+    }
+   },
+   "trajectories": {
+    "timecourse2_B_S": {
+     "max_rel_to_peak": 1.7174414746945361,
+     "worst": {
+      "S_FSforce": 1.7174414746945361,
+      "Sval": 1.4855578836701673,
+      "Seq": 0.9708692791200662
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 5.317403049123,
+       "probe": 5.307440053127
+      },
+      "FC_pAdRTK": {
+       "authors": 0.05751173643597,
+       "probe": 0.05706520798281
+      },
+      "FC_ppERK": {
+       "authors": 0.04046673557027,
+       "probe": 0.04015362285255
+      },
+      "FC_pAKT": {
+       "authors": 0.2058486891805,
+       "probe": 0.2039757537524
+      }
+     }
+    },
+    "timecourse2_B_S_AKTinh": {
+     "max_rel_to_peak": 1.944391829889867,
+     "worst": {
+      "S_FSforce": 1.944391829889867,
+      "Sval": 1.6475711665308477,
+      "Seq": 1.0080010360004765
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 4.887374585141,
+       "probe": 4.884933075044
+      },
+      "FC_pAdRTK": {
+       "authors": 0.04594551571407,
+       "probe": 0.04559390466974
+      },
+      "FC_ppERK": {
+       "authors": 0.03596463313345,
+       "probe": 0.03569154732639
+      },
+      "FC_pAKT": {
+       "authors": 0.07414635411552,
+       "probe": 0.07340617408995
+      }
+     }
+    },
+    "timecourse2_B_S_ERKinh": {
+     "max_rel_to_peak": 1.9113892179450258,
+     "worst": {
+      "S_FSforce": 1.9113892179450258,
+      "Sval": 1.6621998480599203,
+      "Seq": 1.0088193050979983
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 4.90314996824,
+       "probe": 4.929629184406
+      },
+      "FC_pAdRTK": {
+       "authors": 0.0528408816606,
+       "probe": 0.05243052515584
+      },
+      "FC_ppERK": {
+       "authors": 0.02495466425664,
+       "probe": 0.02476716097875
+      },
+      "FC_pAKT": {
+       "authors": 0.1574238096877,
+       "probe": 0.1559607348992
+      }
+     }
+    },
+    "timecourse2_B_S_JNKinh": {
+     "max_rel_to_peak": 1.7782311485678868,
+     "worst": {
+      "S_FSforce": 1.7782311485678868,
+      "Sval": 1.5156251989302385,
+      "Seq": 0.9775431173913485
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 5.257707760944,
+       "probe": 5.248479663126
+      },
+      "FC_pAdRTK": {
+       "authors": 0.05704267148656,
+       "probe": 0.05659971867402
+      },
+      "FC_ppERK": {
+       "authors": 0.03770556629745,
+       "probe": 0.03741841759814
+      },
+      "FC_pAKT": {
+       "authors": 0.2015451469924,
+       "probe": 0.1997100270968
+      }
+     }
+    },
+    "timecourse2_B_S_RSKinh": {
+     "max_rel_to_peak": 1.9051825042880275,
+     "worst": {
+      "S_FSforce": 1.9051825042880275,
+      "Sval": 1.5776047242955062,
+      "Seq": 0.9900000575273904
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 5.153884848779,
+       "probe": 5.145656286402
+      },
+      "FC_pAdRTK": {
+       "authors": 0.0456617216384,
+       "probe": 0.04528008774561
+      },
+      "FC_ppERK": {
+       "authors": 0.03698166022345,
+       "probe": 0.03668253765151
+      },
+      "FC_pAKT": {
+       "authors": 0.1729335547171,
+       "probe": 0.1712490539868
+      }
+     }
+    },
+    "timecourse2_B_S_S6Kinh": {
+     "max_rel_to_peak": 1.9047743806367705,
+     "worst": {
+      "Sval": 1.9047743806367705,
+      "S_FSforce": 1.2176287230828384,
+      "Seq": 0.9970395010907865
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -2.712689848382,
+       "probe": 4.083609827389
+      },
+      "FC_pAdRTK": {
+       "authors": 0.06280122714584,
+       "probe": 0.06232595740964
+      },
+      "FC_ppERK": {
+       "authors": 0.04244118963066,
+       "probe": 0.04211595590967
+      },
+      "FC_pAKT": {
+       "authors": 0.2985390402061,
+       "probe": 0.2959117612626
+      }
+     }
+    },
+    "timecourse2_B_S_TRKinh": {
+     "max_rel_to_peak": 1.9098711327142301,
+     "worst": {
+      "Sval": 1.9098711327142301,
+      "Seq": 0.6832321070259065,
+      "S_FSforce": 0.03227921754357886
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -4.110472011205,
+       "probe": 4.486570341341
+      },
+      "FC_pAdRTK": {
+       "authors": 0.002684038286519,
+       "probe": 0.002657680672723
+      },
+      "FC_ppERK": {
+       "authors": 0.01411431894584,
+       "probe": 0.01405622857092
+      },
+      "FC_pAKT": {
+       "authors": 0.04865360039376,
+       "probe": 0.04844565193488
+      }
+     }
+    }
+   }
+  },
+  "steady_state_after_S_reset": {
+   "states": {
+    "equilibration2 vs equilibration2": {
+     "end_state_max_rel": 0.017604750120862538,
+     "worst": "S68",
+     "worst_species": "AdRTK(Dim!1,IBD,Y~P).AdRTK(Dim!1,IBD,Y~P)",
+     "probe_last_interval_drift_max_rel": 4.102796800001022e-21,
+     "probe_end_time": 100000000.0,
+     "authors_end_time": 50000.0,
+     "watched_at_end": {
+      "Sval": {
+       "authors": -4.139945624715,
+       "probe": -4.140213767174
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01158846310557,
+       "probe": 0.01144099329465
+      },
+      "FC_ppERK": {
+       "authors": 0.008742631774374,
+       "probe": 0.008695532204667
+      },
+      "FC_pAKT": {
+       "authors": 0.03222583149068,
+       "probe": 0.03204884312381
+      }
+     }
+    }
+   },
+   "trajectories": {
+    "timecourse2_B_S": {
+     "max_rel_to_peak": 0.09232231808929202,
+     "worst": {
+      "S_FSforce": 0.09232231808929202,
+      "Seq": 0.05402312650323051,
+      "Sval": 0.03501813004272422
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 5.317403049123,
+       "probe": 5.307238798554
+      },
+      "FC_pAdRTK": {
+       "authors": 0.05751173643597,
+       "probe": 0.05706520426966
+      },
+      "FC_ppERK": {
+       "authors": 0.04046673557027,
+       "probe": 0.04015364046899
+      },
+      "FC_pAKT": {
+       "authors": 0.2058486891805,
+       "probe": 0.2039757611062
+      }
+     }
+    },
+    "timecourse2_B_S_AKTinh": {
+     "max_rel_to_peak": 0.3619997473286162,
+     "worst": {
+      "S_FSforce": 0.3619997473286162,
+      "Seq": 0.1898208132044516,
+      "Sval": 0.13174115373728415
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 4.887374585141,
+       "probe": 4.880401413035
+      },
+      "FC_pAdRTK": {
+       "authors": 0.04594551571407,
+       "probe": 0.04559389867788
+      },
+      "FC_ppERK": {
+       "authors": 0.03596463313345,
+       "probe": 0.0356915733908
+      },
+      "FC_pAKT": {
+       "authors": 0.07414635411552,
+       "probe": 0.07340622235014
+      }
+     }
+    },
+    "timecourse2_B_S_ERKinh": {
+     "max_rel_to_peak": 0.5509859446209073,
+     "worst": {
+      "S_FSforce": 0.5509859446209073,
+      "Seq": 0.29164194629687135,
+      "Sval": 0.20928956396047596
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 4.90314996824,
+       "probe": 4.883165781566
+      },
+      "FC_pAdRTK": {
+       "authors": 0.0528408816606,
+       "probe": 0.05243054709738
+      },
+      "FC_ppERK": {
+       "authors": 0.02495466425664,
+       "probe": 0.02476717119976
+      },
+      "FC_pAKT": {
+       "authors": 0.1574238096877,
+       "probe": 0.1559608545556
+      }
+     }
+    },
+    "timecourse2_B_S_JNKinh": {
+     "max_rel_to_peak": 0.10633430740442266,
+     "worst": {
+      "S_FSforce": 0.10633430740442266,
+      "Seq": 0.05924106824168478,
+      "Sval": 0.03877548497033374
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 5.257707760944,
+       "probe": 5.248179359735
+      },
+      "FC_pAdRTK": {
+       "authors": 0.05704267148656,
+       "probe": 0.05659975836767
+      },
+      "FC_ppERK": {
+       "authors": 0.03770556629745,
+       "probe": 0.0374184692992
+      },
+      "FC_pAKT": {
+       "authors": 0.2015451469924,
+       "probe": 0.1997100389095
+      }
+     }
+    },
+    "timecourse2_B_S_RSKinh": {
+     "max_rel_to_peak": 0.16344830700064356,
+     "worst": {
+      "S_FSforce": 0.16344830700064356,
+      "Seq": 0.08335682188037344,
+      "Sval": 0.05550460244754446
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": 5.153884848779,
+       "probe": 5.144703777561
+      },
+      "FC_pAdRTK": {
+       "authors": 0.0456617216384,
+       "probe": 0.0452800951242
+      },
+      "FC_ppERK": {
+       "authors": 0.03698166022345,
+       "probe": 0.03668248514918
+      },
+      "FC_pAKT": {
+       "authors": 0.1729335547171,
+       "probe": 0.1712491818742
+      }
+     }
+    },
+    "timecourse2_B_S_S6Kinh": {
+     "max_rel_to_peak": 1.2295816857677342,
+     "worst": {
+      "S_FSforce": 1.2295816857677342,
+      "Seq": 1.0068229606063153,
+      "Sval": 0.3994456530066295
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -2.712689848382,
+       "probe": -4.225672285435
+      },
+      "FC_pAdRTK": {
+       "authors": 0.06280122714584,
+       "probe": 0.06232598363699
+      },
+      "FC_ppERK": {
+       "authors": 0.04244118963066,
+       "probe": 0.04211597708235
+      },
+      "FC_pAKT": {
+       "authors": 0.2985390402061,
+       "probe": 0.2959118909359
+      }
+     }
+    },
+    "timecourse2_B_S_TRKinh": {
+     "max_rel_to_peak": 0.017604750120862538,
+     "worst": {
+      "RTKdim2": 0.017604750120862538,
+      "RTKdim1": 0.016369482990767348,
+      "RTKdim0": 0.015140538470730573
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -4.110472011205,
+       "probe": -4.110805545519
+      },
+      "FC_pAdRTK": {
+       "authors": 0.002684038286519,
+       "probe": 0.002657680312917
+      },
+      "FC_ppERK": {
+       "authors": 0.01411431894584,
+       "probe": 0.01405622843402
+      },
+      "FC_pAKT": {
+       "authors": 0.04865360039376,
+       "probe": 0.04844564885653
+      }
+     }
+    }
+   }
+  }
+ },
+ "verdict": "PASS"
+}

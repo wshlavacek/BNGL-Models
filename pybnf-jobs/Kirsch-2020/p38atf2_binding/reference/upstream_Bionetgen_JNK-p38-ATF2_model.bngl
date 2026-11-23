@@ -1,0 +1,90 @@
+begin model
+begin parameters 
+	kon1 5.6			#WT: 5.6 JNK binding to ATF2 [uM-1*s-1]
+	koff1 19.6  			#JNK release from ATF2 [s-1]
+	kon2 17.2			#WT: 17.2, S90N: 77.1, MUT4: 1.2 #p38 binding to both ATF2 sites [uM-1*s-1]
+	koff2 429   			#p38 release from both ATF2 sites [s-1]
+	kon3 0.429			#WT: 0.429 p38 binding only at ATF2 D-site [uM-1*s-1]
+	koff3 429			#p38 release only from ATF2 D-site [s-1]
+	k1 3.52 			#CTR: 3.52, JNKIN8: 0 #JNK activity on T71->pT71 and T69->pT69 [s-1]
+	k2 0.78				#CTR: 0.78, JNKIN8: 0, S90N: 0 #JNK activity on F-site (S90) [s-1]
+	k3 8.2 				#p38 activity on T71->pT71, T69->pT69 and T69pT71->pT69pT71  [s-1]
+	k4 1.67				#p38 activity on pT69T71->pT69pT71 [s-1]
+	kstim7 0.00009074 		#MKK7 activity on JNK [s-1]
+	dp1 0.000626 			#phosphatase activity on pp-JNK [s-1]
+	kstim6 0.000116			#MKK6 activity on p38 [s-1] 
+	dp2 0.00176 			#phosphatase activity on pp-p38 [s-1] 
+	dp3 0.00954			#phosphatase activiy on ATF2 pT69 and pT71  [s-1] 
+	dp4 0.00450			#phosphatase activity on ATF2 pS90  [s-1] 
+	totJNK 1			#total concentration of JNK species [uM]
+	totp38 2.65			#total concentration of p38 species [uM]
+	totATF2 1			#total concentration of ATF2 species[uM]
+end parameters
+
+begin molecule types
+	JNK(DRS,TY~0~p) 
+    	p38(DRS,FRS,TY~0~p)
+    	ATF2(D,T71~0~p,T69~0~p,F~0~p)   
+end molecule types
+
+begin seed species
+    	JNK(DRS,TY~0) totJNK
+    	p38(DRS,FRS,TY~0) totp38
+    	ATF2(D,T71~0,T69~0,F~0) totATF2    
+end seed species
+
+begin observables
+	Molecules pT69pT71 ATF2(T71~p,T69~p)
+   	Molecules p38ATF2all p38(DRS!2,FRS!3,TY~p).ATF2(D!2,F~0!3),p38(DRS!2,FRS,TY~0).ATF2(D!2,F),p38(DRS!2,FRS,TY~p).ATF2(D!2,F~p)
+  	Molecules ppp38 p38(TY~p)
+  	Molecules ppJNK JNK(TY~p)
+end observables
+
+begin reaction rules
+ #JNK and p38 phosphorylation and dephosphorylation, when it is not bound to ATF2
+ 	JNK(DRS,TY~0) -> JNK(DRS,TY~p) kstim7
+ 	JNK(DRS,TY~p) -> JNK(DRS,TY~0) dp1
+ 	p38(DRS,FRS,TY~0) -> p38(DRS,FRS,TY~p) kstim6
+ 	p38(DRS,FRS,TY~p) -> p38(DRS,FRS,TY~0) dp2
+ #JNK-ATF2 binding
+ 	JNK(DRS) + ATF2(D) <-> JNK(DRS!1).ATF2(D!1) kon1,koff1
+ #JNK-ATF2 phosphorylation 
+ 	JNK(DRS!1,TY~p).ATF2(D!1,T71~0,T69~0) -> JNK(DRS!1,TY~p).ATF2(D!1,T71~p,T69~0) k1
+ 	JNK(DRS!1,TY~p).ATF2(D!1,T71~p,T69~0) -> JNK(DRS!1,TY~p).ATF2(D!1,T71~p,T69~p) k1
+ 	JNK(DRS!1,TY~p).ATF2(D!1,T71~0,T69~0) -> JNK(DRS!1,TY~p).ATF2(D!1,T71~0,T69~p) k1
+ 	JNK(DRS!1,TY~p).ATF2(D!1,T71~0,T69~p) -> JNK(DRS!1,TY~p).ATF2(D!1,T71~p,T69~p) k1
+ 	JNK(DRS!1,TY~p).ATF2(D!1,F~0) -> JNK(DRS!1,TY~p).ATF2(D!1,F~p) k2
+ #p38-ATF2 binding at both sites
+ 	p38(DRS,FRS,TY~p) + ATF2(D,F~0) <-> p38(DRS!2,FRS!3,TY~p).ATF2(D!2,F~0!3) kon2,koff2
+ #p38-ATF2 binding only at D-site
+ 	p38(DRS,FRS,TY~0) + ATF2(D,F) <-> p38(DRS!2,FRS,TY~0).ATF2(D!2,F) kon3,koff3
+ 	p38(DRS,FRS,TY~p) + ATF2(D,F~p) <-> p38(DRS!2,FRS,TY~p).ATF2(D!2,F~p) kon3,koff3
+ #p38-ATF2 phosphorylation  - when binds both sites
+ 	p38(DRS!2,FRS!3,TY~p).ATF2(D!2,T71~0,T69~0,F~0!3) -> p38(DRS!2,FRS!3,TY~p).ATF2(D!2,T71~p,T69~0,F~0!3) k3
+ 	p38(DRS!2,FRS!3,TY~p).ATF2(D!2,T71~p,T69~0,F~0!3) -> p38(DRS!2,FRS!3,TY~p).ATF2(D!2,T71~p,T69~p,F~0!3) k3
+ 	p38(DRS!2,FRS!3,TY~p).ATF2(D!2,T71~0,T69~0,F~0!3) -> p38(DRS!2,FRS!3,TY~p).ATF2(D!2,T71~0,T69~p,F~0!3) k3
+ 	p38(DRS!2,FRS!3,TY~p).ATF2(D!2,T71~0,T69~p,F~0!3) -> p38(DRS!2,FRS!3,TY~p).ATF2(D!2,T71~p,T69~p,F~0!3) k4
+ #p38-ATF2 phosphorylation - when binds only D-site
+ 	p38(DRS!2,FRS,TY~p).ATF2(D!2,T71~0,T69~0,F~p) -> p38(DRS!2,FRS,TY~p).ATF2(D!2,T71~p,T69~0,F~p) k3
+ 	p38(DRS!2,FRS,TY~p).ATF2(D!2,T71~p,T69~0,F~p) -> p38(DRS!2,FRS,TY~p).ATF2(D!2,T71~p,T69~p,F~p) k3
+ 	p38(DRS!2,FRS,TY~p).ATF2(D!2,T71~0,T69~0,F~p) -> p38(DRS!2,FRS,TY~p).ATF2(D!2,T71~0,T69~p,F~p) k3
+ 	p38(DRS!2,FRS,TY~p).ATF2(D!2,T71~0,T69~p,F~p) -> p38(DRS!2,FRS,TY~p).ATF2(D!2,T71~p,T69~p,F~p) k4
+ #ATF2 dephosphorylation
+ 	ATF2(T71~p) -> ATF2(T71~0) dp3
+ 	ATF2(T69~p) -> ATF2(T69~0) dp3
+ 	ATF2(F~p) -> ATF2(F~0) dp4
+end reaction rules
+
+end model
+
+# generate reaction network
+generate_network({overwrite=>1})
+## actions ##
+# Equilibration
+setParameter("kstim7",0.000004695); # keq7 
+setParameter("kstim6",0.0000174); # keq6
+simulate({prefix=>"01",method=>"ode",t_start=>-20000,t_end=>0,n_steps=>10});
+# Stimulation 
+setParameter("kstim7",0.00009074); 
+setParameter("kstim6",0.000116);
+simulate({prefix=>"01",method=>"ode",t_start=>0,t_end=>2400,n_steps=>2400})

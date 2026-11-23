@@ -24,13 +24,14 @@ distinct sites — JNK at the D-site, p38 bipartitely at the D-site **and** the 
 additionally phosphorylates the F-site **S90**, and **S90-P sterically blocks p38's F-site
 recruitment** — the paper's central mechanism. Deterministic ODE, **48 species, 152
 reactions**. The edition-2 reconstruction reproduces the authors' trajectories **exactly**
-(max relative difference 0.0).
+(max difference 0.0), asserted with BNG2.pl by `p38atf2_binding/check_author_file.py` against the
+vendored, sha256-pinned Supplementary Software 1 file.
 
 ## The jobs
 
 | slug | run cost | fits | flavor | data source | status |
 |---|---|---|---|---|---|
-| [`p38atf2_binding`](p38atf2_binding/) | `minutes` | WT p38-ATF2 NanoBit **binding** (`p38ATF2all`; free `keq6,kstim6,dp2,dp4`) | quantitative, **native-only** (`normalization=init`, `chi_sq`) | Source Data `Figure_4` (with SD) | ✅ **validated 91/100** — Gate 3a 5.8 %, Gate 3b ≤1.3× |
+| [`p38atf2_binding`](p38atf2_binding/) | `minutes` | WT p38-ATF2 NanoBit **binding** (`p38ATF2all`; free `keq6,kstim6,dp2,dp4`) | quantitative, **native-only** (`normalization=init`, `chi_sq`) | Source Data `Figure_4` (with SD) | ✅ **validated 91/100** (score predates the 2026-11-23 correction) — author-file check asserted (BNG2.pl, max Δ 0.0); data at the published point **reported, not asserted**: median 5.8 %, ½χ² 41.6, 3/19 points beyond 3 SE (the authors fit it jointly with the JNK-IN-8 curve; joint ½χ² 74.6); Gate 3b ≤1.3× |
 | [`ppatf2_phospho`](ppatf2_phospho/) | `minutes` | WT pp-ATF2(T69/T71) **phosphorylation** (`pT69pT71`; free `dp3`; CTR + JNK-IN-8) | quantitative, absolute µM (`sos`), **PEtab-exportable** | **digitized** Fig. 7b pp-ATF2 panel | ✅ **validated** — Gate 3a 6.1 %, Gate 3b `dp3` 1.06×, PEtab round-trip |
 | [`phosphoswitch_bpsl`](phosphoswitch_bpsl/) | `minutes` | S90 phosphoswitch → p38 recruitment orderings (4 cell params) | **BPSL** constraints, **native-only** | Suppl. Table 2 mutants; Figs. 3c/4b binding | ✅ tier-1 + **`check` 6/6 satisfied** (build-verified; not yet primary-source-audited) |
 

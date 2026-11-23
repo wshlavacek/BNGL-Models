@@ -1,0 +1,1208 @@
+{
+ "slug": "cstar_trka",
+ "generated_by": "pybnf-jobs/Rukhlenko-2022/cstar_trka/compare_upstream.py",
+ "bionetgen_version": "2.9.3",
+ "job_file": {
+  "path": "cstar_trka.bngl",
+  "sha256": "1f5d6fbbba78a165a6068f3b2e0f1fa8066697856fd8be7f71fd1c550ef59def"
+ },
+ "authors_file": {
+  "repository": "https://github.com/OleksiiR/cSTAR_Nature",
+  "commit": "bfb092f2e4bffcfc43b3de01c301303fc6d4fd36",
+  "path": "Trk_AB_models/TrkA_S_model.bngl",
+  "sha256": "1d19402b91ebe8fb526e69b220f4def4d5ed9dcbee145bd4588f74965d204aee"
+ },
+ "protocol": {
+  "authors_actions": [
+   "generate_network({overwrite=>1})",
+   "writeSBML()",
+   "setConcentration(\"TRKl(Rec)\",0)",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "simulate({suffix=>\"equilibration1\",method=>\"ode\",t_end=>50000,n_steps=>100,print_functions=>1})",
+   "setConcentration(\"S\",\"2*S0\")",
+   "simulate({suffix=>\"equilibration2\",method=>\"ode\",t_end=>50000,n_steps=>100,print_functions=>1})",
+   "saveConcentrations()",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "simulate({suffix=>\"timecourse2_A_S\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",\"I_AKT_conc\")",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "simulate({suffix=>\"timecourse2_A_S_AKTinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",\"I_ERK_conc\")",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "simulate({suffix=>\"timecourse2_A_S_ERKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",\"I_JNK_conc\")",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "simulate({suffix=>\"timecourse2_A_S_JNKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",\"I_RSK_conc\")",
+   "simulate({suffix=>\"timecourse2_A_S_RSKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",\"I_S6K_conc\")",
+   "simulate({suffix=>\"timecourse2_A_S_S6Kinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"TRKl(Rec)\",10)",
+   "setConcentration(\"ITRK(TRKBD)\",\"I_TRK_conc\")",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "simulate({suffix=>\"timecourse2_A_S_TRKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})"
+  ],
+  "job_actions": [
+   "generate_network({overwrite=>1})",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setParameter(\"Lig_on\",\"0\")",
+   "simulate({suffix=>\"equilibration1\",method=>\"ode\",t_end=>50000,n_steps=>100,print_functions=>1})",
+   "setConcentration(\"S\",\"2*S0\")",
+   "setParameter(\"Lig_on\",\"0\")",
+   "simulate({suffix=>\"equilibration2\",method=>\"ode\",t_end=>50000,n_steps=>100,print_functions=>1})",
+   "saveConcentrations()",
+   "resetConcentrations()",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_A_S\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",\"(1.42)\")",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_A_S_AKTinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",\"(0.5)\")",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_A_S_ERKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",\"(11)\")",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_A_S_JNKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",\"(1.7)\")",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_A_S_RSKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"ITRK(TRKBD)\",0)",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",\"(25)\")",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_A_S_S6Kinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})",
+   "resetConcentrations()",
+   "setConcentration(\"ITRK(TRKBD)\",\"(26)\")",
+   "setConcentration(\"IRTK(RTKBD)\",0)",
+   "setConcentration(\"IJNK(JNKBD)\",0)",
+   "setConcentration(\"IERK(ERKBD)\",0)",
+   "setConcentration(\"IAKT(AKTBD)\",0)",
+   "setConcentration(\"IS6K(S6KBD)\",0)",
+   "setConcentration(\"IRSK(RSKBD)\",0)",
+   "setParameter(\"Lig_on\",\"1\")",
+   "simulate({suffix=>\"timecourse2_A_S_TRKinh\",method=>\"ode\",t_end=>2700,n_steps=>2700,print_functions=>1})"
+  ]
+ },
+ "tolerances": {
+  "rate_coefficient_max_rel": {
+   "value": 1e-12,
+   "reason": "both sides are the same IEEE doubles: the slug's file only multiplies some constants by a gate equal to 1 or replaces a fixed species by a parameter of the same value"
+  },
+  "rhs_max_rel_to_gross_flux": {
+   "value": 1e-12,
+   "reason": "dy/dt of both networks at the same states, relative to each species' gross turnover sum_j |S_ij r_j|"
+  },
+  "common_functions_max_rel": {
+   "value": 1e-12,
+   "reason": "every function both files define, at the same states (the observable and function columns of the .gdat)"
+  },
+  "common_observables_max_rel": {
+   "value": 1e-12,
+   "reason": "every observable both files define, at the same states"
+  },
+  "trajectory_max_rel_to_peak": {
+   "value": 1e-09,
+   "reason": "max_t |authors - slug| / max(peak, 1e-8) for every species, observable and function of a phase. The two runs give the same run_network binary the same equations, parameter doubles and initial state (the translation keeps the authors' expressions, which BNG2.pl passes on in full precision), and CVODE is deterministic, so they must agree to the 13 significant digits BioNetGen prints; 1e-9 allows only last-digit rounding. 1e-8 is the solver's absolute tolerance, below which values are solver noise. The bound is far below the solver's own error (solver_error), so even an equivalent reformulation that changed CVODE's step sequence would be flagged: the claim is identity"
+  }
+ },
+ "notes": {
+  "protocol": "The published protocol is the authors' actions block, run verbatim. Its pre-equilibration is two finite 50000 s phases with S reset to 2*S0 between them, not a steady state; protocol_sensitivity reports how far a steady-state pre-equilibration moves the state and the trajectories."
+ },
+ "network": {
+  "species": {
+   "authors": 82,
+   "job": 82,
+   "only_authors": [],
+   "only_job": [],
+   "bijection": true,
+   "same_order": true
+  },
+  "reactions": {
+   "authors": 405,
+   "job": 405,
+   "unmatched": [],
+   "multiplicity_mismatch": 0,
+   "bijection": true,
+   "same_order_and_rate_law_text": true
+  },
+  "observables": {
+   "only_authors": [],
+   "only_job": [],
+   "differing_definition": []
+  },
+  "functions": {
+   "only_authors": [],
+   "only_job": [],
+   "only_job_used_by_rate_laws": [],
+   "differing_text": {}
+  },
+  "parameters": {
+   "only_authors": [],
+   "only_job": {
+    "Lig_on": 0.0
+   },
+   "differing_value": {
+    "I_AKT_conc": {
+     "authors": 1.42,
+     "job": 0.0
+    },
+    "I_ERK_conc": {
+     "authors": 0.5,
+     "job": 0.0
+    },
+    "I_TRK_conc": {
+     "authors": 26.0,
+     "job": 0.0
+    },
+    "I_JNK_conc": {
+     "authors": 11.0,
+     "job": 0.0
+    },
+    "I_S6K_conc": {
+     "authors": 25.0,
+     "job": 0.0
+    },
+    "I_RSK_conc": {
+     "authors": 1.7,
+     "job": 0.0
+    },
+    "_rateLaw1": {
+     "authors": 0.057735026918962574,
+     "job": 0.0
+    },
+    "_rateLaw3": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw5": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw7": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw9": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw19": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw21": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw23": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    },
+    "_rateLaw25": {
+     "authors": 0.11388664808568193,
+     "job": 0.0
+    }
+   },
+   "differing_text": [
+    "I_AKT_conc",
+    "I_ERK_conc",
+    "I_JNK_conc",
+    "I_RSK_conc",
+    "I_S6K_conc",
+    "I_TRK_conc",
+    "_rateLaw1",
+    "_rateLaw19",
+    "_rateLaw21",
+    "_rateLaw23",
+    "_rateLaw25",
+    "_rateLaw3",
+    "_rateLaw5",
+    "_rateLaw7",
+    "_rateLaw9"
+   ]
+  },
+  "conditions": {
+   "NGF added: Lig_on = 1, the same state": {
+    "states": 32,
+    "rate_coefficient_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "rhs_max_rel_to_gross_flux": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "common_functions_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "common_observables_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    }
+   },
+   "equilibration: authors TRKl(Rec) = 0; slug Lig_on = 0, TRKl(Rec) = 10": {
+    "states": 32,
+    "rhs_max_rel_to_gross_flux": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "common_functions_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    },
+    "common_observables_max_rel": {
+     "value": 0.0,
+     "tolerance": 1e-12,
+     "pass": true
+    }
+   }
+  },
+  "documented_differences": {
+   "parameters_only_job": {
+    "found": [
+     "Lig_on"
+    ],
+    "documented": [
+     "Lig_on"
+    ],
+    "pass": true
+   },
+   "parameters_only_authors": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "parameters_differing_value": {
+    "found": [
+     "I_AKT_conc",
+     "I_ERK_conc",
+     "I_JNK_conc",
+     "I_RSK_conc",
+     "I_S6K_conc",
+     "I_TRK_conc",
+     "_rateLaw1",
+     "_rateLaw19",
+     "_rateLaw21",
+     "_rateLaw23",
+     "_rateLaw25",
+     "_rateLaw3",
+     "_rateLaw5",
+     "_rateLaw7",
+     "_rateLaw9"
+    ],
+    "documented": [
+     "I_AKT_conc",
+     "I_ERK_conc",
+     "I_JNK_conc",
+     "I_RSK_conc",
+     "I_S6K_conc",
+     "I_TRK_conc",
+     "_rateLaw1",
+     "_rateLaw19",
+     "_rateLaw21",
+     "_rateLaw23",
+     "_rateLaw25",
+     "_rateLaw3",
+     "_rateLaw5",
+     "_rateLaw7",
+     "_rateLaw9"
+    ],
+    "pass": true
+   },
+   "observables_only_job": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "observables_only_authors": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "observables_differing_definition": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "functions_only_job_used_by_rate_laws": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "functions_only_authors": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   },
+   "functions_differing_text": {
+    "found": [],
+    "documented": [],
+    "pass": true
+   }
+  }
+ },
+ "trajectories": {
+  "equilibration1": {
+   "species": {
+    "compared": 81,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S2",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 73,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 101,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "gated_species": {
+    "TRKl(Rec)": {
+     "authors_value": 0.0,
+     "job_value": 10.0,
+     "authors_max_dev": 0.0,
+     "job_max_dev": 0.0,
+     "pass": true
+    }
+   }
+  },
+  "equilibration2": {
+   "species": {
+    "compared": 81,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S2",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 73,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 101,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "gated_species": {
+    "TRKl(Rec)": {
+     "authors_value": 0.0,
+     "job_value": 10.0,
+     "authors_max_dev": 0.0,
+     "job_max_dev": 0.0,
+     "pass": true
+    }
+   }
+  },
+  "timecourse2_A_S": {
+   "species": {
+    "compared": 82,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 73,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "timecourse2_A_S_AKTinh": {
+   "species": {
+    "compared": 82,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 73,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "timecourse2_A_S_ERKinh": {
+   "species": {
+    "compared": 82,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 73,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "timecourse2_A_S_JNKinh": {
+   "species": {
+    "compared": 82,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 73,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "timecourse2_A_S_RSKinh": {
+   "species": {
+    "compared": 82,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 73,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "timecourse2_A_S_S6Kinh": {
+   "species": {
+    "compared": 82,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 73,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  },
+  "timecourse2_A_S_TRKinh": {
+   "species": {
+    "compared": 82,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "S1",
+    "identical": true
+   },
+   "observables_and_functions": {
+    "compared": 73,
+    "max_rel_to_peak": 0.0,
+    "max_abs": 0.0,
+    "worst": "nTRK",
+    "identical": true
+   },
+   "time_points": 2701,
+   "species_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   },
+   "observables_max_rel_to_peak": {
+    "value": 0.0,
+    "tolerance": 1e-09,
+    "pass": true
+   }
+  }
+ },
+ "solver_error": {
+  "equilibration1": {
+   "species_max_rel_to_peak": 1.6874287186789548e-06,
+   "species_max_abs": 9.079894000230126e-06,
+   "species_worst": "S25",
+   "observables_max_rel_to_peak": 1.6874287186789548e-06,
+   "observables_max_abs": 8.264723999928947e-05,
+   "observables_worst": "ppERK"
+  },
+  "equilibration2": {
+   "species_max_rel_to_peak": 2.868509395292682e-06,
+   "species_max_abs": 7.07919100007004e-07,
+   "species_worst": "S56",
+   "observables_max_rel_to_peak": 2.868509395292682e-06,
+   "observables_max_abs": 7.175740002196562e-06,
+   "observables_worst": "RTKdim2"
+  },
+  "timecourse2_A_S": {
+   "species_max_rel_to_peak": 0.00177257409505424,
+   "species_max_abs": 1.1408314000149744e-05,
+   "species_worst": "S33",
+   "observables_max_rel_to_peak": 0.00035934375454738,
+   "observables_max_abs": 0.0004804163500011782,
+   "observables_worst": "TRKdim0"
+  },
+  "timecourse2_A_S_AKTinh": {
+   "species_max_rel_to_peak": 0.0017725741849863377,
+   "species_max_abs": 7.086729999494779e-07,
+   "species_worst": "S33",
+   "observables_max_rel_to_peak": 0.0003593437650019666,
+   "observables_max_abs": 0.0004804163599985145,
+   "observables_worst": "TRKdim0"
+  },
+  "timecourse2_A_S_ERKinh": {
+   "species_max_rel_to_peak": 0.0017825497940818055,
+   "species_max_abs": 0.00024441113599982245,
+   "species_worst": "S33",
+   "observables_max_rel_to_peak": 0.0007326501709489704,
+   "observables_max_abs": 0.00048069556000029934,
+   "observables_worst": "S_FSforce"
+  },
+  "timecourse2_A_S_JNKinh": {
+   "species_max_rel_to_peak": 8.134531503245931e-06,
+   "species_max_abs": 9.044160000026835e-06,
+   "species_worst": "S63",
+   "observables_max_rel_to_peak": 1.9819595318413653e-05,
+   "observables_max_abs": 6.101127999613709e-05,
+   "observables_worst": "S_FSforce"
+  },
+  "timecourse2_A_S_RSKinh": {
+   "species_max_rel_to_peak": 0.0017727114599195338,
+   "species_max_abs": 2.2577934999823412e-05,
+   "species_worst": "S33",
+   "observables_max_rel_to_peak": 0.0003593635696583824,
+   "observables_max_abs": 0.0004804300699987607,
+   "observables_worst": "TRKdim0"
+  },
+  "timecourse2_A_S_S6Kinh": {
+   "species_max_rel_to_peak": 1.9785562123685603e-05,
+   "species_max_abs": 7.088843999580874e-07,
+   "species_worst": "S63",
+   "observables_max_rel_to_peak": 3.4266245419689116e-06,
+   "observables_max_abs": 2.7027350000707884e-05,
+   "observables_worst": "RTKdim2"
+  },
+  "timecourse2_A_S_TRKinh": {
+   "species_max_rel_to_peak": 0.0001565424883768078,
+   "species_max_abs": 3.958272399984253e-05,
+   "species_worst": "S73",
+   "observables_max_rel_to_peak": 0.00012048853741948415,
+   "observables_max_abs": 5.209823000029701e-05,
+   "observables_worst": "S_FSforce"
+  }
+ },
+ "protocol_sensitivity": {
+  "steady_state_from_seeds": {
+   "states": {
+    "equilibration2 vs equilibration1": {
+     "end_state_max_rel": 0.4278188750191092,
+     "worst": "S17",
+     "worst_species": "S()",
+     "probe_last_interval_drift_max_rel": 5.834930342305928e-12,
+     "probe_end_time": 100000000.0,
+     "authors_end_time": 50000.0,
+     "watched_at_end": {
+      "Sval": {
+       "authors": -4.13166251281,
+       "probe": -2.364059304621
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01304025827792,
+       "probe": 0.01249837044499
+      },
+      "FC_ppERK": {
+       "authors": 0.01012219470736,
+       "probe": 0.01012273149676
+      },
+      "FC_pAKT": {
+       "authors": 0.01204419926865,
+       "probe": 0.01203837468177
+      }
+     }
+    }
+   },
+   "trajectories": {
+    "timecourse2_A_S": {
+     "max_rel_to_peak": 1.1118601157403838,
+     "worst": {
+      "S_FSforce": 1.1118601157403838,
+      "Seq": 0.9520234034713861,
+      "Sval": 0.4404980281991135
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -2.213643654269,
+       "probe": -2.213995178218
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01306650361035,
+       "probe": 0.01256931528549
+      },
+      "FC_ppERK": {
+       "authors": 0.01739114451277,
+       "probe": 0.01739208627811
+      },
+      "FC_pAKT": {
+       "authors": 0.01397341775856,
+       "probe": 0.01396754428257
+      }
+     }
+    },
+    "timecourse2_A_S_AKTinh": {
+     "max_rel_to_peak": 0.7030383250497992,
+     "worst": {
+      "Seq": 0.7030383250497992,
+      "Sval": 0.42372291308485244,
+      "RTKdim2": 0.0415730652482413
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -4.192577291602,
+       "probe": -2.608340492173
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01283917586913,
+       "probe": 0.01235050549522
+      },
+      "FC_ppERK": {
+       "authors": 0.01954473889547,
+       "probe": 0.01954523257085
+      },
+      "FC_pAKT": {
+       "authors": 0.00739829328163,
+       "probe": 0.007394790132864
+      }
+     }
+    },
+    "timecourse2_A_S_ERKinh": {
+     "max_rel_to_peak": 1.20000305929572,
+     "worst": {
+      "S_FSforce": 1.20000305929572,
+      "Seq": 0.9771249598445494,
+      "Sval": 0.44271843617781925
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -2.292678417415,
+       "probe": -2.292962724234
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01302489591592,
+       "probe": 0.01252925513358
+      },
+      "FC_ppERK": {
+       "authors": 0.01219266797732,
+       "probe": 0.01219329239989
+      },
+      "FC_pAKT": {
+       "authors": 0.01281168366975,
+       "probe": 0.01280616227254
+      }
+     }
+    },
+    "timecourse2_A_S_JNKinh": {
+     "max_rel_to_peak": 1.1341153488776343,
+     "worst": {
+      "S_FSforce": 1.1341153488776343,
+      "Seq": 0.9591639537160959,
+      "Sval": 0.44138730478005617
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -2.230184419261,
+       "probe": -2.230522498675
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01304980391898,
+       "probe": 0.01255323572843
+      },
+      "FC_ppERK": {
+       "authors": 0.01472831461075,
+       "probe": 0.01472910142074
+      },
+      "FC_pAKT": {
+       "authors": 0.0135104058217,
+       "probe": 0.01350466887507
+      }
+     }
+    },
+    "timecourse2_A_S_RSKinh": {
+     "max_rel_to_peak": 0.8867377036837184,
+     "worst": {
+      "Seq": 0.8867377036837184,
+      "S_FSforce": 0.8295172104397817,
+      "Sval": 0.4313671599786253
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -1.848242634287,
+       "probe": -1.848665663578
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01315764628788,
+       "probe": 0.01265707182605
+      },
+      "FC_ppERK": {
+       "authors": 0.03447068847319,
+       "probe": 0.03447279097518
+      },
+      "FC_pAKT": {
+       "authors": 0.01649361603864,
+       "probe": 0.01648702415083
+      }
+     }
+    },
+    "timecourse2_A_S_S6Kinh": {
+     "max_rel_to_peak": 0.5271780643869505,
+     "worst": {
+      "S_FSforce": 0.5271780643869505,
+      "Seq": 0.4550850228159854,
+      "Sval": 0.40234916721050584
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -4.390696362511,
+       "probe": -3.429723590828
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01234034816954,
+       "probe": 0.01187016072615
+      },
+      "FC_ppERK": {
+       "authors": 0.02670344836346,
+       "probe": 0.02670310189435
+      },
+      "FC_pAKT": {
+       "authors": 0.03886052454834,
+       "probe": 0.03883912815556
+      }
+     }
+    },
+    "timecourse2_A_S_TRKinh": {
+     "max_rel_to_peak": 1.2139967600888317,
+     "worst": {
+      "S_FSforce": 1.2139967600888317,
+      "Seq": 0.9849965082591154,
+      "Sval": 0.4443502819059827
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -2.249246614711,
+       "probe": -2.249444482153
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01305273307786,
+       "probe": 0.01255602283221
+      },
+      "FC_ppERK": {
+       "authors": 0.01655906125118,
+       "probe": 0.01655994854957
+      },
+      "FC_pAKT": {
+       "authors": 0.0136702421313,
+       "probe": 0.0136644310225
+      }
+     }
+    }
+   }
+  },
+  "steady_state_after_S_reset": {
+   "states": {
+    "equilibration2 vs equilibration2": {
+     "end_state_max_rel": 0.04157306323854643,
+     "worst": "S56",
+     "worst_species": "AdRTK(Dim!1,IBD,Y~P).AdRTK(Dim!1,IBD,Y~P)",
+     "probe_last_interval_drift_max_rel": 1.0907814131915432e-13,
+     "probe_end_time": 100000000.0,
+     "authors_end_time": 50000.0,
+     "watched_at_end": {
+      "Sval": {
+       "authors": -4.13166251281,
+       "probe": -4.131746621908
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01304025827792,
+       "probe": 0.01249837047119
+      },
+      "FC_ppERK": {
+       "authors": 0.01012219470736,
+       "probe": 0.01012273149673
+      },
+      "FC_pAKT": {
+       "authors": 0.01204419926865,
+       "probe": 0.01203837468205
+      }
+     }
+    }
+   },
+   "trajectories": {
+    "timecourse2_A_S": {
+     "max_rel_to_peak": 0.04153676884048277,
+     "worst": {
+      "RTKdim": 0.04153676884048277,
+      "RTKdim0": 0.041524436729742785,
+      "RTKdim1": 0.04126316848414709
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -2.213643654269,
+       "probe": -2.214015068589
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01306650361035,
+       "probe": 0.01256931535917
+      },
+      "FC_ppERK": {
+       "authors": 0.01739114451277,
+       "probe": 0.01739208534839
+      },
+      "FC_pAKT": {
+       "authors": 0.01397341775856,
+       "probe": 0.01396754439672
+      }
+     }
+    },
+    "timecourse2_A_S_AKTinh": {
+     "max_rel_to_peak": 0.04157306323854643,
+     "worst": {
+      "RTKdim2": 0.04157306323854643,
+      "pAdRTK": 0.04155499033692717,
+      "FC_pAdRTK": 0.04155499033692717
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -4.192577291602,
+       "probe": -4.192626696717
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01283917586913,
+       "probe": 0.01235050549819
+      },
+      "FC_ppERK": {
+       "authors": 0.01954473889547,
+       "probe": 0.01954523587035
+      },
+      "FC_pAKT": {
+       "authors": 0.00739829328163,
+       "probe": 0.007394789654693
+      }
+     }
+    },
+    "timecourse2_A_S_ERKinh": {
+     "max_rel_to_peak": 0.04153676884048277,
+     "worst": {
+      "RTKdim": 0.04153676884048277,
+      "RTKdim0": 0.041524436729742785,
+      "RTKdim1": 0.04138793909425759
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -2.292678417415,
+       "probe": -2.293022086641
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01302489591592,
+       "probe": 0.01252925533144
+      },
+      "FC_ppERK": {
+       "authors": 0.01219266797732,
+       "probe": 0.01219329029552
+      },
+      "FC_pAKT": {
+       "authors": 0.01281168366975,
+       "probe": 0.0128061633108
+      }
+     }
+    },
+    "timecourse2_A_S_JNKinh": {
+     "max_rel_to_peak": 0.04153676884048277,
+     "worst": {
+      "RTKdim": 0.04153676884048277,
+      "RTKdim0": 0.041524436729742785,
+      "RTKdim1": 0.041316391287373695
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -2.230184419261,
+       "probe": -2.230544544836
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01304980391898,
+       "probe": 0.01255323583101
+      },
+      "FC_ppERK": {
+       "authors": 0.01472831461075,
+       "probe": 0.01472910052771
+      },
+      "FC_pAKT": {
+       "authors": 0.0135104058217,
+       "probe": 0.01350466914942
+      }
+     }
+    },
+    "timecourse2_A_S_RSKinh": {
+     "max_rel_to_peak": 0.04153676884048277,
+     "worst": {
+      "RTKdim": 0.04153676884048277,
+      "RTKdim0": 0.041524436729742785,
+      "RTKdim1": 0.04098491032144586
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -1.848242634287,
+       "probe": -1.84866857276
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01315764628788,
+       "probe": 0.01265707175144
+      },
+      "FC_ppERK": {
+       "authors": 0.03447068847319,
+       "probe": 0.03447278887206
+      },
+      "FC_pAKT": {
+       "authors": 0.01649361603864,
+       "probe": 0.01648702534777
+      }
+     }
+    },
+    "timecourse2_A_S_S6Kinh": {
+     "max_rel_to_peak": 0.04157306323854643,
+     "worst": {
+      "RTKdim2": 0.04157306323854643,
+      "pAdRTK": 0.04155499033692717,
+      "FC_pAdRTK": 0.04155499033692717
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -4.390696362511,
+       "probe": -4.390704926477
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01234034816954,
+       "probe": 0.01187016074857
+      },
+      "FC_ppERK": {
+       "authors": 0.02670344836346,
+       "probe": 0.02670310944383
+      },
+      "FC_pAKT": {
+       "authors": 0.03886052454834,
+       "probe": 0.03883912663547
+      }
+     }
+    },
+    "timecourse2_A_S_TRKinh": {
+     "max_rel_to_peak": 0.059367533463727515,
+     "worst": {
+      "S_FSforce": 0.059367533463727515,
+      "Seq": 0.04765392970670172,
+      "RTKdim": 0.04153676884048277
+     },
+     "watched_at_end": {
+      "Sval": {
+       "authors": -2.249246614711,
+       "probe": -2.249608738195
+      },
+      "FC_pAdRTK": {
+       "authors": 0.01305273307786,
+       "probe": 0.01255602307194
+      },
+      "FC_ppERK": {
+       "authors": 0.01655906125118,
+       "probe": 0.01655994683082
+      },
+      "FC_pAKT": {
+       "authors": 0.0136702421313,
+       "probe": 0.01366443299214
+      }
+     }
+    }
+   }
+  }
+ },
+ "verdict": "PASS"
+}

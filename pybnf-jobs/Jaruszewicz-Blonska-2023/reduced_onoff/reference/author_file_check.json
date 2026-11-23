@@ -1,0 +1,159 @@
+{
+  "exact_file": "reduced_onoff.bngl",
+  "exact_file_sha256": "629bd88d72b09fee4bb395d5bb817df7d227020d9f4c657abb473e08113e4228",
+  "author_file": "reference/upstream_fitted_reduced_model_on_off_protocol.bngl",
+  "author_file_sha256": "3bd1c19d95465c37ee02012a98ad96fb5a7b84e47c73306948e337d27291f54a",
+  "engine": "BioNetGen BNG2.pl (run_network, CVODE); no bngsim",
+  "tolerances": {
+    "pre_stimulus_constancy_abs": 1e-12,
+    "trajectory_max_abs_over_peak": 1e-05,
+    "identically_zero_observable_abs": 1e-12
+  },
+  "checks": {
+    "a_pre_stimulus_phase_is_steady": {
+      "WT": {
+        "n_points": 25,
+        "max_abs_change": 0.0,
+        "seed_is_resting_state": true
+      },
+      "A20KO": {
+        "n_points": 25,
+        "max_abs_change": 0.0,
+        "seed_is_resting_state": true
+      }
+    },
+    "b_network": {
+      "authors_species": 6,
+      "authors_reactions": 14,
+      "exact_species": 7,
+      "exact_reactions": 15,
+      "species_only_in_exact": [
+        "Clock()"
+      ],
+      "species_only_in_authors": [],
+      "same_reactions_apart_from_clock": true,
+      "pass": true
+    },
+    "c_trajectories_after_onset": {
+      "WT": {
+        "n_points": 145,
+        "observables": {
+          "IKK_n": {
+            "peak_authors": 1.0,
+            "max_abs_diff": 1.7069838000038917e-07,
+            "metric": "max_abs_diff/peak",
+            "value": 1.7069838000038917e-07,
+            "tol": 1e-05,
+            "pass": true,
+            "max_rel_diff_where_above_1e-3_of_peak": 2.5604794417106413e-06
+          },
+          "IKK_a": {
+            "peak_authors": 0.3265278243639,
+            "max_abs_diff": 5.040643999421057e-08,
+            "metric": "max_abs_diff/peak",
+            "value": 1.5437104048454675e-07,
+            "tol": 1e-05,
+            "pass": true,
+            "max_rel_diff_where_above_1e-3_of_peak": 2.7705810703650622e-06
+          },
+          "NFkB_n": {
+            "peak_authors": 0.9995896328438,
+            "max_abs_diff": 6.357102000087433e-07,
+            "metric": "max_abs_diff/peak",
+            "value": 6.359711816940002e-07,
+            "tol": 1e-05,
+            "pass": true,
+            "max_rel_diff_where_above_1e-3_of_peak": 1.1466352910080826e-05
+          },
+          "A20": {
+            "peak_authors": 0.2504314707001,
+            "max_abs_diff": 7.269720000979696e-08,
+            "metric": "max_abs_diff/peak",
+            "value": 2.902877973226227e-07,
+            "tol": 1e-05,
+            "pass": true,
+            "max_rel_diff_where_above_1e-3_of_peak": 4.880359291527492e-07
+          },
+          "IkBa": {
+            "peak_authors": 1.869481575756,
+            "max_abs_diff": 8.058602999350128e-07,
+            "metric": "max_abs_diff/peak",
+            "value": 4.3106084081579186e-07,
+            "tol": 1e-05,
+            "pass": true,
+            "max_rel_diff_where_above_1e-3_of_peak": 1.5828610375865268e-06
+          },
+          "tIkBa": {
+            "peak_authors": 0.5730644680002,
+            "max_abs_diff": 2.1741670000463564e-07,
+            "metric": "max_abs_diff/peak",
+            "value": 3.793930912578579e-07,
+            "tol": 1e-05,
+            "pass": true,
+            "max_rel_diff_where_above_1e-3_of_peak": 9.51884443416678e-06
+          }
+        }
+      },
+      "A20KO": {
+        "n_points": 145,
+        "observables": {
+          "IKK_n": {
+            "peak_authors": 1.0,
+            "max_abs_diff": 1.5405819997482695e-07,
+            "metric": "max_abs_diff/peak",
+            "value": 1.5405819997482695e-07,
+            "tol": 1e-05,
+            "pass": true,
+            "max_rel_diff_where_above_1e-3_of_peak": 1.8694841623985476e-06
+          },
+          "IKK_a": {
+            "peak_authors": 0.4160391404628,
+            "max_abs_diff": 9.608626999613179e-08,
+            "metric": "max_abs_diff/peak",
+            "value": 2.30954880565434e-07,
+            "tol": 1e-05,
+            "pass": true,
+            "max_rel_diff_where_above_1e-3_of_peak": 4.6153937323708366e-06
+          },
+          "NFkB_n": {
+            "peak_authors": 0.9997585082236,
+            "max_abs_diff": 7.02341199976253e-07,
+            "metric": "max_abs_diff/peak",
+            "value": 7.025108505694973e-07,
+            "tol": 1e-05,
+            "pass": true,
+            "max_rel_diff_where_above_1e-3_of_peak": 1.1627889793782867e-05
+          },
+          "A20": {
+            "peak_authors": 0.0,
+            "max_abs_diff": 0.0,
+            "metric": "max_abs_diff (zero observable)",
+            "value": 0.0,
+            "tol": 1e-12,
+            "pass": true,
+            "max_rel_diff_where_above_1e-3_of_peak": 0.0
+          },
+          "IkBa": {
+            "peak_authors": 4.76935898556,
+            "max_abs_diff": 3.653705999973056e-06,
+            "metric": "max_abs_diff/peak",
+            "value": 7.660790498335808e-07,
+            "tol": 1e-05,
+            "pass": true,
+            "max_rel_diff_where_above_1e-3_of_peak": 1.543829703008353e-06
+          },
+          "tIkBa": {
+            "peak_authors": 0.8392747535275,
+            "max_abs_diff": 2.002387999855415e-07,
+            "metric": "max_abs_diff/peak",
+            "value": 2.385855158205714e-07,
+            "tol": 1e-05,
+            "pass": true,
+            "max_rel_diff_where_above_1e-3_of_peak": 7.685813707094633e-06
+          }
+        }
+      }
+    }
+  },
+  "verdict": "PASS"
+}

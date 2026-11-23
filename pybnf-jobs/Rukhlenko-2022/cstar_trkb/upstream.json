@@ -1,0 +1,33 @@
+{
+  "_comment": [
+    "Provenance pin for the authors' model this slug is checked against. Nothing is copied:",
+    "the authors' repository grants no licence (see `license`), so the file is pinned by",
+    "commit, path and sha256 and fetched at check time (compare_upstream.py --fetch, into the",
+    "git-ignored dev/upstream/ cache) or read from a local checkout (--upstream DIR).",
+    "cstar_upstream.authors_file refuses a file whose sha256 differs.",
+    "cstar_trkb.bngl is the authors' file with the documented edits in its header; the",
+    "comparison that establishes it is upstream_comparison.json, written by compare_upstream.py."
+  ],
+  "publication": "Rukhlenko OS, Halasz M, Rauch N, Zhernovkov V, Prince T, Wynne K, Maher S, Kashdan E, MacLeod K, Carragher NO, Kolch W, Kholodenko BN (2022). Control of cell state transitions. Nature 609:975-985. doi:10.1038/s41586-022-05194-y",
+  "upstream_repository": "https://github.com/OleksiiR/cSTAR_Nature",
+  "pinned_commit": "bfb092f2e4bffcfc43b3de01c301303fc6d4fd36",
+  "pinned_commit_short": "bfb092f",
+  "pinned_commit_date": "2022-05-04T16:21:02Z",
+  "pinned_ref": "HEAD of main when pinned (2026-11-23); the repository's last push is this commit",
+  "license": {
+    "name": "none granted",
+    "statement": "All rights reserved. No licence is granted, express or implied, to use, copy, modify, or distribute the software code and/or data in this repository. Copyright 2021-2022 University College Dublin.",
+    "source": "README.md at the pinned commit; GitHub reports license null (no LICENSE file)",
+    "consequence": "not vendored: pinned by URL and sha256 only"
+  },
+  "verification_rule": "sha256 of the raw bytes at the pinned commit",
+  "file": {
+    "upstream_path": "Trk_AB_models/TrkB_S_model.bngl",
+    "raw_url": "https://raw.githubusercontent.com/OleksiiR/cSTAR_Nature/bfb092f2e4bffcfc43b3de01c301303fc6d4fd36/Trk_AB_models/TrkB_S_model.bngl",
+    "sha256": "6086bdef466687e8e4ee3d6b34f07b0eda9cfca057d5edd9f0e7889c22019cbb",
+    "git_blob": "8772e79839cfe7a55ff22e4e67e066d6e849ded6",
+    "last_changed_in": "5d8be86628ece3b02305c273811da27ba0d639e1 (2022-05-04, 'Add files via upload'); unchanged to the pinned commit",
+    "role": "The authors' TrkB/BDNF model (114 species, 645 reactions) with their fitted parameters and their actions block, which is the published protocol: equilibrate without ligand, reset S, equilibrate, then BDNF with and without each inhibitor for 2700 s."
+  },
+  "verified": "2026-11-23"
+}

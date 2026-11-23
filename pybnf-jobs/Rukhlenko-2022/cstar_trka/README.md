@@ -39,8 +39,9 @@ parameters the 45-min points fit less tightly than the 10-min ones (see `VALIDAT
 phosphorylation), then add NGF (`Lig_on = 1`) and measure over 0–2700 s (= 45 min). PyBNF
 synthesizes the two-phase protocol from `preequilibrate: basal` → `condition: stim`.
 
-See **[`VALIDATION.md`](VALIDATION.md)** for the primary-source audit (confidence 86/100; model
-byte-identical to the authors' `TrkA_S_model.bngl`, `.exp` byte-reproducible from their RPPA).
+See **[`VALIDATION.md`](VALIDATION.md)** for the primary-source audit (confidence 86/100; the
+generated network is identical to that of the authors' `TrkA_S_model.bngl`, checked by
+[`compare_upstream.py`](compare_upstream.py) below; `.exp` byte-reproducible from their RPPA).
 
 ## Files
 
@@ -51,6 +52,9 @@ byte-identical to the authors' `TrkA_S_model.bngl`, `.exp` byte-reproducible fro
 | `cstar_trka.exp` | fit target: 7 phospho fold changes at 0/10/45 min |
 | `extract_exp.py` | reproducible extraction of `cstar_trka.exp` from the authors' RPPA CSVs |
 | `cstar_trka_reproduction.png` | verification: model at published params vs. the RPPA data |
+| `upstream.json` | pin of the authors' `TrkA_S_model.bngl` (commit, path, sha256); not vendored |
+| `compare_upstream.py` | BioNetGen-only comparison of `cstar_trka.bngl` with the authors' file |
+| `upstream_comparison.json` | what that comparison measured, against which tolerance |
 
 Source model + data: [github.com/OleksiiR/cSTAR_Nature](https://github.com/OleksiiR/cSTAR_Nature)
 (`Trk_AB_models/TrkA_S_model.bngl`, `RPPA_DA/RPPA_data_trusted.csv`,
@@ -116,6 +120,46 @@ shipped `igf1r.conf`. This job is therefore verified **without** the PEtab round
   median relative error ≈ 18 % (max ≈ 43 %) across the 10- and 45-min points; the bounded
   fit already improves on this single-arm subset (the published values were fit jointly to
   a much larger TrkA+TrkB × multi-inhibitor × 10/45-min dataset).
+
+## Checked against the authors' file (BioNetGen only)
+
+`compare_upstream.py` compares `cstar_trka.bngl` as committed with the authors'
+`Trk_AB_models/TrkA_S_model.bngl` at
+[OleksiiR/cSTAR_Nature@bfb092f](https://github.com/OleksiiR/cSTAR_Nature/tree/bfb092f2e4bffcfc43b3de01c301303fc6d4fd36)
+(sha256 `1d19402b...`, pinned in `upstream.json`). That repository grants no licence ("All
+rights reserved"), so the file is not copied here: `--fetch` downloads it from the pinned commit
+into the git-ignored `dev/upstream/` and checks its sha256, or `--upstream DIR` reads a local
+checkout. Nothing uses bngsim; the shared code is `../cstar_upstream.py`. Every number below is
+in `upstream_comparison.json` (BioNetGen 2.9.3):
+
+| check | measured | asserted |
+|---|---|---|
+| species (canonical labels), reactions (canonical reactants and products) | 82 = 82, 405 = 405, both bijections, same order | bijection |
+| rate coefficients, dy/dt (to each species' gross flux), functions, observables at 32 sampled states, `Lig_on = 1` | 0 | ≤ 1e-12 |
+| dy/dt with the authors' free ligand at 0 and this file's at 10 with `Lig_on = 0` | 0 | ≤ 1e-12 |
+| differences in parameters | only `Lig_on`, the six inhibitor doses (0 here) and the nine ligand-association rate laws that carry `Lig_on` | exactly these |
+| trajectories under the published protocol: 2 equilibrations + 7 stimulated arms (DMSO and six inhibitors), every species, observable and function | identical to the printed digits | ≤ 1e-9 of peak |
+
+The published protocol is the authors' own actions block, run verbatim on their file. The slug's
+file runs the same actions, translated mechanically: `TRKl(Rec)` 0/10 becomes `Lig_on` 0/1 (the
+free ligand then stays at 10 during the equilibrations, checked separately), and an inhibitor
+dose the slug sets to 0 is written out as the authors' value.
+
+**The published pre-equilibration is not a steady state.** It is 50000 s without ligand, a reset
+of the phenotype coordinate `S` to `2*S0`, and another 50000 s. Run to steady state instead
+(reported, not asserted), the AdRTK species end up to 4.2 % away (its synthesis and
+degradation act on a ~1e5 s time scale), and without the `S` reset `Sval` settles at -2.364 in
+the `Sd` well instead of the authors' -4.132 in the `S0` well. The fitted fold changes move by
+at most 3.7e-3 (`FC_pAdRTK`), but the stimulated trajectories differ by up to 5.9 % with the
+reset, and without it by 44 % in `Sval` and up to 121 % in its force terms `Seq`/`S_FSforce`.
+A simulation meant to match the paper should therefore replay the finite protocol, reset
+included. BioNetGen's default tolerances (atol = rtol = 1e-8) are themselves accurate only to
+~2e-3 of peak on species whose peak is below 1e-4 (`solver_error`, against 1e-12).
+
+```bash
+export BNGPATH="$HOME/Simulations/BioNetGen-2.9.3"   # folder with BNG2.pl
+uv run python pybnf-jobs/Rukhlenko-2022/cstar_trka/compare_upstream.py --fetch
+```
 
 ## Run
 

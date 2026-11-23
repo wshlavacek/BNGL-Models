@@ -20,26 +20,37 @@ Download the workbook (5.8 MB) from the article's supplementary materials:
   https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-19582-3/MediaObjects/41467_2020_19582_MOESM6_ESM.xlsx
 and pass its path as argv[1] (default: ./41467_2020_19582_MOESM6_ESM.xlsx).
 
+The workbook is pinned by sha256 in upstream.json and refused if it differs. The same run also
+transcribes the WT + JNK-IN-8 column (D) to reference/fig4a_wt_jnkin8.exp in the same format. That
+curve is not fit by this job, but the authors fit kstim6, dp2 and dp4 to it together with the WT
+control (Methods), so check_author_file.py reports the published point against both.
+
 "treated/untreated" is a fold change vs the unstimulated control, so the conf compares it
 to the model's p38ATF2all under ``normalization = init`` (each simulated series divided by
 its own t=0 / basal value). Model time is in seconds: t[s] = t[min] * 60. Only stdlib is
 used (the xlsx is unzipped and its sheet XML parsed directly).
 """
-import sys
+
+import hashlib
+import json
+import os
 import re
-import zipfile
+import sys
 import xml.etree.ElementTree as ET
+import zipfile
 
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 XLSX = sys.argv[1] if len(sys.argv) > 1 else "41467_2020_19582_MOESM6_ESM.xlsx"
-OUT = "p38atf2_binding.exp"
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(HERE, "p38atf2_binding.exp")
+OUT_JNKIN8 = os.path.join(HERE, "reference", "fig4a_wt_jnkin8.exp")
 OBS = "p38ATF2all"
 
 # Figure_4 is the 4th sheet (sheet4.xml); the MEAN block is rows 6-24, the SD block rows
 # 29-47; WT is column C (=3), the independent variable t(min) is column B (=2).
 SHEET = "xl/worksheets/sheet4.xml"
 MEAN_ROW0, SD_ROW0, N = 6, 29, 19
-T_COL, WT_COL = 2, 3
+T_COL, WT_COL, WT_JNKIN8_COL = 2, 3, 4
 
 
 def colnum(ref):
@@ -68,19 +79,29 @@ def load_grid(xlsx_path):
     return grid
 
 
-def main():
-    grid = load_grid(XLSX)
+def write_column(grid, col, out):
     rows = []
     for i in range(N):
         t_min = float(grid[(MEAN_ROW0 + i, T_COL)])
-        mean = float(grid[(MEAN_ROW0 + i, WT_COL)])
-        sd = float(grid[(SD_ROW0 + i, WT_COL)])
+        mean = float(grid[(MEAN_ROW0 + i, col)])
+        sd = float(grid[(SD_ROW0 + i, col)])
         rows.append((round(t_min * 60.0), mean, sd))
-    with open(OUT, "w") as fh:
+    with open(out, "w") as fh:
         fh.write(f"# time {OBS} {OBS}_SD\n")
         for t_s, mean, sd in rows:
             fh.write(f"{t_s} {mean:.4f} {sd:.4f}\n")
-    print(f"wrote {OUT} with {len(rows)} points (t = 0..{rows[-1][0]} s)")
+    print(f"wrote {os.path.relpath(out, HERE)} with {len(rows)} points (t = 0..{rows[-1][0]} s)")
+
+
+def main():
+    pin = json.load(open(os.path.join(HERE, "upstream.json")))["publisher_copies"]["source_data"]
+    with open(XLSX, "rb") as fh:
+        got = hashlib.sha256(fh.read()).hexdigest()
+    if got != pin["sha256"]:
+        sys.exit(f"{XLSX}: sha256 {got} does not match upstream.json {pin['sha256']}")
+    grid = load_grid(XLSX)
+    write_column(grid, WT_COL, OUT)
+    write_column(grid, WT_JNKIN8_COL, OUT_JNKIN8)
 
 
 if __name__ == "__main__":

@@ -50,6 +50,32 @@ target is the *original* model's output, and "the paper's result" is **Table 1**
   brings `a_3` within 3×. Expected sloppy-fit behavior for this deliberately sparse (41-point)
   protocol; the sibling combination slug recovers all 13.
 
+## Author-file check (BNG2.pl, asserted)
+
+[`check_author_file.py`](check_author_file.py) runs this exact file and the authors' own on-off file
+through BNG2.pl and asserts that they are the same model on the same protocol. The authors' file is
+S1 Code of the article (`fitted_reduced_model_on_off_protocol.bngl`, the reduced model at the Table 1
+fitted values), vendored byte-identical as
+[`reference/upstream_fitted_reduced_model_on_off_protocol.bngl`](reference/) and pinned by URL and
+sha256 in [`upstream.json`](upstream.json); the script refuses a copy whose sha256 differs. Nothing in
+it uses bngsim. It writes [`reference/author_file_check.json`](reference/author_file_check.json) and
+[`reduced_onoff_author_file_check.png`](reduced_onoff_author_file_check.png), and exits 1 on any
+failure. The file checked is `reduced_onoff.bngl` with sha256 `629bd88d…4228`.
+
+| check | result | tolerance |
+|---|---|---|
+| (a) the authors' TR = 0 hour (0–3600 s) leaves the seed (IKKn = 1, rest 0) unchanged, WT and A20KO | max change 0 | 1e-12 |
+| (b) generated networks | authors 6 species / 14 reactions; this file the same plus `Clock()` and `0 -> Clock()` | identical |
+| (c) this file at *t* vs the authors' at *t* + 3600 s: 6 species × WT, A20KO × 145 points (0–12 h after onset, the authors' 300 s grid) | worst max\|Δ\| / peak **7.7e-7** (A20KO IκBα); A20 in A20KO is identically 0 in both | 1e-5 of peak |
+
+(a) is what lets this file start at TNF onset with no pre-equilibration. In (c) the authors' file runs
+at its own CVODE tolerances (rtol = atol = 1e-16) and this one at BNG2.pl's defaults (1e-8); the
+1e-5 tolerance, fixed before the run, is a thousand times the looser of the two and two orders below
+the smallest change a parameter edit could make (the Table 1 values carry three significant
+digits). The TNF-off step `TRfunc() = if(simtime<7200,1,0)` is a discontinuity inside a single
+integration here, where the authors restart CVODE at a phase boundary; the residual jumps at 120 min
+in the figure and stays below 1e-6 of peak.
+
 ## Run
 
 ```bash
@@ -57,6 +83,7 @@ export BNGPATH="$HOME/Simulations/BioNetGen-2.9.3"
 cd pybnf-jobs/Jaruszewicz-Blonska-2023/reduced_onoff
 pybnf -c reduced_onoff.conf                       # the fit (Gate 3b)
 BNGPATH=$BNGPATH python make_reproduction.py      # Gate 3a overlay at Table-1 params
+BNGPATH=$BNGPATH uv run python check_author_file.py   # the author-file check (BNG2.pl only)
 ```
 
 See the sibling [`../reduced_combination/`](../reduced_combination/) slug for the paper's headline

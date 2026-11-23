@@ -1,0 +1,36 @@
+{
+  "_comment": [
+    "Provenance pin for the one file in this slug copied from the authors' release: their reduced",
+    "model on the on-off protocol, from S1 Code of the article. It is vendored byte-identical under",
+    "reference/; check_author_file.py refuses to run if its sha256 differs from the value below.",
+    "Everything else in the slug is written here. VERIFY: sha256(file bytes) == sha256."
+  ],
+  "publication": "Jaruszewicz-Blonska J, Kosiuk I, Prus W, Lipniacki T (2023). A plausible identifiable model of the canonical NF-kB signaling pathway. PLoS ONE 18(6):e0286416. doi:10.1371/journal.pone.0286416 (PMC10237389)",
+  "publisher_copy": {
+    "item": "S1 Code of the article, pone.0286416.s015.zip",
+    "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0286416.s015",
+    "doi": "10.1371/journal.pone.0286416.s015",
+    "sha256": "76c51b2b9c44e931f62d4956df2a0aee1b02a481472125d4ae8a0e268ad885f0",
+    "size_bytes": 37613
+  },
+  "license": {
+    "name": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "applies_via": "S1 Code, published as supporting information of the open-access PLoS ONE article",
+    "attribution": "Jaruszewicz-Blonska J, Kosiuk I, Prus W, Lipniacki T (2023), PLoS ONE 18:e0286416, S1 Code.",
+    "changes": "None. The file is moved out of its archive folder and given an upstream_ prefix; its bytes are unmodified (including trailing whitespace)."
+  },
+  "verified": "2026-11-23",
+  "files": {
+    "reference/upstream_fitted_reduced_model_on_off_protocol.bngl": {
+      "upstream_path": "S1_Codes/BNGL files/Reduced2023 - BNGL file/fitted_reduced_model_on_off_protocol.bngl",
+      "sha256": "3bd1c19d95465c37ee02012a98ad96fb5a7b84e47c73306948e337d27291f54a",
+      "role": "The authors' reduced 2023 model at the Table 1 fitted values, with its own actions block: the on-off protocol of Table 2 (TR = 0 for 0-3600 s, TR = 1 for 3600-10800 s, TR = 0 to 46800 s) for WT cells and, with c_deg = 0, for A20KO cells. The README of S1 Code says this file produces S6 Fig (WT)."
+    }
+  },
+  "not_vendored": {
+    "S1_Codes/BNGL files/Lipniacki_et_al_2004_model - BNGL file/lipniacki_original_model_on_off_protocol.bngl": {
+      "used_for": "The fit target: the .exp files of this slug are its raw on-off output at the Table 2 times (VALIDATION.md, Gate 1). Not needed by check_author_file.py."
+    }
+  }
+}
