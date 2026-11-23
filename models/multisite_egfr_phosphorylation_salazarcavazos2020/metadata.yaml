@@ -49,17 +49,25 @@ files:
       the BioNetGen-generated 75-species network with an independent SciPy
       mass-action integrator (LSODA), agreeing with BioNetGen CVODE to ~1e-7. (2)
       Reported data: reproduces the SiMPull Fig 2 EGF dose response and 25 nM time
-      course for pY1068, pY1173, and pan-PY at the best fit (total chi_sq ≈ 356,
-      overall median ~10% rel err — the authors' published global fit).
-      Regenerates verify_salazarcavazos2020.png. Requires BNG2.pl (BNGPATH) and
+      course for pY1068, pY1173, and pan-PY at the best fit (1/2 chi^2 = 359.71,
+      overall median ~10% rel err — the authors' published global fit). (3)
+      Published fit, asserted: run as committed, the file reproduces the PEtab
+      benchmark collection's 2020 simulation of the authors' best fit at all 18
+      measured points to 1.8e-8 relative (tol 1e-5), with the six fitted values
+      and the 18 measurements and SDs equal to the collection's; its 1/2 chi^2
+      against the SiMPull data, 359.70568, equals the published fit's to 4e-6
+      (tol 0.05). Regenerates verify_salazarcavazos2020.png. Requires BNG2.pl (BNGPATH) and
       scipy/numpy/matplotlib.
   - name: verify_salazarcavazos2020.png
     role: figure
     description: >
-      Verification figure (2x3). Top row: EGF dose response (Fig 2A/2C), model
+      Verification figure (2x4). Top row: EGF dose response (Fig 2A/2C), model
       curve vs SiMPull data, for pY1068 / pY1173 / pan-PY. Bottom row: 25 nM time
       course (Fig 2D), model (BNG line) with independent SciPy (open markers, the
-      model-spec check) vs SiMPull data.
+      model-spec check) vs SiMPull data. Fourth column: the published-fit check —
+      parity of the 18 BioNetGen values against the PEtab collection's
+      simulation, and each point's 1/2 chi^2 contribution for both. The footer
+      states the verdicts.
   - name: reference/multisite_egfr_phosphorylation_salazarcavazos2020.net
     role: reference
     description: BioNetGen-generated reaction network (75 species, 618 reactions).
@@ -85,3 +93,38 @@ files:
       Salazar-Cavazos et al. (2020) Fig 2D SiMPull 25 nM EGF time-course data (the
       fit target): % pY1068 / pY1173 / pan-PY at 60/120/300 s with SD; from
       pybnf-jobs/Salazar-Cavazos-2019/egfr_simpull/EGF_25nM.exp.
+  - name: reference/salazarcavazos2020_upstream.json
+    role: reference
+    description: >
+      Provenance pin for the published-fit check: the PEtab benchmark collection
+      commit, upstream paths, sha256 and licence (BSD 3-Clause) of the vendored
+      salazarcavazos2020_petab_* files, the history of the simulated values
+      (published March 2020, PR #64), and the sha256 of the authors' own
+      supplement items, which are CC BY-NC-SA 3.0 and not vendored.
+  - name: reference/salazarcavazos2020_petab_measurementData_SalazarCavazos_MBoC2020.tsv
+    role: reference
+    description: >
+      PEtab collection measurement table, verbatim: the 18 SiMPull measurements
+      and SDs, equal to the authors' dose_resp.exp and EGF_25nM.exp.
+  - name: reference/salazarcavazos2020_petab_simulatedData_SalazarCavazos_MBoC2020.tsv
+    role: reference
+    description: >
+      PEtab collection simulation of every measured observable at the best fit,
+      verbatim; with the measurement table it gives the published 1/2 chi^2,
+      359.70568.
+  - name: reference/salazarcavazos2020_petab_parameters_SalazarCavazos_MBoC2020.tsv
+    role: reference
+    description: >
+      PEtab collection parameter table, verbatim: the six estimated parameters
+      at the authors' best fit (equal digit for digit to
+      190127_CHO_EGFR_best-fit.bngl).
+  - name: reference/salazarcavazos2020_petab_observables_SalazarCavazos_MBoC2020.tsv
+    role: reference
+    description: >
+      PEtab collection observable table, verbatim: the % phosphorylation
+      formulas behind the simulated values.
+  - name: reference/salazarcavazos2020_petab_LICENSE
+    role: reference
+    description: >
+      The PEtab benchmark collection's BSD 3-Clause License, under which the
+      four vendored tables are distributed.
