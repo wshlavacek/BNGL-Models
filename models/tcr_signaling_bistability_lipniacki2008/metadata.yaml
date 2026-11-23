@@ -50,6 +50,47 @@ files:
       Four-panel verification figure showing ERK switching, feedback and
       cascade dynamics, reported-curve errors, and independent-solver
       residuals.
+  - name: verify_lipniacki2008_steady_state.ipynb
+    role: verification
+    description: >
+      Both steady-state branches over N_agonist = 1 to 1000 (20 log-spaced doses). BNG2.pl runs
+      the primary file with only N_agonist changed, by two protocols, a primed cell given N
+      agonists and a ramp that adds agonist to a cell already at steady state, each to
+      t = 2e6 s at rtol = atol = 1e-10; the independent 37-state equations
+      (independent_lipniacki2008.py) are run the same way and Newton-polished. All 37 species
+      agree to 7.9e-10 relative (tolerance 1e-6, floor one molecule). Pseudo-arclength
+      continuation of the independent equations puts the folds at N = 8.8452 and 772.11, so 13
+      of the 20 doses are bistable; the primed cell reaches the ERK-high branch exactly above
+      the lower fold and the ramp stays ERK-low exactly below the upper fold. Level 2: the
+      d = 0.05/s curves of Fig. 7A (the bifurcation figure), digitized, agree with BNG2.pl's
+      ppERK at 19 doses on both branches to 0.0102 decade (2.4%; tolerance 0.024 decade, two
+      pixels), and the published branches end within 0.035 decade of the computed folds
+      (tolerance 0.056 decade, half a stroke plus one pixel).
+  - name: verify_lipniacki2008_steady_state.png
+    role: figure
+    description: >
+      ppERK steady states against N on both branches (BNG2.pl, the independent equations, the
+      continuation curve with its unstable middle branch, the folds and digitized Fig. 7A),
+      with level-1 and level-2 residuals.
+  - name: independent_lipniacki2008.py
+    role: verification
+    description: >
+      The independent 37-state right-hand side of verify_lipniacki2008.ipynb, copied byte for
+      byte so the steady-state notebook can import it; that notebook asserts the copy is still
+      identical.
+  - name: digitize_lipniacki2008.py
+    role: verification
+    description: >
+      Digitizes the d = 0.05/s branches of Fig. 7A from the NIH author manuscript's figure
+      bitmap (PMC2577002, nihms68204f7.jpg, sha256-pinned, not committed); log-log calibration
+      on the dotted grid lines, checked against the frame; regenerates its CSV byte for byte.
+  - name: reference/lipniacki2008_fig7a_d0p05_ppERK_steady_states_digitized.csv
+    role: reference
+    description: >
+      Stable steady states of ppERK against N for d = 0.05/s, digitized from Fig. 7A of
+      Lipniacki et al. (2008) by digitize_lipniacki2008.py: one row per pixel column per branch,
+      with occluded, steep and end-cap flags. The grid lines labelled 3000 and 30000 sit at half
+      decades (10^3.5, 10^4.5), which the calibration uses.
   - name: reference/lipniacki2008_fig7b_deterministic_ppERK_digitized.csv
     role: reference
     description: >
