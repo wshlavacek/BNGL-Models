@@ -78,9 +78,13 @@ files:
       temporary directory and checks the committed reference output reproduces,
       including the seeded SSA; compares the ODE against an independent SciPy
       integration of Eq. 1 and the SSA against an independent pure-Python
-      Gillespie ensemble; and compares both against the digitized figures. The
-      64-replicate BioNetGen ensembles and 16-replicate pure-Python ensembles,
-      not the model, are what make this artifact minutes rather than trivial.
+      Gillespie ensemble; and compares both against the digitized figures. Every
+      check is asserted with a stated tolerance; the two stochastic comparisons
+      are set at a 1% family-wise false-alarm rate. Level 2 reads only the
+      committed CSVs, never the article PDF, and BioNetGen is located through
+      $BNG2_PL or $BNGPATH. The 64-replicate BioNetGen ensembles and
+      16-replicate pure-Python ensembles, not the model, are what make this
+      artifact minutes rather than trivial.
   - name: verify_vilar2002.png
     role: figure
     description: >
@@ -100,7 +104,9 @@ files:
       embedded 150 ppi figure bitmaps with pdfimages, finds panel frames by
       their shared contiguous span, calibrates on the tick marks with an
       assertion that every interior tick lands on the implied grid, and records
-      the per-column upper and lower ink envelope.
+      the per-column upper and lower ink envelope. For Figs. 7b and 7d it also
+      prints the envelope time average at ink thresholds 160, 190 and 210, the
+      measurement behind their exclusion from the quantitative comparison.
   - name: reference/noise_resistant_circadian_oscillator_vilar2002.net
     role: reference
     description: Generated network of the primary model, 9 species and 16 reactions.
@@ -117,7 +123,11 @@ files:
     role: reference
     description: >
       Seeded Gillespie trajectory at seed 92133899, t = 0 to 400 h; Fig. 2 c
-      and d. Re-running the file reproduces this exactly.
+      and d. Re-running the file with stock BioNetGen 2.9.3 reproduces this
+      exactly. A seed fixes the trajectory only for a given run_network build:
+      the three _ssa outputs first committed came from a BioNetGen development
+      tree whose SSA stream differs at the same seed, and were regenerated with
+      stock 2.9.3.
   - name: reference/noise_resistant_circadian_oscillator_vilar2002_ssa.cdat
     role: reference
   - name: reference/noise_resistant_circadian_oscillator_vilar2002_stable_fixed_point.net
