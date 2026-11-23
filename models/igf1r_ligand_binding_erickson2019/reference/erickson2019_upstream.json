@@ -1,0 +1,57 @@
+{
+  "_comment": [
+    "Provenance pin for the only file in this folder copied from the authors' release: their",
+    "BioNetFit model IGF1R_fit.bngl, from the S2 Compressed File Archive of the article. It is",
+    "vendored byte-identical; verify_erickson2019.ipynb refuses to use it if its sha256 differs.",
+    "table1_this_study holds the seven estimates the authors' BioNetFit placeholders take, as the",
+    "article's Table 1 prints them. Everything else in the folder is written or generated here."
+  ],
+  "publication": "Erickson KE, Rukhlenko OS, Shahinuzzaman M, Slavkova KP, Lin YT, Suderman R, Stites EC, Anghel M, Posner RG, Barua D, Kholodenko BN, Hlavacek WS (2019). Modeling cell line-specific recruitment of signaling proteins to the insulin-like growth factor 1 receptor. PLoS Comput Biol 15(1):e1006706. doi:10.1371/journal.pcbi.1006706 (PMC6353226)",
+  "publisher_copy": {
+    "item": "S2 Compressed File Archive of the article, pcbi.1006706.s013.zip",
+    "url": "https://journals.plos.org/ploscompbiol/article/file?type=supplementary&id=10.1371/journal.pcbi.1006706.s013",
+    "doi": "10.1371/journal.pcbi.1006706.s013",
+    "sha256": "c1b57d8b067f54d299ae6c05e8cc9d54eddb7ae0c0f896eba4e08a15bbd03748",
+    "size_bytes": 4469,
+    "contents": "IGF1R_fit.bngl, IGF1R_fit.conf, F5B.exp, F5D_20min.exp, F5D_60min.exp: the files BioNetFit processed to estimate the Table 1 parameters (S2 caption)."
+  },
+  "license": {
+    "name": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "applies_via": "supporting information of the open-access PLoS Computational Biology article",
+    "attribution": "Erickson KE et al. (2019), PLoS Comput Biol 15:e1006706, S2 Compressed File Archive.",
+    "changes": "None. The file is renamed with an erickson2019_upstream_ prefix to sit in the flat reference/ directory; its bytes are unmodified."
+  },
+  "verified": "2026-11-23",
+  "files": {
+    "reference/erickson2019_upstream_IGF1R_fit.bngl": {
+      "upstream_path": "S2 Compressed File Archive/IGF1R_fit.bngl",
+      "sha256": "294e85b6d2ea7459a01aded9a541b7b46c4a97b4493a887f1a80cdcbb678d88c",
+      "role": "The authors' BioNetFit model: rules, fixed constants (NA 6.02214e23, Vecf 2.1e-9 L/cell, 20000 IGF1R per cell) and seven fitted constants as X__FREE__ placeholders, with the protocol of all three fits in its actions block: 24 pM (30350 copies) labeled IGF1 for 2 h, wash, 20 and 60 min cold-IGF1 scans (Kiselyov Fig 5D); then 7 pM (8852 copies) labeled IGF1 with a 4 h cold-IGF1 scan (Fig 5B)."
+    }
+  },
+  "not_vendored": {
+    "S2 Compressed File Archive/IGF1R_fit.conf": {
+      "sha256": "34810437f3dab0585b2ec3db7d16fc48cdec181cbb56d7dfd2d513e63b33b35c",
+      "used_for": "Read, not run: BioNetFit settings of the fit (objfunc = 2, weighted least squares; divide_by_init = 1) and the bounds of the seven loguniform_var parameters."
+    },
+    "S2 Compressed File Archive/F5B.exp, F5D_20min.exp, F5D_60min.exp": {
+      "sha256": {
+        "F5B.exp": "7e8755bc9080b6e844add13268f95ee8b35d3bf3a76b959a38de9ff1ae0657b5",
+        "F5D_20min.exp": "9e492aa889c9c5872df503320928545238055e36781220cb18f78da625da1abb",
+        "F5D_60min.exp": "b8977eac5315b847d82bf6754a37baa9749b50855d10420ebb80893da4043ba7"
+      },
+      "used_for": "Their values are already committed as reference/kiselyov2009_fig5b_competition_digitized.csv and reference/kiselyov2009_fig5d_dissociation_digitized.csv."
+    }
+  },
+  "table1_this_study": {
+    "_source": "Erickson et al. 2019, Table 1, column 'This Study', 'Estimate' (article full text, PMC6353226). a'2 is not a placeholder: Table 1 gives it as 52 from Eq 1 and the unrounded estimates; the file derives it from the rounded ones (54).",
+    "a1_perMpers": {"symbol": "a1", "units": "/M/s", "value": "2.8e5"},
+    "d1": {"symbol": "d1", "units": "/s", "value": "5.0e-2"},
+    "a2_perMpers": {"symbol": "a2", "units": "/M/s", "value": "1.5e4"},
+    "d2": {"symbol": "d2", "units": "/s", "value": "1.9e-4"},
+    "kcr": {"symbol": "a'1", "units": "/s", "value": "5.6e-3"},
+    "d1prime": {"symbol": "d'1", "units": "/s", "value": "1.9e-5"},
+    "d2prime": {"symbol": "d'2", "units": "/s", "value": "1.3e-2"}
+  }
+}

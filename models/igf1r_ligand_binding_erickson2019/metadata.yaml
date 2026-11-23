@@ -21,7 +21,9 @@ source:
     free; the eighth (a2prime) is fixed by detailed balance. House-styled from
     the authors' own BioNetFit model (Erickson 2019 SI "S2 Compressed File
     Archive", IGF1R_fit.bngl — the file that produced Table 1), at the Table-1
-    best fit, via the validated pybnf-jobs/Erickson-2019/igf1r job. The model
+    best fit, via the validated pybnf-jobs/Erickson-2019/igf1r job. That file is
+    vendored in reference/ (sha256-pinned), and the notebook asserts that the
+    curated file reproduces it at the Table 1 estimates. The model
     reproduces the Kiselyov et al. (2009) radioligand competition (Fig 5B) and
     2 h-preincubation dissociation (Fig 5D, 20/60 min) data — i.e. Erickson
     et al. (2019) Fig 3.
@@ -52,8 +54,16 @@ files:
       integrator (LSODA), agreeing with BioNetGen CVODE to ~1e-7. (2) Reported
       data: reproduces the Kiselyov (2009) Fig 5B competition (median ~1% rel err)
       and Fig 5D 20/60-min dissociation (median ~6% rel err) at the Erickson (2019)
-      Table-1 fit. Regenerates verify_erickson2019.png. Requires BNG2.pl (BNGPATH)
-      and scipy/numpy/matplotlib.
+      Table-1 fit (reported, not asserted). (3) Author file, asserted: the
+      authors' BioNetFit IGF1R_fit.bngl (sha256-pinned), filled in with the
+      Table 1 estimates and run with its own actions block, is the same model —
+      the seven estimates equal, the same 27 species / 96 reactions / rate laws,
+      rate constants within 1.3e-7 (Avogadro's number; tol 1e-6), and bound
+      labeled IGF1 under the authors' full protocol within 1.2e-7 of peak (tol
+      1e-5); the file's own competition scan is 6.0-6.2e-5 above the authors'
+      (tol 1e-4), the 8852.55 vs 8852 labeled-IGF1 copies. Regenerates
+      verify_erickson2019.png. Requires BNG2.pl (BNGPATH) and
+      scipy/numpy/matplotlib.
   - name: verify_erickson2019.png
     role: figure
     description: >
@@ -61,6 +71,8 @@ files:
       data. Panel B: dissociation after 2 h preincubation (Fig 5D, 20/60 min).
       Panel C: model-specification check — BioNetGen ODE (lines) vs independent
       SciPy integration (open markers) of the labeled-IGF1 binding time course.
+      Panel D: author-file check — per-point differences from the authors'
+      IGF1R_fit.bngl at Table 1, with the tolerances; footer states the verdicts.
   - name: reference/igf1r_ligand_binding_erickson2019.net
     role: reference
     description: BioNetGen-generated reaction network (27 species, 96 reactions).
@@ -86,3 +98,21 @@ files:
       Kiselyov et al. (2009) Fig 5D dissociation data (the Erickson F5D fit target),
       fraction bound labeled IGF1 remaining at 20 and 60 min vs unlabeled dose with
       SD; from pybnf-jobs/Erickson-2019/igf1r/F5D_20min.exp and F5D_60min.exp.
+  - name: reference/erickson2019_upstream_IGF1R_fit.bngl
+    role: reference
+    description: >
+      The authors' BioNetFit model, "S2 Compressed File Archive/IGF1R_fit.bngl"
+      of Erickson et al. (2019), verbatim (third-party source, CC BY 4.0, not a
+      curated model of this collection): the fitted constants are __FREE__
+      placeholders and its actions block is the protocol of all three fits.
+      The notebook's author-file check runs it at the Table 1 estimates.
+    documentation_target: none
+    scale: trivial
+    min_bionetgen_version: "2.9.3"
+  - name: reference/erickson2019_upstream.json
+    role: reference
+    description: >
+      Provenance pin for the vendored author file: the S2 archive URL and
+      sha256, the file's upstream path and sha256, licence and attribution, and
+      the seven Table 1 ("This Study") estimates the check substitutes for the
+      placeholders.
