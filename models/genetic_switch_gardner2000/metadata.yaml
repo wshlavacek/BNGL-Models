@@ -29,6 +29,26 @@ files:
     role: verification
   - name: verify_gardner2000.png
     role: figure
+  - name: verify_gardner2000_steady_state.ipynb
+    role: verification
+    description: >
+      Both stable branches and the saddle of the primary file over its own alpha_2 scan (1 to
+      500, 100 points), against the exact fixed points of Box 1 Eq. 1 (roots of the scalar
+      reduction, bracketed and refined to machine precision; folds from the closed-form
+      derivative of alpha_2 along the root curve). Bistable for 14.7594 < alpha_2 < 80.5674,
+      13 scan points. BNG2.pl scans from (alpha_1, 0) and from (0, 500), each point run to
+      t = 1000 at rtol 1e-10, atol 1e-12, land on the u-dominant and the v-dominant root at
+      every bistable point and on the same root elsewhere: max relative error 4.6e-10 and
+      3.9e-10, tolerance 1e-6 (reference exact; slowest relaxation 0.20). At each bistable
+      point BNG2.pl runs from the saddle displaced by +/- 1e-6 (relative) along its unstable
+      eigenvector end on opposite stable branches (max relative error 2.8e-12). Also reports,
+      without asserting, that the file's own scan (t_end = 20) is not at steady state: it is
+      1.1e-5 (median) and 1.6e-3 (at alpha_2 = 16.12, next to the fold) from the v-dominant root.
+  - name: verify_gardner2000_steady_state.png
+    role: figure
+    description: >
+      Both branches, the saddle and the folds against alpha_2 with the BNG2.pl scans overlaid,
+      residuals with the 1e-6 tolerance, and BNG2.pl trajectories leaving the saddle.
   # Reference simulation data (reference/ subdirectory)
   - name: reference/genetic_switch_gardner2000.net
     role: reference
