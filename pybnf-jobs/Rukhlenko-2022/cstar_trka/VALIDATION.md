@@ -63,6 +63,15 @@ removed from a shipped `.exp` — extracted from raw RPPA — but the extraction
 
 Reference compared against: the authors' `Trk_AB_models/TrkA_S_model.bngl` (in the garage).
 
+> **Committed and re-runnable since 2026-11-23:** [`compare_upstream.py`](compare_upstream.py)
+> pins that file at OleksiiR/cSTAR_Nature@bfb092f by sha256 (`upstream.json`; not vendored, the
+> repository grants no licence) and checks, with BioNetGen only, that the two networks are
+> identical (82/405, species and reactions in bijection, rate coefficients and dy/dt equal at
+> sampled states) and that `cstar_trka.bngl` reproduces the authors' own actions block (two
+> equilibrations, the DMSO and six inhibitor arms) to the printed digits. Results:
+> `upstream_comparison.json`; summary in the README. The authors' pre-equilibration is finite
+> (2 x 50000 s with an `S` reset), not a steady state; see the README for what that changes.
+
 `scripts/model_diff.py` (generated network): **species A=82 B=82 IDENTICAL; reactions A=405 B=405
 IDENTICAL.** A comment-stripped body diff shows only the documented changes:
 
