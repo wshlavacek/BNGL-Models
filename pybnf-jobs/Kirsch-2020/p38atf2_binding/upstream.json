@@ -1,0 +1,40 @@
+{
+  "_comment": [
+    "Provenance pin for the one file in this slug copied from the authors' release, their BNGL model",
+    "from Supplementary Software 1, vendored byte-identical under reference/; check_author_file.py",
+    "refuses to run if its sha256 differs. The Source Data workbook is pinned but not vendored",
+    "(5.8 MB); extract_exp.py refuses a copy whose sha256 differs. Everything else in the slug is",
+    "written here. VERIFY: sha256(file bytes) == sha256."
+  ],
+  "publication": "Kirsch K, Zeke A, Toke O, Sok P, Sethi A, Sebo A, Kumar GS, Egri P, Poti AL, Gooley P, Peti W, Bento I, Alexa A, Remenyi A (2020). Co-regulation of the transcription controlling ATF2 phosphoswitch by JNK and p38. Nat Commun 11:5769. doi:10.1038/s41467-020-19582-3 (PMC7666158)",
+  "publisher_copies": {
+    "supplementary_software_1": {
+      "item": "Supplementary Software 1, 41467_2020_19582_MOESM4_ESM.zip (ReadMe.txt, Bionetgen_JNK-p38-ATF2_model.bngl)",
+      "url": "https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-19582-3/MediaObjects/41467_2020_19582_MOESM4_ESM.zip",
+      "sha256": "db8c3ae661fbb623058a4d744d55e9c0d53d46eab7e9702650b89bcefb6708ca",
+      "size_bytes": 2129
+    },
+    "source_data": {
+      "item": "Source Data, 41467_2020_19582_MOESM6_ESM.xlsx",
+      "url": "https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-19582-3/MediaObjects/41467_2020_19582_MOESM6_ESM.xlsx",
+      "sha256": "0f59b67a608d8a7916d6729676c3ad289e998c1286ee5fd545b3a1f854c656b2",
+      "size_bytes": 5790393,
+      "used": "Sheet Figure_4 (Fig. 4a): columns B (t, min), C (WT) and D (WT + JNK-IN-8), mean rows 6-24 and error rows 29-47. Cell C27 says the error rows are 'calculated with error propagation from the standard error of treated and untreated samples (n=3)', i.e. propagated standard errors, though the block is headed SD."
+    }
+  },
+  "license": {
+    "name": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "applies_via": "supplementary information of the open-access Nature Communications article",
+    "attribution": "Kirsch K et al. (2020), Nat Commun 11:5769, Supplementary Software 1.",
+    "changes": "None. The file is moved out of its archive and given an upstream_ prefix; its bytes are unmodified."
+  },
+  "verified": "2026-11-23",
+  "files": {
+    "reference/upstream_Bionetgen_JNK-p38-ATF2_model.bngl": {
+      "upstream_path": "Bionetgen_JNK-p38-ATF2_model.bngl (in 41467_2020_19582_MOESM4_ESM.zip)",
+      "sha256": "ffbd155d339a28cf42b4809f67b7294c5c45df1ccd326b57c6e6f68e87e5f05d",
+      "role": "The authors' rule-based model for WT ATF2 (their ReadMe: 'used for generating Figure_7b'), with its own actions block: 20000 s equilibration with kstim7 and kstim6 set to the basal keq7 = 4.695e-6 and keq6 = 1.74e-5, then 2400 s of anisomycin stimulation at kstim7 = 9.074e-5 and kstim6 = 1.16e-4."
+    }
+  }
+}
