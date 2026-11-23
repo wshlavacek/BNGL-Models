@@ -70,6 +70,11 @@ the approach.
   Lipniacki_et_al_2004_model - BNGL file/` (the original 15-variable model = the fit target). Also
   MATLAB implementations of 5 models (Hoffmann-2002, Lipniacki-2004, Ashall-2009, Murakawa-2015,
   Reduced-2023).
+- **Committed author-file check:** `reduced_onoff/` vendors the authors' on-off file
+  (`fitted_reduced_model_on_off_protocol.bngl`, byte-identical, pinned by URL and sha256 in
+  `reduced_onoff/upstream.json`), and `reduced_onoff/check_author_file.py` asserts with BNG2.pl
+  alone that the slug's model reproduces it: all six species in WT and A20KO over the 12 h after
+  TNF onset agree to 7.7e-7 of peak (tolerance 1e-5).
 - **Validation tooling (untracked):** `dev/papers/Jaruszewicz-Blonska-2023/validation/` —
   `gen_onoff.py`, `gen_combination.py`, `gen_combination_models.py`, `obj_at_table1.py`,
   `published_table1.json`.

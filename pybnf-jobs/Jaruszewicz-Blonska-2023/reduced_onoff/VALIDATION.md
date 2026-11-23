@@ -86,6 +86,17 @@ functional-equivalence refactors (edition-2, same idioms as Lin-2021/nyc_multiph
 | pre-equilibration | 1 h TR=0 phase | none — seed IS the exact TR=0 steady state (verified: all six ODEs = 0 at (1,0,0,0,0,0)) | equiv |
 | initial conditions / units | non-dimensional | same | match |
 
+**Committed, asserted check (2026-11-23).** The diff above and the "verified" steady state were run
+on the untracked `dev/papers/` copy and are not re-runnable from the repository. The authors' file
+is now vendored byte-identical in `reference/` and pinned by URL and sha256 in `upstream.json`, and
+`check_author_file.py` runs both files through BNG2.pl (no bngsim) and asserts, against tolerances
+fixed before the run: (a) the authors' TR = 0 hour leaves the seed exactly unchanged (max change 0;
+tol 1e-12) in WT and A20KO; (b) the networks are the authors' 6 species and 14 reactions plus only
+`Clock()` and `0 -> Clock()`; (c) this file at *t* equals the authors' at *t* + 3600 s for all six
+species, both genotypes, over 145 points spanning the 12 h after onset, worst max|Δ|/peak 7.7e-7
+(tol 1e-5). See the slug README, `reference/author_file_check.json` and
+`reduced_onoff_author_file_check.png`.
+
 **Verdict:** PASS (equiv) — identical published NF-κB model; the only structural addition is the
 inert time-clock that delivers the TNF stimulus in an edition-2 (conf-synthesized-time-course) form.
 
