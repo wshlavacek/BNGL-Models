@@ -60,11 +60,17 @@ files:
     scale: minutes
     description: >
       Self-contained driver. `reference` reproduces Monine 2010 Fig 2a: the
-      network-free NFsim parameter_scan (-bscb) over the 12 doses at the Table-1
-      fit, averaged over replicate scans, vs the Fig 2a binding data -- reports the
-      fit objective sos (FL space), the RMS in lambda (Monine kept fits with
-      RMS < 0.02, SI Eq 11), and the relative error over doses above the noise
-      floor. `agreement` is the independent-algorithm cross-check (issue #11, task
+      network-free parameter_scan (-bscb) over the 12 doses at the Table-1 fit, run
+      by BioNetGen's bundled NFsim and averaged over independent replicate scans
+      (default 24, seeds 1000.., run in parallel), vs the Fig 2a binding data --
+      reports the fit objective sos (FL space), the RMS in lambda with a bootstrap
+      standard error (Monine kept fits with RMS < 0.02, SI Eq 11), and the relative
+      error over doses above the noise floor. Every BioNetGen run has its own
+      directory and is read back by the exact output name it wrote, and distinct
+      seeds must give distinct scans (an earlier version ran every replicate in one
+      shared directory and read it back with a glob, so its cache averaged five
+      copies of one scan). `agreement-bng` re-runs only the BioNetGen arm of the
+      cached agreement check at its recorded seeds. `agreement` is the independent-algorithm cross-check (issue #11, task
       3): three network-free engines running the same acyclic rules with -bscb --
       BioNetGen NFsim v1.14.3, bngsim NfsimSession, and bngsim RuleMonkeySession --
       agree on the per-dose equilibrium lambda to within the Monte-Carlo scale
@@ -77,10 +83,13 @@ files:
   - name: verify_monine2010.ipynb
     role: verification
     description: >
-      Verification notebook. Loads the committed reference data and reports the two
-      checks: the Fig 2a reproduction metrics (sos, RMS in lambda < 0.02) and the
-      three-engine independent-algorithm agreement (max |d lambda| < 0.02, NFsim =
-      RuleMonkey with -bscb) plus the no-bscb contrast; displays verify_monine2010.png.
+      Verification notebook. Runs the Fig 2a reproduction fresh -- 24 BioNetGen
+      2.9.3 NFsim parameter_scans of the committed model (-bscb, seeds 1000-1023, no
+      bngsim), asserted distinct -- and asserts RMS in lambda 0.0153 +/- 0.0005
+      (bootstrap s.e.) below Monine's own 0.02 acceptance (SI Eq 11), with the
+      margin required to exceed 3 s.e.; then loads the cached three-engine
+      independent-algorithm agreement (max |d lambda| < 0.02, NFsim = RuleMonkey
+      with -bscb) plus the no-bscb contrast, and rebuilds verify_monine2010.png.
       run_monine2010.py is the engine that regenerates the reference data.
   - name: verify_monine2010.png
     role: figure
@@ -112,11 +121,15 @@ files:
   - name: reference/reproduction.npz
     role: reference
     description: >
-      Cached Fig 2a reproduction: model FL per dose (replicate-averaged), the data,
-      and the sos / RMS-lambda metrics.
+      Cached Fig 2a reproduction from BioNetGen's NFsim: the per-replicate lambda
+      per dose with its seeds and the BioNetGen version, model FL per dose
+      (replicate-averaged), the data, and the sos / RMS-lambda metrics with a
+      bootstrap s.e. Written by the notebook's fresh run.
   - name: reference/agreement.npz
     role: reference
     description: >
       Cached three-engine per-dose lambda ensembles (BNG NFsim, bngsim NFsim,
       bngsim RuleMonkey, plus bngsim NFsim without -bscb) for the network-free
-      algorithm agreement cross-check.
+      algorithm agreement cross-check, 20 seeds per engine (5000-5019). The BNG
+      NFsim arm was re-run with distinct per-seed outputs (it had held 4 distinct
+      scans of 20); the bngsim arms are unchanged.
