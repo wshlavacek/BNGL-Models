@@ -70,14 +70,18 @@ files:
   # Reference simulation data (reference/ subdirectory)
   - name: reference/blbr_dembo1978_nfr.gdat
     role: reference
-    description: NFsim time course (seed=42) for the no-rings primary model.
+    description: >
+      NFsim time course (seed=42) for the no-rings primary model, from stock
+      BioNetGen 2.9.3 (NFsim 1.14.3).
   - name: reference/blbr_dembo1978_nfr.species
     role: reference
   - name: reference/blbr_dembo1978_nfr.xml
     role: reference
   - name: reference/blbr_dembo1978_monovalent_inhibitor_nfr.gdat
     role: reference
-    description: NFsim time course (seed=42) for the monovalent-inhibitor variant.
+    description: >
+      NFsim time course (seed=42) for the monovalent-inhibitor variant, from
+      stock BioNetGen 2.9.3 (NFsim 1.14.3).
   - name: reference/blbr_dembo1978_monovalent_inhibitor_nfr.species
     role: reference
   - name: reference/blbr_dembo1978_monovalent_inhibitor_nfr.xml
