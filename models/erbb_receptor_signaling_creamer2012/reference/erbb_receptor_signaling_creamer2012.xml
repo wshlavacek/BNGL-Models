@@ -215,10 +215,10 @@
       <Parameter id="Phosphokm18" type="Constant" value="0.071375571" expr="7.13755713699078e-2"/>
       <Parameter id="Phosphokm19" type="Constant" value="0.01208142" expr="1.20814195649541e-2"/>
       <Parameter id="Phosphokm20" type="Constant" value="0.059154983" expr="5.91549834797695e-2"/>
-      <Parameter id="Grb2kp1" type="Constant" value="9.4875104e-6" expr="9.48751042996452e-6"/>
-      <Parameter id="Grb2kp2" type="Constant" value="4.4925949e-7" expr="4.49259489482017e-7"/>
-      <Parameter id="Grb2kp3" type="Constant" value="6.0369707e-6" expr="6.03697072678887e-6"/>
-      <Parameter id="Grb2kp4" type="Constant" value="7.2671419e-7" expr="7.26714190078701e-7"/>
+      <Parameter id="Grb2kp1" type="Constant" value="0.00047437552" expr="9.48751042996452e-6/f"/>
+      <Parameter id="Grb2kp2" type="Constant" value="2.2462974e-5" expr="4.49259489482017e-7/f"/>
+      <Parameter id="Grb2kp3" type="Constant" value="0.00030184854" expr="6.03697072678887e-6/f"/>
+      <Parameter id="Grb2kp4" type="Constant" value="3.633571e-5" expr="7.26714190078701e-7/f"/>
       <Parameter id="Grb2kp5" type="Constant" value="0.00039048718" expr="7.80974367513346e-6/f"/>
       <Parameter id="Grb2km1" type="Constant" value="0.06744704" expr="6.74470404588556e-2"/>
       <Parameter id="Grb2km2" type="Constant" value="0.32126672" expr="3.21266715315215e-1"/>
@@ -488,12 +488,12 @@
       <Parameter id="Gab1kp153" type="Constant" value="0.22227477" expr="2.22274772107301e-1"/>
       <Parameter id="Gab1kp154" type="Constant" value="0.084191964" expr="8.4191964204494e-2"/>
       <Parameter id="Gab1kp155" type="Constant" value="0.085403376" expr="8.54033761596293e-2"/>
-      <Parameter id="Gab1kp156" type="Constant" value="1.4665785e-6" expr="1.46657846706313e-6"/>
-      <Parameter id="Gab1kp157" type="Constant" value="6.8342038e-7" expr="6.834203762122e-7"/>
-      <Parameter id="Gab1kp158" type="Constant" value="2.2806886e-7" expr="2.28068860916886e-7"/>
-      <Parameter id="Gab1kp159" type="Constant" value="2.3834315e-6" expr="2.38343153678147e-6"/>
-      <Parameter id="Gab1kp160" type="Constant" value="7.4594943e-6" expr="7.4594943271976e-6"/>
-      <Parameter id="Gab1kp161" type="Constant" value="4.584337e-6" expr="4.58433700010636e-6"/>
+      <Parameter id="Gab1kp156" type="Constant" value="7.3328923e-5" expr="1.46657846706313e-6/f"/>
+      <Parameter id="Gab1kp157" type="Constant" value="3.4171019e-5" expr="6.834203762122e-7/f"/>
+      <Parameter id="Gab1kp158" type="Constant" value="1.1403443e-5" expr="2.28068860916886e-7/f"/>
+      <Parameter id="Gab1kp159" type="Constant" value="0.00011917158" expr="2.38343153678147e-6/f"/>
+      <Parameter id="Gab1kp160" type="Constant" value="0.00037297472" expr="7.4594943271976e-6/f"/>
+      <Parameter id="Gab1kp161" type="Constant" value="0.00022921685" expr="4.58433700010636e-6/f"/>
       <Parameter id="Gab1kp162" type="Constant" value="0.92123924" expr="9.21239244666731e-1"/>
       <Parameter id="Gab1kp163" type="Constant" value="0.48385747" expr="4.83857466703586e-1"/>
       <Parameter id="Gab1kp164" type="Constant" value="0.36856983" expr="3.68569830054378e-1"/>
