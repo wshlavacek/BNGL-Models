@@ -27,11 +27,15 @@ source:
     integer increment/decrement operators, which NFsim >=1.14.3 rejects when the
     operator labels are declared as allowed states; it is re-encoded as an
     explicit 10-level integer counter (dynamically identical, and interpreted
-    consistently by all three network-free engines). As deposited, irradiation
-    is off and DNA damage is driven only by chronic background ROS -- the non-
-    irradiated baseline of Fig. 4. The model has no multivalent aggregation or
-    same-complex binding, so standard (legacy) BioNetGen NFsim is a valid
-    reference (no -bscb / -utl required).
+    consistently by all three network-free engines). That re-encoding replaces
+    the published file's two counter rules (one PLUS, one MINUS) with eighteen
+    (nine increments, nine decrements), so the curated file has 2355 reaction
+    rules where the published S11 file has 2339 (BNG2.pl reads 2355 rules, 121
+    of them with function rate laws, 74 molecule types and 2341 particles at
+    t = 0). As deposited, irradiation is off and DNA damage is driven only by
+    chronic background ROS -- the non-irradiated baseline of Fig. 4. The model
+    has no multivalent aggregation or same-complex binding, so standard
+    (legacy) BioNetGen NFsim is a valid reference (no -bscb / -utl required).
 
 files:
   - name: p53_nhej_dolan2015.bngl
@@ -49,7 +53,8 @@ files:
       that depletes Ku70/80 and PARP-1. The committed protocol is one
       representative single-cell NFsim run over 2400 min (chronic background ROS,
       no irradiation) reproducing Fig. 4; uncomment the IR event and timer
-      functions to enable acute irradiation.
+      functions to enable acute irradiation. The action block carries no seed;
+      reference/ is that action at seed 2015.
     documentation_target: standard
     scale: minutes
     min_bionetgen_version: "2.9.3"
@@ -57,12 +62,16 @@ files:
     role: verification
     scale: hours
     description: >
-      Self-contained driver. `reference` runs the committed model's faithful
-      published protocol with standard BioNetGen NFsim (seed 2015 reproduces the
-      committed reference .gdat) and checks the paper's stated non-irradiated
-      baseline claims (ROS ~ 10; p21 stays < 15; DNA damage foci low/transient;
-      no cell enters senescence). `independent` is the model-specification check:
-      with DNA damage off (kdam1=kdam2=0), an independent SciPy mean-field ODE of
+      Driver for the campaigns verify_dolan2015.ipynb does not run; its checks
+      are printed, not asserted, and none of them is the record's network-free
+      verification (the notebook is). `reference` runs the committed model's
+      faithful published protocol with standard BioNetGen NFsim (seed 2015
+      reproduces the committed reference .gdat) and checks the paper's stated
+      non-irradiated baseline claims at that one seed (ROS ~ 10; p21 stays < 15;
+      DNA damage foci low/transient, counted as Damage_Foci_i only, i.e. without
+      the ATM-bound Complete_Damage_Foci_i; no cell enters senescence).
+      `independent` is a model-specification check on an edited copy: with DNA
+      damage off (kdam1=kdam2=0), an independent SciPy mean-field ODE of
       the p53/Mdm2/p21/GADD45/p38/ROS core is compared to the BNG-NFsim ensemble
       mean (matched time) -- linear / high-copy observables match tightly while
       the low-copy UNBOUND species (free Mdm2, Mdm2 mRNA, free p53) show the
@@ -71,11 +80,56 @@ files:
       checked. `agreement` is the three-engine network-free cross-check (issue
       #10, task 4): standard BioNetGen NFsim v1.14.3, bngsim NfsimSession, and
       bngsim RuleMonkeySession agree on the same rules within Monte-Carlo error
-      (pairwise z-scores). `plot` builds the verification PNG.
+      (pairwise z-scores); it runs through bngsim. `plot` builds
+      verify_dolan2015_agreement.png from the caches.
+  - name: verify_dolan2015.ipynb
+    role: verification
+    scale: hours
+    description: >
+      The asserted verification and the entry point; no bngsim. Every run is
+      stock BioNetGen 2.9.3 BNG2.pl driving NFsim 1.14.3 on the committed .bngl
+      unchanged: a wrapper reads it with readFile({skip_actions=>1}) and runs the
+      file's own simulate action with a seed added (default flags: -cb, no -bscb,
+      no -utl). The seed-2015 run reproduces reference/ exactly (max difference
+      0) and its XML matches reference/ structurally. A 300-cell ensemble (seeds
+      20150001-20150300; the published S11 protocol, 2400 min at one output per
+      minute) is held to exact theory and to the paper's statements about
+      non-irradiated cells (30 h, the paper's simulation length), all asserted:
+      p53 mRNA (immigration-death) within z* = 4.10 exact SE of E = 10 at all 240
+      10-min outputs (max |z| 2.99), pooled mean 10.076 +- 0.067 (tol 3 SE),
+      variance at 40 h 9.88 vs 10.00 (tol 3 SE = 2.51); ROS balance
+      <ROS - 0.3 p38p> = 10.0026 +- 0.0043 vs kROS/kdROS = 10 (tol 3 SE + 1.6e-3
+      bias bound); no cell senescent by 30 h (0/300; one cell turns senescent
+      between 30 and 40 h, printed); hourly ensemble-mean ROS within sqrt(10) of
+      10 (max deviation 0.78, a slow rise carried by phospho-p38); p21 > 15
+      ("feedback activated", rare) in 3/300 = 1.0% of cells (tol < 10%); 0.00%
+      of 7744 foci (h2ax~foc, free or ATM-bound) still present 24 h after
+      appearing (tol <= 10%, "almost all resolve"); p53 rises after an isolated
+      focus onset, 51.3 +- 5.8 molecules at +90 min, z 8.9 (tol > 3.64). The
+      pulse's "transient" is reported, not asserted: the pre-set test, a fall
+      from the peak to +12 h larger than z* SE, is not met (z 2.4; 62% of the
+      peak left), a statistic confounded by the roughly four further breaks a
+      cell takes in 12 h. The 10-fold-ROS statement is asserted on 150 cells
+      (seeds 20151001-20151150, setParameter("kROS", 500), 30 h): 56/150 = 37.3%
+      senescent vs the paper's 32% (tol 3 combined binomial SE with the paper's
+      N taken as 100: +-18.1 points). About 13,700 s on a 32-core node with
+      BNGLM_WORKERS=64.
   - name: verify_dolan2015.png
     role: figure
     description: >
-      Verification figure. Top: reproduced Fig. 4 non-irradiated baseline
+      Built by verify_dolan2015.ipynb. Level 1: p53 mRNA ensemble mean vs the
+      exact immigration-death mean with its residual z(t) and tolerance band;
+      hourly ROS and ROS - 0.3 p38p vs kROS/kdROS = 10 with the sqrt(10) band.
+      The paper's statements: the focus-triggered p53 rise; focus survival with
+      the 24-h line and 10% tolerance; the per-cell maximum p21 against the
+      kplus threshold; the senescent fraction over time at normal and 10-fold
+      ROS against the paper's 32% at 30 h with its tolerance. Footer: every
+      metric and its verdict.
+  - name: verify_dolan2015_agreement.png
+    role: figure
+    description: >
+      Figure of run_dolan2015.py (`plot`; formerly verify_dolan2015.png).
+      Top: reproduced Fig. 4 non-irradiated baseline
       (single-cell ROS ~ 10 with transient DNA damage foci; damage-triggered p53
       pulses with low p21). Bottom: independent mean-field ODE vs BNG-NFsim
       ensemble for the damage-off signaling core (bar + identity-line panels),
@@ -104,3 +158,11 @@ files:
     description: >
       Cached three-engine ensembles (per-seed observable trajectories) for the
       network-free agreement cross-check.
+  - name: reference/baseline_ensemble.npz
+    role: reference
+    description: >
+      Cache written by verify_dolan2015.ipynb: the 300-cell baseline ensemble
+      (seeds, ROS, p38p, p53, p21, p53 mRNA, Senescent_Counter and total foci at
+      10-min resolution, int16), every focus run (onset, duration, censored; from
+      the 1-min outputs), and the 150-cell 10-fold-ROS ensemble (ROS, p38p, p21,
+      Senescent_Counter, foci every 10 min).

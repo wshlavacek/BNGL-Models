@@ -10,7 +10,14 @@ same-complex-binding ambiguity: standard/legacy BioNetGen NFsim is a valid refer
 As deposited, IRRADIATION IS OFF and DNA damage is driven only by chronic background ROS:
 this is the non-irradiated baseline of Fig. 4 in Dolan et al. (2015).
 
-Three things are verified here:
+The asserted verification is verify_dolan2015.ipynb: a 300-cell BNG2.pl NFsim ensemble of the
+unchanged file, held to exact immigration-death and ROS-balance theory and to the paper's
+statements about non-irradiated cells, plus its 10-fold-ROS senescence fraction. This driver
+keeps the campaigns that notebook does not run; it prints its checks rather than asserting them.
+Its "DNA damage foci" are the Damage_Foci_i observables only, i.e. without the ATM-bound
+Complete_Damage_Foci_i state; the notebook counts both.
+
+Three things are checked here:
 
   reference    -- runs the committed model's faithful published protocol (single-cell
                   NFsim run over 2400 min of chronic background-ROS damage) with standard
@@ -49,7 +56,7 @@ Requirements: `bionetgen` on PATH (BNG core with NFsim v1.14.3) and the `bngsim`
     python run_dolan2015.py reference           # faithful protocol + baseline anchors
     python run_dolan2015.py independent 16       # mean-field ODE vs NFsim ensemble (16 seeds)
     python run_dolan2015.py agreement 12         # 3-engine cross-check, 12 seeds/engine
-    python run_dolan2015.py plot                 # (re)build verify_dolan2015.png
+    python run_dolan2015.py plot                 # (re)build verify_dolan2015_agreement.png
     python run_dolan2015.py all
 """
 import glob
@@ -348,7 +355,7 @@ def agreement(n_seeds=12, t_end=CROSS_T_END, n_points=25, save=True):
 
 # ---------------------------------------------------------------- figure
 def plot():
-    """Build verify_dolan2015.png from the committed reference .gdat + cached npz files."""
+    """Build verify_dolan2015_agreement.png from the committed reference .gdat + cached npz files."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -446,7 +453,7 @@ def plot():
     fig.suptitle("p53_nhej_dolan2015 verification: Fig. 4 baseline + independent ODE + "
                  "3-engine network-free agreement", fontsize=12)
     fig.tight_layout(rect=(0, 0, 1, 0.96))
-    png = os.path.join(HERE, "verify_dolan2015.png")
+    png = os.path.join(HERE, "verify_dolan2015_agreement.png")
     fig.savefig(png, dpi=130)
     print(f"wrote {png}")
 

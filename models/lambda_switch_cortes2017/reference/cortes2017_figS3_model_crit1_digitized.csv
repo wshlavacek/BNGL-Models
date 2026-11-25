@@ -1,0 +1,23 @@
+# The paper's own detailed-model prediction, decision criteria #1 (Fig. S3 SOLID lines),
+# read at MOI 1-5 by digitize_cortes2017.py from the same render as the data points.
+# Each value is a straight-line fit through the traced line within 0.15 MOI of the
+# integer (marker zones excluded; one-sided at MOI 1 and 5, where the lines end);
+# fit_resid is the fit's largest residual in % lysogeny. Read error ~0.5 % lysogeny;
+# at MOI 1 and 5 the blue solid and dashed lines nearly meet, so the blue ends are
+# uncertain by the lines' separation there (< 1 % lysogeny).
+cell_class,v0,MOI,pct_lysogeny_crit1,n_samples,fit_resid
+small,0.5,1,49.85,16,0.05
+small,0.5,2,64.14,48,0.14
+small,0.5,3,75.23,47,0.18
+small,0.5,4,82.28,48,0.1
+small,0.5,5,87.31,27,0.07
+average,1.0,1,39.3,30,0.15
+average,1.0,2,50.35,47,0.04
+average,1.0,3,61.81,48,0.08
+average,1.0,4,72.0,47,0.07
+average,1.0,5,81.7,17,0.22
+large,1.5,1,31.38,17,0.06
+large,1.5,2,40.83,48,0.08
+large,1.5,3,51.16,47,0.12
+large,1.5,4,59.39,48,0.07
+large,1.5,5,67.85,30,0.06

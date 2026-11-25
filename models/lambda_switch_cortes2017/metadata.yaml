@@ -53,11 +53,28 @@ files:
       explicit pRM/R (free/CI/Cro), pRE (free/CII) and paQ (free/CII)
       states with fast reversible binding (kon_X = kappa_X*koff). In the
       fast-binding QSSA limit the occupancies self-average to the
-      detailed model's mean-field fractions -- functionally equivalent
-      (verified: matching %lysogeny-vs-MOI within stochastic noise) --
-      while exposing per-copy promoter telegraph noise. Network-free
-      (NFsim/RuleMonkey) only; drive with run_cortes2017.py under
-      CORTES_MODEL=pergenome.
+      detailed model's mean-field fractions, while exposing per-copy
+      promoter telegraph noise. The file ships writeXML() for network-free
+      use (drive with run_cortes2017.py under CORTES_MODEL=pergenome), but
+      its network is FINITE -- generate_network gives 22 species (12 DNA
+      operator states) and 82 reactions -- despite the file's own note
+      that it is network-free only, so its exact SSA is a witness for any
+      network-free run. ASSERTED without bngsim (verify_cortes2017.ipynb
+      section 3b; BNG2.pl only, 1000 seeds x 15 Fig. S3 conditions,
+      reference/cortes2017_pergenome_bng.npz): stock NFsim 1.14.3 (-cb)
+      agrees with the exact SSA (%lysogeny max|z| 2.09 over 30
+      comparisons, tolerance 3.59; observable means max|z| 2.87 over 265,
+      tolerance 4.12; combined endpoint |z| <= 1.85, tolerance 3.14), and
+      per condition the %lysogeny matches the detailed file's (max|z|
+      2.03, tolerance 3.40; mean difference +0.7 %). Against the Fig. S3
+      data the file FAILS the pre-set test (chi^2 <= 30.6 and every |z|
+      <= 3.40, error bars read as 1 SE): chi^2 49.7, max|z| 3.63 by exact
+      SSA (58.3 / 4.55 by NFsim). The miss is MOI 1, 10-17 points above
+      the data in all three cell sizes; MOI 2-5 give chi^2 11.3 over 12
+      points. The paper's own fitted ODE/SDE model passes the same test
+      (chi^2 19.7, max|z| 2.62), so the excess belongs to this
+      reformulation (intrinsic CTMC noise in place of the fitted Langevin
+      term).
     documentation_target: standard
     scale: minutes
     min_bionetgen_version: "2.9.3"
@@ -82,7 +99,23 @@ files:
       (CII crosses CII_T before Q crosses Q_T). Modes: sweep (%lysogeny
       vs MOI for small/average/large cells), traj (Fig. S2 example
       trajectories), parity (NFsim vs RuleMonkey). Drives either the
-      detailed or the per-genome model (CORTES_MODEL).
+      detailed or the per-genome model (CORTES_MODEL). Mode bng uses no
+      bngsim: one BNG2.pl run per condition and block of seeds
+      (setParameter MOI and v0, then simulate with resetConcentrations
+      between seeds) for three arms -- the per-genome file by exact SSA
+      on its generated network and by simulate_nf (stock NFsim, -cb), and
+      the detailed file by exact SSA -- caching per-seed calls,
+      first-passage times and observables at 20/40/60 min to
+      reference/cortes2017_pergenome_bng.npz.
+  - name: digitize_cortes2017.py
+    role: verification
+    description: >
+      Digitizer for Fig. S3 (Supporting Material mmc1.pdf p. 21; seven
+      embedded strips rendered at their native 300 dpi; calibrated on the
+      tick marks): the 15 experimental points with their error bars, and
+      the paper's solid criteria-#1 model curves at MOI 1-5. Regenerates
+      both reference CSVs byte for byte; the PDF is not committed (URL and
+      sha256 in the docstring).
   - name: verify_cortes2017.ipynb
     role: verification
     description: >
@@ -91,9 +124,16 @@ files:
       network-free stochastic %lysogeny-vs-MOI against the digitized
       Fig. S3 single-cell data for three cell sizes (RMSE ~8%); (3)
       functional equivalence of the per-genome variant to the detailed
-      model, and NFsim/RuleMonkey parity; (4) the simple CII-Q model's
-      steady states against analytic Eqs. 72-74 (Fig. 1C). Regenerates
-      verify_cortes2017.png.
+      model, and NFsim/RuleMonkey parity; (3b) the per-genome file with
+      BioNetGen only (no bngsim): its finite network, stock NFsim against
+      its exact SSA, its %lysogeny against the detailed file's, and an
+      asserted test against the Fig. S3 data points and error bars, on
+      which the paper's own model passes and this file fails at MOI 1
+      (asserted as the finding); (4) the simple CII-Q model's steady
+      states against analytic Eqs. 72-74 (Fig. 1C). Checks (2), (3) and
+      the parity panel read bngsim caches; (1), (3b) and (4) run on
+      BioNetGen (BNG2.pl from $BNG2_PL or $BNGPATH, or the bionetgen
+      CLI). Regenerates verify_cortes2017.png.
   - name: verify_cortes2017.png
     role: figure
     description: >
@@ -130,5 +170,23 @@ files:
   - name: reference/cortes2017_figS3_lysogeny_vs_moi_digitized.csv
     role: reference
     description: >
-      Experimental single-cell %lysogeny-vs-MOI data digitized from
-      Fig. S3 (small/average/large cells, MOI 1-5) for data verification.
+      Experimental single-cell %lysogeny-vs-MOI data (Zeng et al. 2010)
+      digitized from Fig. S3 (small/average/large cells, MOI 1-5) by
+      digitize_cortes2017.py, with each point's error bar (half-length
+      sigma_bar and its read error) for data verification. Replaces an
+      earlier unscripted digitization of the same points (values within
+      0.46 % lysogeny of it).
+  - name: reference/cortes2017_figS3_model_crit1_digitized.csv
+    role: reference
+    description: >
+      The paper's own detailed-model prediction (Fig. S3 solid lines,
+      criteria #1) at MOI 1-5, digitized by digitize_cortes2017.py, so
+      the data test can be calibrated on the paper's model.
+  - name: reference/cortes2017_pergenome_bng.npz
+    role: reference
+    description: >
+      BNG2.pl-only sweep (run_cortes2017.py bng 1000): per-genome file by
+      exact SSA and by stock NFsim 1.14.3 (-cb), detailed file by exact
+      SSA, three cell sizes x MOI 1-5, seeds 40000-40999 -- per-seed
+      criteria #1/#2 calls, CII/Q first-passage times, and Obs_* at
+      t = 20/40/60 min; records the sha256 of both model files.

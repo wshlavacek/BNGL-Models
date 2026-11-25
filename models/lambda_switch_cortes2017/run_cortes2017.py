@@ -31,6 +31,9 @@ Requirements: `bionetgen` on PATH (BNG >= 2.9.3) and the `bngsim` package. Examp
     python run_cortes2017.py sweep 400 rm          # %lysogeny(MOI) for 3 cell sizes
     python run_cortes2017.py traj  1               # example lyso/lytic trajectories
     python run_cortes2017.py parity 100            # NFsim vs RuleMonkey agreement
+The `bng` mode uses no bngsim: BNG2.pl only (found from $BNG2_PL or $BNGPATH), with numpy --
+    python run_cortes2017.py bng 1000 36           # per-genome SSA + NFsim, detailed SSA
+(see the section above bng() for its three arms and what each run is checked for).
 """
 
 import os
@@ -221,6 +224,142 @@ def parity(n_seeds=100, moi=3, v0=1.0):
     return out
 
 
+# ------------------------------------------------ the same sweep with no bngsim (BNG2.pl only)
+# Every mode above simulates through bngsim. `bng` reruns the Fig. S3 sweep with BioNetGen alone,
+# three arms on the SAME conditions, seeds and classifier:
+#
+#   pg_ssa   the per-genome file's generated network (generate_network: 22 species, 82
+#            reactions -- the file is finite although its notes call it network-free only),
+#            simulated with BNG2.pl's exact SSA (run_network);
+#   pg_nf    the per-genome file network-free, BNG2.pl simulate_nf, i.e. the stock NFsim 1.14.3
+#            binary at BNG2.pl's default flags (-cb; no -bscb, -utl automatic);
+#   det_ssa  the primary (detailed, mean-field promoter) file's generated network, BNG2.pl SSA.
+#
+# Each block is ONE BNG2.pl run: setParameter("MOI"), setParameter("v0"), then for each seed a
+# simulate with resetConcentrations() in between, exactly the action list a reader would write.
+# Every trajectory is checked to start at Obs_DNA = MOI and Obs_Vol = v0*Vscale, so a parameter
+# that did not take effect cannot pass silently. Per seed, the cache keeps the criteria #1/#2
+# calls, the CII and Q first-passage times, and Obs_* at t = 20/40/60 min.
+BNG_ARMS = {"pg_ssa": ("pergenome", "ssa"), "pg_nf": ("pergenome", "nf"),
+            "det_ssa": ("detailed", "ssa")}
+BNG_SEEDS, BNG_SEED0, BNG_BLOCK = 1000, 40000, 100
+BNG_MOIS = (1, 2, 3, 4, 5)
+BNG_KEEP_T = (40, 80, 120)          # sample indices of t = 20, 40, 60 min (0.5-min grid)
+
+
+def find_bionetgen():
+    """BNG2.pl from $BNG2_PL or $BNGPATH, then BNG2.pl on PATH."""
+    import shutil
+    for cand in (os.environ.get("BNG2_PL"),
+                 os.path.join(os.environ["BNGPATH"], "BNG2.pl") if os.environ.get("BNGPATH")
+                 else None,
+                 shutil.which("BNG2.pl")):
+        if cand and os.path.isfile(cand):
+            return os.path.abspath(cand)
+    raise FileNotFoundError("BioNetGen not found: set BNG2_PL (or BNGPATH) to a BioNetGen "
+                            "2.9.3 BNG2.pl.")
+
+
+def _bng_block(args):
+    """One BNG2.pl run: `arm` at (moi, v0) for `seeds`. Returns per-seed arrays."""
+    import shutil
+    arm, moi, v0, seeds = args
+    model, method = BNG_ARMS[arm]
+    src = open(os.path.join(HERE, _MODEL_ALIASES[model])).read()
+    acts = [f'setParameter("MOI",{moi})', f'setParameter("v0",{v0})']
+    if method == "ssa":
+        acts.append("generate_network({overwrite=>1})")
+    for i, s in enumerate(seeds):
+        if i:
+            acts.append("resetConcentrations()")
+        sim = "simulate_nf" if method == "nf" else 'simulate'
+        extra = "" if method == "nf" else 'method=>"ssa",'
+        acts.append(f'{sim}({{{extra}prefix=>"s{s}",t_start=>0,t_end=>{T_END:g},'
+                    f'n_steps=>{N_POINTS - 1},seed=>{s}}})')
+    text = src[: src.index("begin actions")] + "begin actions\n  " + "\n  ".join(acts) + \
+        "\nend actions\n"
+    work = tempfile.mkdtemp(prefix=f"bng_{arm}_m{moi}_v{v0}_", dir=HERE)
+    try:
+        bngl = os.path.join(work, "m.bngl")
+        open(bngl, "w").write(text)
+        r = subprocess.run(["perl", find_bionetgen(), "--outdir", work, bngl],
+                           capture_output=True, text=True)
+        assert r.returncode == 0, r.stdout[-3000:] + r.stderr[-3000:]
+        stacks = {o: [] for o in TRAJ}
+        for s in seeds:
+            g = os.path.join(work, f"s{s}.gdat")
+            with open(g) as fh:
+                names = fh.readline().lstrip("#").split()
+            Y = np.loadtxt(g, ndmin=2)
+            assert Y.shape[0] == N_POINTS and abs(Y[-1, 0] - T_END) < 1e-9, (arm, s, Y.shape)
+            assert Y[0, names.index("Obs_DNA")] == moi, (arm, s, "MOI not applied")
+            assert Y[0, names.index("Obs_Vol")] == v0 * VSCALE, (arm, s, "v0 not applied")
+            for o in TRAJ:
+                stacks[o].append(Y[:, names.index(o)])
+        tvec = Y[:, 0]
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    st = {o: np.vstack(v) for o, v in stacks.items()}
+    c = classify(st, tvec)
+    cii, q = _conc(st, "Obs_CII"), _conc(st, "Obs_Q")
+    fpt = {k: np.array([tvec[np.argmax(row)] if row.any() else np.inf for row in x])
+           for k, x in (("t_cii", cii >= CII_T), ("t_q", q >= Q_T))}
+    keep = {f"{o}": st[o][:, list(BNG_KEEP_T)].astype(np.int32) for o in TRAJ}
+    return arm, moi, v0, np.array(seeds), c, fpt, keep
+
+
+def bng(n_seeds=BNG_SEEDS, arms=tuple(BNG_ARMS), workers=1):
+    """Run every (arm, cell size, MOI) at n_seeds through BNG2.pl and cache
+    reference/cortes2017_pergenome_bng.npz."""
+    import hashlib
+    from multiprocessing import Pool
+    blocks = [(a, m, v0, tuple(range(s0, min(s0 + BNG_BLOCK, BNG_SEED0 + n_seeds))))
+              for a in arms for v0 in CELL_SIZES.values() for m in BNG_MOIS
+              for s0 in range(BNG_SEED0, BNG_SEED0 + n_seeds, BNG_BLOCK)]
+    print(f"=== bng: {len(blocks)} BNG2.pl runs of <= {BNG_BLOCK} seeds, arms {list(arms)}, "
+          f"{n_seeds} seeds per condition from {BNG_SEED0}, {workers} workers", flush=True)
+    acc = {}
+    t0 = time.time()
+    with Pool(workers) as pool:
+        for i, (a, m, v0, seeds, c, fpt, keep) in enumerate(
+                pool.imap_unordered(_bng_block, blocks, chunksize=1)):
+            acc.setdefault((a, m, v0), []).append((seeds, c, fpt, keep))
+            if (i + 1) % 25 == 0:
+                print(f"  {i + 1}/{len(blocks)} blocks [{time.time() - t0:.0f}s]", flush=True)
+    out = {}
+    for (a, m, v0), parts in acc.items():
+        parts.sort(key=lambda p: p[0][0])
+        seeds = np.concatenate([p[0] for p in parts])
+        assert np.array_equal(seeds, np.arange(BNG_SEED0, BNG_SEED0 + n_seeds))
+        key = f"{a}__moi{m}__v{v0}"
+        for k in ("lyso1", "lysis1", "lyso2", "lysis2"):
+            out[f"{key}__{k}"] = np.concatenate([p[1][k] for p in parts])
+        for k in ("t_cii", "t_q"):
+            out[f"{key}__{k}"] = np.concatenate([p[2][k] for p in parts])
+        for o in TRAJ:
+            out[f"{key}__{o}"] = np.concatenate([p[3][o] for p in parts])
+    print("  %lysogeny, criteria #1 (rows: cell size; columns: MOI 1..5)")
+    for a in arms:
+        for size, v0 in CELL_SIZES.items():
+            vals = []
+            for m in BNG_MOIS:
+                k = f"{a}__moi{m}__v{v0}"
+                n1, n0 = out[f"{k}__lyso1"].sum(), out[f"{k}__lysis1"].sum()
+                vals.append(100.0 * n1 / (n1 + n0))
+            print(f"    {a:8s} {size:8s}" + "".join(f"{v:7.1f}" for v in vals))
+    sha = {m: hashlib.sha256(open(os.path.join(HERE, f), "rb").read()).hexdigest()
+           for m, f in _MODEL_ALIASES.items()}
+    path = os.path.join(HERE, "reference", "cortes2017_pergenome_bng.npz")
+    np.savez_compressed(path, arms=np.array(arms), mois=np.array(BNG_MOIS),
+                        cell_sizes=np.array(list(CELL_SIZES)),
+                        v0s=np.array(list(CELL_SIZES.values())), n_seeds=n_seeds,
+                        seed0=BNG_SEED0, t_end=T_END, n_points=N_POINTS,
+                        keep_t=np.array(BNG_KEEP_T) * T_END / (N_POINTS - 1),
+                        bng="BioNetGen 2.9.3 BNG2.pl (run_network SSA; bin/NFsim 1.14.3, -cb)",
+                        sha_pergenome=sha["pergenome"], sha_detailed=sha["detailed"], **out)
+    print(f"  cached -> reference/{os.path.basename(path)}")
+
+
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "sweep"
     if mode == "sweep":
@@ -229,7 +368,12 @@ if __name__ == "__main__":
     elif mode == "traj":
         moi = int(sys.argv[2]) if len(sys.argv) > 2 else 1
         traj(moi, float(sys.argv[3]) if len(sys.argv) > 3 else 1.0)
+    elif mode == "bng":
+        # bng [n_seeds] [workers] [arm,arm,...]
+        bng(int(sys.argv[2]) if len(sys.argv) > 2 else BNG_SEEDS,
+            tuple(sys.argv[4].split(",")) if len(sys.argv) > 4 else tuple(BNG_ARMS),
+            int(sys.argv[3]) if len(sys.argv) > 3 else 1)
     elif mode == "parity":
         parity(int(sys.argv[2]) if len(sys.argv) > 2 else 100)
     else:
-        print(f"unknown mode {mode!r}; use sweep | traj | parity")
+        print(f"unknown mode {mode!r}; use sweep | traj | parity | bng")
