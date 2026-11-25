@@ -31,10 +31,22 @@ files:
     min_bionetgen_version: "2.9.3"
   - name: verify_macken1982.ipynb
     role: verification
+    scale: minutes
     description: >
-      Compares NFsim against Macken and Perelson (1982) kinetic
-      ODEs, branching process aggregate distributions (Theorem 1),
-      and Eq. 21 equilibrium at three ligand doses.
+      Compares NFsim, run by stock BioNetGen BNG2.pl with the file's own
+      action (500 s, -bscb; only NL and the seed substituted; 200 seeds per
+      dose, every trajectory its own seed), against Macken and Perelson
+      (1982) kinetic ODEs (Eq. 11), branching process aggregate
+      distributions (Theorem 1) and Eq. 21 equilibrium at three ligand
+      doses, and asserts, with each tolerance stated in the notebook: the
+      ODE at equilibrium reproduces Eqs. 13/17/21 (1e-6 relative); every
+      dose is below the gel point (Eq. 18); bonds, free ligand and the four
+      small-aggregate counts at every sampled time (pooled z, max |z| under a
+      family-wise 0.1 % bound and fraction |z| < 3 >= 0.99); the same over
+      the final 60 s per dose and observable, and combined over doses; and
+      the final-window means against Eq. 21 within the SE term plus the
+      ODE's own distance from equilibrium at 500 s. Set NF_WORKERS to run
+      trajectories in parallel (default 2).
   - name: verify_macken1982.png
     role: figure
     description: Bond kinetics comparison

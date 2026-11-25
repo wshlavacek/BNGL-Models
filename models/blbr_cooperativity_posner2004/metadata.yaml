@@ -35,8 +35,28 @@ files:
     min_bionetgen_version: ">2.9.3"
   - name: verify_posner2004.ipynb
     role: verification
+    description: >
+      Verifies the primary file. BNG2.pl NFsim, 120 replicates of the file's own
+      20-dose scan at distinct seeds (1-120), against the Wofsy-Goldstein
+      equilibrium theory (Eqs. 10, 15, 17, J2 = 0, solved with scipy.optimize at
+      C*R_T = 0.49816 nM), asserted: at every dose |q - theory| <= 3 SE + 0.002
+      (max 0.0016, max |z| 2.61) and the pooled z within +-3 (+0.72). The -bscb
+      question is settled by measurement: the "-rings" model has no cyclic
+      aggregates, and the file's complex=>1 passes NFsim -cb, which in NFsim
+      1.14.3 blocks same-complex binding exactly as -bscb does (byte-identical
+      scans with and without -bscb, about 200 null events each), so the file
+      needs no -bscb. Final species lists of 50 blocked runs at 5.036 nM are
+      acyclic; with complex=>0 cycles do form, but q moves by no more than
+      Monte-Carlo error at any dose (max |z| 2.99 against a family-wise 3.5,
+      pooled -1.29). Also asserts that the pinned seed reproduces both
+      reference/ scans. The _rings variant is run for that regression only and
+      is not verified here. Committed with outputs.
   - name: verify_posner2004.png
     role: figure
+    description: >
+      The 120-seed NFsim binding curve (mean +- 3 SE) on the theory, with the
+      residuals of the blocked runs and of the complex=>0 control against the
+      per-dose tolerance; the footer carries every asserted metric.
   # Reference simulation data (reference/ subdirectory)
   - name: reference/blbr_cooperativity_posner2004.xml
     role: reference

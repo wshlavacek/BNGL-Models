@@ -31,8 +31,20 @@ files:
     role: verification
     scale: minutes
     description: >
-      Compares NFsim ensemble (10 reps) against Goldstein & Wofsy
-      (1980) Eqs. 13-14 for X_T = 500 (Fig. 5, bottom curve).
+      Runs the file's 18 scan doses with stock BioNetGen BNG2.pl driving
+      NFsim (-bscb; 64 seeds per dose at the shipped R_T = 50, every
+      trajectory its own seed; 60 s, averaged over 20-60 s) against
+      Goldstein & Wofsy (1980) Eqs. 13-14 for X_T = 500 (Fig. 5, bottom
+      curve), and asserts, with each tolerance stated in the notebook: Eq. 13
+      by two independent solvers (1e-9); no drift over the averaging window;
+      the ensemble mean x_poly at every dose within a family-wise 0.1 %
+      Student-t bound on its SE plus a 0.5/R_T finite-size allowance (the 5
+      explicit-ligand doses with ligand conservation, since the file seeds
+      total ligand); the same at R_T = 500 with the allowance scaled to
+      0.5/500; and the file's own 10 s horizon at the 13 excess-ligand doses.
+      Reports, not asserts, that at 1e-12 and 3e-12 M the 10 s value still
+      lags equilibrium by 0.023. Set NF_WORKERS to run trajectories in
+      parallel (default 2).
   - name: verify_goldstein1980.png
     role: figure
   - name: reference/blbr_heterogeneity_goldstein1980.xml
