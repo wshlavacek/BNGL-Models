@@ -54,13 +54,16 @@ begin model
 #      exactly those BioNetGen computes.
 #  (2) A subvolume factor f (reserved house-style name) implements the paper's
 #      compartment-size scaling (Methods: "compartment sizes were scaled by a factor
-#      of 0.2"): the 18 copy-number *_tot parameters are multiplied by f and the 87
-#      bimolecular association rate constants are divided by f (86 explicitly;
+#      of 0.2"): the 18 copy-number *_tot parameters are multiplied by f and the 97
+#      bimolecular association rate constants are divided by f (96 explicitly;
 #      Scafoldkp3=5*Scafoldkp2 inherits scaling from Scafoldkp2 and is not divided
-#      again). f=1 recovers the published full-cell model exactly; smaller f trades
-#      Monte-Carlo noise for speed without changing per-site normalized dynamics. The
-#      default f=0.02 runs the full 180 min protocol under standard BioNetGen NFsim in
-#      a few minutes.
+#      again), so every one of the 126 bimolecular rules scales as 1/f and none of the
+#      499 unimolecular rules changes. f=1 recovers the published full-cell model
+#      exactly; smaller f trades Monte-Carlo noise for speed. The default f=0.02 runs
+#      the full 180 min protocol under standard BioNetGen NFsim in minutes. (Until
+#      2026-11 ten association constants -- Grb2kp1-4 and Gab1kp156-161 -- were left
+#      unscaled, which slowed EGFR-Grb2 docking and ERK-Gab1 phosphorylation 50-fold
+#      at f=0.02 and cut the MAPK-cascade response of Fig. 4 short.)
 #
 #  Ligand binding is off during equilibration because the published forward rates
 #  EGFkp1-3/HRG3kp1-3/HRG4kp1-3 are 0 (the "on" values are the file's own inline
@@ -312,10 +315,10 @@ Phosphokm18		7.13755713699078e-2
 Phosphokm19		1.20814195649541e-2
 Phosphokm20		5.91549834797695e-2
 
-Grb2kp1		9.48751042996452e-6
-Grb2kp2		4.49259489482017e-7
-Grb2kp3		6.03697072678887e-6
-Grb2kp4		7.26714190078701e-7
+Grb2kp1		(9.48751042996452e-6)/f
+Grb2kp2		(4.49259489482017e-7)/f
+Grb2kp3		(6.03697072678887e-6)/f
+Grb2kp4		(7.26714190078701e-7)/f
 Grb2kp5		(7.80974367513346e-6)/f
 
 Grb2km1		6.74470404588556e-2
@@ -602,12 +605,12 @@ Gab1kp153		2.22274772107301e-1
 Gab1kp154		8.4191964204494e-2
 Gab1kp155		8.54033761596293e-2
 
-Gab1kp156		1.46657846706313e-6
-Gab1kp157		6.834203762122e-7
-Gab1kp158		2.28068860916886e-7
-Gab1kp159		2.38343153678147e-6
-Gab1kp160		7.4594943271976e-6
-Gab1kp161		4.58433700010636e-6
+Gab1kp156		(1.46657846706313e-6)/f
+Gab1kp157		(6.834203762122e-7)/f
+Gab1kp158		(2.28068860916886e-7)/f
+Gab1kp159		(2.38343153678147e-6)/f
+Gab1kp160		(7.4594943271976e-6)/f
+Gab1kp161		(4.58433700010636e-6)/f
 Gab1kp162		9.21239244666731e-1
 Gab1kp163		4.83857466703586e-1
 Gab1kp164		3.68569830054378e-1
@@ -2002,10 +2005,11 @@ begin actions
   #  equilibrated molecular state into Phase 2. gml is raised so the ~10^5-10^6
   #  molecules are not silently capped. The adaptor layer can in principle form small
   #  rings (a receptor dimer bridged by Grb2+Shc), so this is not a pure-multisite
-  #  model; the authors simulated with default NFsim v1.09 and the accompanying
-  #  driver (run_creamer2012.py) verifies that standard BioNetGen NFsim agrees with
-  #  the exact RuleMonkey method within Monte-Carlo error, and that -bscb/-utl do not
-  #  change the observed dynamics.
+  #  model; the authors simulated with default NFsim v1.09. The accompanying driver
+  #  (run_creamer2012.py) checks this protocol under standard BioNetGen NFsim against
+  #  Fig. 4; its older cross-checks (BioNetGen NFsim vs the exact RuleMonkey method,
+  #  and -bscb/-utl found to be no-ops) ran on the rules before the 2026-11 scaling
+  #  fix.
 
   #@protocol: |
   #  Equilibrate 500 s with ligand binding off, turn on EGF/HRG binding (5 nM each),
