@@ -49,8 +49,14 @@ files:
   - name: verify_dembo1978.ipynb
     role: verification
     description: >
-      Compares NFsim (no rings) against Perelson and DeLisi (1980)
-      kinetic ODEs and exact per-site equilibrium at three ligand doses.
+      Runs the file through BNG2.pl's NFsim (-bscb) at three hapten doses
+      (only LT_per_cell changes; the middle dose is the file itself), 20
+      seeds each, and asserts the equilibrium bonds, cross-links and free
+      receptors against the exact no-ring chain theory (|z| < 4 on the
+      replicate standard error; max 1.7) and the kinetics against the
+      Perelson-DeLisi ODEs at t = 10, 40, 100, 300 and 1000 s (|z| < 4.5;
+      max 2.2). Also asserts that the file's seed-42 run reproduces
+      reference/. Committed with outputs.
   - name: verify_dembo1978.png
     role: figure
   - name: verify_dembo1978_with_rings.ipynb
@@ -63,21 +69,30 @@ files:
   - name: verify_dembo1978_monovalent.ipynb
     role: verification
     description: >
-      Compares NFsim (with monovalent inhibitor) against extended
-      Perelson ODEs at three bivalent doses with fixed monovalent hapten.
+      Runs the monovalent-inhibitor file through BNG2.pl's NFsim (-bscb) at
+      three bivalent doses with the monovalent hapten fixed at the file's
+      value (only LT_per_cell changes), 20 seeds each, and asserts the
+      equilibrium L-R and B-R bonds, cross-links and free receptors against
+      the exact theory (|z| < 4) and the kinetics against the extended
+      Perelson-DeLisi ODEs at five times (|z| < 4.5). Also asserts that the
+      file's seed-42 run reproduces reference/. Committed with outputs.
   - name: verify_dembo1978_monovalent.png
     role: figure
   # Reference simulation data (reference/ subdirectory)
   - name: reference/blbr_dembo1978_nfr.gdat
     role: reference
-    description: NFsim time course (seed=42) for the no-rings primary model.
+    description: >
+      NFsim time course (seed=42) for the no-rings primary model, from stock
+      BioNetGen 2.9.3 (NFsim 1.14.3).
   - name: reference/blbr_dembo1978_nfr.species
     role: reference
   - name: reference/blbr_dembo1978_nfr.xml
     role: reference
   - name: reference/blbr_dembo1978_monovalent_inhibitor_nfr.gdat
     role: reference
-    description: NFsim time course (seed=42) for the monovalent-inhibitor variant.
+    description: >
+      NFsim time course (seed=42) for the monovalent-inhibitor variant, from
+      stock BioNetGen 2.9.3 (NFsim 1.14.3).
   - name: reference/blbr_dembo1978_monovalent_inhibitor_nfr.species
     role: reference
   - name: reference/blbr_dembo1978_monovalent_inhibitor_nfr.xml
