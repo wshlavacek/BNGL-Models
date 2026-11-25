@@ -93,12 +93,31 @@ files:
       the constant-volume ~90 down to ~55-60 nM; (2) ANTITERMINATION SATURATION
       (Table 2): nut sites become a slow step (k23=5 nt/s) with reversible N
       loading (k24=0.145, k25=0.1) and antiterminated escape (k26=30), via paused
-      RNAP states at~n/at~m -- restores the Fig-6a 'Full' onset to MOI>3
-      (f_lyso = 0.29/0.60/0.58 at MOI 4/5/6 in the committed 48-seed
-      reference/fullcircuit_exact_fig6.npz, against the paper's 0.30/0.55/0.70 --
-      each within the +/-0.07 binomial s.e. of 48 seeds; the base model sits at
-      0.10/0.32/0.48). Translation stays geometric-burst (deprioritized). Drive
-      with run_fullcircuit.py under FULLCIRCUIT_MODEL=exact.
+      RNAP states at~n/at~m -- moves the Fig-6a onset to MOI>3. The committed
+      48-seed RuleMonkey cache (reference/fullcircuit_exact_fig6.npz) gives
+      f_lyso = 0.29/0.60/0.58 at MOI 4/5/6. The values this entry used to call
+      "the paper's", 0.30/0.55/0.70, are not the published curve: Fig. 6a 'Full',
+      digitized from the journal scan (digitize_arkin1998.py), is
+      0.17/0.39/0.46 at MOI 4/5/6 (0.63/0.77 at 7/8, plateau ~0.82), so
+      the cache runs 0.12-0.21 high there and the base model (0.10/0.32/0.48) is
+      closer. Translation stays geometric-burst (deprioritized). Drive with
+      run_fullcircuit.py under FULLCIRCUIT_MODEL=exact.
+      CHECKED WITHOUT BNGSIM (verify_arkin1998.ipynb Part 5): the stock NFsim
+      1.14.3 bundled with BioNetGen 2.9.3 carries the same symmetric-pattern
+      defect described below -- the symcheck reproducer's symmetric dimer ends at
+      0.500 of the exact value (120 seeds) while the plain and asymmetric species
+      are exact -- so a stock-NFsim run of this file dilutes the CI2/Cro2 dimers at
+      2x and is not a sample of the model as written. BNG2.pl's simulate_nf also
+      reports this file as failed (NFsim's stderr notes on the ~PLUS product
+      patterns) after writing a complete trajectory; the NFsim binary run on the
+      writeXML() output exits 0. That run (fig6nf, -cb, 200 seeds per MOI,
+      reference/fullcircuit_exact_fig6_nfsim.npz) gives f_lyso =
+      0.000/0.010/0.175/0.380/0.570/0.750/0.845/0.895/0.985/1.000 at MOI
+      1-8/10/12 and lies outside the published curve (|z| > 3.29, family-wise 1 %, with the published
+      curve's own noise taken from its plateau scatter, 0.020) at MOI
+      4, 5, 6, 7, 8, 10, 12. So BNG2.pl's stock NFsim is not an admissible
+      network-free reference for this file; a bngsim-free one would need
+      another exact engine (e.g. a standalone RuleMonkey build).
       RUN THIS FILE WITH RULEMONKEY, NOT NFsim (issue #39). The two engines do
       NOT agree on this variant, and the cause is an NFsim defect rather than the
       model (lanl/bngsim#195): for a rule whose reactant pattern is SYMMETRIC and whose rate is a
@@ -133,8 +152,10 @@ files:
       contiguous 4-min window) AND (ii) [CI2]>[Cro2] at the end of the 35-min
       cell cycle. Drives either full circuit: set FULLCIRCUIT_MODEL=exact to run
       the paper-exact companion. Modes: fig3 | fig6 | agreement | rescore |
-      symcheck | traj. `agreement` is verification level 1 for a model with no
-      network to integrate -- it runs rejection-based NFsim against exact
+      symcheck | traj, plus symcheck-nfsim and fig6nf / fig6nf-merge, which use
+      no bngsim (BNG2.pl writeXML + the stock NFsim binary; per-block part
+      files so a Slurm job can take a share and resume). `agreement` is
+      verification level 1 for a model with no network to integrate -- it runs rejection-based NFsim against exact
       RuleMonkey on one XML with shared seeds and caches every per-seed trajectory
       (issue #39). `rescore` recomputes every agreement statistic from that cache
       without re-simulating; `symcheck` reproduces, in about a minute on a
@@ -162,7 +183,13 @@ files:
       targets, (2) the P_RE/P_L scans against the analytic Shea-Ackers
       partition function, and (3) reproduces the Fig. 2 P_R/P_RM panels
       from the full Shea-Ackers OR system (Table 1 + Table 2),
-      checked against the Fig. 2 caption anchors.
+      checked against the Fig. 2 caption anchors; Part 4 reads the base
+      full circuit's bngsim caches. Part 5 checks the exact variant with no
+      bngsim: the symcheck reproducer on stock NFsim (defect present,
+      asserted), BNG2.pl simulate_nf's abort on this file (asserted), and
+      the stock-NFsim Fig. 6a sweep against the digitized published 'Full'
+      curve; it rebuilds fullcircuit_exact_verification.png. BioNetGen is
+      found from $BNG2_PL or $BNGPATH, then BNG2.pl or the bionetgen CLI.
   - name: verify_arkin1998.png
     role: figure
   - name: fullcircuit_verification.png
@@ -173,9 +200,36 @@ files:
   - name: fullcircuit_exact_verification.png
     role: figure
     description: >
-      Paper-exact variant verification: Fig 3a Cro2 plateau restored to ~55-60 nM
-      by growth dilution; Fig 6a 'Full' onset restored to MOI>3 (overlaid on the
-      digitized Arkin Fig 6a points); Fig 6b Poisson-weighted lysogens vs API.
+      Paper-exact variant, rebuilt from the caches by verify_arkin1998.ipynb
+      Part 5: Fig 3a (RuleMonkey cache); Fig 6a with the digitized published
+      'Full' curve, the stock-NFsim sweep, the RuleMonkey cache and the
+      formerly quoted values marked as such (the earlier figure drew those
+      quoted values as the paper's curve); Fig 6b Poisson-weighted.
+  - name: digitize_arkin1998.py
+    role: verification
+    description: >
+      Digitizer for the Fig. 6a 'Full' squares (journal p. 1644, the embedded
+      1-bit scan at native resolution; calibrated on 49 y and 30 x tick
+      marks, residuals 1.1 and 0.75 px). Regenerates
+      reference/arkin1998_fig6a_full_digitized.csv byte for byte; the PDF is
+      not committed (archived publisher URL and sha256 in the docstring).
+  - name: reference/arkin1998_fig6a_full_digitized.csv
+    role: reference
+    description: >
+      Arkin Fig. 6a 'Full' probability of lysogeny at MOI 0-15 (the paper
+      prints no table and no run count), digitization uncertainty 0.005; the
+      header records the plateau scatter (SD 0.020) used as the published
+      curve's own Monte Carlo noise.
+  - name: reference/fullcircuit_exact_fig6_nfsim.npz
+    role: reference
+    description: >
+      Exact-variant Fig. 6a with no bngsim: BNG2.pl writeXML() + the stock
+      NFsim 1.14.3 binary, -cb, 200 seeds per MOI from 20000 at MOI 1-8, 10,
+      12 (run_fullcircuit.py fig6nf / fig6nf-merge): per-seed footnote-12
+      calls, the CI2/Cro2/free-CII trajectories they use, endpoints of every
+      tracked observable, and per-trajectory wall time. A record of what the
+      stock binary does with this file, not a sample of the model (the
+      binary dilutes the symmetric dimers at 2x; see the .bngl entry).
   - name: reference/lambda_switch_arkin1998_fullcircuit.xml
     role: reference
     description: >

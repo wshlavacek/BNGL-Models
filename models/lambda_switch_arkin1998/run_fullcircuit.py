@@ -12,6 +12,13 @@ NFsim + RuleMonkey). Run with a Python that has bngsim + numpy, e.g.
     python run_fullcircuit.py fig6       48       # Fig 6: f_lysogeny(MOI) + Poisson->API
     python run_fullcircuit.py agreement 100       # NFsim vs RuleMonkey, 100 seeds/engine
     python run_fullcircuit.py traj       40  6 rm # one MOI mean trajectory
+Two modes use no bngsim at all -- BNG2.pl (found from $BNG2_PL or $BNGPATH) and BioNetGen's
+bundled NFsim 1.14.3 binary only, with numpy:
+    python run_fullcircuit.py symcheck-nfsim 120  # the symcheck reproducer on stock NFsim
+    python run_fullcircuit.py fig6nf 200 --workers 36 --parts DIR [--job k/K]
+    python run_fullcircuit.py fig6nf-merge 200 --parts DIR   # -> <prefix>_fig6_nfsim.npz
+(see the section above fig6nf() for why the binary runs the writeXML() output instead of
+BNG2.pl's simulate_nf, and what each trajectory is checked for).
 Every mode caches to reference/<prefix>_*.npz (prefix = fullcircuit | fullcircuit_exact),
 records the engine that produced it, and runs with the seed count the committed cache was
 produced with when none is given -- so a bare `fig3` / `fig6` / `agreement` regenerates the
@@ -605,6 +612,216 @@ def rescore():
     return res
 
 
+# ------------------------------------- Fig 6a with BNG2.pl + the stock NFsim binary (no bngsim)
+# Every mode above runs through bngsim. `fig6nf` is the same Fig-6a sweep with no bngsim in the
+# loop: BioNetGen's BNG2.pl runs the file's own action block (writeXML) on an MOI-substituted
+# copy, and BioNetGen's bundled NFsim 1.14.3 binary simulates that XML with the flags BNG2.pl's
+# simulate_nf passes by default (-cb; no -bscb; -utl left to NFsim's automatic value). The same
+# footnote-12 classify() scores every seed.
+#
+# Why the binary and not BNG2.pl's simulate_nf: NFsim prints "You are trying to give a pattern
+# of type 'RNAP', but you gave an invalid state! The state you gave was: 'PLUS'" on stderr while
+# reading the ~PLUS product patterns of the elongation rules, and BNG2.pl treats ANY non-WARNING
+# stderr line as a failed run (BNGAction.pm, simulate_nf) -- so simulate_nf ABORTs after a
+# complete 2100-s trajectory has been written. The binary itself exits 0 and simulates the
+# increments through its StateChange operations; the run is accepted only if NFsim exits 0, its
+# stderr holds nothing but those PLUS messages and NFsim's species-observable notice, the .gdat
+# has all 36 rows to t = 2100 s, and the Species dimer readouts equal half their Molecules
+# counterparts at every sample (CI2_dimer = Obs_CI2/2, Cro2_dimer = Obs_Cro2/2), which is what
+# complex bookkeeping (-cb) must deliver.
+#
+# Campaign: blocks of FIG6NF_BLOCK seeds per MOI, each cached as its own part file so a Slurm
+# job can take a round-robin share (`--job k/K`) and a killed job resumes; `fig6nf-merge` builds
+# reference/fullcircuit_exact_fig6_nfsim.npz from the parts.
+FIG6NF_MOIS = (1, 2, 3, 4, 5, 6, 7, 8, 10, 12)
+FIG6NF_SEEDS, FIG6NF_SEED0, FIG6NF_BLOCK = 200, 20000, 25
+FIG6NF_FLAGS = ("-cb",)
+_NF_KEEP = ("CI2_dimer", "Cro2_dimer", "Obs_CII")      # classify() inputs, full trajectories
+_NF_STDERR_OK = ("You are trying to give a pattern of type 'RNAP', but you gave an",
+                 "invalid state! The state you gave was: 'PLUS'.  Quitting now.")
+
+
+def find_bionetgen():
+    """BNG2.pl from $BNG2_PL or $BNGPATH, then BNG2.pl on PATH; NFsim is BioNetGen's own
+    bin/NFsim beside it (override with $NFSIM_BIN)."""
+    import shutil
+    for cand in (os.environ.get("BNG2_PL"),
+                 os.path.join(os.environ["BNGPATH"], "BNG2.pl") if os.environ.get("BNGPATH")
+                 else None,
+                 shutil.which("BNG2.pl")):
+        if cand and os.path.isfile(cand):
+            bng = os.path.abspath(cand)
+            nf = os.environ.get("NFSIM_BIN") or os.path.join(os.path.dirname(bng), "bin", "NFsim")
+            if not os.path.isfile(nf):
+                raise FileNotFoundError(f"NFsim binary not found at {nf}")
+            return bng, nf
+    raise FileNotFoundError("BioNetGen not found: set BNG2_PL (or BNGPATH) to a BioNetGen "
+                            "2.9.3 BNG2.pl.")
+
+
+def _bng2_xml(moi, workdir):
+    """MOI-substituted copy of MODEL, run through BNG2.pl with the file's own writeXML()
+    action block; returns the XML path."""
+    bng, _ = find_bionetgen()
+    text = open(MODEL).read()
+    text, n = re.subn(r"(?m)^(\s*MOI\s+)\d+", rf"\g<1>{moi}", text)
+    assert n == 1, f"expected exactly one MOI parameter line, found {n}"
+    bngl = os.path.join(workdir, f"fullcircuit_moi{moi}.bngl")
+    open(bngl, "w").write(text)
+    r = subprocess.run(["perl", bng, "--outdir", workdir, bngl], capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout[-3000:] + r.stderr[-3000:]
+    return os.path.join(workdir, f"fullcircuit_moi{moi}.xml")
+
+
+def _nfsim_one(args):
+    """One stock-NFsim trajectory: returns (moi, seed, {obs: array over the 36 samples}, wall)."""
+    moi, xml, seed, workdir = args
+    _, nf = find_bionetgen()
+    gdat = os.path.join(workdir, f"moi{moi}_s{seed}.gdat")
+    cmd = [nf, "-xml", xml, "-o", gdat, "-sim", f"{T_END:g}", "-oSteps", str(FIG6_POINTS - 1),
+           *FIG6NF_FLAGS, "-seed", str(seed)]
+    t0 = time.time()
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    wall = time.time() - t0
+    assert r.returncode == 0, \
+        f"NFsim exit {r.returncode}, MOI {moi} seed {seed}: {r.stderr[-2000:]}"
+    bad = [ln for ln in r.stderr.splitlines() if ln.strip() and ln.strip() not in _NF_STDERR_OK]
+    assert not bad, f"unexpected NFsim stderr, MOI {moi} seed {seed}: {bad[:4]}"
+    with open(gdat) as fh:
+        names = fh.readline().lstrip("#").split()
+    Y = np.loadtxt(gdat, ndmin=2)
+    os.remove(gdat)
+    assert Y.shape[0] == FIG6_POINTS and abs(Y[-1, 0] - T_END) < 1e-6, \
+        f"MOI {moi} seed {seed}: truncated trajectory {Y.shape}"
+    col = {o: Y[:, names.index(o)] for o in names}
+    for sp, mol in (("CI2_dimer", "Obs_CI2"), ("Cro2_dimer", "Obs_Cro2")):
+        assert np.array_equal(2 * col[sp], col[mol]), \
+            f"MOI {moi} seed {seed}: {sp} != {mol}/2 -- complex bookkeeping (-cb) failed"
+    return moi, seed, col, wall
+
+
+def _fig6nf_blocks(n_seeds, mois):
+    """(MOI, first seed, seeds) for every block of the campaign, in a fixed order."""
+    out = []
+    for m in mois:
+        for s0 in range(FIG6NF_SEED0, FIG6NF_SEED0 + n_seeds, FIG6NF_BLOCK):
+            out.append((m, s0, tuple(range(s0, min(s0 + FIG6NF_BLOCK, FIG6NF_SEED0 + n_seeds)))))
+    return out
+
+
+def fig6nf(n_seeds=FIG6NF_SEEDS, mois=FIG6NF_MOIS, workers=1, parts=None, job=(0, 1)):
+    """Run this job's round-robin share of the stock-NFsim Fig-6a blocks; each finished block
+    is written to <parts>/moi<M>_s<seed0>.npz at once, and blocks already present are skipped."""
+    import shutil
+    from multiprocessing import Pool
+    parts = parts or os.path.join(HERE, "fig6nf_parts")
+    os.makedirs(parts, exist_ok=True)
+    k, K = job
+    mine = [b for i, b in enumerate(_fig6nf_blocks(n_seeds, mois)) if i % K == k]
+    todo = [b for b in mine if not os.path.exists(os.path.join(parts, f"moi{b[0]}_s{b[1]}.npz"))]
+    print(f"=== fig6nf: {os.path.basename(MODEL)}: BNG2.pl writeXML + stock NFsim "
+          f"{' '.join(FIG6NF_FLAGS)}, {n_seeds} seeds/MOI from {FIG6NF_SEED0}, "
+          f"MOI {list(mois)}; job {k}/{K}: {len(mine)} blocks, {len(todo)} to run, "
+          f"{workers} workers", flush=True)
+    if not todo:
+        return
+    work = tempfile.mkdtemp(prefix="fig6nf_", dir=HERE)
+    try:
+        xmls = {m: _bng2_xml(m, work) for m in sorted({b[0] for b in todo})}
+        tasks = [(m, xmls[m], s, work) for m, _, seeds in todo for s in seeds]
+        got = {}
+        with Pool(workers) as pool:
+            for moi, seed, col, wall in pool.imap_unordered(_nfsim_one, tasks, chunksize=1):
+                got[(moi, seed)] = (col, wall)
+                for m, s0, seeds in todo:
+                    if m != moi or seed not in seeds or any((m, s) not in got for s in seeds):
+                        continue
+                    cols = [got[(m, s)][0] for s in seeds]
+                    np.savez_compressed(
+                        os.path.join(parts, f"moi{m}_s{s0}.npz"), moi=m,
+                        seeds=np.array(seeds), tvec=cols[0]["time"],
+                        wall=np.array([got[(m, s)][1] for s in seeds]),
+                        **{o: np.array([c[o] for c in cols]).astype(np.int32)
+                           for o in _NF_KEEP},
+                        **{f"end__{o}": np.array([c[o][-1] for c in cols]) for o in TRAJ})
+                    print(f"  MOI {m:2d} seeds {s0}..{seeds[-1]} done; median "
+                          f"{np.median([got[(m, s)][1] for s in seeds]):.0f} s/trajectory",
+                          flush=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def fig6nf_merge(n_seeds=FIG6NF_SEEDS, mois=FIG6NF_MOIS, parts=None):
+    """Assemble the part files into reference/<prefix>_fig6_nfsim.npz and print Fig 6a."""
+    import hashlib
+    parts = parts or os.path.join(HERE, "fig6nf_parts")
+    out, rows = {}, []
+    for m in mois:
+        blocks = [np.load(os.path.join(parts, f"moi{bm}_s{s0}.npz"))
+                  for bm, s0, _ in _fig6nf_blocks(n_seeds, (m,))]
+        seeds = np.concatenate([b["seeds"] for b in blocks])
+        assert np.array_equal(seeds, np.arange(FIG6NF_SEED0, FIG6NF_SEED0 + n_seeds))
+        tvec = blocks[0]["tvec"]
+        st = {o: np.concatenate([b[o] for b in blocks]).astype(float) for o in _NF_KEEP}
+        c = classify(st, tvec, m)
+        p = c["lyso"].mean()
+        wall = np.concatenate([b["wall"] for b in blocks])
+        rows.append((m, p, np.sqrt(p * (1 - p) / n_seeds), np.median(wall)))
+        out[f"lyso__moi{m}"] = c["lyso"]
+        out[f"wall__moi{m}"] = wall
+        for o in _NF_KEEP:
+            out[f"{o}__moi{m}"] = st[o].astype(np.int32)
+        for o in TRAJ:
+            out[f"end__{o}__moi{m}"] = np.concatenate([b[f"end__{o}"] for b in blocks])
+    print(f"=== Fig 6a, stock NFsim {' '.join(FIG6NF_FLAGS)} via BNG2.pl writeXML, "
+          f"{n_seeds} seeds/MOI ===")
+    for m, p, se, w in rows:
+        print(f"  MOI={m:2d}: f_lyso = {p:.3f} +/- {se:.3f}   (median {w:.0f} s/trajectory)")
+    sha = hashlib.sha256(open(MODEL, "rb").read()).hexdigest()
+    _cache("fig6_nfsim", tvec=tvec, mois=np.array(mois, float), n_seeds=n_seeds,
+           seed0=FIG6NF_SEED0, f=np.array([r[1] for r in rows]),
+           se=np.array([r[2] for r in rows]),
+           engine="nfsim-1.14.3 (BioNetGen 2.9.3 bin/NFsim) on BNG2.pl writeXML output",
+           flags=" ".join(FIG6NF_FLAGS), bngl_sha256=sha, **out)
+
+
+def symcheck_nfsim(n_seeds=120, seed0=8000):
+    """`symcheck` with no bngsim: BNG2.pl writes the three-species reproducer's XML and the stock
+    NFsim binary runs it at the same flags as `fig6nf`. Returns {obs: (mean, s.e.m., exact)} at
+    t = 35 min. This is the direct test of whether the stock binary carries the defect that the
+    exact variant's growth-dilution rules (a symmetric dimer at a functional rate) would expose:
+    with the defect, Sym comes back at half the exact value."""
+    import shutil
+    bng, nf = find_bionetgen()
+    k0, vol0, x0 = 4.76e-4, 1000, 2000
+    work = tempfile.mkdtemp(prefix="symcheck_nf_", dir=HERE)
+    try:
+        bngl = os.path.join(work, "symcheck.bngl")
+        open(bngl, "w").write(_SYM_BNGL.format(k0=k0, vol0=vol0, x0=x0))
+        r = subprocess.run(["perl", bng, "--outdir", work, bngl], capture_output=True, text=True)
+        assert r.returncode == 0, r.stdout[-2000:] + r.stderr[-2000:]
+        xml, gdat = os.path.join(work, "symcheck.xml"), os.path.join(work, "s.gdat")
+        obs = ["Obs_Vol", "Obs_X", "Sym", "Asym"]
+        rows = []
+        for s in range(seed0, seed0 + n_seeds):
+            r = subprocess.run([nf, "-xml", xml, "-o", gdat, "-sim", f"{T_END:g}", "-oSteps", "1",
+                                *FIG6NF_FLAGS, "-seed", str(s)], capture_output=True, text=True)
+            assert r.returncode == 0 and not r.stderr.strip(), r.stderr[-2000:]
+            with open(gdat) as fh:
+                names = fh.readline().lstrip("#").split()
+            rows.append(np.loadtxt(gdat, ndmin=2)[-1])
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    A = np.vstack(rows)
+    exact = {"Obs_Vol": vol0 * (1 + k0 * T_END), "Obs_X": x0 / (1 + k0 * T_END)}
+    exact["Sym"] = exact["Asym"] = exact["Obs_X"]
+    out = {}
+    for o in obs:
+        v = A[:, names.index(o)]
+        out[o] = (v.mean(), v.std(ddof=1) / np.sqrt(v.size), exact[o])
+    return out
+
+
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "fig3"
     _dflt = {"fig3": FIG3_SEEDS, "fig6": FIG6_SEEDS, "agreement": AGREE_SEEDS}.get(mode, 40)
@@ -622,6 +839,21 @@ if __name__ == "__main__":
         rescore()
     elif mode == "symcheck":
         symcheck(n_seeds if len(sys.argv) > 2 else 60)
+    elif mode == "symcheck-nfsim":
+        for o, (m, se, ex) in symcheck_nfsim(n_seeds if len(sys.argv) > 2 else 120).items():
+            print(f"  {o:>8s}: stock NFsim {m:8.1f} +/- {se:.1f}   exact {ex:8.1f}   "
+                  f"ratio {m / ex:.3f}")
+    elif mode in ("fig6nf", "fig6nf-merge"):
+        # fig6nf [n_seeds] [--mois 3,4] [--workers W] [--parts DIR] [--job k/K]
+        opt = dict(zip(sys.argv[3::2], sys.argv[4::2], strict=False))
+        n = int(sys.argv[2]) if len(sys.argv) > 2 else FIG6NF_SEEDS
+        mois = tuple(int(m) for m in opt["--mois"].split(",")) if "--mois" in opt \
+            else FIG6NF_MOIS
+        if mode == "fig6nf":
+            k, K = (int(v) for v in opt.get("--job", "0/1").split("/"))
+            fig6nf(n, mois, int(opt.get("--workers", 1)), opt.get("--parts"), (k, K))
+        else:
+            fig6nf_merge(n, mois, opt.get("--parts"))
     elif mode == "traj":
         moi = int(sys.argv[3]) if len(sys.argv) > 3 else 6
         method = sys.argv[4] if len(sys.argv) > 4 else "rm"
@@ -634,4 +866,5 @@ if __name__ == "__main__":
             print(f"  {o:>10s}:" + "".join(f"{v:6.1f}" for v in st[o].mean(0)))
     else:
         print(f"unknown mode {mode!r}; "
-              f"use fig3 | fig6 | agreement | rescore | symcheck | traj")
+              f"use fig3 | fig6 | agreement | rescore | symcheck | symcheck-nfsim | fig6nf | "
+              f"fig6nf-merge | traj")

@@ -46,9 +46,21 @@ files:
   - name: verify_posner1995.ipynb
     role: verification
     description: >
-      Compares NFsim (reversible ring closure, -bscb -utl 5)
-      against Posner kinetic ODEs and equilibrium theory at
-      three ligand doses.
+      Runs the file through BNG2.pl's NFsim (-bscb -utl 5) at three ligand
+      doses (only LT_per_cell changes; the middle dose is the file itself),
+      60 seeds each, with one Species observable added that counts the
+      closable C1(2) chains. Asserts (1) the ring identity d<R2>/dt =
+      jp<C1(2)> - 4 koff<R2>, with rings and chains counted independently
+      in the simulation (|z| < 4, max 1.2; three doses and two R_T = 750
+      runs); (2) the equilibrium bonds, rings, C1(2) and free receptors
+      against the closed-form detailed-balance solution, which equals the
+      steady state of Posner Eqs. 14a-i, after extrapolating out the 1/R_T
+      finite-size term with R_T = 750 runs (|z| < 4, max 1.6); (3) the
+      kinetics against Eqs. 14a-i at five times (|z| < 4.5, max 2.4). A
+      contrast at NFsim's auto traversal limit (-bscb only) breaks the
+      ring identity (z = -81, <R2>/<C1(2)> = 17 against 25), the NFsim
+      issue #52 that -utl 5 works around. Also asserts that the file's
+      seed-42 run reproduces reference/. Committed with outputs.
   - name: verify_posner1995.png
     role: figure
   - name: verify_no_rings_posner1995.ipynb
