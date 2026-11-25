@@ -43,20 +43,31 @@ Three things are verified here:
 
   plot        -- builds verify_mitra2019.png from the cached .npz files.
 
-Requirements: BNG2.pl (set BNGPATH, or the default install is used) and the bngsim
-package (NfsimSession + RuleMonkeySession). Run with the repo venv:
-    python run_mitra2019.py reference 4     # Fig 2B/2D/3B/3D reproduction, 4 replicates
-    python run_mitra2019.py agreement 6     # bngsim NFsim=RuleMonkey (+legacy, bscb), 6 seeds
+Requirements: BioNetGen 2.9.3, found from $BNG2_PL or $BNGPATH, then BNG2.pl or the
+`bionetgen` CLI on PATH; `agreement` also needs the bngsim package (NfsimSession +
+RuleMonkeySession). Run with the repo venv:
+    python run_mitra2019.py reference 12 [W]  # Fig 2B/2D/3B/3D reproduction, 12 replicates
+    python run_mitra2019.py agreement 6 [W]   # bngsim NFsim=RuleMonkey (+legacy, bscb), 6 seeds
+    python run_mitra2019.py agreement-bng 6 [W]  # refresh only the BNG2.pl NFsim arm
     python run_mitra2019.py plot            # (re)build verify_mitra2019.png
     python run_mitra2019.py all
+W is the number of BNG2.pl runs in parallel (default 1).
+
+Every BNG2.pl run gets its own directory under a per-invocation work directory inside
+this folder (removed afterwards), and its output is read back by the exact name that
+run wrote. Each dose of a replicate's dose-response is its own one-point
+parameter_scan, so the doses run in parallel; BioNetGen reuses a scan's seed at every
+point, so this is the same simulation as the full scan. Seeds: time-course replicate r
+uses 1000+r, dose-response replicate r 2000+r (at every dose), agreement seed s 5000+s.
 """
-import glob
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
 import time
+from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 
@@ -64,8 +75,21 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL = os.path.join(HERE, "egfr_oligomerization_mitra2019.bngl")
 REFDIR = os.path.join(HERE, "reference")
 
-BNGPATH = os.environ.get("BNGPATH") or os.path.expanduser("~/Simulations/BioNetGen-2.9.3")
-BNG2PL = os.path.join(BNGPATH, "BNG2.pl")
+
+
+def find_bionetgen():
+    """BNG2.pl from $BNG2_PL or $BNGPATH, then BNG2.pl on PATH, then the `bionetgen` CLI.
+    Returns (path, use_cli)."""
+    for cand in (os.environ.get("BNG2_PL"),
+                 os.path.join(os.environ["BNGPATH"], "BNG2.pl") if os.environ.get("BNGPATH") else None,
+                 shutil.which("BNG2.pl")):
+        if cand and os.path.isfile(cand):
+            return os.path.abspath(cand), False
+    cli = shutil.which("bionetgen")
+    if cli:
+        return cli, True
+    raise FileNotFoundError("BioNetGen not found: set BNG2_PL (or BNGPATH) to a BioNetGen 2.9.3 "
+                            "BNG2.pl, or put the bionetgen CLI on PATH.")
 
 # PyBioNetFit best fit (Mitra 2019 Data S1, RuleHub 04-egfrnf/fit_ade, chi_sq=13.4) --
 # also the shipped .bngl nominals; re-applied here so the driver is robust to edits.
@@ -124,12 +148,50 @@ def _apply(text, params):
     return text
 
 
-def _run_bng(bngl_text, workdir, tag):
-    bngl = os.path.join(workdir, f"{tag}.bngl")
-    open(bngl, "w").write(bngl_text)
-    r = subprocess.run(["perl", BNG2PL, bngl], cwd=workdir, capture_output=True, text=True)
+def _run_bng(bngl_text, rundir, tag):
+    """Write `bngl_text` to rundir/<tag>.bngl and run BioNetGen on it with all outputs in
+    rundir (BioNetGen names them <tag>_<suffix>.<ext>)."""
+    bng, use_cli = find_bionetgen()
+    bngl = os.path.join(rundir, f"{tag}.bngl")
+    with open(bngl, "w") as fh:
+        fh.write(bngl_text)
+    cmd = ([bng, "run", "-i", bngl, "-o", rundir] if use_cli
+           else ["perl", bng, "--outdir", rundir, bngl])
+    r = subprocess.run(cmd, cwd=rundir, capture_output=True, text=True)
     assert r.returncode == 0, r.stderr[-3000:] + "\n---STDOUT---\n" + r.stdout[-3000:]
     return bngl
+
+
+def _workdir(label):
+    """A fresh per-invocation work directory inside this folder (never /tmp)."""
+    return tempfile.mkdtemp(prefix=f".{label}_", dir=HERE)
+
+
+def _run_and_read(bngl_text, workdir, tag, ext):
+    """Run BioNetGen in its own directory under `workdir` and return the columns of the
+    one output file with extension `ext` that run wrote, read by its exact name."""
+    rundir = tempfile.mkdtemp(prefix=f"{tag}_", dir=workdir)
+    _run_bng(bngl_text, rundir, tag)
+    out = [f for f in os.listdir(rundir) if f.endswith(ext)]
+    suffix = {".gdat": "nfr", ".scan": "scan"}[ext]
+    assert out == [f"{tag}_{suffix}{ext}"], f"expected exactly {tag}_{suffix}{ext}, found {out}"
+    cols = _read_table(os.path.join(rundir, out[0]))
+    shutil.rmtree(rundir)
+    return cols
+
+
+def _pmap(fn, args, workers):
+    """[fn(*a) for a in args], `workers` processes in parallel."""
+    if workers > 1:
+        with ProcessPoolExecutor(max_workers=workers) as ex:
+            return list(ex.map(fn, *zip(*args)))
+    return [fn(*a) for a in args]
+
+
+def _assert_distinct(A, what):
+    """Distinct seeds must give distinct replicates (rows of A)."""
+    n_unique = len({tuple(np.ravel(row)) for row in A})
+    assert n_unique == len(A), f"{what}: only {n_unique} distinct replicates of {len(A)}"
 
 
 def _read_table(path):
@@ -154,8 +216,7 @@ def _bng_timecourse(seed, workdir):
            f'  simulate({{method=>"nf",suffix=>"nfr",t_start=>0,t_end=>{T_END},n_steps=>60,'
            f'seed=>{seed},gml=>{GML},print_functions=>1,param=>"{NFPARAM}"}})\n'
            "end actions\n")
-    _run_bng(base + act, workdir, f"tc_s{seed}")
-    cols = _read_table(glob.glob(os.path.join(workdir, "*_nfr.gdat"))[0])
+    cols = _run_and_read(base + act, workdir, f"tc_s{seed}", ".gdat")
     clusters, pegfr = _clusters_pegfr(cols)
     return cols["time"], clusters, pegfr
 
@@ -170,9 +231,27 @@ def _bng_dose_scan(doses, seed, workdir):
            f'suffix=>"scan",t_start=>0,t_end=>{T_END},n_steps=>1,seed=>{seed},gml=>{GML},'
            f'print_functions=>1,param=>"{NFPARAM}"}})\n'
            "end actions\n")
-    _run_bng(base + act, workdir, f"scan_s{seed}")
-    cols = _read_table(glob.glob(os.path.join(workdir, "*_scan.scan"))[0])
+    tag = f"scan_s{seed}_" + "_".join(f"{d:.10g}" for d in doses).replace(".", "p")
+    cols = _run_and_read(base + act, workdir, tag, ".scan")
+    assert np.allclose(cols["LT_nM"], doses, rtol=1e-8), "scan rows do not match the doses"
     return _clusters_pegfr(cols)
+
+
+def _bng_dose_point(dose, seed, workdir):
+    """(Clusters, pEGFR) at t_end at one dose: a one-point parameter_scan."""
+    c, p = _bng_dose_scan([dose], seed, workdir)
+    return float(c[0]), float(p[0])
+
+
+def _bng_dose_replicates(doses, seeds, workdir, workers=1):
+    """Dose response at `seeds` (one replicate per seed, same seed at every dose, as in a
+    full parameter_scan), every (seed, dose) run in parallel; returns (Clusters, pEGFR),
+    each (n_seeds, n_doses)."""
+    args = [(d, s, workdir) for s in seeds for d in doses]
+    out = np.array(_pmap(_bng_dose_point, args, workers)).reshape(len(seeds), len(doses), 2)
+    cl, pe = out[..., 0], out[..., 1]
+    _assert_distinct(np.concatenate([cl, pe], axis=1), "dose response")
+    return cl, pe
 
 
 def _dose_xml(dose, workdir):
@@ -187,7 +266,8 @@ def _dose_xml(dose, workdir):
     base = _set_param_text(base, "LT_nM", dose)
     base += "\nbegin actions\n  writeXML({overwrite=>1})\nend actions\n"
     _run_bng(base, workdir, tag)
-    return glob.glob(os.path.join(workdir, f"{tag}.xml"))[0]
+    assert os.path.isfile(xml), f"no XML produced for dose {dose}"
+    return xml
 
 
 # ---------------------------------------------------------------- bngsim helpers
@@ -220,33 +300,68 @@ def _metrics(model, data, sd):
     return chisq, float(np.median(rel)), float(rel.max())
 
 
-def reference(n_reps=4, save=True):
-    """Reproduce Kozer 2013 Fig 2B/2D/3B/3D: NFsim (-bscb) at the best fit vs the data."""
+def _bng_version():
+    """'BioNetGen <version>' of the install find_bionetgen() picks (VERSION file)."""
+    bng, use_cli = find_bionetgen()
+    vf = os.path.join(os.path.dirname(bng), "VERSION")
+    v = open(vf).read().split()[0] if (not use_cli and os.path.isfile(vf)) else "unknown"
+    return f"BioNetGen {v} ({'bionetgen CLI' if use_cli else 'BNG2.pl'}; bundled NFsim)"
+
+
+def _chisq_total(clus_t, pegf_t, clus_d, pegf_d, tc, dr, dmask):
+    """Total chi_sq of replicate-mean model outputs against the four datasets."""
+    m = (ALPHA["a2"] * clus_t / F, ALPHA["a4"] * pegf_t / F,
+         ALPHA["a1"] * clus_d / F, ALPHA["a3"] * pegf_d / F)
+    d = ((tc["pre2_time"], tc["pre2_time_SD"]), (tc["pre4_time"], tc["pre4_time_SD"]),
+         (dr["pre1_dose"][dmask], dr["pre1_dose_SD"][dmask]),
+         (dr["pre3_dose"][dmask], dr["pre3_dose_SD"][dmask]))
+    return sum(_metrics(mi, di, si)[0] for mi, (di, si) in zip(m, d))
+
+
+def reference(n_reps=12, workers=1, save=True):
+    """Reproduce Kozer 2013 Fig 2B/2D/3B/3D: BNG2.pl NFsim (-bscb -utl 5) at the best fit
+    vs the data. Replicates are independent BNG2.pl runs (time course seed 1000+r, dose
+    response seed 2000+r), `workers` in parallel."""
     print("=== reference: Kozer 2013 Fig 2B/2D/3B/3D reproduction (BNG NFsim, -bscb) ===")
-    print(f"    {n_reps} replicates, best fit, t_end={T_END}s")
+    print(f"    {n_reps} replicates, best fit, t_end={T_END}s, {workers} parallel runs")
     tc, dr = load_data()
     t_exp = tc["time_s"]
-    with tempfile.TemporaryDirectory() as wd:
+    seeds_tc = [1000 + r for r in range(n_reps)]
+    seeds_dr = [2000 + r for r in range(n_reps)]
+    # Most expensive runs first (top doses, then the 30 nM time course) so they start first.
+    order = sorted(range(len(DOSE_DATA)), key=lambda i: -DOSE_DATA[i])
+    wd = _workdir("reference")
+    try:
         t0 = time.time()
-        # Time course (30 nM): average Clusters(t)/pEGFR(t) over reps, interp to exp times.
-        cl_t, pe_t = [], []
-        for r in range(n_reps):
-            t, c, p = _bng_timecourse(1000 + r, wd)
-            cl_t.append(np.interp(t_exp, t, c))
-            pe_t.append(np.interp(t_exp, t, p))
-        clus_t = np.mean(cl_t, 0)
-        pegf_t = np.mean(pe_t, 0)
-        print(f"  [{time.time()-t0:.0f}s] time course done")
-        # Dose response: average endpoint Clusters/pEGFR per dose over reps.
-        t0 = time.time()
-        cl_d, pe_d = [], []
-        for r in range(n_reps):
-            c, p = _bng_dose_scan(DOSE_DATA, 2000 + r, wd)
-            cl_d.append(c)
-            pe_d.append(p)
-        clus_d = np.mean(cl_d, 0)
-        pegf_d = np.mean(pe_d, 0)
-        print(f"  [{time.time()-t0:.0f}s] dose response done")
+        with ProcessPoolExecutor(max_workers=max(1, workers)) as ex:
+            fut_dr = {}
+            for i in order[:2]:
+                for s in seeds_dr:
+                    fut_dr[s, i] = ex.submit(_bng_dose_point, DOSE_DATA[i], s, wd)
+            fut_tc = [ex.submit(_bng_timecourse, s, wd) for s in seeds_tc]
+            for i in order[2:]:
+                for s in seeds_dr:
+                    fut_dr[s, i] = ex.submit(_bng_dose_point, DOSE_DATA[i], s, wd)
+            tcs = [f.result() for f in fut_tc]
+            print(f"  [{time.time()-t0:.0f}s] time course done")
+            drs = np.array([[fut_dr[s, i].result() for i in range(len(DOSE_DATA))]
+                            for s in seeds_dr])          # (n_reps, n_doses, 2)
+            print(f"  [{time.time()-t0:.0f}s] dose response done")
+    finally:
+        shutil.rmtree(wd, ignore_errors=True)
+
+    # Per-replicate arrays; the time course is sampled every 10 s, so the experimental
+    # times (multiples of 30 s) are grid points and np.interp just picks them out.
+    tc_t = tcs[0][0]
+    tc_cl = np.array([c for _, c, _ in tcs])             # (n_reps, n_t)
+    tc_pe = np.array([p for _, _, p in tcs])
+    dr_cl, dr_pe = drs[..., 0], drs[..., 1]              # (n_reps, n_doses)
+    _assert_distinct(np.concatenate([tc_cl, tc_pe], axis=1), "time course")
+    _assert_distinct(np.concatenate([dr_cl, dr_pe], axis=1), "dose response")
+    cl_t = np.array([np.interp(t_exp, tc_t, c) for c in tc_cl])
+    pe_t = np.array([np.interp(t_exp, tc_t, p) for p in tc_pe])
+    clus_t, pegf_t = cl_t.mean(0), pe_t.mean(0)
+    clus_d, pegf_d = dr_cl.mean(0), dr_pe.mean(0)
 
     # Model observables scaled to the average-normalized data (alpha*_pre*obs/f).
     m_pre2 = ALPHA["a2"] * clus_t / F      # cluster density vs time  (Fig 3B)
@@ -269,6 +384,17 @@ def reference(n_reps=4, save=True):
         total_chisq += chisq
         print(f"  {lab:32s} {chisq:8.2f} {med:9.3f} {mx:9.3f}")
     print(f"  {'TOTAL chi_sq':32s} {total_chisq:8.2f}   (published PyBNF best fit chi_sq=13.4)")
+    # Monte-Carlo standard error of the total: bootstrap over replicates (time-course and
+    # dose-response replicates resampled independently), fixed RNG seed.
+    rng = np.random.default_rng(0)
+    boot = []
+    for _ in range(2000):
+        a = rng.integers(0, n_reps, n_reps)
+        b = rng.integers(0, n_reps, n_reps)
+        boot.append(_chisq_total(cl_t[a].mean(0), pe_t[a].mean(0), dr_cl[b].mean(0),
+                                 dr_pe[b].mean(0), tc, dr, dmask))
+    chisq_se = float(np.std(boot, ddof=1))
+    print(f"  bootstrap s.e. of TOTAL chi_sq over replicates = {chisq_se:.2f}")
 
     if save:
         os.makedirs(REFDIR, exist_ok=True)
@@ -279,26 +405,33 @@ def reference(n_reps=4, save=True):
                  doses=np.array(DOSE_DATA), m_pre1=m_pre1, m_pre3=m_pre3,
                  d_pre1=dr["pre1_dose"][dmask], d_pre1_sd=dr["pre1_dose_SD"][dmask],
                  d_pre3=dr["pre3_dose"][dmask], d_pre3_sd=dr["pre3_dose_SD"][dmask],
-                 n_reps=n_reps, total_chisq=total_chisq)
+                 n_reps=n_reps, total_chisq=total_chisq, chisq_se=chisq_se,
+                 tc_t=tc_t, tc_clusters=tc_cl, tc_pegfr=tc_pe,
+                 dose_clusters=dr_cl, dose_pegfr=dr_pe,
+                 seeds_tc=np.array(seeds_tc), seeds_dose=np.array(seeds_dr),
+                 engine=f"{_bng_version()}, param '{NFPARAM}', gml {GML}")
         print(f"  cached -> {os.path.join(REFDIR, 'reproduction.npz')}")
 
 
 # ---------------------------------------------------------------- agreement
-def agreement(n_seeds=4, save=True):
+def _agreement_bng(n_seeds, workdir, workers=1):
+    """BNG2.pl NFsim arm of the agreement check: seeds 5000.., every (seed, dose) its own
+    run; returns (Clusters, pEGFR), each (n_seeds, n_doses)."""
+    t0 = time.time()
+    cl, pe = _bng_dose_replicates(DOSE_AGREE, [5000 + s for s in range(n_seeds)], workdir,
+                                  workers)
+    print(f"  [{time.time()-t0:5.0f}s] bng_nf           done")
+    return cl, pe
+
+
+def agreement(n_seeds=4, workers=1, save=True):
     """bngsim NFsim == bngsim RuleMonkey (two independent NF algorithms, -bscb) is the
     reference of record; BNG2.pl's legacy NFsim v1.14.3 and a no-bscb run are contrasts."""
     print("=== agreement: bngsim-NFsim == bngsim-RuleMonkey (+ legacy BNG2.pl NFsim) ===")
     print(f"    {n_seeds} seeds/engine, doses {DOSE_AGREE} nM, t_end={T_END}s")
-    with tempfile.TemporaryDirectory() as wd:
-        # BNG NFsim: one parameter_scan per seed (all doses at once); take pEGFR + Clusters.
-        t0 = time.time()
-        bng_cl, bng_pe = [], []
-        for s in range(n_seeds):
-            c, p = _bng_dose_scan(DOSE_AGREE, 5000 + s, wd)
-            bng_cl.append(c)
-            bng_pe.append(p)
-        print(f"  [{time.time()-t0:5.0f}s] bng_nf           done")
-        bng_cl, bng_pe = np.array(bng_cl), np.array(bng_pe)   # (n_seeds, n_doses)
+    wd = _workdir("agreement")
+    try:
+        bng_cl, bng_pe = _agreement_bng(n_seeds, wd, workers)
         # bngsim engines: per-dose baked XML, reused across seeds/engines.
         xmls = [_dose_xml(d, wd) for d in DOSE_AGREE]
         ens_cl = {"bng_nf": bng_cl}
@@ -314,7 +447,30 @@ def agreement(n_seeds=4, save=True):
                     cl[s, i], pe[s, i] = _bngsim(engine, xmls[i], 5000 + s, bscb)
             ens_cl[label], ens_pe[label] = cl, pe
             print(f"  [{time.time()-t0:5.0f}s] {label:16s} done")
+    finally:
+        shutil.rmtree(wd, ignore_errors=True)
+    _agreement_report(ens_pe, ens_cl, n_seeds, save)
 
+
+def agreement_bng(n_seeds=6, workers=1, save=True):
+    """Re-run only the BNG2.pl NFsim arm of the committed agreement.npz (same seeds) and
+    recompute the summary; the bngsim arms in the cache are kept as they are."""
+    print("=== agreement-bng: refresh the BNG2.pl NFsim arm of agreement.npz ===")
+    old = np.load(os.path.join(REFDIR, "agreement.npz"))
+    assert int(old["n_seeds"]) == n_seeds, f"cache has {int(old['n_seeds'])} seeds per engine"
+    assert np.allclose(old["doses"], DOSE_AGREE)
+    wd = _workdir("agreement_bng")
+    try:
+        bng_cl, bng_pe = _agreement_bng(n_seeds, wd, workers)
+    finally:
+        shutil.rmtree(wd, ignore_errors=True)
+    labs = ("bngsim_nf", "bngsim_rm", "bngsim_nf_nobscb")
+    ens_pe = {"bng_nf": bng_pe, **{k: old[f"pe_{k}"] for k in labs}}
+    ens_cl = {"bng_nf": bng_cl, **{k: old[f"cl_{k}"] for k in labs}}
+    _agreement_report(ens_pe, ens_cl, n_seeds, save)
+
+
+def _agreement_report(ens_pe, ens_cl, n_seeds, save):
     def mean_se(A):
         return A.mean(0), A.std(0, ddof=1) / np.sqrt(A.shape[0])
 
@@ -364,7 +520,8 @@ def agreement(n_seeds=4, save=True):
         os.makedirs(REFDIR, exist_ok=True)
         np.savez(os.path.join(REFDIR, "agreement.npz"),
                  doses=np.array(DOSE_AGREE), n_seeds=n_seeds, rel_pe=rel_pe, rel_cl=rel_cl,
-                 legacy_pe=legacy_pe,
+                 legacy_pe=legacy_pe, bng_seeds=np.arange(5000, 5000 + n_seeds),
+                 bng_engine=f"{_bng_version()}, param '{NFPARAM}', gml {GML}",
                  **{f"pe_{k}": v for k, v in ens_pe.items()},
                  **{f"cl_{k}": v for k, v in ens_cl.items()})
         print(f"  cached -> {os.path.join(REFDIR, 'agreement.npz')}")
@@ -381,14 +538,19 @@ def plot():
     rp = os.path.join(REFDIR, "reproduction.npz")
     ag = os.path.join(REFDIR, "agreement.npz")
 
+    chisq_txt = ""
     if os.path.exists(rp):
         d = np.load(rp)
+        lab_model = f"BioNetGen NFsim ({NFPARAM}), best fit, {int(d['n_reps'])} reps"
+        chisq_txt = (f"; BioNetGen NFsim chi_sq = {float(d['total_chisq']):.2f} +/- "
+                     f"{float(d['chisq_se']):.2f} (tol 30; published 13.4)"
+                     if "chisq_se" in d else "")
         # Fig 3B -- cluster density vs time
         ax = axes[0, 0]
         ax.errorbar(d["t_exp"] / 60, d["d_pre2"], yerr=d["d_pre2_sd"], fmt="o", color="#222",
                     capsize=3, zorder=5, label="Kozer 2013 Fig 3B")
         ax.plot(d["t_exp"] / 60, d["m_pre2"], "s-", color="#1f77b4", lw=2, mfc="none",
-                label="NFsim (-bscb), best fit")
+                label=lab_model)
         ax.set(title="Fig 3B: EGFR cluster density vs time (30 nM)",
                xlabel="time (min)", ylabel="scaled cluster density")
         # Fig 3D -- phospho-EGFR vs time
@@ -396,7 +558,7 @@ def plot():
         ax.errorbar(d["t_exp"] / 60, d["d_pre4"], yerr=d["d_pre4_sd"], fmt="o", color="#222",
                     capsize=3, zorder=5, label="Kozer 2013 Fig 3D")
         ax.plot(d["t_exp"] / 60, d["m_pre4"], "s-", color="#d62728", lw=2, mfc="none",
-                label="NFsim (-bscb), best fit")
+                label=lab_model)
         ax.set(title="Fig 3D: phospho-EGFR vs time (30 nM)",
                xlabel="time (min)", ylabel="scaled pEGFR")
         # Fig 2B -- cluster density vs dose
@@ -404,7 +566,7 @@ def plot():
         ax.errorbar(d["doses"], d["d_pre1"], yerr=d["d_pre1_sd"], fmt="o", color="#222",
                     capsize=3, zorder=5, label="Kozer 2013 Fig 2B")
         ax.plot(d["doses"], d["m_pre1"], "s-", color="#1f77b4", lw=2, mfc="none",
-                label="NFsim (-bscb), best fit")
+                label=lab_model)
         ax.set(xscale="log", title="Fig 2B: EGFR cluster density vs EGF dose",
                xlabel="EGF dose (nM)", ylabel="scaled cluster density")
         # Fig 2D -- phospho-EGFR vs dose
@@ -412,7 +574,7 @@ def plot():
         ax.errorbar(d["doses"], d["d_pre3"], yerr=d["d_pre3_sd"], fmt="o", color="#222",
                     capsize=3, zorder=5, label="Kozer 2013 Fig 2D")
         ax.plot(d["doses"], d["m_pre3"], "s-", color="#d62728", lw=2, mfc="none",
-                label="NFsim (-bscb), best fit")
+                label=lab_model)
         ax.set(xscale="log", title="Fig 2D: phospho-EGFR vs EGF dose",
                xlabel="EGF dose (nM)", ylabel="scaled pEGFR")
         for ax in (axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]):
@@ -455,7 +617,7 @@ def plot():
         ax.grid(alpha=0.25, which="both")
 
     fig.suptitle("egfr_oligomerization_mitra2019 verification: Kozer 2013 Fig 2B/2D/3B/3D "
-                 "reproduction + independent network-free algorithm agreement "
+                 f"reproduction{chisq_txt}\n+ independent network-free algorithm agreement "
                  "(bngsim NFsim = RuleMonkey, -bscb)", fontsize=12)
     fig.tight_layout(rect=(0, 0, 1, 0.96))
     png = os.path.join(HERE, "verify_mitra2019.png")
@@ -464,17 +626,22 @@ def plot():
 
 
 if __name__ == "__main__":
-    assert os.path.exists(BNG2PL), f"BNG2.pl not found at {BNG2PL}; set BNGPATH"
+    print("BioNetGen:", find_bionetgen()[0])
     mode = sys.argv[1] if len(sys.argv) > 1 else "reference"
+    n = int(sys.argv[2]) if len(sys.argv) > 2 else None
+    w = int(sys.argv[3]) if len(sys.argv) > 3 else 1
     if mode == "reference":
-        reference(n_reps=int(sys.argv[2]) if len(sys.argv) > 2 else 4)
+        reference(n_reps=n or 12, workers=w)
     elif mode == "agreement":
-        agreement(n_seeds=int(sys.argv[2]) if len(sys.argv) > 2 else 4)
+        agreement(n_seeds=n or 6, workers=w)
+    elif mode == "agreement-bng":
+        agreement_bng(n_seeds=n or 6, workers=w)
     elif mode == "plot":
         plot()
     elif mode == "all":
-        reference(n_reps=int(sys.argv[2]) if len(sys.argv) > 2 else 4)
-        agreement(n_seeds=int(sys.argv[3]) if len(sys.argv) > 3 else 4)
+        reference(n_reps=n or 12, workers=w)
+        agreement(n_seeds=6, workers=w)
         plot()
     else:
-        print(f"unknown mode {mode!r}; use reference [N] | agreement [N] | plot | all")
+        print(f"unknown mode {mode!r}; use reference [N [W]] | agreement [N [W]] | "
+              f"agreement-bng [N [W]] | plot | all [N [W]]")

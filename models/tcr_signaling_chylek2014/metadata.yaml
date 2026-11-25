@@ -51,23 +51,62 @@ files:
     role: verification
     scale: hours
     description: >
-      Self-contained driver. `reference` runs the committed model's faithful
-      published protocol with standard BioNetGen NFsim (full subvolume Fx=0.02)
-      and checks it against the committed reference .gdat. `agreement` runs the
-      three-engine network-free cross-check — standard BioNetGen NFsim, bngsim
-      NfsimSession, and bngsim RuleMonkeySession — on a reduced but identical
-      single-phase ligand-on protocol (Fx=0.005, no equilibration, which
-      RuleMonkey cannot afford at full subvolume), and quantifies agreement by
-      the pairwise z-score of ensemble means. `plot` builds the verification PNG.
+      Self-contained driver; BioNetGen is located through $BNG2_PL or $BNGPATH
+      (or the bionetgen CLI), and every run uses a temporary directory inside
+      this folder. `ensemble [N] [workers]` runs the committed file with its own
+      two-phase actions block, unchanged except for pinned seeds (1000+r on the
+      equilibration, 5000+r on the response), N=144 replicates in parallel under
+      standard BioNetGen NFsim, and caches every replicate to
+      reference/data_ensemble.npz; `negctl` caches the negative control (the
+      same protocol at Fx=0.005 without rescaling the literal ligand on-rates
+      kfl/kfl_m, so ligand binding runs 4x slow). `data` is level 2: the
+      ensemble mean as log2 fold change over the equilibrated baseline against
+      the published Fig. S6 lines at the paper's measurement times (5, 15, 30,
+      60 s), asserted at max z <= 4 over the 16 x 4 comparisons. `reference`
+      runs the committed file verbatim; `agreement` is the older three-engine
+      cross-check (BioNetGen NFsim, bngsim NfsimSession, bngsim
+      RuleMonkeySession) on a single-phase, ligand-on protocol at Fx=0.005 with
+      kfl/kfl_m at their Fx=0.02 values; `plot` builds the PNG from committed
+      artifacts only.
+  - name: verify_tcr_chylek2014.ipynb
+    role: verification
+    scale: minutes
+    description: >
+      Notebook of asserted checks, all through BioNetGen's NFsim and none
+      through bngsim: replays one cached replicate and requires it count for
+      count; re-checks the digitized Fig. S6 points against Table S1 (15 of 16
+      panels within one 0.8-pt grid step; panel h reported); level 2 against
+      the published Fig. S6 simulation (144 replicates, max z = 1.74 at a
+      tolerance of 4 over 64 comparisons; error budget = bootstrap s.e., the
+      published line's own Monte-Carlo error bounded as a mean of >= 10 runs,
+      and the PDF's 0.8-pt grid); the negative control rejected (max z 14.7, 13
+      of 64 beyond 4); and the committed reference/ run a typical draw from the
+      ensemble (max |x-mean|/sd 3.01 response, 3.32 equilibration, against
+      leave-one-out null maxima 5.10 and 4.29). The three-engine agreement is
+      printed from its cache for context only.
+  - name: digitize_chylek2014.py
+    role: verification
+    description: >
+      Regenerates the three Fig. S6 / Table S1 CSVs, byte for byte, from the
+      publisher's File S2 PDF (page 9, Fig. S6, MATLAB vector art read as
+      geometry: frames, tick strokes, the simulated polyline, filled-circle
+      markers and capped error bars; axes fitted to the tick marks; abscissae
+      of the measured points snapped to 0/5/15/30/60 s) and File S1's
+      TableS1.xlsx (read with the standard library). Asserts that the figure's
+      measured points equal the Table S1 means and SDs to one 0.8-pt grid step
+      in 15 of 16 panels; panel h ("LCK Y424", Table S1's LCK position 394)
+      differs by up to 1.9 steps (mean) and 2.2 (SD) and is reported. The
+      source files are not committed (dev/papers/chylek2014/).
   - name: verify_tcr_chylek2014.png
     role: figure
     description: >
-      Verification figure. Top row: the faithful published protocol (flat basal
-      equilibration with ligand off; 60 s stimulation response) from standard
-      BioNetGen NFsim at Fx=0.02. Bottom row: the three network-free engines
-      (BNG NFsim, bngsim NFsim, bngsim RuleMonkey) overlaid as ensemble
-      mean +/- s.e.m. phosphosite trajectories, showing they agree within
-      Monte-Carlo error on the reduced-subvolume cross-check.
+      Verification figure. Row 1: the committed reference run (60 s response,
+      with its typicality against the ensemble) and its flat ligand-off
+      equilibration. Row 2: the older three-engine agreement from its cache.
+      Row 3, level 2: the 144-replicate BioNetGen NFsim mean against the
+      published Fig. S6 lines (parity over all 16 sites), the signed z per site
+      over 0-60 s with the +/-4 tolerance band, and the same for the negative
+      control, which leaves the band; verdicts and numbers on the figure.
   - name: reference/tcr_signaling_chylek2014.xml
     role: reference
     description: >
@@ -88,3 +127,33 @@ files:
     description: >
       Cached three-engine ensembles (per-seed observable trajectories) for the
       reduced-subvolume network-free agreement cross-check.
+  - name: reference/data_ensemble.npz
+    role: reference
+    description: >
+      144 replicates of the faithful published protocol under BioNetGen 2.9.3
+      NFsim (default flags: -cb, no -bscb, default -utl), seeds 1000+r /
+      5000+r: per-replicate equilibration (0-500 s) and response (0-60 s, every
+      1 s) counts for all 20 observables, int32, with the BioNetGen version.
+  - name: reference/data_ensemble_negctl.npz
+    role: reference
+    description: >
+      72 replicates of the negative control (Fx=0.005 with kfl=6e-6 and
+      kfl_m=6e-4 left at their Fx=0.02 values), same layout and seeds.
+  - name: reference/chylek2014_figS6_simulated_digitized.csv
+    role: reference
+    description: >
+      Fig. S6 a-p: the published simulation lines (log2 fold change over
+      baseline), vertices of the vector polylines, with panel, model
+      observable and printed label; +/-0.029 log2 and +/-0.33 s (0.8-pt grid).
+  - name: reference/chylek2014_figS6_data_digitized.csv
+    role: reference
+    description: >
+      Fig. S6 a-p: the measured points (mean of three experiments) and SD
+      error bars at 0/5/15/30/60 s; sd_clipped marks a bar that leaves the
+      frame (PLCG1 Y783 at 60 s), whose SD is then the in-frame half.
+  - name: reference/chylek2014_tableS1_sites.csv
+    role: reference
+    description: >
+      The authors' source data for the 16 Fig. S6 sites: Table S1's log2 SILAC
+      ratios at 0/5/15/30/60 s per LC-MS/MS experiment (blank = not
+      quantified), with gene, position and peptide.

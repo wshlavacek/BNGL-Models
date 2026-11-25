@@ -14,9 +14,11 @@ begin model
 #  populations are 1000-fold smaller than the per-cell values in Table I
 #  of Faeder et al. (2003), with bimolecular rate constants scaled
 #  upward to preserve deterministic ODE dynamics. The active protocol
-#  reproduces the Fig. 3-style time course of receptor aggregation,
-#  receptor ITAM phosphorylation, Lyn redistribution, and Syk
-#  phosphorylation over 600 s.
+#  follows receptor aggregation, receptor ITAM phosphorylation, Lyn
+#  redistribution, and Syk phosphorylation for 10 min after 10 nM IgE
+#  dimer (Lig_tot = 6000 scaled molecules at 1e6 cells/ml), the
+#  condition of Figs. 4 and 7. Fig. 3 (1.6 nM, 70 min) is reproduced by
+#  this model block at Lig_tot = 963.5; see verify_faeder2003.ipynb.
 
 #@keyword: |
 #  immunoreceptor signaling, FceRI, mast cell signaling, RBL-2H3,
@@ -219,13 +221,17 @@ begin actions
 
   #@protocol: |
   #  Simulate receptor aggregation and downstream signaling for 600 s
-  #  from the scaled source initial condition. The output observables
-  #  track the quantities plotted in Fig. 3 of Faeder et al. (2003):
-  #  receptor dimers, receptor beta and gamma phosphorylation, Lyn
-  #  redistribution, Syk recruitment, and Syk activation-loop
-  #  phosphorylation.
+  #  from the scaled source initial condition, 10 nM IgE dimer (the
+  #  condition of Figs. 4 and 7). The output observables track the
+  #  kinds of quantity Fig. 3 of Faeder et al. (2003) plots: receptor
+  #  dimers, receptor beta and gamma phosphorylation, Lyn redistribution,
+  #  Syk recruitment, and Syk activation-loop phosphorylation. Fig. 3
+  #  itself is 1.6 nM over 70 min (Lig_tot = 963.5), which
+  #  verify_faeder2003.ipynb runs with this model block unchanged.
 
-  #@figure: Fig. 3 in Faeder et al. (2003)
+  #@figure: |
+  #  Fig. 3 in Faeder et al. (2003), at Fig. 3's dose (see the protocol
+  #  note); this run is the 10 nM condition of Figs. 4 and 7.
 
   resetConcentrations()
   simulate({method=>"ode",suffix=>"ode",t_start=>0,t_end=>600,\

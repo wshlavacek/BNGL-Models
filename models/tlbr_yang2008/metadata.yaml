@@ -24,8 +24,31 @@ files:
   - name: verify_yang2008.ipynb
     role: verification
     scale: minutes
+    description: >
+      BNG2.pl NFsim, 200 replicates of the file's own action at distinct seeds
+      (1-200), against an independent mean-field bond-count ODE (SciPy), asserted:
+      each equilibrium mean (t >= 500 s) within 3 SE + 0.3% of the ODE (bonds
+      293.13 +- 0.17 against 293.21), and over 1200 time-point comparisons at
+      least 99% of |z| < 3 with max |z| < 4. Fig. 3 of the paper plots CPU cost,
+      not a model output; its caption's null-event fractions are asserted to
+      their printed precision: 1.6e-4 at beta = 0.1 ("essentially 0.0", < 0.05)
+      and 0.567 +- 0.001 at beta = 50 ("approximately 0.6", +- 0.05). Fig. 5's
+      species counts for rounds 0-3 of network generation (2, 3, 6, 19) are
+      asserted exactly. The -bscb question is settled by measurement: the
+      paper's TLBR model forbids cyclic aggregates, and BNG2.pl's default
+      complex=>1 passes NFsim -cb, which in NFsim 1.14.3 blocks same-complex
+      binding exactly as -bscb does (byte-identical output with and without
+      -bscb at beta = 50, 3571 null events each), so the file needs no -bscb.
+      Every blocked final species list is acyclic; with the block off
+      (complex=>0) cycles form, but at the file's beta = 0.1 no observable moves
+      beyond Monte-Carlo error (|z| <= 1.35), while at beta = 50 bonds rise from
+      533 to 573. Also asserts that the pinned seed reproduces reference/.
+      Committed with outputs.
   - name: verify_yang2008.png
     role: figure
+    description: >
+      Bonds and free receptors, the 200-seed NFsim mean +- 3 SE against the
+      mean-field ODE, with z(t) below; the footer carries every asserted metric.
   # Reference simulation data (reference/ subdirectory)
   - name: reference/tlbr_yang2008_nfr.xml
     role: reference

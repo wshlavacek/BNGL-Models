@@ -27,9 +27,9 @@ source:
     publisher's figure raster, and with the numbers the Results section reads
     off them. The file's own active protocol is a different published
     condition: Lig_tot = 6000 is 10 nM at 1e6 cells/ml, run for 10 min, the
-    condition of Figs. 4 and 7, although the .bngl header describes it as a
-    Fig. 3-style time course. The .bngl is left unchanged (sha256 7dc745c0...,
-    pinned downstream).
+    condition of Figs. 4 and 7, and the .bngl header says so (it called this
+    a Fig. 3-style time course before 2026-11-24; only comments changed, so
+    the model block and the generated network are as before).
 
 files:
   - name: early_fceri_signaling_faeder2003.bngl
