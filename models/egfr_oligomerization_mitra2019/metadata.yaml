@@ -66,9 +66,17 @@ files:
     scale: hours
     description: >
       Self-contained driver. `reference` reproduces Kozer 2013 Fig 2B/2D/3B/3D: the
-      network-free NFsim protocol (-bscb -utl 5) at the best fit, replicate-averaged,
-      vs the average-normalized cluster-density and phospho-EGFR data -- reports
-      chi_sq and median/max relative error per dataset. `agreement` is the
+      network-free protocol run by BioNetGen's bundled NFsim (-bscb -utl 5) at the
+      best fit, averaged over independent replicates (default 24; time course seeds
+      1000.., dose response seeds 2000.., each dose a one-point parameter_scan, all
+      run in parallel), vs the average-normalized cluster-density and phospho-EGFR
+      data -- reports chi_sq with a bootstrap standard error and median/max relative
+      error per dataset. Every BioNetGen run has its own directory and is read back
+      by the exact output name it wrote, and distinct seeds must give distinct
+      replicates (an earlier version read every replicate from one shared directory
+      with a glob, so its caches averaged repeated copies of the same run).
+      `agreement-bng` re-runs only the BioNetGen arm of the cached agreement check at
+      its recorded seeds. `agreement` is the
       independent-algorithm cross-check (issue #8, capability group): the two
       INDEPENDENT network-free algorithms bngsim provides -- NfsimSession (NFsim,
       Yang 2008) and the exact RuleMonkeySession (RuleMonkey, Colvin 2009/2010), both
@@ -87,11 +95,15 @@ files:
     role: verification
     description: >
       Verification notebook. Loads the committed reference data and reports the two
-      checks: the Kozer 2013 Fig 2B/2D/3B/3D reproduction metrics (chi_sq,
-      median/max relative error) and the three-engine independent-algorithm
-      agreement (NFsim = RuleMonkey with -bscb) plus the no-bscb contrast; displays
-      verify_mitra2019.png. run_mitra2019.py is the engine that regenerates the
-      reference data.
+      checks: the Kozer 2013 Fig 2B/2D/3B/3D reproduction and the three-engine
+      independent-algorithm agreement (NFsim = RuleMonkey with -bscb) plus the
+      no-bscb contrast; displays verify_mitra2019.png. The reproduction is asserted
+      on the BioNetGen 2.9.3 NFsim arm (no bngsim): 24 distinct time-course and 24
+      distinct dose-response replicates, a fresh re-run of one replicate must match
+      the cache exactly, and total chi_sq 13.90 +/- 0.50 (bootstrap s.e.) over the
+      24 data points must be below 30 (published PyBNF best fit 13.4; a model
+      within the data SDs gives 12 +/- 3.5). run_mitra2019.py is the engine that
+      regenerates the reference data.
   - name: verify_mitra2019.png
     role: figure
     description: >
@@ -136,11 +148,15 @@ files:
   - name: reference/reproduction.npz
     role: reference
     description: >
-      Cached Fig 2B/2D/3B/3D reproduction: replicate-averaged scaled model outputs
-      per time point and per dose, the data, and the chi_sq metrics.
+      Cached Fig 2B/2D/3B/3D reproduction from BioNetGen's NFsim: the per-replicate
+      Clusters/pEGFR time courses and dose endpoints with their seeds and the
+      BioNetGen version, the replicate-averaged scaled model outputs per time point
+      and per dose, the data, and the chi_sq metrics with a bootstrap s.e.
   - name: reference/agreement.npz
     role: reference
     description: >
       Cached three-engine per-dose equilibrium pEGFR / cluster ensembles (BNG NFsim,
       bngsim NFsim, bngsim RuleMonkey, plus bngsim NFsim without -bscb) for the
-      network-free algorithm agreement cross-check.
+      network-free algorithm agreement cross-check, 6 seeds per engine (5000-5005).
+      The BioNetGen NFsim arm was re-run with distinct per-seed outputs (it had held
+      4 distinct runs of 6); the bngsim arms are unchanged.
