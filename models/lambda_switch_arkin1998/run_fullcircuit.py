@@ -13,10 +13,11 @@ NFsim + RuleMonkey). Run with a Python that has bngsim + numpy, e.g.
     python run_fullcircuit.py agreement 100       # NFsim vs RuleMonkey, 100 seeds/engine
     python run_fullcircuit.py traj       40  6 rm # one MOI mean trajectory
 Two modes use no bngsim at all -- BNG2.pl (found from $BNG2_PL or $BNGPATH) and BioNetGen's
-bundled NFsim 1.14.3 binary only, with numpy:
+bundled NFsim binary only (NFsim 2.0.1 in BioNetGen 2.9.4, 1.14.3 in 2.9.3), with numpy:
     python run_fullcircuit.py symcheck-nfsim 120  # the symcheck reproducer on stock NFsim
     python run_fullcircuit.py fig6nf 200 --workers 36 --parts DIR [--job k/K]
-    python run_fullcircuit.py fig6nf-merge 200 --parts DIR   # -> <prefix>_fig6_nfsim.npz
+    python run_fullcircuit.py fig6nf-merge 200 --parts DIR
+        # -> <prefix>_fig6_nfsim201.npz (NFsim 2.0.1); <prefix>_fig6_nfsim.npz was NFsim 1.14.3
 (see the section above fig6nf() for why the binary runs the writeXML() output instead of
 BNG2.pl's simulate_nf, and what each trajectory is checked for).
 Every mode caches to reference/<prefix>_*.npz (prefix = fullcircuit | fullcircuit_exact),
@@ -615,15 +616,20 @@ def rescore():
 # ------------------------------------- Fig 6a with BNG2.pl + the stock NFsim binary (no bngsim)
 # Every mode above runs through bngsim. `fig6nf` is the same Fig-6a sweep with no bngsim in the
 # loop: BioNetGen's BNG2.pl runs the file's own action block (writeXML) on an MOI-substituted
-# copy, and BioNetGen's bundled NFsim 1.14.3 binary simulates that XML with the flags BNG2.pl's
+# copy, and BioNetGen's bundled NFsim binary simulates that XML with the flags BNG2.pl's
 # simulate_nf passes by default (-cb; no -bscb; -utl left to NFsim's automatic value). The same
-# footnote-12 classify() scores every seed.
+# footnote-12 classify() scores every seed. Run with BNGPATH naming BioNetGen 2.9.4 it is NFsim
+# 2.0.1 (the cache <prefix>_fig6_nfsim201.npz); the first campaign ran 2.9.3's NFsim 1.14.3
+# (<prefix>_fig6_nfsim.npz), which fires a symmetric pattern at a functional rate at twice the
+# rate (symcheck-nfsim), so that cache is not a sample of the model.
 #
-# Why the binary and not BNG2.pl's simulate_nf: NFsim prints "You are trying to give a pattern
+# Why the binary and not BNG2.pl's simulate_nf (under 2.9.3): NFsim 1.14.3 prints "You are trying to give a pattern
 # of type 'RNAP', but you gave an invalid state! The state you gave was: 'PLUS'" on stderr while
 # reading the ~PLUS product patterns of the elongation rules, and BNG2.pl treats ANY non-WARNING
 # stderr line as a failed run (BNGAction.pm, simulate_nf) -- so simulate_nf ABORTs after a
-# complete 2100-s trajectory has been written. The binary itself exits 0 and simulates the
+# complete 2100-s trajectory has been written (NFsim 2.0.1 prints nothing, and BNG2.pl 2.9.4's
+# simulate_nf runs the file; the binary route is kept so the two campaigns differ only in the
+# NFsim). The binary itself exits 0 and simulates the
 # increments through its StateChange operations; the run is accepted only if NFsim exits 0, its
 # stderr holds nothing but those PLUS messages and NFsim's species-observable notice, the .gdat
 # has all 36 rows to t = 2100 s, and the Species dimer readouts equal half their Molecules
@@ -656,7 +662,27 @@ def find_bionetgen():
                 raise FileNotFoundError(f"NFsim binary not found at {nf}")
             return bng, nf
     raise FileNotFoundError("BioNetGen not found: set BNG2_PL (or BNGPATH) to a BioNetGen "
-                            "2.9.3 BNG2.pl.")
+                            "BNG2.pl (2.9.4 bundles NFsim 2.0.1).")
+
+
+def nfsim_version():
+    """The version the NFsim binary's banner names ("starting NFsim v2.0.1...")."""
+    _, nf = find_bionetgen()
+    r = subprocess.run([nf], capture_output=True, text=True)
+    m = re.search(r"starting NFsim v([0-9][0-9.]*[0-9])", r.stdout + r.stderr)
+    assert m, f"no NFsim banner from {nf}: {(r.stdout + r.stderr)[-500:]}"
+    return m.group(1)
+
+
+def bionetgen_version():
+    """The VERSION file of the BioNetGen distribution BNG2.pl is in."""
+    bng, _ = find_bionetgen()
+    return open(os.path.join(os.path.dirname(os.path.realpath(bng)), "VERSION")).read().strip()
+
+
+def fig6nf_cache_name(version):
+    """fig6_nfsim for the first (NFsim 1.14.3) campaign, fig6_nfsim<digits> for any other."""
+    return "fig6_nfsim" if version == "1.14.3" else "fig6_nfsim" + version.replace(".", "")
 
 
 def _bng2_xml(moi, workdir):
@@ -752,7 +778,8 @@ def fig6nf(n_seeds=FIG6NF_SEEDS, mois=FIG6NF_MOIS, workers=1, parts=None, job=(0
 
 
 def fig6nf_merge(n_seeds=FIG6NF_SEEDS, mois=FIG6NF_MOIS, parts=None):
-    """Assemble the part files into reference/<prefix>_fig6_nfsim.npz and print Fig 6a."""
+    """Assemble the part files into reference/<prefix>_<fig6nf_cache_name>.npz, named for the
+    NFsim that ran them, and print Fig 6a."""
     import hashlib
     parts = parts or os.path.join(HERE, "fig6nf_parts")
     out, rows = {}, []
@@ -773,15 +800,16 @@ def fig6nf_merge(n_seeds=FIG6NF_SEEDS, mois=FIG6NF_MOIS, parts=None):
             out[f"{o}__moi{m}"] = st[o].astype(np.int32)
         for o in TRAJ:
             out[f"end__{o}__moi{m}"] = np.concatenate([b[f"end__{o}"] for b in blocks])
-    print(f"=== Fig 6a, stock NFsim {' '.join(FIG6NF_FLAGS)} via BNG2.pl writeXML, "
+    ver, bver = nfsim_version(), bionetgen_version()
+    print(f"=== Fig 6a, stock NFsim {ver} {' '.join(FIG6NF_FLAGS)} via BNG2.pl {bver} writeXML, "
           f"{n_seeds} seeds/MOI ===")
     for m, p, se, w in rows:
         print(f"  MOI={m:2d}: f_lyso = {p:.3f} +/- {se:.3f}   (median {w:.0f} s/trajectory)")
     sha = hashlib.sha256(open(MODEL, "rb").read()).hexdigest()
-    _cache("fig6_nfsim", tvec=tvec, mois=np.array(mois, float), n_seeds=n_seeds,
+    _cache(fig6nf_cache_name(ver), tvec=tvec, mois=np.array(mois, float), n_seeds=n_seeds,
            seed0=FIG6NF_SEED0, f=np.array([r[1] for r in rows]),
            se=np.array([r[2] for r in rows]),
-           engine="nfsim-1.14.3 (BioNetGen 2.9.3 bin/NFsim) on BNG2.pl writeXML output",
+           engine=f"nfsim-{ver} (BioNetGen {bver} bin/NFsim) on BNG2.pl writeXML output",
            flags=" ".join(FIG6NF_FLAGS), bngl_sha256=sha, **out)
 
 
