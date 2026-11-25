@@ -115,10 +115,20 @@ files:
       0.000/0.010/0.175/0.380/0.570/0.750/0.845/0.895/0.985/1.000 at MOI
       1-8/10/12 and lies outside the published curve (|z| > 3.29, family-wise 1 %, with the published
       curve's own noise taken from its plateau scatter, 0.020) at MOI
-      4, 5, 6, 7, 8, 10, 12. So BNG2.pl's stock NFsim is not an admissible
-      network-free reference for this file; a bngsim-free one would need
-      another exact engine (e.g. a standalone RuleMonkey build).
-      RUN THIS FILE WITH RULEMONKEY, NOT NFsim (issue #39). The two engines do
+      4, 5, 6, 7, 8, 10, 12. So BNG2.pl 2.9.3's stock NFsim is not an
+      admissible network-free reference for this file. NFSIM 2.0.1 IS: BioNetGen
+      2.9.4 bundles it, its symcheck reproducer is exact (Sym 1003.3 +/- 2.1
+      against 1000.2, ratio 1.003; NFsim 2.0.0 corrected the rate,
+      RuleWorld/nfsim#88), and BNG2.pl 2.9.4's simulate_nf runs this file (exit
+      0, no PLUS notes). Its Fig. 6a sweep (same seeds and flags,
+      reference/fullcircuit_exact_fig6_nfsim201.npz) gives f_lyso =
+      0.000/0.015/0.165/0.405/0.580/0.730/0.835/0.900/0.960/0.970 at MOI
+      1-8/10/12: within the published curve at MOI 1-3, above it beyond the same
+      tolerance at MOI 4, 5, 6, 7, 8, 10, 12 (z +4.4 to +7.3), and within 2.5 s.e.
+      of the 1.14.3 sweep at every MOI. So correcting the dimer dilution changes
+      little, and this file does not reproduce Fig. 6a from the onset up (asserted
+      in verify_arkin1998.ipynb Part 5).
+      RUN THIS FILE WITH RULEMONKEY OR NFSIM 2.0.1, NOT NFsim 1.14.3 (issue #39). The two engines do
       NOT agree on this variant, and the cause is an NFsim defect rather than the
       model (lanl/bngsim#195): for a rule whose reactant pattern is SYMMETRIC and whose rate is a
       FUNCTION, NFsim does not divide out the pattern's automorphism and fires at
@@ -230,6 +240,14 @@ files:
       tracked observable, and per-trajectory wall time. A record of what the
       stock binary does with this file, not a sample of the model (the
       binary dilutes the symmetric dimers at 2x; see the .bngl entry).
+  - name: reference/fullcircuit_exact_fig6_nfsim201.npz
+    role: reference
+    description: >
+      Exact-variant Fig. 6a with no bngsim, the asserted one: BNG2.pl 2.9.4
+      writeXML() + its bundled NFsim 2.0.1 binary, -cb, 200 seeds per MOI from
+      20000 at MOI 1-8, 10, 12 (run_fullcircuit.py fig6nf / fig6nf-merge with
+      BNGPATH naming BioNetGen 2.9.4), the same arrays as the 1.14.3 cache.
+      NFsim 2.0.1 samples the model as written (Part 5a).
   - name: reference/lambda_switch_arkin1998_fullcircuit.xml
     role: reference
     description: >
